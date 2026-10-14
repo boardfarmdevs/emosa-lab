@@ -67,6 +67,11 @@ bool em_vault_fingerprint_text(const em_vault *v, const char *text, char out[65]
 
 /* A received M2 credential: "wsc-<32 hex>[-1..7]", never overwritten, durable. */
 em_reason em_vault_persist_received(const em_vault *v, const char *ref, const char *value);
+/* EMOSA's own passphrase under an "emosa-[a-z0-9-]{1,32}" reference (spec 3.10, the APs a legacy
+ * profile does not name): made once, 32 random letters and digits, durable before it is returned,
+ * the same value from then on (SecretStore.generated); NULL with *why set. The caller frees it with
+ * em_free_secret. */
+char *em_vault_generated(const em_vault *v, const char *ref, em_reason *why);
 /* Removes a reference (a credential whose operation was never journaled). */
 void em_vault_forget(em_vault *v, const char *ref);
 

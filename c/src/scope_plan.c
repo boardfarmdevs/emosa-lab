@@ -16,6 +16,7 @@
 #define SOURCE "radio-plan-policy"
 #define DEADLINE 30
 #define ROWS 16 /* the unclaimed APs and their Inet rows the scope reads, at most */
+#define NEUTRAL_REF "emosa-unclaimed" /* RadioPlanIntent's default neutral_ref */
 
 static const char *str(const cJSON *o, const char *k)
 {
@@ -27,7 +28,7 @@ static int by_name(const void *a, const void *b) { return strcmp((const char *)a
 /* RadioPlanIntent.validate */
 static em_reason validate(const em_plan_intent *i)
 {
-    if (!*i->pod_id || !i->nclaimed || !*i->band || !*i->ht_mode)
+    if (!*i->pod_id || !i->nclaimed || !*i->band || !*i->ht_mode || !*i->neutral_ref)
         return EM_INVALID_INPUT;
     for (size_t k = 0; k < i->nclaimed; k++)
         if (!*i->claimed[k])
@@ -60,6 +61,7 @@ bool em_plan_intent_from(const char *pod_id, const em_profile *profile, em_plan_
         !em_copy(out->ht_mode, sizeof(out->ht_mode), profile->ht_mode))
         return false;
     out->channel = profile->channel;
+    EM_FORMAT_FIXED(out->neutral_ref, sizeof(out->neutral_ref), "%s", NEUTRAL_REF);
     *why = validate(out);
     return *why == EM_OK;
 }
@@ -75,6 +77,7 @@ static cJSON *record(const em_plan_intent *i)
     cJSON_AddStringToObject(r, "band", i->band);
     cJSON_AddNumberToObject(r, "channel", i->channel);
     cJSON_AddStringToObject(r, "ht_mode", i->ht_mode);
+    cJSON_AddStringToObject(r, "neutral_ref", i->neutral_ref);
     return r;
 }
 
@@ -97,6 +100,10 @@ static bool from_record(const cJSON *r, em_plan_intent *i)
             return false;
     }
     i->channel = channel->valueint;
+    /* absent in records made before it: the default */
+    const char *ref = str(r, "neutral_ref") ? str(r, "neutral_ref") : NEUTRAL_REF;
+    if (!em_copy(i->neutral_ref, sizeof(i->neutral_ref), ref))
+        return false;
     return validate(i) == EM_OK;
 }
 
@@ -111,6 +118,7 @@ static cJSON *target(void *ctx, const cJSON *intent, em_reason *why)
     }
     cJSON *t = cJSON_CreateObject();
     cJSON_AddArrayToObject(t, "unclaimed_inet_on");
+    cJSON_AddArrayToObject(t, "unclaimed_exposed");
     cJSON_AddTrueToObject(t, "radio_planned");
     return t;
 }
@@ -123,8 +131,9 @@ typedef struct {
 } named;
 
 typedef struct {
-    size_t ninets, nall;
-    named inets[ROWS];  /* to write: the unclaimed APs' Inet rows on (the APs themselves left on) */
+    size_t nexposed, ninets, nall;
+    named exposed[ROWS]; /* to write: the unclaimed APs not neutral (hidden, in no bridge, EMOSA's key) */
+    named inets[ROWS];   /* to write: the unclaimed APs' Inet rows on (the APs themselves left on) */
     char all[ROWS][16]; /* every unclaimed AP */
     const char *radio_uuid;        /* to write: the wired pod's radio, off the profile's channel */
     const cJSON *radio;
@@ -150,7 +159,44 @@ static bool unclaimed_ap(const plan_changes *c, const char *name)
 
 /* RadioPlanBackend._changes: what the plan writes now, and the configured view. An AP is never
  * disabled: the 2.4.3 pods' vendor healthcheck reboots a pod whose AP stops beaconing (spec 3.10) */
-static cJSON *changes(const em_plan_intent *i, const cJSON *tables, plan_changes *c)
+/* EMOSA's own passphrase for the unclaimed APs (SecretStore.generated), NULL when the vault makes
+ * none; freed with em_free_secret */
+static char *neutral_key(const em_plan_scope *s, const em_plan_intent *i)
+{
+    em_reason why;
+    return s->vault ? em_vault_generated(s->vault, i->neutral_ref, &why) : NULL;
+}
+
+/* a legacy pod's WPA2-PSK: the security map ["map", [["encryption","WPA-PSK"],["key",psk]]] */
+static cJSON *security_map(const char *psk)
+{
+    cJSON *map = cJSON_CreateArray(), *pairs = cJSON_CreateArray(), *enc = cJSON_CreateArray(),
+          *pair = cJSON_CreateArray();
+    cJSON_AddItemToArray(enc, cJSON_CreateString("encryption"));
+    cJSON_AddItemToArray(enc, cJSON_CreateString("WPA-PSK"));
+    cJSON_AddItemToArray(pair, cJSON_CreateString("key"));
+    cJSON_AddItemToArray(pair, cJSON_CreateString(psk));
+    cJSON_AddItemToArray(pairs, enc);
+    cJSON_AddItemToArray(pairs, pair);
+    cJSON_AddItemToArray(map, cJSON_CreateString("map"));
+    cJSON_AddItemToArray(map, pairs);
+    return map;
+}
+
+/* radio_plan.neutral: the AP row already hidden, in no bridge, on `key` (WPA2-PSK in the security
+ * map); never with no key */
+static bool neutral(const cJSON *row, const char *key)
+{
+    const char *broadcast = ovs_str(row, "ssid_broadcast"), *bridge = ovs_str(row, "bridge");
+    const char *encryption = ovs_map_get(row, "security", "encryption");
+    const char *psk = ovs_map_get(row, "security", "key");
+    return key && broadcast && !strcmp(broadcast, "disabled") && (!bridge || !*bridge) && encryption &&
+           !strcmp(encryption, "WPA-PSK") && psk && !strcmp(psk, key);
+}
+
+/* `key`: EMOSA's own passphrase for the unclaimed APs, NULL when the vault has none (each then
+ * counts as exposed) */
+static cJSON *changes(const em_plan_intent *i, const cJSON *tables, const char *key, plan_changes *c)
 {
     memset(c, 0, sizeof(*c));
     const cJSON *r;
@@ -164,6 +210,10 @@ static cJSON *changes(const em_plan_intent *i, const cJSON *tables, plan_changes
         (void)em_copy(c->all[c->nall++], 16, name); /* an interface name (15) */
         if (ovs_true(r, "enabled") && non < ROWS * 2)
             (void)em_copy(on[non++], 16, name);
+        if (!neutral(r, key) && c->nexposed < ROWS) {
+            (void)em_copy(c->exposed[c->nexposed].name, 16, name);
+            c->exposed[c->nexposed++].uuid = r->string;
+        }
     }
     cJSON_ArrayForEach(r, em_table(tables, "Wifi_VIF_State"))
     {
@@ -179,6 +229,7 @@ static cJSON *changes(const em_plan_intent *i, const cJSON *tables, plan_changes
             c->inets[c->ninets++].uuid = r->string;
         }
     }
+    qsort(c->exposed, c->nexposed, sizeof(c->exposed[0]), named_order);
     qsort(c->inets, c->ninets, sizeof(c->inets[0]), named_order);
     qsort(c->all, c->nall, sizeof(c->all[0]), by_name);
     qsort(on, non, sizeof(on[0]), by_name);
@@ -227,11 +278,14 @@ static cJSON *changes(const em_plan_intent *i, const cJSON *tables, plan_changes
     list = cJSON_AddArrayToObject(v, "unclaimed_inet_on");
     for (size_t k = 0; k < c->ninets; k++)
         cJSON_AddItemToArray(list, cJSON_CreateString(c->inets[k].name));
+    list = cJSON_AddArrayToObject(v, "unclaimed_exposed");
+    for (size_t k = 0; k < c->nexposed; k++)
+        cJSON_AddItemToArray(list, cJSON_CreateString(c->exposed[k].name));
     cJSON_AddItemToObject(v, "channel", has_channel ? cJSON_CreateNumber((double)channel) : cJSON_CreateNull());
     cJSON_AddItemToObject(v, "ht_mode", ht_mode ? cJSON_CreateString(ht_mode) : cJSON_CreateNull());
     cJSON_AddBoolToObject(v, "wired", wired);
     cJSON_AddBoolToObject(v, "radio_planned", !wired || on_plan);
-    cJSON_AddBoolToObject(v, "pending", c->ninets || c->radio);
+    cJSON_AddBoolToObject(v, "pending", c->nexposed || c->ninets || c->radio);
     return v;
 }
 
@@ -262,7 +316,9 @@ static bool snapshot(void *ctx, em_snapshot *out)
         return true;
     }
     plan_changes c;
-    out->config = changes(&s->intent, em_ovsdb_tables(s->ovs), &c);
+    char *key = neutral_key(s, &s->intent);
+    out->config = changes(&s->intent, em_ovsdb_tables(s->ovs), key, &c);
+    em_free_secret(key);
     out->ready = true;
     out->generation = em_ovsdb_generation(s->ovs);
     EM_FORMAT_FIXED(out->schema_fingerprint, 65, "%s", em_ovsdb_schema_fingerprint(s->ovs)); /* SHA-256 hex */
@@ -296,17 +352,23 @@ static cJSON *plan(void *ctx, const cJSON *intent, em_reason *why)
         return NULL;
     }
     plan_changes c;
-    cJSON_Delete(changes(&i, em_ovsdb_tables(s->ovs), &c));
+    char *key = neutral_key(s, &i);
+    cJSON_Delete(changes(&i, em_ovsdb_tables(s->ovs), key, &c));
+    em_free_secret(key);
     cJSON *p = cJSON_CreateObject();
     cJSON_AddStringToObject(p, "mapping", MODE);
     cJSON_AddStringToObject(p, "action", "radio-plan");
-    cJSON *list = cJSON_AddArrayToObject(p, "inet_off");
+    cJSON *list = cJSON_AddArrayToObject(p, "neutralize");
+    for (size_t k = 0; k < c.nexposed; k++)
+        cJSON_AddItemToArray(list, cJSON_CreateString(c.exposed[k].name));
+    list = cJSON_AddArrayToObject(p, "inet_off");
     for (size_t k = 0; k < c.ninets; k++)
         cJSON_AddItemToArray(list, cJSON_CreateString(c.inets[k].name));
     cJSON_AddItemToObject(p, "channel", c.radio ? cJSON_CreateNumber(i.channel) : cJSON_CreateNull());
     cJSON_AddStringToObject(p, "instance", s->instance);
-    const char *fields[] = {"Wifi_Inet_Config.enabled", "Wifi_Radio_Config.channel", "Wifi_Radio_Config.ht_mode"};
-    cJSON_AddItemToObject(p, "fields", em_ovs_strings(fields, 3));
+    const char *fields[] = {"Wifi_VIF_Config.security",  "Wifi_VIF_Config.ssid_broadcast", "Wifi_VIF_Config.bridge",
+                            "Wifi_Inet_Config.enabled",  "Wifi_Radio_Config.channel",      "Wifi_Radio_Config.ht_mode"};
+    cJSON_AddItemToObject(p, "fields", em_ovs_strings(fields, 6));
     cJSON_AddStringToObject(p, "guard", "pod serial and each changed row as it is");
     return p;
 }
@@ -357,21 +419,39 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
     const char *node_uuid;
     const cJSON *node = bind(s, &node_uuid);
     plan_changes c = {0};
+    char *key = neutral_key(s, &i);
     if (node)
-        cJSON_Delete(changes(&i, em_ovsdb_tables(s->ovs), &c));
-    if (!node || em_ovsdb_generation(s->ovs) != generation || !(c.ninets || c.radio)) {
-        strcpy(out->status, "rejected"); /* not bound, another session, or nothing differs any more */
+        cJSON_Delete(changes(&i, em_ovsdb_tables(s->ovs), key, &c));
+    if (!node || em_ovsdb_generation(s->ovs) != generation || !(c.nexposed || c.ninets || c.radio) ||
+        (c.nexposed && !key)) {
+        em_free_secret(key);
+        strcpy(out->status, "rejected"); /* not bound, another session, nothing differs, or no key */
         out->reason = EM_NOT_READY;
         return;
     }
     cJSON *ops = cJSON_CreateArray(), *row;
-    int counts[1 + 2 * (ROWS + 1)];
+    int counts[1 + 2 * (ROWS + ROWS + 1)];
     size_t n = 0;
     const char *node_cols[] = {"serial_number"};
     row = cJSON_CreateObject();
     cJSON_AddStringToObject(row, "serial_number", s->serial);
     cJSON_AddItemToArray(ops, wait_row("AWLAN_Node", node_uuid, node_cols, 1, row));
     counts[n++] = -1;
+    const char *vif_cols[] = {"if_name", "mode"};
+    for (size_t k = 0; k < c.nexposed; k++) { /* radio_plan.neutral_row: still enabled, so it beacons */
+        row = cJSON_CreateObject();
+        cJSON_AddStringToObject(row, "if_name", c.exposed[k].name);
+        cJSON_AddStringToObject(row, "mode", "ap");
+        cJSON_AddItemToArray(ops, wait_row("Wifi_VIF_Config", c.exposed[k].uuid, vif_cols, 2, row));
+        row = cJSON_CreateObject();
+        cJSON_AddItemToObject(row, "security", security_map(key));
+        cJSON_AddStringToObject(row, "ssid_broadcast", "disabled");
+        cJSON_AddStringToObject(row, "bridge", "");
+        cJSON_AddItemToArray(ops, update_row("Wifi_VIF_Config", c.exposed[k].uuid, row));
+        counts[n++] = -1;
+        counts[n++] = 1;
+    }
+    em_free_secret(key);
     const char *inet_cols[] = {"if_name", "enabled"};
     for (size_t k = 0; k < c.ninets; k++) {
         row = cJSON_CreateObject();
@@ -436,6 +516,7 @@ em_reason em_plan_open(em_plan_scope *s, const char *state_dir, const em_journal
 {
     char dir[600];
     EM_FORMAT_FIXED(dir, sizeof(dir), "%s/radio-plan", state_dir); /* EM_STATE_DIR_MAX */
+    s->vault = vault;
     em_reason why;
     s->journal = em_journal_open(dir, schemas, &why);
     if (!s->journal)
@@ -554,8 +635,8 @@ cJSON *em_plan_status(em_plan_scope *s)
 {
     cJSON *o = cJSON_CreateObject(), *op = em_journal_latest(s->journal);
     const cJSON *config = s->has_last ? s->last.config : NULL;
-    const char *keys[] = {"unclaimed", "unclaimed_enabled", "unclaimed_inet_on", "channel", "wired"};
-    for (size_t k = 0; k < 5; k++) {
+    const char *keys[] = {"unclaimed", "unclaimed_enabled", "unclaimed_inet_on", "unclaimed_exposed", "channel", "wired"};
+    for (size_t k = 0; k < 6; k++) {
         const cJSON *v = cJSON_GetObjectItemCaseSensitive(config, keys[k]);
         cJSON_AddItemToObject(o, keys[k], v ? cJSON_Duplicate(v, 1) : cJSON_CreateNull());
     }

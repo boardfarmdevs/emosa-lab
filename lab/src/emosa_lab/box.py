@@ -5536,6 +5536,27 @@ async def legacy_gtp_station_unassociated(box):
     )
 
 
+def emosa_key(box):
+    """The agent's own passphrase for the unclaimed APs (spec 3.10), read from its secret store as
+    only the box may: never in a status, a log or the journal."""
+    path = box.directory / "state" / box.serial / "secrets" / "emosa-unclaimed"
+    return path.read_text() if path.exists() else None
+
+
+async def neutralized(box, names):
+    """The unclaimed APs ``names`` neutral (spec 3.10): hidden, in no bridge, on the agent's own key
+    (WPA2-PSK), and still on (their beacons are the vendor healthcheck's)."""
+    key = emosa_key(box)
+    rows = {r.get("if_name"): r for r in (await box.rows("Wifi_VIF_Config")).values()}
+    return bool(key) and all(
+        rows.get(n, {}).get("ssid_broadcast") == "disabled"
+        and rows.get(n, {}).get("bridge") in ("", None)
+        and ovsdb_map(rows.get(n, {}).get("security")) == {"encryption": "WPA-PSK", "key": key}
+        and rows.get(n, {}).get("enabled") is True
+        for n in names
+    )
+
+
 async def legacy_radio_plan(box):
     """spec 3.10, the radio plan (radio_plan emosa): a wired legacy pod as its vendor's seed has
     it, the operator's APs on wl0 (wl0.1 with its own address and DHCP server, wl0.2 in br-home)
@@ -5559,6 +5580,7 @@ async def legacy_radio_plan(box):
     rows = await radio_plan_rows(box)
     vifs = rows["vifs"]
     kept_on = all(vifs.get(n) == ("ap", True, True) for n in OPERATOR_APS)
+    neutral = await neutralized(box, OPERATOR_APS)
     claimed = all(vifs.get(n, (None, None))[1] is True for n in (LEGACY_FRONTHAUL, LEGACY_PARENT))
     station = vifs.get("wl1", (None, None))[:2] == ("sta", True)
     planned = rows["inets"].get("wl0.1") is False and rows["wl1"] == (6, "HT20")
@@ -5595,6 +5617,7 @@ async def legacy_radio_plan(box):
     await associate_station(box)
     rows_again = await radio_plan_rows(box)
     failing_again = await healthcheck(box)
+    neutral_again = await neutralized(box, OPERATOR_APS)
     await asyncio.sleep(8)
     once = radio_plan_operation(box).get("operation_id") == (second or {}).get("operation_id")
     return box.result(
@@ -5610,11 +5633,15 @@ async def legacy_radio_plan(box):
         and rows_again["inets"].get("wl0.1") is False
         and rows_again["vifs"].get("wl1", (None, None))[:2] == ("sta", True)
         and not failing_again
+        and neutral
+        and neutral_again
         and once,
         vifs=vifs,
         inets=rows["inets"],
         wl1=rows["wl1"],
         operator_aps_kept_on=kept_on,
+        operator_aps_neutral=neutral,
+        operator_aps_neutral_after_reseed=neutral_again,
         claimed_enabled=claimed,
         station_enabled=station,
         healthcheck_failing=failing,
@@ -5693,6 +5720,7 @@ async def legacy_reseed(box, *, away=0):
         return {
             "fronthaul": fronthaul.get("ssid") == REGISTRAR_SSID,
             "unclaimed_on": all(vifs.get(n) == ("ap", True, True) for n in unclaimed),
+            "unclaimed_neutral": await neutralized(box, unclaimed),
             "wl0.1_inet_off": rows["inets"].get("wl0.1") is False,
             "station": vifs.get("wl1", (None, None))[:2] == ("sta", True),
             "wl1": rows["wl1"] == (6, "HT20"),
@@ -5835,6 +5863,7 @@ async def legacy_profile_5g(box):
         and not conflicts
         and placed == {"wl0": (36, "HT80"), "home_5g": {"ssid": REGISTRAR_SSID, "enabled": True}}
         and rows["vifs"].get("wl0.1") == ("ap", True, True)
+        and await neutralized(box, ["wl0.1"])
         and rows["inets"].get("wl0.1") is False,
         switched=done,
         five_ghz=placed,

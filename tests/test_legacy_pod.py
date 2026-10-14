@@ -523,48 +523,64 @@ class OperatorPod(SeededPod):
         self.tables["Wifi_Inet_Config"][OP_INET] = {"if_name": "wl0.1", "enabled": True}
 
 
-def radio_plan(pod):
+def radio_plan(pod, tmp_path):
     from emosa.opensync.radio_plan import RadioPlanBackend, RadioPlanIntent
 
+    vault = SecretStore(tmp_path / "secrets")
     intent = RadioPlanIntent("pod-1", ("wl1.1", "wl1.2"), "2.4G", 6, "HT20")
-    return RadioPlanBackend("pod-1", pod, serial=SERIAL, intent=intent), intent
+    return RadioPlanBackend("pod-1", pod, vault, serial=SERIAL, intent=intent), intent, vault
 
 
-def test_the_radio_plan_turns_off_only_unclaimed_aps_inet_and_plans_the_wired_radio():
+def neutral(key):
+    """An unclaimed AP as the plan leaves it: on, hidden, out of any bridge, EMOSA's own key."""
+    return {
+        "security": ["map", [["encryption", "WPA-PSK"], ["key", key]]],
+        "ssid_broadcast": "disabled",
+        "bridge": "",
+    }
+
+
+def test_the_radio_plan_neutralizes_unclaimed_aps_and_plans_the_wired_radio(tmp_path):
     # an AP is never disabled: the 2.4.3 pods' vendor healthcheck reboots a pod whose AP stops
-    # beaconing (14 October); an Inet row off leaves the link to wm (inet_vif)
+    # beaconing (14 October). It keeps beaconing, hidden, out of br-home, on EMOSA's own key, its
+    # Inet row off (inet_vif leaves the link to wm)
     pod = OperatorPod()
-    backend, intent = radio_plan(pod)
+    backend, intent, vault = radio_plan(pod, tmp_path)
     config = asyncio.run(backend.snapshot()).config
     assert config["unclaimed"] == ["wl0.1", "wl0.2"] and config["pending"] is True
     assert config["unclaimed_enabled"] == ["wl0.1", "wl0.2"]
     assert config["unclaimed_inet_on"] == ["wl0.1"]
+    assert config["unclaimed_exposed"] == ["wl0.1", "wl0.2"]
     assert config["wired"] is True and config["radio_planned"] is False
+    plan = asyncio.run(backend.plan(intent))
     attempt = {"transaction_id": "t1", "session_generation": 1}
     assert asyncio.run(backend.submit(intent, attempt)).status == "committed"
+    key = vault.generated("emosa-unclaimed")
+    assert len(key) == 32 and key not in json.dumps(plan)  # the plan names no key
     (ops,) = pod.sent
-    assert not [op for op in ops if op["table"] == "Wifi_VIF_Config"]
     updates = [(op["table"], op["where"], op["row"]) for op in ops if op["op"] == "update"]
     assert updates == [
+        ("Wifi_VIF_Config", [["_uuid", "==", ["uuid", OP_AP1]]], neutral(key)),
+        ("Wifi_VIF_Config", [["_uuid", "==", ["uuid", OP_AP2]]], neutral(key)),
         ("Wifi_Inet_Config", [["_uuid", "==", ["uuid", OP_INET]]], {"enabled": False}),
         (
             "Wifi_Radio_Config",
             [["_uuid", "==", ["uuid", RADIO]]],
             {"channel": 6, "ht_mode": "HT20"},
         ),
-    ]  # never the station wl1 nor the profile's wl1.2
+    ]  # never "enabled", never the station wl1 nor the profile's wl1.2
     radio_wait = [op for op in ops if op["op"] == "wait" and op["table"] == "Wifi_Radio_Config"]
     assert radio_wait[0]["rows"] == [{"if_name": "wl1", "channel": 1, "ht_mode": "HT40"}]
 
 
-def test_the_radio_plan_leaves_the_radio_to_its_station_when_not_wired():
+def test_the_radio_plan_leaves_the_radio_to_its_station_when_not_wired(tmp_path):
     pod = OperatorPod()
     pod.tables["Connection_Manager_Uplink"][UPLINK] = {
         "if_name": "g-wl1",
         "if_type": "gre",
         "is_used": True,
     }
-    backend, intent = radio_plan(pod)
+    backend, intent, _ = radio_plan(pod, tmp_path)
     config = asyncio.run(backend.snapshot()).config
     assert config["wired"] is False and config["radio_planned"] is True
     attempt = {"transaction_id": "t1", "session_generation": 1}
@@ -573,14 +589,41 @@ def test_the_radio_plan_leaves_the_radio_to_its_station_when_not_wired():
     assert not [op for op in ops if op["table"] == "Wifi_Radio_Config"]
 
 
-def test_a_planned_pod_has_nothing_to_write():
+def test_a_planned_pod_has_nothing_to_write(tmp_path):
     pod = OperatorPod()  # its unclaimed APs on, as the plan leaves them
+    backend, intent, vault = radio_plan(pod, tmp_path)
+    key = vault.generated("emosa-unclaimed")
+    for uuid in (OP_AP1, OP_AP2):
+        pod.tables["Wifi_VIF_Config"][uuid].update(neutral(key))
     pod.tables["Wifi_Inet_Config"][OP_INET]["enabled"] = False
     pod.tables["Wifi_Radio_Config"][RADIO].update({"channel": 6, "ht_mode": "HT20"})
-    backend, intent = radio_plan(pod)
     config = asyncio.run(backend.snapshot()).config
-    assert config["pending"] is False
-    assert all(config.get(k) == v for k, v in intent.target().items())
+    assert config["pending"] is False and config["unclaimed_exposed"] == []
+    assert all(config.get(k) == v for k, v in intent.target(vault).items())
+
+
+def test_the_agent_monitors_every_column_the_radio_plan_compares():
+    # the session sees only the columns monitored: the neutral AP's hidden flag, bridge and key,
+    # the radio's channel and width, the Inet rows and cm's uplink (the box found the hidden flag
+    # missing: the plan was written and never seen applied)
+    from emosa.agent.pod import MONITOR
+
+    for table, columns in {
+        "Wifi_VIF_Config": ("if_name", "mode", "enabled", "ssid_broadcast", "bridge", "security"),
+        "Wifi_Radio_Config": ("channel", "ht_mode"),
+        "Wifi_Inet_Config": ("if_name", "enabled"),
+        "Connection_Manager_Uplink": ("if_name", "if_type", "is_used"),
+    }.items():
+        assert set(columns) <= set(MONITOR[table]), table
+
+
+def test_emosas_own_credential_is_made_once_and_kept(tmp_path):
+    vault = SecretStore(tmp_path / "secrets")
+    first = vault.generated("emosa-unclaimed")
+    assert len(first) == 32 and first.isalnum()
+    assert SecretStore(tmp_path / "secrets").generated("emosa-unclaimed") == first
+    with pytest.raises(EmosaError):
+        vault.generated("wsc-" + "0" * 32)  # only an emosa- reference
 
 
 def test_a_6_6_profile_may_not_take_the_radio_plan(tmp_path):
