@@ -41,7 +41,7 @@
       "python": ["test_wire_reports.py", "test_easymesh_view.py"]
     },
     "README 3.1 Connections": {
-      "box": ["boot", "transport-cut", "adapter-restart"],
+      "box": ["boot", "transport-cut", "adapter-restart", "pod-vanished"],
       "python": ["test_ovsdb.py", "test_tls_listener.py"],
       "units": ["framing"],
       "fuzz": ["ovsdb"],

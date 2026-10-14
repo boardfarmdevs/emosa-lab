@@ -19,6 +19,7 @@ import asyncio
 import codecs
 import json
 import os
+import signal
 import socket
 import struct
 import subprocess
@@ -4397,6 +4398,33 @@ async def transport_cut_long(box):
     )
 
 
+async def pod_vanished(box):
+    """spec 3.1, the echo probe (14 October: the gateway's agent kept a pod rebooted behind
+    a switch as its source for hours): the pod's database frozen (SIGSTOP: no FIN, nothing read,
+    nothing answered), as a pod that loses power or reboots without closing its connection. The
+    agent probes the idle connection after 5 s and drops it 5 s later: its report source lost
+    (report_source_available false) within 25 s, not held while the connection looks open."""
+    if not (await onboarded(box)).get("applied"):
+        return box.result(passed=False, failed="not onboarded")
+    available = bool((box.status() or {}).get("report_source_available"))
+    pid = box.db.process.pid
+    os.kill(pid, signal.SIGSTOP)
+    frozen = time.monotonic()
+    try:
+        lost = await box.until(
+            lambda: (box.status() or {}).get("report_source_available") is False, seconds=40
+        )
+        lost_after = time.monotonic() - frozen
+    finally:
+        os.kill(pid, signal.SIGCONT)
+    return box.result(
+        passed=available and bool(lost) and lost_after < 25,
+        available_before=available,
+        source_lost=bool(lost),
+        lost_after_s=round(lost_after, 1),
+    )
+
+
 def station_parent(topology):
     """The BSSID the pod's backhaul station is on, as a Topology Response's 1905 Device
     Information TLV names it: the 802.11 interface with the non-AP STA role."""
@@ -5928,6 +5956,7 @@ SCENARIOS = {
     "adapter-restart": adapter_restart,
     "transport-cut": transport_cut,
     "transport-cut-long": transport_cut_long,
+    "pod-vanished": pod_vanished,
     "reconnect-moved-uplink": reconnect_moved_uplink,
     "reconnect-channel-follows": reconnect_channel_follows,
     "reconnect-not-provisioned": reconnect_not_provisioned,
