@@ -47,6 +47,7 @@
 #include "scope_telemetry.h"
 #include "scope_gre_parent.h"
 #include "scope_gtp.h"
+#include "scope_node.h"
 #include "scope_plan.h"
 #include "scope_wired.h"
 #include "scope_uplink.h"
@@ -274,6 +275,8 @@ typedef struct {
     em_gtp_scope gtp;
     bool plan_on;               /* the radio plan scope (emosa.agent.radio_plan): profile radio_plan emosa */
     em_plan_scope plan;
+    bool node_on;               /* the node-config scope (emosa.agent.node_config): configured modules */
+    em_node_scope node;
     em_gre_scope *gre;          /* a GRE parent's tunnels (emosa.agent.gre_parent, spec 8.6); NULL: none */
     em_bh_shared bh_shared;     /* Backhaul Steering under way: the agent's, across sessions */
     em_bh_coordinator bh;
@@ -2417,6 +2420,7 @@ static cJSON *status(agent *a)
     cJSON_AddItemToObject(o, "gre_parent", a->gre ? em_gre_status(a->gre) : cJSON_CreateNull());
     cJSON_AddItemToObject(o, "gtp_station", a->gtp_on ? em_gtp_status(&a->gtp) : cJSON_CreateNull());
     cJSON_AddItemToObject(o, "radio_plan", a->plan_on ? em_plan_status(&a->plan) : cJSON_CreateNull());
+    cJSON_AddItemToObject(o, "node_config", a->node_on ? em_node_status(&a->node) : cJSON_CreateNull());
     cJSON_AddNumberToObject(o, "writes", a->writes);
     cJSON_AddNumberToObject(o, "worker_pid", getpid());
     struct timespec ts;
@@ -2657,6 +2661,17 @@ static bool configure(agent *a, const char *path, const char *profiles)
             a->telemetry_on = a->watch_on = false;
         }
     }
+    /* spec 4, the pods' modules: their settings in Node_Config, their reports from Node_State */
+    const cJSON *modules = cJSON_GetObjectItemCaseSensitive(c, "modules");
+    a->node_on = cJSON_GetArraySize(modules) > 0;
+    if (a->node_on) {
+        em_reason why;
+        if (!em_node_intent_from(cfg_str(c, "pod_id"), modules, &a->node, &why)) {
+            FAIL("modules: one to %d modules of one to %d settings, names and values as the schema has them",
+                 EM_NODE_MODULES, EM_NODE_SETTINGS);
+            return false;
+        }
+    }
     /* spec 3.10, the GTP station: a legacy pod's core makes none, and its seed has none */
     const cJSON *bootstrap = cJSON_GetObjectItemCaseSensitive(uplink, "bootstrap");
     a->gtp_on = cJSON_IsObject(bootstrap);
@@ -2838,14 +2853,17 @@ int main(int argc, char **argv)
         FAIL("signal handlers not installed");
         return 1;
     }
-    static const char *const tables[] = {"AWLAN_Node", "Wifi_Radio_Config", "Wifi_Radio_State",
+    const char *tables[] = {"AWLAN_Node", "Wifi_Radio_Config", "Wifi_Radio_State",
         "Wifi_VIF_Config", "Wifi_VIF_State", "Wifi_Associated_Clients", "Wifi_Inet_Config",
         "Wifi_Credential_Config", "Connection_Manager_Uplink", "Band_Steering_Config",
         "Band_Steering_Clients", "Wifi_VIF_Neighbors", "Wifi_Stats_Config",
         /* a GRE parent's children and tunnels (spec 8.6), their columns only */
         "DHCP_leased_IP:hwaddr,inet_addr", "Wifi_Inet_State:if_name,inet_addr", "Bridge:name,ports",
-        "Port:name,interfaces", "Interface:name"};
-    a.ovs = em_ovsdb_open(cfg_str(a.config, "ovsdb"), tables, sizeof(tables) / sizeof(*tables));
+        "Port:name,interfaces", "Interface:name",
+        /* the pods' modules (spec 4), only with modules configured: the last two */
+        "Node_Config:module,key,value,persist", "Node_State:module,key,value"};
+    size_t ntables = sizeof(tables) / sizeof(*tables) - (a.node_on ? 0 : 2);
+    a.ovs = em_ovsdb_open(cfg_str(a.config, "ovsdb"), tables, ntables);
     if (!a.ovs) {
         FAIL("cannot listen on %s", cfg_str(a.config, "ovsdb"));
         return 1;
@@ -3000,6 +3018,18 @@ int main(int argc, char **argv)
             return 1;
         }
     }
+    if (a.node_on) {
+        a.node.ovs = a.ovs;
+        a.node.serial = a.serial;
+        a.node.run_id = a.run_id;
+        a.node.transact = transact;
+        a.node.transact_ctx = &a;
+        em_reason why = em_node_open(&a.node, a.state_dir, &a.schemas, &a.vault, now);
+        if (why != EM_OK) {
+            FAIL("node config journal: %s", em_reason_name(why));
+            return 1;
+        }
+    }
     /* EMOSA_NETNS (/etc/default/emosa): the agents' interfaces in a namespace of their own */
     if (em_ethernet_open_in(&a.eth, getenv("EMOSA_NETNS"), a.interface, a.al) != EM_OK) {
         FAIL("cannot open the 1905 interface %s with MAC %s", a.interface, cfg_str(a.config, "al_mac"));
@@ -3074,6 +3104,8 @@ int main(int argc, char **argv)
             em_gtp_tick(&a.gtp);
         if (refreshed && a.plan_on)
             em_plan_tick(&a.plan);
+        if (refreshed && a.node_on)
+            em_node_tick(&a.node);
         if (refreshed && a.gre)
             em_gre_tick(a.gre);
         if (refreshed && a.telemetry_on)
@@ -3108,6 +3140,8 @@ int main(int argc, char **argv)
         em_gtp_close(&a.gtp);
     if (a.plan_on)
         em_plan_close(&a.plan);
+    if (a.node_on)
+        em_node_close(&a.node);
     if (a.gre) {
         em_gre_close(a.gre);
         free(a.gre);

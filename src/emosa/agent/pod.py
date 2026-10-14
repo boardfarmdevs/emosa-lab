@@ -763,7 +763,11 @@ async def serve(config, stop):
     if profile.legacy:
         new_session_start()  # spec 3.10: the pod's starts counted by its agent's sessions
     session = OvsSession(
-        config["ovsdb"], monitor_columns=MONITOR, timeout=2, schema_generation=profile.schema
+        config["ovsdb"], monitor_columns=(
+            MONITOR  # the pods' modules' tables only with modules configured (spec 4)
+            if config.get("modules")
+            else {t: c for t, c in MONITOR.items() if t not in NODE_CONFIG_MONITOR}
+        ), timeout=2, schema_generation=profile.schema
     )
     vault, store = SecretStore(state_dir / "secrets"), Store(state_dir / "journal")
     backend = PodBackend(

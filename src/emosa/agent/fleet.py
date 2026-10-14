@@ -558,12 +558,13 @@ class Fleet:
         pstream = pstream or self.listen()
         files = None
         if self.config.get("files"):
-            files = FileServer(
-                self.config["files"]["directory"],
-                self.config["advertise"],
-                self.config["files"].get("port", FILES_PORT),
-            )
-            files.start()
+            port = self.config["files"].get("port", FILES_PORT)
+            try:
+                files = FileServer(self.config["files"]["directory"], self.config["advertise"], port)
+                files.start()
+            except OSError as exc:  # the fleet serves its pods without it
+                log.warning("files: cannot serve on %s:%d: %s", self.config["advertise"], port, exc)
+                files = None
         self.start_registered()
         if ready is not None:
             ready.set()

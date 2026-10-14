@@ -234,6 +234,12 @@ def test_the_backhaul_sta_capability_names_each_backhaul_station_radio(agent, tm
     assert result["passed"], result
 
 
+def test_a_pods_module_gets_its_settings_and_its_report_is_read(agent, tmp_path):
+    # spec 4, the pods' modules: Node_Config written once per start, Node_State in the status
+    result = box("node-config", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+
+
 def test_a_wired_pods_backhaul_stations_all_off_are_left_alone(agent, tmp_path):
     # spec 8.4, 8.3: the Pis' bootstrap, a station row per band and none on a wired pod
     result = box("wired-stations-off", agent, tmp_path / "box")

@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 #include <ctype.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <openssl/crypto.h>
 #include <openssl/sha.h>
 #include <stdio.h>
@@ -360,6 +361,168 @@ static cJSON *mode_off(void)
     return o;
 }
 
+/* -- the pods' modules (spec 4) --------------------------------------------------------- */
+
+static int name_order(const void *a, const void *b) { return strcmp(*(const char *const *)a, *(const char *const *)b); }
+
+/* an object's member names in order, at most max */
+static size_t member_names(const cJSON *o, const char **out, size_t max)
+{
+    size_t n = 0;
+    const cJSON *m;
+    cJSON_ArrayForEach(m, o)
+    {
+        if (n < max && m->string)
+            out[n++] = m->string;
+    }
+    qsort(out, n, sizeof(*out), name_order);
+    return n;
+}
+
+cJSON *em_module_settings(const cJSON *fleet, const char *serial)
+{
+    cJSON *modules = setting(fleet, serial, "modules", NULL);
+    const cJSON *port = cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(fleet, "files"), "port");
+    const char *advertise = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(fleet, "advertise"));
+    const char *names[64], *keys[64];
+    size_t n = member_names(modules, names, 64);
+    cJSON *out = cJSON_CreateObject();
+    for (size_t i = 0; i < n; i++) {
+        const cJSON *own = cJSON_GetObjectItemCaseSensitive(modules, names[i]);
+        const cJSON *config = cJSON_GetObjectItemCaseSensitive(own, "config");
+        const char *update = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(own, "update"));
+        size_t k = member_names(config, keys, 64);
+        cJSON *values = cJSON_CreateObject();
+        for (size_t j = 0; j < k; j++)
+            cJSON_AddItemToObject(values, keys[j], cJSON_Duplicate(cJSON_GetObjectItemCaseSensitive(config, keys[j]), 1));
+        char url[400]; /* a host name of 253 and a SHA-256 */
+        if (update && advertise &&
+            em_format(url, sizeof(url), "http://%s:%d/%s", advertise, cJSON_IsNumber(port) ? port->valueint : EM_FILES_PORT,
+                      update)) {
+            cJSON_AddStringToObject(values, "update_url", url);
+            cJSON_AddStringToObject(values, "update_sha256", update);
+        }
+        if (cJSON_GetArraySize(values))
+            cJSON_AddItemToObject(out, names[i], values);
+        else
+            cJSON_Delete(values);
+    }
+    cJSON_Delete(modules);
+    if (!cJSON_GetArraySize(out)) {
+        cJSON_Delete(out);
+        return NULL;
+    }
+    return out;
+}
+
+char *em_files_servable(const char *directory, const char *name, size_t *len, const char **why)
+{
+    *len = 0;
+    size_t n = name ? strlen(name) : 0;
+    bool hex = n == 64;
+    for (size_t i = 0; hex && i < n; i++)
+        hex = (name[i] >= '0' && name[i] <= '9') || (name[i] >= 'a' && name[i] <= 'f');
+    char path[600];
+    if (!hex || !em_format(path, sizeof(path), "%s/%s", directory, name)) {
+        *why = "not a SHA-256";
+        return NULL;
+    }
+    struct stat st;
+    int fd = open(path, O_RDONLY | O_NOFOLLOW | O_CLOEXEC); /* a link is not served */
+    if (fd < 0 || fstat(fd, &st) || !S_ISREG(st.st_mode)) {
+        if (fd >= 0)
+            close(fd);
+        *why = "no such file";
+        return NULL;
+    }
+    if (st.st_size > EM_FILES_MAX) {
+        close(fd);
+        *why = "too large";
+        return NULL;
+    }
+    size_t size = (size_t)st.st_size, got = 0;
+    char *content = malloc(size + 1);
+    while (content && got < size) {
+        ssize_t r = read(fd, content + got, size - got);
+        if (r <= 0)
+            break;
+        got += (size_t)r;
+    }
+    close(fd);
+    char digest[65];
+    if (content && got == size)
+        em_sha256_hex(content, size, digest);
+    if (!content || got != size || strcmp(digest, name)) {
+        *why = content && got == size ? "its content is not its name" : "unreadable";
+        free(content);
+        return NULL;
+    }
+    *len = size;
+    return content;
+}
+
+char *em_files_answer(const char *directory, const char *request, time_t now, size_t *len, int *status,
+                      char *note, size_t note_size)
+{
+    /* the request line: METHOD SP PATH SP VERSION */
+    char method[8] = "", path[200] = "";
+    const char *sp = strchr(request, ' '), *sp2 = sp ? strchr(sp + 1, ' ') : NULL, *eol = strpbrk(request, "\r\n");
+    bool parsed = sp && sp2 && (!eol || sp2 < eol) && (size_t)(sp - request) < sizeof(method) &&
+                  (size_t)(sp2 - sp - 1) < sizeof(path);
+    if (parsed) {
+        memcpy(method, request, (size_t)(sp - request));
+        method[sp - request] = 0;
+        memcpy(path, sp + 1, (size_t)(sp2 - sp - 1));
+        path[sp2 - sp - 1] = 0;
+        char *query = strchr(path, '?');
+        if (query)
+            *query = 0;
+    }
+    bool get = !strcmp(method, "GET"), head = !strcmp(method, "HEAD");
+    const char *why = NULL;
+    char *content = NULL;
+    size_t clen = 0;
+    int code = 404;
+    if (!parsed) {
+        code = 400;
+        why = "not a request";
+    } else if (!get && !head) {
+        code = 501;
+        why = "not GET or HEAD";
+    } else if (!strcmp(path, "/")) {
+        code = 200;
+    } else if (path[0] != '/') {
+        why = "not a path";
+    } else if ((content = em_files_servable(directory, path + 1, &clen, &why))) {
+        code = 200;
+    }
+    char date[40] = "", head_text[400];
+    struct tm tm;
+    if (!gmtime_r(&now, &tm) || !strftime(date, sizeof(date), "%a, %d %b %Y %H:%M:%S GMT", &tm))
+        date[0] = 0;
+    const char *phrase = code == 200 ? "OK" : code == 404 ? "Not Found" : code == 400 ? "Bad Request" : "Not Implemented";
+    (void)em_format(head_text, sizeof(head_text),
+                    "HTTP/1.0 %d %s\r\nServer: emosa-fleet\r\nDate: %s\r\nContent-Type: application/octet-stream\r\n"
+                    "Content-Length: %zu\r\nConnection: close\r\n\r\n",
+                    code, phrase, date, clen); /* fits: 400 bytes */
+    size_t h = strlen(head_text), body = get ? clen : 0;
+    char *out = malloc(h + body + 1);
+    if (out) {
+        memcpy(out, head_text, h);
+        if (body)
+            memcpy(out + h, content, body);
+        *len = h + body;
+    }
+    free(content);
+    *status = code;
+    if (code == 200 && !strcmp(path, "/"))
+        note[0] = 0;
+    else
+        (void)em_format(note, note_size, "%s %s: %d%s%s", method[0] ? method : "?", path[0] ? path : "?", code,
+                        why ? ", " : "", why ? why : ""); /* a log line, cut when long */
+    return out;
+}
+
 cJSON *em_agent_config(const em_fleet_entry *e, const cJSON *fleet)
 {
     cJSON *c = cJSON_CreateObject();
@@ -382,6 +545,10 @@ cJSON *em_agent_config(const em_fleet_entry *e, const cJSON *fleet)
     const cJSON *window = cJSON_GetObjectItemCaseSensitive(fleet, "topology_query_window");
     if (window)
         cJSON_AddItemToObject(c, "topology_query_window", cJSON_Duplicate(window, 1));
+    /* its modules' settings (spec 4), only when there are any */
+    cJSON *modules = em_module_settings(fleet, e->pod_id);
+    if (modules)
+        cJSON_AddItemToObject(c, "modules", modules);
     /* its underlay as a GRE parent (spec 8.6), while the fleet allocates them */
     if (e->underlay[0] && cJSON_GetObjectItemCaseSensitive(fleet, "gtp_underlay"))
         cJSON_AddStringToObject(c, "underlay", e->underlay);
@@ -460,6 +627,20 @@ bool em_fleet_open(em_fleet *f, cJSON *config, char *why, size_t size)
     }
     if (!em_copy(f->registry.gtp_underlay, sizeof(f->registry.gtp_underlay), config_text(config, "gtp_underlay", ""))) {
         (void)em_format(why, size, "gtp_underlay too long");
+        return false;
+    }
+    /* a module's update is a file the fleet serves (spec 4, the pods' modules) */
+    bool update = false;
+    const cJSON *own, *module;
+    cJSON_ArrayForEach(module, cJSON_GetObjectItemCaseSensitive(config, "modules"))
+        update = update || cJSON_GetObjectItemCaseSensitive(module, "update");
+    cJSON_ArrayForEach(own, cJSON_GetObjectItemCaseSensitive(config, "pods"))
+    {
+        cJSON_ArrayForEach(module, cJSON_GetObjectItemCaseSensitive(own, "modules"))
+            update = update || cJSON_GetObjectItemCaseSensitive(module, "update");
+    }
+    if (update && !cJSON_GetObjectItemCaseSensitive(config, "files")) {
+        (void)em_format(why, size, "a module's update needs the fleet's files");
         return false;
     }
     bool ok = reload(f);

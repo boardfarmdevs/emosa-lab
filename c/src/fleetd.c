@@ -12,9 +12,14 @@
  *
  * Without systemd (a router's busybox init: "agents": "supervised" in the configuration, or
  * EMOSA_AGENTS=supervised in the environment or /etc/default/emosa) the agents are the
- * fleet's own children instead of emosa-agent@ units (supervise.h, spec §4). */
+ * fleet's own children instead of emosa-agent@ units (supervise.h, spec §4).
+ *
+ * With "files" the loop also serves the pods' modules' files (spec 4, the pods' modules): plain
+ * HTTP on the advertise address, a few connections at a time, each answered at once from
+ * em_files_answer and closed. */
 #include <arpa/inet.h>
 #include <cjson/cJSON.h>
+#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>
@@ -222,9 +227,29 @@ typedef struct {
     em_json_scanner scan; /* where the scan of in stopped */
 } conn;
 
+/* -- the file server (spec 4, the pods' modules) ------------------------------------------ */
+
+#define HTTP_CONNS 8
+#define HTTP_REQUEST_MAX 2048 /* bytes of a request's head, more is not read */
+#define HTTP_TIMEOUT 10.0     /* seconds a connection has for its request and the answer */
+
+typedef struct {
+    int fd;
+    char peer[64];
+    char in[HTTP_REQUEST_MAX + 1];
+    size_t in_len;
+    char *out; /* the answer, once the request's head is in */
+    size_t out_len, out_off;
+    double deadline;
+} http_conn;
+
 typedef struct {
     em_fleet fleet;
     agents agents;
+    int files_fd; /* the file server's listener, -1 without */
+    const char *files_dir;
+    http_conn http[HTTP_CONNS];
+    size_t nhttp;
     int listener;
     char unix_path[sizeof(((struct sockaddr_un *)0)->sun_path)];
     conn *conns;
@@ -501,6 +526,107 @@ static void reap_orphans(server *s)
     }
 }
 
+/* The file server's listener on the advertise address, its files listed in the log; -1 without
+ * files, or when it cannot listen (logged: the fleet serves its pods without it). */
+static int files_open(server *s)
+{
+    const cJSON *files = cJSON_GetObjectItemCaseSensitive(s->fleet.config, "files");
+    s->files_dir = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(files, "directory"));
+    if (!s->files_dir)
+        return -1;
+    const cJSON *port = cJSON_GetObjectItemCaseSensitive(files, "port");
+    const char *advertise = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(s->fleet.config, "advertise"));
+    char name[320], unused[8];
+    int number = cJSON_IsNumber(port) ? port->valueint : EM_FILES_PORT;
+    int fd = advertise && em_format(name, sizeof(name), "ptcp:%d:%s", number, advertise) ? listen_on(name, unused, sizeof(unused)) : -1;
+    if (fd < 0) {
+        WARN("files: cannot serve on %s:%d: %s", advertise ? advertise : "?", number, strerror(errno));
+        return -1;
+    }
+    size_t served = 0;
+    DIR *dir = opendir(s->files_dir);
+    for (struct dirent *e = dir ? readdir(dir) : NULL; e; e = readdir(dir)) {
+        if (!strcmp(e->d_name, ".") || !strcmp(e->d_name, ".."))
+            continue;
+        size_t len;
+        const char *why = NULL;
+        char *content = em_files_servable(s->files_dir, e->d_name, &len, &why);
+        if (content)
+            served++;
+        else
+            WARN("files: %s not served: %s", e->d_name, why);
+        free(content);
+    }
+    if (dir)
+        closedir(dir);
+    LOG("files: %zu served from %s on %s:%d", served, s->files_dir, advertise, number);
+    return fd;
+}
+
+static void http_close(server *s, size_t i)
+{
+    close(s->http[i].fd);
+    free(s->http[i].out);
+    s->http[i] = s->http[--s->nhttp];
+}
+
+static void http_accept(server *s)
+{
+    while (s->nhttp < HTTP_CONNS) {
+        struct sockaddr_in sa;
+        socklen_t len = sizeof(sa);
+        int fd = accept(s->files_fd, (struct sockaddr *)&sa, &len);
+        if (fd < 0) {
+            if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
+                WARN("files: accept: %s", strerror(errno));
+            return;
+        }
+        int flags = fcntl(fd, F_GETFL);
+        if (flags == -1 || fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1 || fcntl(fd, F_SETFD, FD_CLOEXEC) == -1) {
+            close(fd);
+            continue;
+        }
+        http_conn *h = &s->http[s->nhttp++];
+        memset(h, 0, sizeof(*h));
+        h->fd = fd;
+        h->deadline = monotonic() + HTTP_TIMEOUT;
+        char host[INET_ADDRSTRLEN] = "";
+        (void)inet_ntop(AF_INET, &sa.sin_addr, host, sizeof(host));
+        EM_FORMAT_FIXED(h->peer, sizeof(h->peer), "%s", host); /* an IPv4 address */
+    }
+}
+
+/* one step of a file server connection: false when it is done (answered, or gone) */
+static bool http_step(server *s, http_conn *h, short revents)
+{
+    if (!h->out && (revents & (POLLIN | POLLHUP | POLLERR))) {
+        ssize_t r = recv(h->fd, h->in + h->in_len, HTTP_REQUEST_MAX - h->in_len, 0);
+        if (r == 0 || (r < 0 && errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR))
+            return false;
+        if (r > 0)
+            h->in_len += (size_t)r;
+        h->in[h->in_len] = 0;
+        if (strstr(h->in, "\r\n\r\n") || strstr(h->in, "\n\n") || h->in_len == HTTP_REQUEST_MAX) {
+            int status = 0;
+            char note[300];
+            h->out = em_files_answer(s->files_dir, h->in, time(NULL), &h->out_len, &status, note, sizeof(note));
+            if (!h->out)
+                return false;
+            if (note[0] && status == 200)
+                LOG("files: %s %s", h->peer, note);
+            else if (note[0])
+                WARN("files: %s %s", h->peer, note);
+        }
+    }
+    while (h->out && h->out_off < h->out_len) {
+        ssize_t w = send(h->fd, h->out + h->out_off, h->out_len - h->out_off, MSG_NOSIGNAL);
+        if (w < 0)
+            return errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR;
+        h->out_off += (size_t)w;
+    }
+    return !h->out;
+}
+
 static int serve(server *s)
 {
     const char *listen_name = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(s->fleet.config, "listen"));
@@ -523,7 +649,8 @@ static int serve(server *s)
         WARN("the fleet registry is unreadable: no agent started");
     else if (unstarted)
         WARN("%zu agents not started: their configurations not written", unstarted);
-    struct pollfd *p = em_calloc(s->concurrency + 1, sizeof(*p));
+    s->files_fd = files_open(s);
+    struct pollfd *p = em_calloc(s->concurrency + 2 + HTTP_CONNS, sizeof(*p));
     while (!stopping) {
         nfds_t n = 0;
         bool listening = s->nconns < s->concurrency; /* full: the others wait in the backlog */
@@ -537,6 +664,17 @@ static int serve(server *s)
                 wake = c->deadline;
             if ((c->child_running || c->ticket) && now + 0.05 < wake)
                 wake = now + 0.05; /* systemctl reaped, a supervised start seen, promptly */
+        }
+        /* the file server after the pods: its listener while a connection is free, then each one */
+        nfds_t files_at = n;
+        bool files_listening = s->files_fd >= 0 && s->nhttp < HTTP_CONNS;
+        if (files_listening)
+            p[n++] = (struct pollfd){s->files_fd, POLLIN, 0};
+        for (size_t i = 0; i < s->nhttp; i++) {
+            http_conn *h = &s->http[i];
+            p[n++] = (struct pollfd){h->fd, (short)(h->out ? POLLOUT : POLLIN), 0};
+            if (h->deadline < wake)
+                wake = h->deadline;
         }
         int timeout = wake > now ? (int)((wake - now) * 1000) + 1 : 0;
         if (poll(p, n, timeout) < 0 && errno != EINTR) {
@@ -569,7 +707,17 @@ static int serve(server *s)
         reap_orphans(s);
         if (listening && (p[0].revents & POLLIN))
             accept_pods(s);
+        size_t first_http = files_at + (files_listening ? 1 : 0), polled = s->nhttp;
+        for (size_t k = polled; k-- > 0;) /* newest first, as http_close moves the last into a gap */
+            if (!http_step(s, &s->http[k], p[first_http + k].revents) || monotonic() > s->http[k].deadline)
+                http_close(s, k);
+        if (files_listening && (p[files_at].revents & POLLIN))
+            http_accept(s);
     }
+    while (s->nhttp)
+        http_close(s, s->nhttp - 1);
+    if (s->files_fd >= 0)
+        close(s->files_fd);
     while (s->nconns)
         finish(s, s->nconns - 1, NULL);
     if (s->agents.sup) { /* the fleet's agents end with it; its next start starts them again */

@@ -16,7 +16,7 @@ the C follows until `emosa-vectors` passes again ([testing.md](testing.md)).
 | File | What | Reference | Tests |
 | --- | --- | --- | --- |
 | `agent.c` | `emosa-agent-c CONFIG.json`: one pod's agent. Configuration (schema `agent-config`), the poll loop over the pod's OVSDB connection, the 1905 socket and the MQTT broker, the onboarding session's states, the dispatch of every received message, the counters and the status file (schema `agent-status`) | `emosa.agent.pod`, `emosa.wire.onboarding` | box (every agent scenario), the labs |
-| `fleetd.c` | `emosa-fleet-c serve\|list\|forget`: the front port's poll loop, one state machine per arriving pod, `systemctl` as reaped children | `emosa.agent.fleet` (main) | box `fleet-*`, fuzz `fleet` |
+| `fleetd.c` | `emosa-fleet-c serve\|list\|forget`: the front port's poll loop, one state machine per arriving pod, `systemctl` as reaped children; with `files`, the file server's connections in the same loop | `emosa.agent.fleet` (main) | box `fleet-*`, fuzz `fleet` |
 | `gtpd.c` | `emosa-gtp-c setup\|lease\|reconcile\|list`: the GTP's command line, dnsmasq's lease hook | `emosa.gtp` (main) | box `gtp`, fuzz `gtp` |
 | `forwardd.c` | `emosa-forward-c CONFIG`: spec 3.1's forwarder on a gateway, the fleet's front and agent ports on its `advertise` address spliced to loopback; inert without `"forward": true` | none (deployment plumbing; the labs' containers use LXD proxies) | ctest `forward` |
 
@@ -63,6 +63,7 @@ the C follows until `emosa-vectors` passes again ([testing.md](testing.md)).
 | `scope_wired.c` | a wired pod's Ethernet uplink port bridged into br-home (`Connection_Manager_Uplink.bridge`, spec 8.4) | `emosa.opensync.wired`, `emosa.agent.wired` | vectors `scope-writes.json` |
 | `scope_gtp.c` | a legacy pod's station on the site's GTP BSS, written once per OpenSync start while it has no row, removed when it stays unassociated past its guard (spec 3.10) | `emosa.opensync.gtp_station`, `emosa.agent.gtp_station` | box `legacy-gtp-station`, `legacy-gtp-station-present`, `legacy-gtp-station-unassociated` |
 | `scope_plan.c` | a legacy pod's radio plan: the APs its profile does not name left on and neutral, their Inet rows off, the operator's cloud cleared (`qm`'s MQTT maps emptied, the statistics rows removed), its fronthaul radio on the profile's channel while wired, once per OpenSync start (spec 3.10, `radio_plan: emosa`) | `emosa.opensync.radio_plan`, `emosa.agent.radio_plan` | box `legacy-radio-plan`, `legacy-cloud-cleared` |
+| `scope_node.c` | a pod's modules' settings (a start-up hook's, say) as `Node_Config` rows once per OpenSync start, and their `Node_State` reports in the status with flags, their events logged once (spec 4, the pods' modules) | `emosa.opensync.node_config`, `emosa.agent.node_config` | box `node-config` |
 | `scope_gre_parent.c` | a GRE parent's tunnels to its children: a gre `Wifi_Inet_Config` row and a br-home port per child (spec 8.6) | `emosa.opensync.gre_parent`, `emosa.agent.gre_parent` | vectors `scope-writes.json` |
 | `peers.c` | the fleet's other agents as their statuses give them (spec 8.5): the peer directory beside the run directory, a backhaul BSS's owner, the no-loop rule; the agent's backhaul 1905 neighbors and link metrics use it | `emosa.agent.peers` | vectors `translation-northbound.json`; box `pod-child`, `pod-parent`, `pod-parent-loop` |
 | `channel_store.c` | the accepted channel policy's durable record | `emosa.wire.channel.ChannelPolicyStore` | box `channel-selection` |
@@ -71,7 +72,7 @@ the C follows until `emosa-vectors` passes again ([testing.md](testing.md)).
 
 | File | What | Reference | Tests |
 | --- | --- | --- | --- |
-| `fleet.c` | the fleet: admission, the registry (ports, interfaces, AL MACs), agent configurations, `forget` | `emosa.agent.fleet` | vectors `fleet.json`, `fleet-sessions.json`, box `fleet-*`, fuzz `fleet` |
+| `fleet.c` | the fleet: admission, the registry (ports, interfaces, AL MACs), agent configurations (the pods' modules' settings too), `forget`, the file server's answers | `emosa.agent.fleet` | vectors `fleet.json`, `fleet-sessions.json`, box `fleet-*`, fuzz `fleet` |
 | `gtp.c` | the GRE termination point: dnsmasq's configuration, a gretap per lease, reconciliation | `emosa.gtp` | vectors `gtp.json`, box `gtp`, fuzz `gtp` |
 | `proc.c` | running other programs without a shell (`systemctl`, `ip`), output captured | `subprocess` in the reference | box `fleet-*`, `gtp` |
 | `supervise.c` | without systemd (`"agents": "supervised"`): each pod's link helper and agent as the fleet's children, their environment files, restarts, stops, bounded logs | none (the reference refuses it) | units `environment_files`, `supervisor`; box `fleet-supervised` |

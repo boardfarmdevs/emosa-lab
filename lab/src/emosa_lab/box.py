@@ -468,6 +468,12 @@ OPERATOR_STATS = (
     },
 )
 CLOUD_COLUMNS = ("mqtt_headers", "mqtt_settings", "mqtt_topics")
+# spec 4, the pods' modules: a module of the pod's own (a hook, say) with a setting and an update,
+# the pod's Node_Config with a key the module no longer has and another module's row
+NODE_UPDATE = "b" * 64
+NODE_MODULES = {"hook": {"config": {"redirector": "auto"}, "update": NODE_UPDATE}}
+NODE_ROWS = (("hook", "stale", "x"), ("vendor", "level", "debug"))
+NODE_ADVERTISE = "192.0.2.1"
 
 
 class Box:
@@ -502,8 +508,11 @@ class Box:
         gtp_station=None,
         operator_cloud=False,
         stations_off=False,
+        modules=None,
     ):
         self.agent, self.directory, self.binary = agent, directory, binary
+        # modules: the fleet's modules (spec 4), the pod's Node_Config with NODE_ROWS beside
+        self.modules = modules
         # operator_cloud (legacy): the seed with its operator's cloud, qm's broker and headers and
         # two statistics rows (spec 3.10)
         self.operator_cloud = operator_cloud
@@ -593,6 +602,18 @@ class Box:
                     for r in OPERATOR_STATS
                 ),
             ]
+        if self.modules:
+            operations = [
+                *operations,
+                *(
+                    {
+                        "op": "insert",
+                        "table": "Node_Config",
+                        "row": {"module": m, "key": k, "value": v, "persist": True},
+                    }
+                    for m, k, v in NODE_ROWS
+                ),
+            ]
         if self.stations_off:
             for o in operations:
                 if (
@@ -672,6 +693,8 @@ class Box:
             fleet["uplink"] = {"mode": "ethernet"}
         if self.topology_query_window:
             fleet["topology_query_window"] = self.topology_query_window
+        if self.modules:  # the update's URL names the fleet's advertise address
+            fleet["modules"], fleet["advertise"] = self.modules, NODE_ADVERTISE
         if self.backhaul:  # option 1, its credentials from the agent's own configuration
             fleet["uplink"] = self.uplink or UPLINK
             secrets = state_root / self.serial / "secrets"
@@ -6125,6 +6148,112 @@ async def legacy_reseed_reclaim_late(box):
     return await legacy_reseed(box, away=RECONNECT_WINDOW + 5)
 
 
+def node_config_status(box):
+    return (box.status() or {}).get("node_config") or {}
+
+
+async def node_settings(box):
+    """The pod's Node_Config: {(module, key): (value, persist)}."""
+    return {
+        (r.get("module"), r.get("key")): (r.get("value"), r.get("persist"))
+        for r in (await box.rows("Node_Config")).values()
+    }
+
+
+async def node_report(box, **state):
+    """The hook's Node_State as it writes it: its rows replaced by one per key."""
+    old = [u for u, r in (await box.rows("Node_State")).items() if r.get("module") == "hook"]
+    await box.transact(
+        [
+            {"op": "delete", "table": "Node_State", "where": [["_uuid", "==", ["uuid", u]]]}
+            for u in old
+        ]
+        + [
+            {"op": "insert", "table": "Node_State", "row": {"module": "hook", "key": k, "value": v}}
+            for k, v in state.items()
+        ]
+    )
+
+
+async def node_config(box):
+    """spec 4, the pods' modules: the fleet's module "hook" (a setting, redirector auto, and an
+    update by its SHA-256) on a pod whose Node_Config has a key the module no longer has and
+    another module's row. The agent writes the module's rows in one guarded write, applied: its
+    setting, update_url (the fleet's file server) and update_sha256, persist true; the stale key
+    removed; the other module's row kept. The box plays the hook: its Node_State (state ok, boot,
+    version, the setting echoed, the update failed its check, three events). The status reports
+    them, the setting echoed, the flag update_failed; each event is logged once. The pod's
+    OpenSync starts again (a new database): the rows are written again on the new start."""
+
+    def operation():
+        return node_config_status(box).get("operation") or {}
+
+    first = await box.until(lambda: operation().get("state") == "OBSERVED_APPLIED" and operation())
+    if not first:
+        return box.result(
+            passed=False, failed="settings not applied", node_config=node_config_status(box)
+        )
+    settings = await node_settings(box)
+    url = f"http://{NODE_ADVERTISE}:6650/{NODE_UPDATE}"
+    wanted = {
+        ("hook", "redirector"): ("auto", True),
+        ("hook", "update_url"): (url, True),
+        ("hook", "update_sha256"): (NODE_UPDATE, True),
+        ("vendor", "level"): ("debug", True),
+    }
+    await node_report(
+        box,
+        state="ok",
+        boot_id="boot-1",
+        version="c" * 64,
+        running="c" * 64,
+        slot="tb",
+        redirector="auto",
+        update="failed:check",
+        update_sha256=NODE_UPDATE,
+        events="1 apply;2 emosa;3 update:failed:check",
+    )
+
+    def module():
+        hook = (node_config_status(box).get("modules") or {}).get("hook") or {}
+        return hook if hook.get("state") == "ok" else None
+
+    reported = await box.until(module, seconds=30)
+    await asyncio.sleep(3)  # a few more reads of the same report: nothing logged twice
+    log = (box.directory / "agent.log").read_text(errors="replace")
+    logged = [log.count(f"module hook: event {e}") for e in ("1 apply", "2 emosa", "3 update")]
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    continued = kept_reconnections(box)
+    await box.new_pod_database()
+    session = await back(box, searches, m1s, continued)
+
+    def again():
+        op = operation()
+        new = op.get("operation_id") != first.get("operation_id")
+        return op if new and op.get("state") == "OBSERVED_APPLIED" else None
+
+    second = await box.until(again, seconds=60)
+    rewritten = await node_settings(box)
+    return box.result(
+        passed=settings == wanted
+        and bool(reported)
+        and reported.get("settings_echoed") == ["redirector", "update_sha256"]
+        and reported.get("flags") == ["update_failed"]
+        and reported.get("version") == "c" * 64
+        and logged == [1, 1, 1]
+        and session is not None
+        and second is not None
+        and second.get("instance") != first.get("instance")
+        and {k: v for k, v in rewritten.items() if k[0] == "hook"}
+        == {k: v for k, v in wanted.items() if k[0] == "hook"},
+        settings=sorted([list(k), list(v)] for k, v in settings.items()),
+        reported=reported,
+        events_logged=logged,
+        session_after_restart=session,
+        rewritten=sorted([list(k), list(v)] for k, v in rewritten.items()),
+    )
+
+
 async def operator_cloud(box):
     """What of its operator's cloud the pod has: {AWLAN_Node's MQTT column: its map} for each not
     empty, and "Wifi_Stats_Config": the statistics rows' types when there are any."""
@@ -6301,6 +6430,7 @@ SCENARIOS = {
     "legacy-profile-5g": legacy_profile_5g,
     "legacy-gtp-station-unassociated": legacy_gtp_station_unassociated,
     "legacy-cloud-cleared": legacy_cloud_cleared,
+    "node-config": node_config,
 }
 OPTIONS = {  # the box each scenario needs beyond the default
     "write-lost-unapplied": {"reply_cut": "lost-write"},
@@ -6313,6 +6443,7 @@ OPTIONS = {  # the box each scenario needs beyond the default
     "unassociated": {"telemetry": True},
     "backhaul-capability": {"backhaul": True},
     "wired-stations-off": {"wired": True, "stations_off": True},
+    "node-config": {"modules": NODE_MODULES},
     "backhaul-steering": {"backhaul": True},
     "revert-by-record": {
         "backhaul": True,

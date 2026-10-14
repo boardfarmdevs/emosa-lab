@@ -9,6 +9,7 @@
  *
  * Leaves SCRATCH_DIR/journal-c (a journal the reference's tests read back). */
 #include <cjson/cJSON.h>
+#include <errno.h>
 #include <limits.h>
 #include <signal.h>
 #include <sqlite3.h>
@@ -698,6 +699,82 @@ static void fleet_secrets(const char *scratch)
     cJSON_Delete(config);
 }
 
+/* the pods' modules (spec 4): the agent's settings from the fleet's, the file server's answers */
+static void fleet_modules(const char *scratch)
+{
+    const char *sha = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    cJSON *fleet = cJSON_Parse("{\"advertise\": \"192.0.2.1\", \"files\": {\"directory\": \"/x\"},"
+                               " \"modules\": {\"hook\": {\"config\": {\"redirector\": \"auto\"}}},"
+                               " \"pods\": {\"POD1\": {\"modules\": {\"hook\": {\"config\": {\"z\": \"1\", \"redirector\": \"auto\"},"
+                               " \"update\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}, \"empty\": {}}}}}");
+    cJSON *own = em_module_settings(fleet, "POD1"), *other = em_module_settings(fleet, "POD2");
+    char *text = own ? cJSON_PrintUnformatted(own) : NULL;
+    char wanted[400];
+    snprintf(wanted, sizeof(wanted),
+             "{\"hook\":{\"redirector\":\"auto\",\"z\":\"1\",\"update_url\":\"http://192.0.2.1:6650/%s\",\"update_sha256\":\"%s\"}}",
+             sha, sha);
+    CHECK(text && !strcmp(text, wanted), "a pod's own modules, its update's url and sha: %s", text ? text : "none");
+    free(text);
+    text = other ? cJSON_PrintUnformatted(other) : NULL;
+    CHECK(text && !strcmp(text, "{\"hook\":{\"redirector\":\"auto\"}}"), "the fleet's for the others");
+    free(text);
+    cJSON_Delete(own);
+    cJSON_Delete(other);
+    cJSON_DeleteItemFromObjectCaseSensitive(fleet, "modules");
+    other = em_module_settings(fleet, "POD2");
+    CHECK(!other, "none without modules");
+    cJSON_Delete(fleet);
+    /* the file server: only a file named by its content's SHA-256 */
+    char dir[512], path[700];
+    snprintf(dir, sizeof(dir), "%s/files", scratch);
+    CHECK(mkdir(dir, 0700) == 0 || errno == EEXIST, "files directory");
+    const char *content = "#!/bin/sh\necho hook\n";
+    char digest[65];
+    em_sha256_hex(content, strlen(content), digest);
+    snprintf(path, sizeof(path), "%s/%s", dir, digest);
+    CHECK(em_write_file(path, content, false), "a served file");
+    snprintf(path, sizeof(path), "%s/%s", dir, sha);
+    CHECK(em_write_file(path, "not its name", false), "a misnamed file");
+    size_t len = 0;
+    int status = 0;
+    char note[300], request[200];
+    const char *why = NULL;
+    char *got = em_files_servable(dir, digest, &len, &why);
+    CHECK(got && len == strlen(content) && !memcmp(got, content, len), "servable");
+    free(got);
+    got = em_files_servable(dir, sha, &len, &why);
+    CHECK(!got && !strcmp(why, "its content is not its name"), "a content not its name");
+    got = em_files_servable(dir, "../files", &len, &why);
+    CHECK(!got && !strcmp(why, "not a SHA-256"), "not a SHA-256 name");
+    time_t when = 1791936000; /* Wed, 14 Oct 2026 00:00:00 GMT */
+    char *answer = em_files_answer(dir, "HEAD / HTTP/1.1\r\nHost: x\r\n\r\n", when, &len, &status, note, sizeof(note));
+    CHECK(answer && status == 200 && !note[0] && len > 0 &&
+              strstr(answer, "HTTP/1.0 200 OK\r\n") == answer && strstr(answer, "\r\nDate: Wed, 14 Oct 2026 00:00:00 GMT\r\n") &&
+              strstr(answer, "Content-Length: 0\r\n"),
+          "HEAD /: 200, the date, no body, not logged");
+    free(answer);
+    snprintf(request, sizeof(request), "GET /%s HTTP/1.1\r\n\r\n", digest);
+    answer = em_files_answer(dir, request, when, &len, &status, note, sizeof(note));
+    CHECK(answer && status == 200 && len > strlen(content) && !memcmp(answer + len - strlen(content), content, strlen(content)) &&
+              strstr(note, "GET /") == note,
+          "GET /<sha256>: the file, logged");
+    free(answer);
+    snprintf(request, sizeof(request), "HEAD /%s HTTP/1.1\r\n\r\n", digest);
+    answer = em_files_answer(dir, request, when, &len, &status, note, sizeof(note));
+    CHECK(answer && status == 200 && strstr(answer, "\r\n\r\n") + 4 == answer + len, "HEAD /<sha256>: no body");
+    free(answer);
+    snprintf(request, sizeof(request), "GET /%s HTTP/1.1\r\n\r\n", sha);
+    answer = em_files_answer(dir, request, when, &len, &status, note, sizeof(note));
+    CHECK(answer && status == 404 && strstr(answer, "\r\nDate: ") && strstr(note, "not its name"), "a misnamed file: 404");
+    free(answer);
+    answer = em_files_answer(dir, "POST / HTTP/1.1\r\n\r\n", when, &len, &status, note, sizeof(note));
+    CHECK(answer && status == 501, "another method: 501");
+    free(answer);
+    answer = em_files_answer(dir, "garbage", when, &len, &status, note, sizeof(note));
+    CHECK(answer && status == 400, "not a request: 400");
+    free(answer);
+}
+
 static void ethernet(void)
 {
     /* what is refused before any packet socket (the box opens real ones) */
@@ -1210,6 +1287,7 @@ int main(int argc, char **argv)
     channel_store(argv[2]);
     fleet_underlays();
     fleet_secrets(argv[2]);
+    fleet_modules(argv[2]);
     ethernet();
     schema_keywords(argv[2]);
     helpers(argv[2]);

@@ -8,6 +8,7 @@
 #define EMOSA_FLEET_H
 
 #include <cjson/cJSON.h>
+#include <time.h>
 
 #include "common.h"
 
@@ -61,6 +62,25 @@ cJSON *em_fleet_entry_json(const em_fleet_entry *e);
 cJSON *em_agent_config(const em_fleet_entry *e, const cJSON *fleet);
 /* Its file's text: json.dumps(indent=2) and a newline. */
 char *em_agent_config_text(const em_fleet_entry *e, const cJSON *fleet);
+
+/* fleet.module_settings (spec 4, the pods' modules): the agent configuration's modules from the
+ * fleet's (or the pod's own, pods.<serial>.modules): each module's settings, with update_url
+ * (http://<advertise>:<files.port>/<sha256>) and update_sha256 for its update; NULL when none. */
+cJSON *em_module_settings(const cJSON *fleet, const char *serial);
+
+/* The fleet's file server (spec 4, the pods' modules). em_files_servable: the file `name` of
+ * `directory` when it is served (a SHA-256 name; a regular file, not a link, of at most
+ * EM_FILES_MAX bytes whose content has that SHA-256): its content (malloc'd, its size in *len), or
+ * NULL with *why. em_files_answer: the whole HTTP response to one request (`request`, its head):
+ * GET or HEAD / is 200 with an empty body, /<sha256> a servable file, anything else 404 (501 for
+ * another method); every response with a Date header in GMT (`now`); malloc'd, its size in *len.
+ * *status is its status code; `note` says what was asked and answered, for the log ("" for a
+ * GET or HEAD / answered). */
+#define EM_FILES_PORT 6650
+#define EM_FILES_MAX (1024 * 1024)
+char *em_files_servable(const char *directory, const char *name, size_t *len, const char **why);
+char *em_files_answer(const char *directory, const char *request, time_t now, size_t *len, int *status,
+                      char *note, size_t note_size);
 
 /* The handover transaction: AWLAN_Node.manager_addr = tcp:<advertise>:<port>. */
 cJSON *em_manager_update(const em_fleet_entry *e, const cJSON *fleet);
