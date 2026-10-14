@@ -18,11 +18,13 @@ typedef struct {
     char claimed[EM_PLAN_CLAIMED][16]; /* sorted, as the reference's tuple(sorted(...)) */
     char band[8], ht_mode[17];
     int channel;
+    char neutral_ref[39]; /* EMOSA's own passphrase for the unclaimed APs: emosa-unclaimed */
 } em_plan_intent;
 
 typedef struct {
     em_ovsdb *ovs;
     const char *serial, *run_id;
+    const em_vault *vault; /* EMOSA's own passphrase for the unclaimed APs (em_vault_generated) */
     em_plan_intent intent;
     cJSON *(*transact)(void *ctx, const cJSON *operations);
     void *transact_ctx;
@@ -48,7 +50,8 @@ void em_plan_close(em_plan_scope *s);
 /* One step on the agent's refresh cadence. */
 void em_plan_tick(em_plan_scope *s);
 
-/* RadioPlan.status: {"unclaimed", "unclaimed_enabled", "channel", "wired", "waiting", "operation"}. */
+/* RadioPlan.status: {"unclaimed", "unclaimed_enabled", "unclaimed_inet_on", "unclaimed_exposed",
+ * "channel", "wired", "waiting", "operation"}. */
 cJSON *em_plan_status(em_plan_scope *s);
 
 #endif

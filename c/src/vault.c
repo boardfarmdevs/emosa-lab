@@ -207,6 +207,45 @@ em_reason em_vault_persist_received(const em_vault *v, const char *ref, const ch
     return v->backend.create(v, ref, (const uint8_t *)value, n) ? EM_OK : EM_INVALID_INPUT;
 }
 
+/* EMOSA's own credential reference: ^emosa-[a-z0-9-]{1,32}$ */
+static bool generated_ok(const char *s)
+{
+    size_t n = strlen(s);
+    if (n < 7 || n > 38 || strncmp(s, "emosa-", 6))
+        return false;
+    for (size_t i = 6; i < n; i++)
+        if (!((s[i] >= 'a' && s[i] <= 'z') || (s[i] >= '0' && s[i] <= '9') || s[i] == '-'))
+            return false;
+    return true;
+}
+
+char *em_vault_generated(const em_vault *v, const char *ref, em_reason *why)
+{
+    static const char alphabet[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    *why = EM_INVALID_INPUT;
+    if (!ref || !generated_ok(ref))
+        return NULL;
+    char *value = em_vault_resolve(v, ref, why);
+    if (value || *why != EM_MISSING_PREREQUISITE)
+        return value;
+    char made[33];
+    for (size_t i = 0; i < 32;) { /* 62 letters and digits, by rejection: no modulo bias */
+        uint8_t b[32];
+        if (RAND_bytes(b, sizeof(b)) != 1) {
+            *why = EM_MISSING_PREREQUISITE;
+            return NULL;
+        }
+        for (size_t k = 0; k < sizeof(b) && i < 32; k++)
+            if (b[k] < 248) /* 248 = 4 * 62 */
+                made[i++] = alphabet[b[k] % 62];
+        OPENSSL_cleanse(b, sizeof(b));
+    }
+    made[32] = 0;
+    (void)v->backend.create(v, ref, (const uint8_t *)made, 32); /* made meanwhile: that one stands */
+    OPENSSL_cleanse(made, sizeof(made));
+    return em_vault_resolve(v, ref, why);
+}
+
 bool em_vault_fingerprint_ref(em_vault *v, const char *ref, char out[65], em_reason *why)
 {
     for (size_t i = 0; ref && i < EM_VAULT_FINGERPRINTS; i++)

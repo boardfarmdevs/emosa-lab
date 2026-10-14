@@ -9,9 +9,11 @@ not name (its fronthaul and its slots) off, which takes its address and DHCP ser
 leaves its link to ``wm`` (OpenSync's inet_vif), and, while the pod is wired (its uplink in use an
 Ethernet port), the fronthaul radio on the profile's channel and ``ht_mode``. An AP is never
 disabled: the 2.4.3 pods' vendor healthcheck reboots a pod whose AP stops beaconing (14
-October). A station is never touched, nor a VIF the profile names. Applied when, on the same
-start, those APs' Inet rows are off and the radio is on the profile's channel (or the pod not
-wired, its radio then its upstream's, which ``wm`` follows).
+October). Each such AP is neutralized instead: hidden, out of any bridge, on EMOSA's own
+passphrase (a per-pod ``emosa-`` secret, never logged), so the operator's credentials admit no
+one and it still beacons. A station is never touched, nor a VIF the profile names. Applied when,
+on the same start, those APs are neutral, their Inet rows off and the radio on the profile's
+channel (or the pod not wired, its radio then its upstream's, which ``wm`` follows).
 """
 
 import json
@@ -22,13 +24,17 @@ from emosa.clock import utc_now
 from emosa.errors import EmosaError, Reason
 from emosa.model import Observation
 from emosa.opensync.mapping import check_results, where_uuid
-from emosa.opensync.uplink import start_instance
+from emosa.opensync.uplink import credential_key, start_instance
 
 MODE = "opensync-2.0-radio-plan"
+NEUTRAL_REF = "emosa-unclaimed"
 PROVENANCE = "opensync-wm:Wifi_VIF_State+Wifi_Radio_Config"
 # What the scope monitors beyond the AP scope's tables (emosa.opensync.schema.TABLES): the radio's
 # channel and width, which its guard compares, and the Inet rows' and cm's columns it reads
 MONITOR = {
+    "Wifi_VIF_Config": [
+        "ssid_broadcast"
+    ],  # an unclaimed AP neutral: hidden (with bridge, security)
     "Wifi_Radio_Config": ["channel", "ht_mode"],
     "Wifi_Inet_Config": ["if_name", "enabled"],
     "Connection_Manager_Uplink": ["if_name", "if_type", "is_used"],
@@ -46,6 +52,7 @@ class RadioPlanIntent:
     band: str
     channel: int
     ht_mode: str
+    neutral_ref: str = NEUTRAL_REF  # EMOSA's own passphrase for the unclaimed APs
 
     def record(self):
         return {
@@ -54,6 +61,7 @@ class RadioPlanIntent:
             "band": self.band,
             "channel": self.channel,
             "ht_mode": self.ht_mode,
+            "neutral_ref": self.neutral_ref,
         }
 
     def validate(self):
@@ -66,7 +74,27 @@ class RadioPlanIntent:
 
     def target(self, vault=None):
         self.validate()
-        return {"unclaimed_inet_on": [], "radio_planned": True}
+        return {"unclaimed_inet_on": [], "unclaimed_exposed": [], "radio_planned": True}
+
+
+def neutral_row(key):
+    """An unclaimed AP made neutral: hidden, in no bridge, on ``key`` (WPA2-PSK, the security
+    map); still enabled, so it beacons."""
+    return {
+        "security": ["map", [["encryption", "WPA-PSK"], ["key", key]]],
+        "ssid_broadcast": "disabled",
+        "bridge": "",
+    }
+
+
+def neutral(row, key):
+    """The decoded AP row already neutral (``neutral_row``)."""
+    bridge = row.get("bridge")
+    return (
+        row.get("ssid_broadcast") == "disabled"
+        and bridge in (None, "", [])
+        and credential_key(row) == key
+    )
 
 
 def optional(value):
@@ -79,8 +107,9 @@ class RadioPlanBackend:
 
     mode = MODE
 
-    def __init__(self, pod_id, session, *, serial, intent):
+    def __init__(self, pod_id, session, vault, *, serial, intent):
         self.pod_id, self.session, self.expected_serial = pod_id, session, serial
+        self.vault = vault
         self.intent = intent
         self.instance = None
         self.last = None
@@ -104,7 +133,8 @@ class RadioPlanBackend:
         return decoded, next(iter(nodes))
 
     def _changes(self, decoded, intent):
-        """What the plan writes now: the unclaimed APs' Inet rows on ((uuid, if_name) each), and the
+        """What the plan writes now: the unclaimed APs not neutral ((uuid, if_name) each: hidden,
+        in no bridge, on EMOSA's own passphrase), their Inet rows on ((uuid, if_name)), and the
         radio ((uuid, row) or None: wired and not on the profile's channel). And the configured
         view, with the unclaimed APs on in their Config or State (left on)."""
         claimed = set(intent.claimed)
@@ -125,6 +155,8 @@ class RadioPlanBackend:
             for u, r in decoded.get("Wifi_Inet_Config", {}).items()
             if r.get("if_name") in names and r.get("enabled") is True
         )
+        key = self.vault.generated(intent.neutral_ref)
+        exposed = [(n, u) for n, u in aps if not neutral(decoded["Wifi_VIF_Config"][u], key)]
         radios = [
             (u, r)
             for u, r in decoded.get("Wifi_Radio_Config", {}).items()
@@ -142,6 +174,7 @@ class RadioPlanBackend:
             intent.ht_mode,
         )
         changes = (
+            [(u, n) for n, u in exposed],
             [(u, n) for n, u in inets],
             radio if wired and radio[0] is not None and not on_plan else None,
         )
@@ -149,11 +182,12 @@ class RadioPlanBackend:
             "unclaimed": sorted(names),
             "unclaimed_enabled": sorted(configs | states),
             "unclaimed_inet_on": sorted(n for n, _ in inets),
+            "unclaimed_exposed": sorted(n for n, _ in exposed),
             "channel": radio[1].get("channel"),
             "ht_mode": radio[1].get("ht_mode"),
             "wired": wired,
             "radio_planned": not wired or on_plan,
-            "pending": bool(changes[0] or changes[1]),
+            "pending": bool(changes[0] or changes[1] or changes[2]),
         }
         return changes, configured
 
@@ -198,14 +232,18 @@ class RadioPlanBackend:
         decoded, _ = self._binding(raw)
         if not raw["ready"]:
             raise EmosaError(Reason.NOT_READY, "the pod's database is not ready")
-        (inets, radio), _ = self._changes(decoded, intent)
+        (exposed, inets, radio), _ = self._changes(decoded, intent)
         return {
             "mapping": MODE,
             "action": "radio-plan",
+            "neutralize": [n for _, n in exposed],
             "inet_off": [n for _, n in inets],
             "channel": None if radio is None else intent.channel,
             "instance": self.instance,
             "fields": [
+                "Wifi_VIF_Config.security",
+                "Wifi_VIF_Config.ssid_broadcast",
+                "Wifi_VIF_Config.bridge",
                 "Wifi_Inet_Config.enabled",
                 "Wifi_Radio_Config.channel",
                 "Wifi_Radio_Config.ht_mode",
@@ -215,8 +253,8 @@ class RadioPlanBackend:
 
     def transaction(self, intent, decoded, node_uuid):
         """The guarded write: its operations and the counts each must match (None: no write)."""
-        (inets, radio), _ = self._changes(decoded, intent)
-        if not (inets or radio):
+        (exposed, inets, radio), _ = self._changes(decoded, intent)
+        if not (exposed or inets or radio):
             return None, None
         operations = [
             {
@@ -230,6 +268,26 @@ class RadioPlanBackend:
             }
         ]
         counts = [None]
+        key = self.vault.generated(intent.neutral_ref)
+        for uuid, name in exposed:
+            operations += [
+                {
+                    "op": "wait",
+                    "table": "Wifi_VIF_Config",
+                    "where": where_uuid(uuid),
+                    "columns": ["if_name", "mode"],
+                    "until": "==",
+                    "rows": [{"if_name": name, "mode": "ap"}],
+                    "timeout": 0,
+                },
+                {
+                    "op": "update",
+                    "table": "Wifi_VIF_Config",
+                    "where": where_uuid(uuid),
+                    "row": neutral_row(key),
+                },
+            ]
+            counts += [None, 1]
         for uuid, name in inets:
             operations += [
                 {

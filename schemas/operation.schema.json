@@ -497,6 +497,11 @@
               "type": "string",
               "minLength": 1,
               "maxLength": 16
+            },
+            "neutral_ref": {
+              "description": "EMOSA's own passphrase for the unclaimed APs, by reference (absent in records made before it: emosa-unclaimed)",
+              "type": "string",
+              "pattern": "^emosa-[a-z0-9-]{1,32}$"
             }
           },
           "required": [
