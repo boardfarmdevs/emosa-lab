@@ -53,6 +53,9 @@ class PodProfile:
     schema: str = "opensync-6.6"
     # a legacy pod's WAN bridge, the one its cm puts the uplink port in (spec 8.4)
     wan_bridge: str = "br-wan"
+    # a legacy pod's radio plan (spec 3.10): "pod", left as its seed brings it back, or "emosa",
+    # the APs the profile does not name disabled and the fronthaul radio on the profile's channel
+    radio_plan: str = "pod"
 
     @property
     def backhaul_row(self):
@@ -99,6 +102,11 @@ def load(ref=DEFAULT):
         raise EmosaError(
             Reason.INVALID_INPUT, f"pod profile {data['id']}: a legacy pod's backhaul is gre-parent"
         )
+    if data.get("radio_plan", "pod") != "pod" and data.get("schema") != "opensync-2.0":
+        # a 6.6 pod's seed is its own bootstrap's, which EMOSA does not take over
+        raise EmosaError(
+            Reason.INVALID_INPUT, f"pod profile {data['id']}: radio_plan is a legacy pod's"
+        )
     return PodProfile(
         data["id"],
         data["radio"]["band"],
@@ -120,4 +128,5 @@ def load(ref=DEFAULT):
         tuple((s["if_name"], s["band"]) for s in data["extra_slots"] if "band" in s),
         data.get("schema", "opensync-6.6"),
         data.get("wan_bridge", "br-wan"),
+        data.get("radio_plan", "pod"),
     )

@@ -46,6 +46,11 @@ em_reason em_profile_load(const char *path, em_profile *out)
     out->legacy = schema && !strcmp(schema, "opensync-2.0");
     const char *wan = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(d, "wan_bridge"));
     out->wan_bridge = wan ? wan : "br-wan";
+    /* a legacy pod's radio plan (spec 3.10): "emosa", or "pod" (the default) */
+    const char *plan = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(d, "radio_plan"));
+    out->radio_plan = plan && !strcmp(plan, "emosa");
+    if (out->radio_plan && !out->legacy)
+        goto invalid; /* a 6.6 pod's seed is its own bootstrap's */
     const cJSON *band_station;
     cJSON_ArrayForEach(band_station, cJSON_GetObjectItemCaseSensitive(
                                          cJSON_GetObjectItemCaseSensitive(d, "uplink"), "stations"))

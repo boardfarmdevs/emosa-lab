@@ -64,6 +64,7 @@
     },
     "inet": {"$ref": "#/$defs/row"},
     "wan_bridge": {"$ref": "#/$defs/if_name", "description": "A legacy pod's WAN bridge (spec 8.4), the one its cm puts the Ethernet uplink port in; the patch pair joins it to the fronthaul's bridge. br-wan when absent."},
+    "radio_plan": {"enum": ["pod", "emosa"], "description": "A legacy pod's radio plan (spec 3.10): pod (the default), left as the pod's seed brings it back; emosa, every AP VIF the profile does not name disabled with its Inet row, and the fronthaul radio on the profile's channel while the pod is wired, once per start."},
     "schema": {"enum": ["opensync-6.6", "opensync-2.0"], "description": "The pod's database generation (spec 3.10): opensync-6.6 (the default) or opensync-2.0, a legacy pod with no wpa_* columns or multi_ap, its WPA2-PSK in the security map and its BSS roles from the profile's slots."},
     "backhaul_mode": {"enum": ["multi-ap", "gre-parent"], "description": "How the pod's radios carry a backhaul BSS of the controller's M2 set: a Multi-AP 4-address BSS (spec 8.5, the default) or a parent AP its children reach by GRE (spec 8.6)."},
     "gre_parent": {

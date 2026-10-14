@@ -47,6 +47,7 @@
 #include "scope_telemetry.h"
 #include "scope_gre_parent.h"
 #include "scope_gtp.h"
+#include "scope_plan.h"
 #include "scope_wired.h"
 #include "scope_uplink.h"
 #include "scope_watch.h"
@@ -270,6 +271,8 @@ typedef struct {
     em_wired_scope wired;
     bool gtp_on;                /* the GTP station scope (emosa.agent.gtp_station): uplink.bootstrap */
     em_gtp_scope gtp;
+    bool plan_on;               /* the radio plan scope (emosa.agent.radio_plan): profile radio_plan emosa */
+    em_plan_scope plan;
     em_gre_scope *gre;          /* a GRE parent's tunnels (emosa.agent.gre_parent, spec 8.6); NULL: none */
     em_bh_shared bh_shared;     /* Backhaul Steering under way: the agent's, across sessions */
     em_bh_coordinator bh;
@@ -2392,6 +2395,7 @@ static cJSON *status(agent *a)
     cJSON_AddItemToObject(o, "probe_watch", a->watch_on ? em_watch_status(&a->watch) : cJSON_CreateNull());
     cJSON_AddItemToObject(o, "gre_parent", a->gre ? em_gre_status(a->gre) : cJSON_CreateNull());
     cJSON_AddItemToObject(o, "gtp_station", a->gtp_on ? em_gtp_status(&a->gtp) : cJSON_CreateNull());
+    cJSON_AddItemToObject(o, "radio_plan", a->plan_on ? em_plan_status(&a->plan) : cJSON_CreateNull());
     cJSON_AddNumberToObject(o, "writes", a->writes);
     cJSON_AddNumberToObject(o, "worker_pid", getpid());
     struct timespec ts;
@@ -2608,6 +2612,15 @@ static bool configure(agent *a, const char *path, const char *profiles)
         a->wired.legacy = a->profile.legacy;
         if (!em_copy(a->wired.wan_bridge, sizeof(a->wired.wan_bridge), a->profile.wan_bridge)) {
             FAIL("profile: wan_bridge must be an interface name");
+            return false;
+        }
+    }
+    /* spec 3.10, the radio plan: the APs the profile does not name off, its radio on its channel */
+    a->plan_on = a->profile.radio_plan;
+    if (a->plan_on) {
+        em_reason why;
+        if (!em_plan_intent_from(cfg_str(c, "pod_id"), &a->profile, &a->plan.intent, &why)) {
+            FAIL("profile: radio_plan needs the profile's VIF names, band, channel and ht_mode");
             return false;
         }
     }
@@ -2913,6 +2926,18 @@ int main(int argc, char **argv)
             return 1;
         }
     }
+    if (a.plan_on) {
+        a.plan.ovs = a.ovs;
+        a.plan.serial = a.serial;
+        a.plan.run_id = a.run_id;
+        a.plan.transact = transact;
+        a.plan.transact_ctx = &a;
+        em_reason why = em_plan_open(&a.plan, a.state_dir, &a.schemas, &a.vault, now);
+        if (why != EM_OK) {
+            FAIL("radio plan journal: %s", em_reason_name(why));
+            return 1;
+        }
+    }
     /* EMOSA_NETNS (/etc/default/emosa): the agents' interfaces in a namespace of their own */
     if (em_ethernet_open_in(&a.eth, getenv("EMOSA_NETNS"), a.interface, a.al) != EM_OK) {
         FAIL("cannot open the 1905 interface %s with MAC %s", a.interface, cfg_str(a.config, "al_mac"));
@@ -2985,6 +3010,8 @@ int main(int argc, char **argv)
             em_wired_tick(&a.wired);
         if (refreshed && a.gtp_on)
             em_gtp_tick(&a.gtp);
+        if (refreshed && a.plan_on)
+            em_plan_tick(&a.plan);
         if (refreshed && a.gre)
             em_gre_tick(a.gre);
         if (refreshed && a.telemetry_on)
@@ -3017,6 +3044,8 @@ int main(int argc, char **argv)
         em_wired_close(&a.wired);
     if (a.gtp_on)
         em_gtp_close(&a.gtp);
+    if (a.plan_on)
+        em_plan_close(&a.plan);
     if (a.gre) {
         em_gre_close(a.gre);
         free(a.gre);

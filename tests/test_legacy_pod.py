@@ -497,3 +497,100 @@ def test_a_gtp_station_intent_is_refused_without_a_valid_ssid_or_pin():
         with pytest.raises(EmosaError) as refused:
             bad.validate()
         assert refused.value.code == Reason.INVALID_INPUT
+
+
+# spec 3.10, the radio plan (radio_plan emosa): the seed's unclaimed APs off, the radio planned
+OP_AP1, OP_AP2, OP_INET, OP_STATE = (
+    f"00000000-0000-4000-8000-0000000005{n}" for n in ("01", "02", "03", "04")
+)
+
+
+class OperatorPod(SeededPod):
+    """The seed with the operator's APs on wl0 (wl0.1 with its own Inet row on) and wl1 on
+    channel 1 at HT40, beside the profile's own VIFs and the GTP station."""
+
+    def __init__(self):
+        super().__init__()
+        self.tables["Wifi_Radio_Config"][RADIO].update({"channel": 1, "ht_mode": "HT40"})
+        self.tables["Wifi_VIF_Config"] = {
+            OP_AP1: {"if_name": "wl0.1", "mode": "ap", "enabled": True},
+            OP_AP2: {"if_name": "wl0.2", "mode": "ap", "enabled": True},
+            VIF: {"if_name": "wl1.2", "mode": "ap", "enabled": True},
+            GTP_STA: {"if_name": "wl1", "mode": "sta", "enabled": True},
+        }
+        self.tables["Wifi_VIF_State"] = {OP_STATE: {"if_name": "wl0.1", "enabled": True}}
+        self.tables["Wifi_Inet_Config"][OP_INET] = {"if_name": "wl0.1", "enabled": True}
+
+
+def radio_plan(pod):
+    from emosa.opensync.radio_plan import RadioPlanBackend, RadioPlanIntent
+
+    intent = RadioPlanIntent("pod-1", ("wl1.1", "wl1.2"), "2.4G", 6, "HT20")
+    return RadioPlanBackend("pod-1", pod, serial=SERIAL, intent=intent), intent
+
+
+def test_the_radio_plan_disables_only_unclaimed_aps_and_plans_the_wired_radio():
+    pod = OperatorPod()
+    backend, intent = radio_plan(pod)
+    config = asyncio.run(backend.snapshot()).config
+    assert config["unclaimed"] == ["wl0.1", "wl0.2"] and config["pending"] is True
+    assert config["wired"] is True and config["radio_planned"] is False
+    attempt = {"transaction_id": "t1", "session_generation": 1}
+    assert asyncio.run(backend.submit(intent, attempt)).status == "committed"
+    (ops,) = pod.sent
+    updates = [(op["table"], op["where"], op["row"]) for op in ops if op["op"] == "update"]
+    assert updates == [
+        ("Wifi_VIF_Config", [["_uuid", "==", ["uuid", OP_AP1]]], {"enabled": False}),
+        ("Wifi_VIF_Config", [["_uuid", "==", ["uuid", OP_AP2]]], {"enabled": False}),
+        ("Wifi_Inet_Config", [["_uuid", "==", ["uuid", OP_INET]]], {"enabled": False}),
+        (
+            "Wifi_Radio_Config",
+            [["_uuid", "==", ["uuid", RADIO]]],
+            {"channel": 6, "ht_mode": "HT20"},
+        ),
+    ]  # never the station wl1 nor the profile's wl1.2
+    radio_wait = [op for op in ops if op["op"] == "wait" and op["table"] == "Wifi_Radio_Config"]
+    assert radio_wait[0]["rows"] == [{"if_name": "wl1", "channel": 1, "ht_mode": "HT40"}]
+
+
+def test_the_radio_plan_leaves_the_radio_to_its_station_when_not_wired():
+    pod = OperatorPod()
+    pod.tables["Connection_Manager_Uplink"][UPLINK] = {
+        "if_name": "g-wl1",
+        "if_type": "gre",
+        "is_used": True,
+    }
+    backend, intent = radio_plan(pod)
+    config = asyncio.run(backend.snapshot()).config
+    assert config["wired"] is False and config["radio_planned"] is True
+    attempt = {"transaction_id": "t1", "session_generation": 1}
+    asyncio.run(backend.submit(intent, attempt))
+    (ops,) = pod.sent
+    assert not [op for op in ops if op["table"] == "Wifi_Radio_Config"]
+
+
+def test_a_planned_pod_has_nothing_to_write():
+    pod = OperatorPod()
+    for uuid in (OP_AP1, OP_AP2):
+        pod.tables["Wifi_VIF_Config"][uuid]["enabled"] = False
+    pod.tables["Wifi_VIF_State"][OP_STATE]["enabled"] = False
+    pod.tables["Wifi_Inet_Config"][OP_INET]["enabled"] = False
+    pod.tables["Wifi_Radio_Config"][RADIO].update({"channel": 6, "ht_mode": "HT20"})
+    backend, intent = radio_plan(pod)
+    config = asyncio.run(backend.snapshot()).config
+    assert config["pending"] is False
+    assert all(config.get(k) == v for k, v in intent.target().items())
+
+
+def test_a_6_6_profile_may_not_take_the_radio_plan(tmp_path):
+    from importlib.resources import files
+
+    data = json.loads(
+        files("emosa").joinpath("profiles/opensync-lab-hwsim-6.6.1-v1.json").read_text()
+    )
+    data["radio_plan"] = "emosa"
+    path = tmp_path / "plan.json"
+    path.write_text(json.dumps(data))
+    with pytest.raises(EmosaError) as refused:
+        load_profile(str(path))
+    assert refused.value.code == Reason.INVALID_INPUT

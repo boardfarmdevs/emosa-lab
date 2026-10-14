@@ -641,6 +641,28 @@ is everything above. For a legacy pod, all of this specification applies, except
 
   Both agents. Box `legacy-gtp-station` (the seed, then the Ethernet lost) and
   `legacy-gtp-station-present` (a station already there, left alone).
+- **The radio plan** (profile `radio_plan: emosa`, a legacy profile's choice; `pod`, the
+  default, leaves it alone). The vendor's seed brings back, at every start, the operator's APs
+  on every radio, some with their own address and DHCP server, and the radios' channels as the
+  operator left them. With `radio_plan: emosa`, the pod's radio plan is EMOSA's, as a
+  controller's is:
+  - **Unclaimed APs.** Every `mode=ap` `Wifi_VIF_Config` row that no VIF of the profile names
+    (its fronthaul and its slots, on any radio) is disabled (`enabled=false`), and so is its
+    `Wifi_Inet_Config` row, which stops its DHCP server. A station is never touched, whoever
+    wrote it (the GTP station, a start-up hook's), nor a VIF the profile names.
+  - **The fronthaul radio's channel.** The profile's `radio.channel` and `ht_mode` are written
+    on the fronthaul's radio while the uplink in use is not its station (the pod wired). On its
+    Wi-Fi uplink, `wm` moves the radio to its upstream's channel, which a legacy profile then
+    shares (the GTP BSS on channel 6).
+  - **Write:** once per start of the pod's OpenSync, in one guarded transaction: `wait` on the
+    serial and on each changed row as it is (`if_name`, `mode` and `enabled` of a VIF;
+    `if_name` and `enabled` of an Inet row; `if_name`, `channel` and `ht_mode` of the radio),
+    then each `update`. Nothing is written when nothing differs. **Applied** when, on the same
+    start, every unclaimed AP is disabled in its Config and its State, its Inet row too, and
+    the radio's Config has the profile's channel. Not repeated on that start, even when a row
+    is enabled again: the next start writes it again.
+
+  Both agents. Box `legacy-radio-plan`.
 - **Not served** on a legacy pod, refused at the agent's start
   (`INVALID_INPUT`) or turned off and said so in the status:
   the uplink switch onto a Multi-AP backhaul (§8.3: no Multi-AP station on such a

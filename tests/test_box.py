@@ -701,6 +701,12 @@ def test_a_legacy_station_already_there_is_left_alone(agent, tmp_path):
     assert result["passed"], result
 
 
+def test_a_legacy_pods_radio_plan_is_emosas_once_per_start(agent, tmp_path):
+    # spec 3.10, radio_plan emosa: the seed's operator APs off, wl1 on 6; stations never touched
+    result = box("legacy-radio-plan", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+
+
 def test_a_legacy_pods_5ghz_radio_serves_its_own_fronthaul(agent, tmp_path):
     # spec 3.10, 9: bcm-pod-2.4.3-gre-5g-v1, the backhaul staying on 2.4 GHz
     result = box("legacy-5g-fronthaul", agent, tmp_path / "box", timeout=240)

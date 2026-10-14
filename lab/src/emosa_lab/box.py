@@ -795,6 +795,8 @@ class Box:
         self.db = SimDatabase(schema=self.schema, generation=old.generation)
         await self.db.start()
         await self.transact(operations)
+        if self.ethernet_first:  # the same legacy pod again, as its seed has it
+            await self.transact(ethernet_first(self.ethernet_first))
         await dial(self.db, f"tcp:127.0.0.1:{AGENT_PORT}")
 
     def result(self, **extra):
@@ -4886,6 +4888,75 @@ GTP_SSID, GTP_KEY = "emosa-lab-gtp", "OnlySimulationGtp2026!"
 
 
 OPERATOR_CREDENTIALS = ("operator-bh-1", "operator-bh-2")  # a seed's onboarding, unlinked
+# the operator's APs a seed brings back on the 5 GHz radio, which no legacy profile names
+OPERATOR_APS = {"wl0.1": "operator-bh-1", "wl0.2": "operator-home"}
+
+
+def operator_aps():
+    """The operator's APs as a vendor's seed has them, applied by its wm: wl0.1, a hidden
+    backhaul AP with its own address and DHCP server (169.254.3.1/24), and wl0.2, a home AP in
+    br-home; and wl1 on channel 1 at HT40, as the operator left it."""
+    operations = []
+    for index, (name, ssid) in enumerate(OPERATOR_APS.items(), start=1):
+        tag = name.replace(".", "_")
+        row = {
+            "if_name": name,
+            "mode": "ap",
+            "enabled": True,
+            "ssid": ssid,
+            "vif_radio_idx": index,
+            "security": ["map", [["encryption", "WPA-PSK"], ["key", "operator-key"]]],
+        }
+        if name == "wl0.2":
+            row["bridge"] = "br-home"
+        operations += [
+            {"op": "insert", "table": "Wifi_VIF_Config", "uuid-name": f"c_{tag}", "row": row},
+            {
+                "op": "insert",
+                "table": "Wifi_VIF_State",
+                "uuid-name": f"s_{tag}",
+                "row": {
+                    **{k: row[k] for k in ("if_name", "mode", "enabled", "ssid")},
+                    "mac": f"02:00:00:00:40:0{index}",
+                    "vif_config": ["named-uuid", f"c_{tag}"],
+                },
+            },
+            {
+                "op": "mutate",
+                "table": "Wifi_Radio_Config",
+                "where": [["if_name", "==", "wl0"]],
+                "mutations": [["vif_configs", "insert", ["set", [["named-uuid", f"c_{tag}"]]]]],
+            },
+            {
+                "op": "mutate",
+                "table": "Wifi_Radio_State",
+                "where": [["if_name", "==", "wl0"]],
+                "mutations": [["vif_states", "insert", ["set", [["named-uuid", f"s_{tag}"]]]]],
+            },
+        ]
+    operations += [
+        {
+            "op": "insert",
+            "table": "Wifi_Inet_Config",
+            "row": {
+                "if_name": "wl0.1",
+                "if_type": "vif",
+                "enabled": True,
+                "network": True,
+                "ip_assign_scheme": "static",
+                "inet_addr": "169.254.3.1",
+                "netmask": "255.255.255.0",
+                "dhcpd": ["map", [["start", "169.254.3.2"], ["stop", "169.254.3.254"]]],
+            },
+        },
+        {
+            "op": "update",
+            "table": "Wifi_Radio_Config",
+            "where": [["if_name", "==", "wl1"]],
+            "row": {"channel": 1, "ht_mode": "HT40"},
+        },
+    ]
+    return operations
 
 
 def ethernet_first(kind):
@@ -4954,6 +5025,14 @@ def ethernet_first(kind):
                 },
             }
         )
+        operations.append(  # wl1 where the legacy profile has it
+            {
+                "op": "update",
+                "table": "Wifi_Radio_Config",
+                "where": [["if_name", "==", "wl1"]],
+                "row": {"channel": 6, "ht_mode": "HT20"},
+            }
+        )
         operations += [
             {
                 "op": "insert",
@@ -4966,6 +5045,8 @@ def ethernet_first(kind):
             }
             for ssid in OPERATOR_CREDENTIALS
         ]
+    if kind == "operator":  # the seed with the operator's APs on wl0 and wl1 on channel 1
+        operations += operator_aps()
     for name, peer, bridge, tag in (
         ("patch-w2h", "patch-h2w", "br-wan", "w2h"),
         ("patch-h2w", "patch-w2h", "br-home", "h2w"),
@@ -5245,6 +5326,119 @@ async def legacy_gtp_station(box):
     )
 
 
+def radio_plan_operation(box):
+    return ((box.status() or {}).get("radio_plan") or {}).get("operation") or {}
+
+
+async def radio_plan_applied(box):
+    """Drive the pod's managers until the agent's radio plan of this start is applied: its
+    disabled VIFs' State follows their Config, as wm's does. The operation, or None."""
+    deadline = time.monotonic() + 60
+    while time.monotonic() < deadline and box.process.poll() is None:
+        await apply_configuration(box.db)
+        operation = radio_plan_operation(box)
+        if operation.get("state") == "OBSERVED_APPLIED":
+            return operation
+        await asyncio.sleep(0.5)
+    return None
+
+
+async def radio_plan_rows(box):
+    """{if_name: (Config enabled, State enabled)} of the pod's VIFs, the Inet rows' enabled, and
+    wl1's channel and ht_mode."""
+    configs, states = await box.rows("Wifi_VIF_Config"), await box.rows("Wifi_VIF_State")
+    state = {r.get("if_name"): r.get("enabled") for r in states.values()}
+    radios = await box.rows("Wifi_Radio_Config")
+    wl1 = next((r for r in radios.values() if r.get("if_name") == "wl1"), {})
+    return {
+        "vifs": {
+            r.get("if_name"): (r.get("mode"), r.get("enabled"), state.get(r.get("if_name")))
+            for r in configs.values()
+        },
+        "inets": {
+            r.get("if_name"): r.get("enabled")
+            for r in (await box.rows("Wifi_Inet_Config")).values()
+        },
+        "wl1": (wl1.get("channel"), wl1.get("ht_mode")),
+    }
+
+
+async def legacy_radio_plan(box):
+    """spec 3.10, the radio plan (radio_plan emosa): a wired legacy pod as its vendor's seed has
+    it, the operator's APs on wl0 (wl0.1 with its own address and DHCP server, wl0.2 in br-home)
+    and wl1 on channel 1 at HT40, the GTP station configured. The agent writes the plan once on
+    that start: wl0.1 and wl0.2 disabled, wl0.1's Inet off, wl1 on the profile's channel 6 at
+    HT20; the VIFs the profile names (wl1.1, wl1.2) and the station (EMOSA's GTP station) stay
+    enabled. An AP enabled again on that start is left alone: one write per start. The pod's
+    OpenSync starts again on its seed (a new database): the plan is written once more, on the
+    new start, and nothing after."""
+    ap, failure = await gre_parent_up(box, LEGACY_PARENT)
+    if failure:
+        return failure
+    first = await radio_plan_applied(box)
+    if not first:
+        return box.result(
+            passed=False, failed="no radio plan", radio_plan=(box.status() or {}).get("radio_plan")
+        )
+    rows = await radio_plan_rows(box)
+    vifs = rows["vifs"]
+    disabled = all(vifs.get(n) == ("ap", False, False) for n in OPERATOR_APS)
+    claimed = all(vifs.get(n, (None, None))[1] is True for n in (LEGACY_FRONTHAUL, LEGACY_PARENT))
+    station = vifs.get("wl1", (None, None))[:2] == ("sta", True)
+    planned = rows["inets"].get("wl0.1") is False and rows["wl1"] == (6, "HT20")
+    # someone enables wl0.2 again on this start: left alone, no second write
+    uuid, _ = await box.vif("Wifi_VIF_Config", "wl0.2")
+    await box.transact(
+        [
+            {
+                "op": "update",
+                "table": "Wifi_VIF_Config",
+                "where": [["_uuid", "==", ["uuid", uuid]]],
+                "row": {"enabled": True},
+            }
+        ]
+    )
+    await asyncio.sleep(8)
+    again = (await radio_plan_rows(box))["vifs"].get("wl0.2", (None, None))[1] is True
+    same_start = radio_plan_operation(box).get("operation_id") == first.get("operation_id")
+    # the pod's OpenSync starts again on its seed: a fresh session, the plan written once more
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    continued = kept_reconnections(box)
+    await box.new_pod_database()
+    session = await back(box, searches, m1s, continued)
+    second = await radio_plan_applied(box)
+    reseeded = (
+        second is not None
+        and second.get("operation_id") != first.get("operation_id")
+        and second.get("instance") != first.get("instance")
+    )
+    vifs_again = (await radio_plan_rows(box))["vifs"]
+    await asyncio.sleep(8)
+    once = radio_plan_operation(box).get("operation_id") == (second or {}).get("operation_id")
+    return box.result(
+        passed=disabled
+        and claimed
+        and station
+        and planned
+        and again
+        and same_start
+        and reseeded
+        and all(vifs_again.get(n) == ("ap", False, False) for n in OPERATOR_APS)
+        and vifs_again.get("wl1", (None, None))[:2] == ("sta", True)
+        and once,
+        vifs=vifs,
+        inets=rows["inets"],
+        wl1=rows["wl1"],
+        operator_aps_disabled=disabled,
+        claimed_enabled=claimed,
+        station_enabled=station,
+        enabled_again_left_alone=again and same_start,
+        session_after_reseed=session,
+        reseed_written_once=reseeded and once,
+        radio_plan=(box.status() or {}).get("radio_plan"),
+    )
+
+
 async def legacy_5g_fronthaul(box):
     """spec 3.10, 9: the legacy pod's 5 GHz radio as a fronthaul only (bcm-pod-2.4.3-gre-5g-v1).
     The pod left wl0 on DFS channel 108, which EMOSA does not map; the profile places it on 36
@@ -5384,6 +5578,7 @@ SCENARIOS = {
     "legacy-ethernet-lost-gre": legacy_ethernet_lost,
     "legacy-gtp-station": legacy_gtp_station,
     "legacy-gtp-station-present": legacy_ethernet_lost,
+    "legacy-radio-plan": legacy_radio_plan,
 }
 OPTIONS = {  # the box each scenario needs beyond the default
     "write-lost-unapplied": {"reply_cut": "lost-write"},
@@ -5568,6 +5763,11 @@ OPTIONS["legacy-gtp-station"] = {
 OPTIONS["legacy-gtp-station-present"] = {
     **OPTIONS["legacy-ethernet-lost"],
     "gtp_station": GTP_STATION,
+}
+# spec 3.10, the radio plan: the seed with the operator's APs, the GTP station written beside
+OPTIONS["legacy-radio-plan"] = {
+    **OPTIONS["legacy-gtp-station"],
+    "ethernet_first": "operator",
 }
 OPTIONS["legacy-gre-move"] = {
     "legacy": True,

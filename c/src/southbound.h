@@ -43,6 +43,9 @@ typedef struct {
     bool legacy;
     /* a legacy pod's WAN bridge, its cm's uplink bridge (spec 8.4): wan_bridge, "br-wan" absent */
     const char *wan_bridge;
+    /* radio_plan "emosa" (spec 3.10): the APs the profile does not name disabled, the fronthaul
+     * radio on the profile's channel while wired, once per start; false: the pod's ("pod") */
+    bool radio_plan;
 } em_profile;
 
 em_reason em_profile_load(const char *path, em_profile *out);

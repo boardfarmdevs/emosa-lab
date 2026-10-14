@@ -40,6 +40,7 @@ from emosa.agent.gre_parent import GreTunnels
 from emosa.agent.gtp_station import GtpStation
 from emosa.agent.peers import PeerDirectory, children, loops, mac_bytes, parent_bssids, upstream
 from emosa.agent.probe_watch import ProbeWatch
+from emosa.agent.radio_plan import RadioPlan
 from emosa.agent.renew import CONTROLLER_TIMEOUT, M2_TIMEOUT, RenewRules
 from emosa.agent.steering import ClientSteering
 from emosa.agent.telemetry import MqttSubscriber, TelemetrySetup
@@ -70,6 +71,8 @@ from emosa.opensync.probe_watch import MONITOR as WATCH_MONITOR
 from emosa.opensync.probe_watch import WatchBackend
 from emosa.opensync.profiles import DEFAULT as DEFAULT_PROFILE
 from emosa.opensync.profiles import load as load_profile
+from emosa.opensync.radio_plan import MONITOR as RADIO_PLAN_MONITOR
+from emosa.opensync.radio_plan import RadioPlanBackend, RadioPlanIntent
 from emosa.opensync.schema import TABLES
 from emosa.opensync.session import OvsSession
 from emosa.opensync.stats import PodStats
@@ -147,6 +150,7 @@ for _scope in (
     WATCH_MONITOR,
     WIRED_MONITOR,
     GRE_PARENT_MONITOR,
+    RADIO_PLAN_MONITOR,
 ):
     for _table, _columns in _scope.items():  # the other scopes, each column once
         MONITOR[_table] = list(dict.fromkeys([*MONITOR.get(_table, []), *_columns]))
@@ -905,6 +909,27 @@ async def serve(config, stop):
             gtp_intent,
             run_id=config.get("run_id", pod_id),
         )
+    radio_plan = None
+    if profile.radio_plan == "emosa":
+        # spec 3.10, the radio plan: the APs the profile does not name off, its radio on its channel
+        radio_plan = RadioPlan(
+            pod_id,
+            RadioPlanBackend(
+                pod_id,
+                session,
+                serial=config["serial"],
+                intent=RadioPlanIntent(
+                    pod_id,
+                    tuple(sorted({profile.fronthaul_if, *(n for n, _, _ in profile.extra_slots)})),
+                    profile.band,
+                    profile.channel,
+                    profile.ht_mode,
+                ),
+            ),
+            Store(state_dir / "radio-plan"),
+            vault,
+            run_id=config.get("run_id", pod_id),
+        )
     tunnels = None
     # a former GRE parent (its profile no longer one, its tunnels' journal kept): the tunnels left
     # on its former parent AP, its backhaul slot, are removed (spec 8.6, a parent demoted)
@@ -1068,6 +1093,7 @@ async def serve(config, stop):
             "probe_watch": watch.status() if watch else None,
             "gre_parent": tunnels.status() if tunnels else None,
             "gtp_station": gtp_station.status() if gtp_station else None,
+            "radio_plan": radio_plan.status() if radio_plan else None,
             "writes": backend.write_count,
             "worker_pid": os.getpid(),
             "updated": time.time(),
@@ -1280,6 +1306,11 @@ async def serve(config, stop):
                         await timed("gtp station", gtp_station.tick())
                     except (EmosaError, ConnectionError, TimeoutError) as exc:
                         log.warning("gtp station: %s", exc)
+                if refreshed and radio_plan:
+                    try:
+                        await timed("radio plan", radio_plan.tick())
+                    except (EmosaError, ConnectionError, TimeoutError) as exc:
+                        log.warning("radio plan: %s", exc)
                 if refreshed and tunnels:
                     try:
                         await timed("gre parent", tunnels.tick())
