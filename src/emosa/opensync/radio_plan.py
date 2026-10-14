@@ -32,6 +32,7 @@ from emosa.clock import utc_now
 from emosa.errors import EmosaError, Reason
 from emosa.model import Observation
 from emosa.opensync.mapping import check_results, where_uuid
+from emosa.opensync.stations import deletion
 from emosa.opensync.uplink import credential_key, start_instance
 
 MODE = "opensync-2.0-radio-plan"
@@ -226,32 +227,6 @@ class RadioPlanBackend:
             for u, r in vifs.items()
             if wired and r.get("mode") == "sta" and not kept_station(r, intent, credentials)
         )
-        gone = {u for _, u in foreign}
-        kept = [r for u, r in vifs.items() if u not in gone]
-        kept_credentials = {c for r in kept for c in r.get("credential_configs") or []}
-        kept_names = {r.get("if_name") for r in kept}
-        stations = {
-            "rows": [(u, vifs[u]) for _, u in foreign],
-            "radios": sorted(
-                (u, v)
-                for u, r in decoded.get("Wifi_Radio_Config", {}).items()
-                for v in r.get("vif_configs") or []
-                if v in gone
-            ),
-            "credentials": sorted(
-                {
-                    c
-                    for u in gone
-                    for c in vifs[u].get("credential_configs") or []
-                    if c in credentials and c not in kept_credentials
-                }
-            ),
-            "inets": sorted(
-                u
-                for u, r in decoded.get("Wifi_Inet_Config", {}).items()
-                if r.get("if_name") in {n for n, _ in foreign} - kept_names
-            ),
-        }
         node = next(iter(decoded.get("AWLAN_Node", {}).values()), {})
         cloud = {c: dict(node.get(c) or {}) for c in CLOUD}
         stats = sorted(decoded.get("Wifi_Stats_Config", {}).items())
@@ -261,7 +236,7 @@ class RadioPlanBackend:
             radio if wired and radio[0] is not None and not on_plan else None,
             cloud if any(cloud.values()) else None,
             stats,
-            stations if foreign else None,
+            [u for _, u in foreign] or None,
         )
         configured = {
             "unclaimed": sorted(names),
@@ -466,45 +441,10 @@ class RadioPlanBackend:
                 {"op": "delete", "table": "Wifi_Stats_Config", "where": where_uuid(uuid)},
             ]
             counts += [None, 1]
-        if stations is not None:
-            # each station row as it is, out of its radio, deleted; then its credentials and Inet
-            for uuid, row in stations["rows"]:
-                operations.append(
-                    {
-                        "op": "wait",
-                        "table": "Wifi_VIF_Config",
-                        "where": where_uuid(uuid),
-                        "columns": ["if_name", "mode", "ssid"],
-                        "until": "==",
-                        "rows": [
-                            {
-                                "if_name": row.get("if_name"),
-                                "mode": "sta",
-                                "ssid": optional(row.get("ssid")),  # a credential list: none
-                            }
-                        ],
-                        "timeout": 0,
-                    }
-                )
-                counts.append(None)
-            for radio_uuid, uuid in stations["radios"]:
-                operations.append(
-                    {
-                        "op": "mutate",
-                        "table": "Wifi_Radio_Config",
-                        "where": where_uuid(radio_uuid),
-                        "mutations": [["vif_configs", "delete", ["set", [["uuid", uuid]]]]],
-                    }
-                )
-                counts.append(1)
-            for table, uuids in (
-                ("Wifi_VIF_Config", [u for u, _ in stations["rows"]]),
-                ("Wifi_Credential_Config", stations["credentials"]),
-                ("Wifi_Inet_Config", stations["inets"]),
-            ):
-                for uuid in uuids:
-                    operations.append({"op": "delete", "table": table, "where": where_uuid(uuid)})
-                    counts.append(1)
+        if stations is not None:  # each station row as it is, with what only it uses
+            more, more_counts = deletion(decoded, stations)
+            operations += more
+            counts += more_counts
         return operations, counts
 
     async def submit(self, intent, attempt):

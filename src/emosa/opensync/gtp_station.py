@@ -25,6 +25,7 @@ from emosa.clock import utc_now
 from emosa.errors import EmosaError, Reason
 from emosa.model import Observation
 from emosa.opensync.mapping import check_results, where_uuid
+from emosa.opensync.stations import deletion
 from emosa.opensync.uplink import BSSID, credential_key, lower_mac, start_instance
 
 MODE = "opensync-2.0-gtp-station"
@@ -81,6 +82,29 @@ def security_map(psk):
 
 def station_rows(decoded, table, station):
     return [(u, r) for u, r in decoded.get(table, {}).items() if r.get("if_name") == station]
+
+
+def all_stations(decoded, own):
+    """Every station row of the pod: [{"uuid", "if_name", "own", "associated"}], by name; a
+    station associated when a State row of its name has a parent (``wl bssid``)."""
+    associated = {
+        r.get("if_name")
+        for r in decoded.get("Wifi_VIF_State", {}).values()
+        if r.get("mode") == "sta" and lower_mac(r.get("parent"))
+    }
+    return sorted(
+        (
+            {
+                "uuid": u,
+                "if_name": r.get("if_name"),
+                "own": u == own,
+                "associated": r.get("if_name") in associated,
+            }
+            for u, r in decoded.get("Wifi_VIF_Config", {}).items()
+            if r.get("mode") == "sta"
+        ),
+        key=lambda s: (s["if_name"] or "", s["uuid"]),
+    )
 
 
 class GtpStationBackend:
@@ -146,7 +170,35 @@ class GtpStationBackend:
             "joined": bool(states),
             # on a BSS (its State's parent), as the vendor healthcheck's `wl bssid` sees it
             "associated": any(lower_mac(r.get("parent")) for r in states),
+            # every station row of the pod, the scope's own marked (the guard's, spec 3.10)
+            "stations": all_stations(decoded, rows[0][0] if written else None),
         }
+
+    async def remove_station(self, uuid):
+        """spec 3.10, the station guard on a converted pod: another station row than the scope's
+        own (the seed's, a hook's), not associated past the guard, deleted with what only it uses
+        (emosa.opensync.stations). The number of station rows deleted."""
+        raw = await self.session.snapshot()
+        decoded, node_uuid = self._binding(raw)
+        row = decoded.get("Wifi_VIF_Config", {}).get(uuid)
+        if not row or row.get("mode") != "sta":
+            raise EmosaError(Reason.NOT_READY, "no such station row")
+        operations, counts = deletion(decoded, [uuid])
+        operations = [
+            {
+                "op": "wait",
+                "table": "AWLAN_Node",
+                "where": where_uuid(node_uuid),
+                "columns": ["serial_number"],
+                "until": "==",
+                "rows": [{"serial_number": self.expected_serial}],
+                "timeout": 0,
+            },
+            *operations,
+        ]
+        results = await self.session.transact(operations, generation=raw["generation"])
+        check_results(results, [None, *counts])
+        return 1
 
     async def remove(self, intent):
         """spec 3.10, the station's guard: the station in the scope's form (the intent's SSID), not

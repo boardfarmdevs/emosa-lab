@@ -149,6 +149,14 @@ static const char *psk_of(const cJSON *row)
 
 /* GtpStationBackend._configured: the station in the scope's vconf form with one linked credential
  * (onboard_type gre) of the same SSID and passphrase, and wm's State of it; present: a row at all */
+static int station_order(const void *a, const void *b)
+{
+    const cJSON *x = *(const cJSON *const *)a, *y = *(const cJSON *const *)b;
+    const char *nx = ovs_str(x, "if_name"), *ny = ovs_str(y, "if_name");
+    int k = strcmp(nx ? nx : "", ny ? ny : "");
+    return k ? k : strcmp(x->string, y->string);
+}
+
 static cJSON *configured(const em_gtp_scope *g, const cJSON *tables)
 {
     const cJSON *vif = NULL, *sole = NULL, *r;
@@ -196,6 +204,34 @@ static cJSON *configured(const em_gtp_scope *g, const cJSON *tables)
     cJSON_AddItemToObject(c, "bssid", pinned ? cJSON_CreateString(mac) : cJSON_CreateNull());
     cJSON_AddBoolToObject(c, "joined", joined);
     cJSON_AddBoolToObject(c, "associated", associated);
+    /* every station row of the pod, the scope's own marked (all_stations: the guard's) */
+    const cJSON *stations[32];
+    size_t nstations = 0;
+    cJSON_ArrayForEach(r, em_table(tables, "Wifi_VIF_Config"))
+    {
+        const char *rm = ovs_str(r, "mode");
+        if (rm && !strcmp(rm, "sta") && nstations < 32)
+            stations[nstations++] = r;
+    }
+    qsort(stations, nstations, sizeof(*stations), station_order);
+    cJSON *list = cJSON_AddArrayToObject(c, "stations");
+    for (size_t k = 0; k < nstations; k++) {
+        const char *name = ovs_str(stations[k], "if_name");
+        bool on_bss = false;
+        cJSON_ArrayForEach(r, em_table(tables, "Wifi_VIF_State"))
+        {
+            const char *rn = ovs_str(r, "if_name"), *rm = ovs_str(r, "mode");
+            char parent[18];
+            if (name && rn && !strcmp(rn, name) && rm && !strcmp(rm, "sta"))
+                on_bss = on_bss || em_row_mac(r, "parent", parent);
+        }
+        cJSON *one = cJSON_CreateObject();
+        cJSON_AddStringToObject(one, "uuid", stations[k]->string);
+        cJSON_AddItemToObject(one, "if_name", name ? cJSON_CreateString(name) : cJSON_CreateNull());
+        cJSON_AddBoolToObject(one, "own", written && stations[k] == vif);
+        cJSON_AddBoolToObject(one, "associated", on_bss);
+        cJSON_AddItemToArray(list, one);
+    }
     return c;
 }
 
@@ -559,6 +595,114 @@ static em_reason remove_station(em_gtp_scope *g, size_t *deleted)
     return checked;
 }
 
+/* GtpStationBackend.remove_station: another station row than the scope's own, deleted with what
+ * only it uses (em_station_deletion) */
+static em_reason remove_other(em_gtp_scope *g, const char *uuid)
+{
+    const char *node_uuid;
+    if (!em_ovsdb_ready(g->ovs) || !bind(g, &node_uuid))
+        return EM_NOT_READY;
+    const cJSON *tables = em_ovsdb_tables(g->ovs), *row;
+    row = cJSON_GetObjectItemCaseSensitive(em_table(tables, "Wifi_VIF_Config"), uuid);
+    const char *mode = ovs_str(row, "mode");
+    if (!mode || strcmp(mode, "sta"))
+        return EM_NOT_READY; /* "no such station row" */
+    cJSON *ops = cJSON_CreateArray();
+    int counts[1 + 5 * EM_STATION_DELETION_MAX];
+    size_t n = 0;
+    cJSON *wait = em_ovs_op("wait", "AWLAN_Node", em_ovs_where_uuid(node_uuid));
+    const char *node_cols[] = {"serial_number"};
+    cJSON_AddItemToObject(wait, "columns", em_ovs_strings(node_cols, 1));
+    cJSON_AddStringToObject(wait, "until", "==");
+    cJSON *as_it_is = cJSON_CreateObject();
+    cJSON_AddStringToObject(as_it_is, "serial_number", g->serial);
+    cJSON_AddItemToArray(cJSON_AddArrayToObject(wait, "rows"), as_it_is);
+    cJSON_AddNumberToObject(wait, "timeout", 0);
+    cJSON_AddItemToArray(ops, wait);
+    counts[n++] = -1;
+    const char *uuids[] = {uuid};
+    size_t added = em_station_deletion(tables, uuids, 1, ops, counts + n, sizeof(counts) / sizeof(*counts) - n);
+    if (!added) {
+        cJSON_Delete(ops);
+        return EM_NOT_READY;
+    }
+    n += added;
+    cJSON *results = g->transact(g->transact_ctx, ops);
+    cJSON_Delete(ops);
+    if (!results)
+        return EM_OUTCOME_UNKNOWN;
+    em_reason checked = em_check_results(results, counts, n);
+    cJSON_Delete(results);
+    return checked;
+}
+
+/* GtpStation._guard_others: on a converted pod, every other station row guarded the same way;
+ * true once it removed one (nothing else on this tick) */
+static bool guard_others(em_gtp_scope *g, const em_snapshot *snap)
+{
+    if (!g->guard_all || !snap->ready)
+        return false;
+    double now = g->monotonic();
+    const cJSON *stations = cJSON_GetObjectItemCaseSensitive(snap->config, "stations"), *st;
+    /* the tracked ones still there and unassociated, the new unassociated ones added */
+    size_t kept = 0;
+    for (size_t k = 0; k < g->nothers; k++) {
+        bool still = false;
+        cJSON_ArrayForEach(st, stations)
+        {
+            if (!strcmp(str(st, "uuid") ? str(st, "uuid") : "", g->others[k].uuid) &&
+                !cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(st, "own")) &&
+                !cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(st, "associated")))
+                still = true;
+        }
+        if (still)
+            g->others[kept++] = g->others[k];
+    }
+    g->nothers = kept;
+    cJSON_ArrayForEach(st, stations)
+    {
+        const char *uuid = str(st, "uuid");
+        if (!uuid || cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(st, "own")) ||
+            cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(st, "associated")))
+            continue;
+        bool tracked = false;
+        for (size_t k = 0; k < g->nothers; k++)
+            tracked = tracked || !strcmp(g->others[k].uuid, uuid);
+        if (!tracked && g->nothers < sizeof(g->others) / sizeof(*g->others) &&
+            em_copy(g->others[g->nothers].uuid, sizeof(g->others[0].uuid), uuid)) /* a UUID: 36 */
+            g->others[g->nothers++].since = now;
+    }
+    for (size_t k = 0; k < g->nothers; k++) {
+        if (now - g->others[k].since < g->unassociated)
+            continue;
+        const char *name = NULL;
+        cJSON_ArrayForEach(st, stations)
+        {
+            if (str(st, "uuid") && !strcmp(str(st, "uuid"), g->others[k].uuid))
+                name = str(st, "if_name");
+        }
+        char station[16];
+        EM_FORMAT_FIXED(station, sizeof(station), "%s", name ? name : "?"); /* an interface name: 15 */
+        em_reason why = remove_other(g, g->others[k].uuid);
+        if (why != EM_OK) {
+            em_log(EM_LOG_WARNING, "emosa.agent.gtp_station", "the pod's station %s: not removed: %s", station,
+                   em_reason_name(why));
+            return true;
+        }
+        g->others[k] = g->others[--g->nothers];
+        g->others_removed++;
+        cJSON *payload = cJSON_CreateObject();
+        cJSON_AddStringToObject(payload, "station", station);
+        cJSON_AddNumberToObject(payload, "unassociated_s", g->unassociated);
+        (void)em_journal_event(g->journal, g->run_id, "STATION_REMOVED", payload, g->intent.pod_id);
+        cJSON_Delete(payload);
+        em_log(EM_LOG_WARNING, "emosa.agent.gtp_station",
+               "the pod's station %s (not EMOSA's) was not associated for %d s: removed", station, g->unassociated);
+        return true;
+    }
+    return false;
+}
+
 /* GtpStation._guard: true once it removed the station (nothing else on this tick) */
 static bool guard(em_gtp_scope *g, const em_snapshot *snap)
 {
@@ -689,9 +833,10 @@ void em_gtp_tick(em_gtp_scope *g)
     if (snap.ready && g->has_instance && strcmp(g->start, g->instance)) { /* a new start: its own attempts */
         EM_FORMAT_FIXED(g->start, sizeof(g->start), "%s", g->instance);
         g->attempt = 0;
+        g->nothers = 0;
         g->unassociated_seen = g->retry_due = false;
     }
-    if (guard(g, &snap)) {
+    if (guard(g, &snap) || guard_others(g, &snap)) {
         em_snapshot_clear(&snap);
         return;
     }
@@ -772,6 +917,7 @@ cJSON *em_gtp_status(em_gtp_scope *g)
         cJSON_AddNullToObject(o, "associated");
     }
     cJSON_AddNumberToObject(o, "removed_unassociated", g->removed);
+    cJSON_AddNumberToObject(o, "others_removed_unassociated", g->others_removed);
     cJSON_AddItemToObject(o, "waiting", g->has_waiting ? cJSON_CreateString(g->waiting) : cJSON_CreateNull());
     if (op) {
         cJSON *x = cJSON_AddObjectToObject(o, "operation");

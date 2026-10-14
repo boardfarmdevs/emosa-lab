@@ -671,8 +671,9 @@ class Box:
                 )
             if self.ethernet_first:
                 await session.transact(ethernet_first(self.ethernet_first))
-            if self.seed_stations:
-                await session.transact(seed_stations())
+            if self.seed_stations:  # True: on wl0 and wl1; else the radios named
+                names = ("wl0", "wl1") if self.seed_stations is True else self.seed_stations
+                await session.transact(seed_stations(names))
         finally:
             await session.close()
         if self.legacy:  # its vendor's seed, as every start of its OpenSync restores it
@@ -5210,10 +5211,10 @@ OPERATOR_APS = {"wl0.1": "operator-bh-1", "wl0.2": "operator-home"}
 SEED_STATION_SSID = "operator-onboarding"
 
 
-def seed_stations():
+def seed_stations(names=("wl0", "wl1")):
     """A converted pod's onboarding stations as its seed brings them back (14 October: its wl0
-    and wl1 joined another pod's operator backhaul): on wl0 and wl1, credential-list mode, the
-    operator's onboarding credential linked, each in its radio's vif_configs, wl0 with an Inet
+    and wl1 joined another pod's operator backhaul): on the radios named, credential-list mode,
+    the operator's onboarding credential linked, each in its radio's vif_configs, wl0 with an Inet
     row (wl1 has the seed's)."""
     operations = [
         {
@@ -5238,7 +5239,7 @@ def seed_stations():
             },
         },
     ]
-    for name in ("wl0", "wl1"):
+    for name in names:
         operations += [
             {
                 "op": "insert",
@@ -6398,6 +6399,48 @@ async def legacy_seed_stations(box):
     )
 
 
+async def legacy_seed_station_unwired(box):
+    """spec 3.10, the station guard on a converted pod: the pod on its Wi-Fi uplink (its station wl1
+    associated, cm on g-wl1), so the radio plan leaves its stations; its seed's onboarding station
+    on wl0 never associates. Past the guard's time (8 s here, 300 by default) the agent deletes it,
+    with its credential, its Inet row and its radio's reference, counts it
+    (others_removed_unassociated) and logs it, and does not write it again; the pod's own uplink
+    station is left alone, and the pod passes the healthcheck."""
+    seeded = await station_rows(box)
+
+    async def removed():
+        rows = await station_rows(box)
+        return rows if "wl0" not in rows else None
+
+    after = await until_async(removed, seconds=40)
+    await asyncio.sleep(13)  # past the back-off it would take: not written again
+    again = await station_rows(box)
+    inets = sorted(r.get("if_name") for r in (await box.rows("Wifi_Inet_Config")).values())
+    credentials = sorted(r.get("ssid") for r in (await box.rows("Wifi_Credential_Config")).values())
+    failing = await healthcheck(box)
+    status = (box.status() or {}).get("gtp_station") or {}
+    plan = (box.status() or {}).get("radio_plan") or {}
+    log = (box.directory / "agent.log").read_text(errors="replace")
+    return box.result(
+        passed=seeded == {"wl0": SEED_STATION_SSID, "wl1": ""}
+        and after == {"wl1": ""}
+        and again == {"wl1": ""}
+        and "wl0" not in inets
+        and SEED_STATION_SSID not in credentials
+        and not failing
+        and status.get("others_removed_unassociated") == 1
+        and plan.get("wired") is False
+        and "(not EMOSA's) was not associated" in log,
+        seeded=seeded,
+        after=after,
+        again=again,
+        inet_rows=inets,
+        credentials=credentials,
+        healthcheck_failing=failing,
+        gtp_station=status,
+    )
+
+
 async def operator_cloud(box):
     """What of its operator's cloud the pod has: {AWLAN_Node's MQTT column: its map} for each not
     empty, and "Wifi_Stats_Config": the statistics rows' types when there are any."""
@@ -6581,6 +6624,7 @@ SCENARIOS = {
     "legacy-cloud-cleared": legacy_cloud_cleared,
     "node-config": node_config,
     "legacy-seed-stations": legacy_seed_stations,
+    "legacy-seed-station-unwired": legacy_seed_station_unwired,
 }
 OPTIONS = {  # the box each scenario needs beyond the default
     "write-lost-unapplied": {"reply_cut": "lost-write"},
@@ -6789,6 +6833,14 @@ OPTIONS["legacy-gtp-station-unassociated"] = {
 # fleet's telemetry on (off on a converted pod)
 # spec 3.10, the seed's stations: the radio plan's pod with the operator's onboarding stations
 OPTIONS["legacy-seed-stations"] = {**OPTIONS["legacy-radio-plan"], "seed_stations": True}
+# the station guard: the pod on its Wi-Fi uplink, a seed station on wl0, the guard's time shortened
+OPTIONS["legacy-seed-station-unwired"] = {
+    "legacy": True,
+    "multi_bss": True,
+    "underlay": LEGACY_UNDERLAY,
+    "gtp_station": {**GTP_STATION, "unassociated_seconds": 8, "retry_seconds": [12]},
+    "seed_stations": ("wl0",),
+}
 OPTIONS["legacy-cloud-cleared"] = {
     **OPTIONS["legacy-radio-plan"],
     "operator_cloud": True,

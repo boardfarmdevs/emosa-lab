@@ -653,8 +653,14 @@ is everything above. For a legacy pod, all of this specification applies, except
     (`retry_seconds`, 900, 1800 then 3600, at most three, the last repeated; back to the first
     once a write associates); each attempt costs the healthcheck at most five failing rounds.
     Counted in the status (`gtp_station.removed_unassociated`, `associated`) and journalled
-    (`GTP_STATION_REMOVED`). A station the scope did not write (another SSID) is not its to
-    remove.
+    (`GTP_STATION_REMOVED`). On a pod that is not converted, a station the scope did not write
+    (another SSID) is not its to remove. On a converted pod (`radio_plan: emosa`) every other
+    station row is guarded the same way (the seed's onboarding stations, a hook's: the vendor
+    healthcheck reboots the pod for any of them) and never written again: deleted with what
+    only it uses (its radio's reference, the credentials no other VIF links, its Inet row when
+    no other VIF has its name), counted (`others_removed_unassociated`), journalled
+    (`STATION_REMOVED`) and logged. While the pod is wired the radio plan deletes those at the
+    start already (below); this covers a pod on its Wi-Fi uplink.
   - **Why it is written while wired, not on the Ethernet's loss:** the pod's OVSDB session to
     its agent runs over that Ethernet, so once it is gone nothing can be written; the station
     must be there before. **Accepted risk:** a pod cabled to the gateway that hosts its agent
