@@ -24,6 +24,10 @@ typedef struct {
      * "6G"), each its own write scope configured by its own M2 */
     size_t nradios;
     const char *radio_bands[2];
+    /* a radio the profile places (spec 9, a fronthaul with no station): its declared channel (0:
+     * none, the radio follows its station) and width (NULL: none), written with its slots */
+    int radio_channels[2];
+    const char *radio_ht_modes[2];
     bool has_esp_be;
     uint8_t esp_be[3]; /* ap_metrics.esp_be: the declared best-effort ESP */
     /* uplink.stations: the pod's backhaul station on each band ("2.4G", "5G", "6G"), for a move

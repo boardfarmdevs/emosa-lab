@@ -31,6 +31,7 @@
         "required": ["band", "chipset"],
         "properties": {
           "band": {"enum": ["5G", "6G"]},
+          "channel": {"type": "integer", "minimum": 1, "maximum": 233, "description": "A radio the profile places (spec 9): a fronthaul with no station of its own. EMOSA writes this channel (and ht_mode) on the radio when it creates the radio's slots, and reports it from the start. It must be a channel EMOSA maps (5 GHz: 36-48 or 149-177). Absent: the radio follows the pod's station on it and EMOSA writes no channel."},
           "ht_mode": {"type": "string", "minLength": 1, "maxLength": 16},
           "chipset": {"type": "string", "minLength": 1, "maxLength": 64}
         }

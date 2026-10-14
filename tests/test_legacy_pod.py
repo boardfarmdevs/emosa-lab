@@ -355,3 +355,17 @@ def test_a_legacy_gre_childs_move_pins_its_stations_parent(tmp_path):
     assert update["row"]["parent"] == PARENT_AP and update["row"]["ssid"] == ""
     assert "multi_ap" not in update["row"]
     assert result.evidence["restore"]["ssid"] == "pod-onboarding"  # the revert's snapshot
+
+
+def test_a_placed_radios_channel_must_be_one_emosa_maps(tmp_path):
+    # spec 9: a radio the profile places is reported on its declared channel from the start
+    from emosa.opensync.profiles import files
+
+    assert load_profile("bcm-pod-2.4.3-gre-5g-v1").radios[0]["channel"] == 36
+    data = json.loads(files("emosa").joinpath("profiles/bcm-pod-2.4.3-gre-5g-v1.json").read_text())
+    data["radios"][0]["channel"] = 108  # DFS: never reported, so never configured
+    path = tmp_path / "dfs.json"
+    path.write_text(json.dumps(data))
+    with pytest.raises(EmosaError) as refused:
+        load_profile(str(path))
+    assert refused.value.code == Reason.INVALID_INPUT

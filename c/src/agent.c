@@ -637,6 +637,11 @@ static bool refresh(agent *a)
          * on its channel, so that a move changes its capabilities once (bound_radios' held) */
         bool held = other && !other->has_channel && !fresh && rs->bound;
         int on = held ? rs->channel : other && other->has_channel ? other->channel : 0;
+        /* a radio the profile places (its declared channel, a fronthaul with no station): EMOSA
+         * writes that channel with the radio's slots, and reports it from the start */
+        for (size_t pr = 0; other && pr < a->profile.nradios; pr++)
+            if (!strcmp(a->profile.radio_bands[pr], rs->band) && a->profile.radio_channels[pr])
+                on = a->profile.radio_channels[pr];
         rs->bound = other && on && em_operating_class(rs->band, on);
         if (!rs->bound)
             continue; /* not brought up yet, or on a channel not mapped (DFS): reported once it is */

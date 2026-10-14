@@ -1,5 +1,5 @@
 {
-  "source": "synthesized (13 October 2026), not recorded: a legacy pod (spec 3.10) on OpenSync 2.0's schema without multi_ap, two Broadcom radios wl1 (2.4 GHz) and wl0 (5 GHz), as its platform names them; its station wl1 on its GRE uplink g-wl1, no AP of its own yet (a cold pod), and a leftover Inet row of its former manager on wl1.1 (169.254.2.1/24 with a DHCP server), which an EMOSA GRE parent AP there replaces; its Open vSwitch bridges as a 2.x pod has them: br-home and br-wan, the WAN bridge holding the Ethernet port eth1 (the box's wired port), no patch pair (the pod in router mode)",
+  "source": "synthesized (13 October 2026), not recorded: a legacy pod (spec 3.10) on OpenSync 2.0's schema without multi_ap, two Broadcom radios wl1 (2.4 GHz) and wl0 (5 GHz, on DFS channel 108 as a pod's former manager left it), as its platform names them; its station wl1 on its GRE uplink g-wl1, no AP of its own yet (a cold pod), and a leftover Inet row of its former manager on wl1.1 (169.254.2.1/24 with a DHCP server), which an EMOSA GRE parent AP there replaces; its Open vSwitch bridges as a 2.x pod has them: br-home and br-wan, the WAN bridge holding the Ethernet port eth1 (the box's wired port), no patch pair (the pod in router mode)",
   "tables": {
     "AWLAN_Node": {
       "6c0a1c10-0000-4000-8000-000000000001": {
@@ -48,7 +48,7 @@
         ]
       },
       "6c0a1c10-0000-4000-8000-000000000022": {
-        "channel": 44,
+        "channel": 108,
         "country": "EU",
         "enabled": true,
         "freq_band": "5G",

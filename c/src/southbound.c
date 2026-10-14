@@ -85,6 +85,14 @@ em_reason em_profile_load(const char *path, em_profile *out)
         const char *band = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(extra_radio, "band"));
         if (out->nradios == 2 || !band || !strcmp(band, out->band) || em_profile_has_radio(out, band))
             goto invalid;
+        /* a radio the profile places: a channel EMOSA maps, else it would never be reported */
+        const cJSON *declared = cJSON_GetObjectItemCaseSensitive(extra_radio, "channel");
+        int channel = cJSON_IsNumber(declared) ? declared->valueint : 0;
+        if (channel && !em_operating_class(band, channel))
+            goto invalid;
+        out->radio_channels[out->nradios] = channel;
+        out->radio_ht_modes[out->nradios] =
+            channel ? cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(extra_radio, "ht_mode")) : NULL;
         out->radio_bands[out->nradios++] = band;
     }
     for (size_t i = 0; i < out->nslots; i++) {
@@ -821,6 +829,25 @@ em_reason em_radio_submit(const em_profile *p, const char *serial, const char *b
      * may change at any time; EMOSA's insert/delete of its own references is atomic */
     const char *radio_cols[1] = {"if_name"};
     PUSH(guard("Wifi_Radio_Config", b.radio_uuid, b.radio, radio_cols, 1), -1);
+    /* a radio the profile places (spec 9): its declared channel and width, as a cold fronthaul's,
+     * written when the radio does not have them already (RadioBackend.submit) */
+    for (size_t k = 0; k < p->nradios; k++) {
+        if (strcmp(p->radio_bands[k], band) || !p->radio_channels[k])
+            continue;
+        long have = 0;
+        const char *width = ovs_str(b.radio, "ht_mode"), *want = p->radio_ht_modes[k];
+        bool same = ovs_int(b.radio, "channel", &have) && have == p->radio_channels[k] &&
+                    ovs_true(b.radio, "enabled") && (!want || (width && !strcmp(width, want)));
+        if (!same) {
+            cJSON *upd = op("update", "Wifi_Radio_Config", where_uuid(b.radio_uuid)), *row = cJSON_CreateObject();
+            cJSON_AddNumberToObject(row, "channel", p->radio_channels[k]);
+            cJSON_AddTrueToObject(row, "enabled");
+            if (want)
+                cJSON_AddStringToObject(row, "ht_mode", want);
+            cJSON_AddItemToObject(upd, "row", row);
+            PUSH(upd, 1);
+        }
+    }
     bool lost = false;
     r = slot_ops(p, &own, b.radio_uuid, found, bss_of_slot, intent, underlay, s, resolve, resolve_ctx, ops,
                  counts, &nops, &lost);

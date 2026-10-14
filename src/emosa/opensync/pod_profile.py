@@ -868,7 +868,9 @@ class RadioBackend(PodBackend):
     BSSes alone. The radio serves no fronthaul of its own: its intent (``RadioIntent``) is the
     set's BSSes fitted to its slots. Of the radio it writes only its slot VIFs (insert/delete of
     its own references in ``vif_configs``) and their Inet rows; never the channel or ``ht_mode``
-    (the radio follows the pod's station on it) nor the pod's own rows there (the station).
+    (the radio follows the pod's station on it) nor the pod's own rows there (the station),
+    unless the profile places the radio (a declared ``channel``: a fronthaul with no station),
+    whose channel and width it then writes with its slots.
     """
 
     primary_bss = False  # the WSC bridge builds a RadioIntent: no primary fronthaul BSS
@@ -890,7 +892,11 @@ class RadioBackend(PodBackend):
         self.band = band
         self.if_name = None  # no bound fronthaul VIF
         self.radio_id = self.bss_id = f"radio-{band}"
-        self.channel = self.ht_mode = None  # never written (spec 9)
+        # never written (spec 9: it follows the station), unless the profile places the radio: a
+        # declared channel (a fronthaul with no station) and its width, written with its slots
+        extra = next(r for r in self.profile.radios if r["band"] == band)
+        self.channel = extra.get("channel")
+        self.ht_mode = extra.get("ht_mode") if self.channel is not None else None
         self.slots = slots_on(self.profile, band) if multi_bss else ()
         self.max_bss = len(self.slots)
         # its exchange takes the radio's whole M2 set, fitted to its slots (none without multi_bss)
@@ -986,6 +992,21 @@ class RadioBackend(PodBackend):
             guard("Wifi_Radio_Config", radio_uuid, radio, ["if_name"]),
         ]
         counts = [None, None]
+        if self.channel is not None:
+            # a radio the profile places: its declared channel and width, as a cold fronthaul's
+            placed = {"channel": self.channel, "enabled": True}
+            if self.ht_mode is not None:
+                placed["ht_mode"] = self.ht_mode
+            if any(radio.get(k) != v for k, v in placed.items()):
+                transaction.append(
+                    {
+                        "op": "update",
+                        "table": "Wifi_Radio_Config",
+                        "where": where_uuid(radio_uuid),
+                        "row": placed,
+                    }
+                )
+                counts.append(1)
         extra_ops, extra_counts = await self._extra_ops(intent, raw, radio_uuid)
         return await self._commit(
             transaction + extra_ops,

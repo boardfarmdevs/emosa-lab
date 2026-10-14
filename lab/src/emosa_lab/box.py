@@ -4862,9 +4862,11 @@ async def legacy_gre_move(box):
 
 async def legacy_5g_fronthaul(box):
     """spec 3.10, 9: the legacy pod's 5 GHz radio as a fronthaul only (bcm-pod-2.4.3-gre-5g-v1).
-    Its own M2 set configures it: the fronthaul BSS on its home AP wl0.2, created on wl0 with
-    WPA2-PSK in the security map and the profile's oftag, no multi_ap; the set's backhaul BSS has
-    no 5 GHz slot and is left out, so the backhaul stays on wl1 (2.4 GHz)."""
+    The pod left wl0 on DFS channel 108, which EMOSA does not map; the profile places it on 36
+    (HT80), so it is reported there from the start and its own M2 set configures it: the fronthaul
+    BSS on its home AP wl0.2, created on wl0 with WPA2-PSK in the security map and the profile's
+    oftag, no multi_ap, and wl0 given channel 36 at HT80 in the same write; the set's backhaul BSS
+    has no 5 GHz slot and is left out, so the backhaul stays on wl1 (2.4 GHz)."""
     if not (await onboarded(box)).get("applied"):
         return box.result(passed=False, failed="not onboarded")
 
@@ -4881,13 +4883,16 @@ async def legacy_5g_fronthaul(box):
     )
     names = {r.get("if_name") for r in vifs.values()}
     wanted = {"encryption": "WPA-PSK", "key": REGISTRAR_KEY, "oftag": "home--1"}
+    placed = {k: radios.get(wl0, {}).get(k) for k in ("channel", "ht_mode", "enabled")}
     return box.result(
         passed=legacy_row_ok(config, wanted)
         and on_wl0
         and (config or {}).get("bridge") == "br-home"
-        and "wl0.1" not in names,
+        and "wl0.1" not in names
+        and placed == {"channel": 36, "ht_mode": "HT80", "enabled": True},
         fronthaul_5g={k: (config or {}).get(k) for k in ("if_name", "ssid", "bridge")},
         on_wl0=on_wl0,
+        wl0=placed,
         vifs=sorted(n for n in names if n),
     )
 

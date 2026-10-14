@@ -1353,7 +1353,13 @@ path is re-run. Carried with the second-radio work (§9).
   class 81; 5 GHz the non-DFS UNII-1 class 115 (36 to 48) and UNII-3 classes 124 (149 to 161)
   and 125 (149 to 177). Its Operating Channel Report names the last class that has its channel
   (115/44 on rdk-1010, 125/149 on V54). A further radio on a channel not mapped (DFS) is not
-  reported until it leaves it. The channel rule (item 9): the radio is operable only on its
+  reported until it leaves it. **A radio the profile places** (its `radios` entry declares a
+  `channel`, which EMOSA maps: a fronthaul with no station of its own, as a legacy pod's 5 GHz
+  radio, §3.10) is the exception to the owner table above for `channel`, `ht_mode` and
+  `enabled`: it is reported on the declared channel from the start, whatever channel the pod
+  left it on, and the radio's own write scope sets the declared channel and width (and
+  `enabled`) in the transaction of its slots, when the radio does not have them already, as a
+  cold fronthaul's create does. The channel rule (item 9): the radio is operable only on its
   station's channel, so a Channel Selection Request that forbids that channel, in any class that
   has it, is declined for that radio alone. A station that moves the radio to another channel
   changes the radio's operable channel: a provisioned session is kept (§2.5), the agent takes the

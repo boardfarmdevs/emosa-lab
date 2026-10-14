@@ -81,6 +81,14 @@ def load(ref=DEFAULT):
             raise EmosaError(
                 Reason.INVALID_INPUT, f"pod profile {data['id']}: {slot['if_name']} on no radio"
             )
+    # a radio the profile places has a channel EMOSA maps, else it would never be reported (spec 9)
+    from emosa.opensync.easymesh_view import operating_class
+
+    for radio in data.get("radios", ()):
+        if "channel" in radio and operating_class(radio["band"], radio["channel"]) is None:
+            raise EmosaError(
+                Reason.INVALID_INPUT, f"pod profile {data['id']}: {radio['band']} channel unmapped"
+            )
     # a legacy pod has no Multi-AP backhaul BSS: its backhaul slots are GRE parent APs (spec 3.10)
     backhaul_slots = any(s["role"] == "backhaul" for s in data["extra_slots"])
     if (

@@ -394,6 +394,10 @@ def bound_radios(device_radios, fronthaul, channel, *, additional, slots, slot_b
         on = None if radio is None else radio.channel
         if on is None and radio is not None:
             on = held.get(radio.ruid)
+        # a radio the profile places (its declared channel, a fronthaul with no station): EMOSA
+        # writes that channel when it creates the radio's slots, and reports it from the start
+        if radio is not None and extra.get("channel") is not None:
+            on = extra["channel"]
         if on is None or operating_class(band, on) is None:
             continue  # not up yet, or on a channel not mapped (DFS): reported once it is
         on_band = sum(1 for name, _, _ in slots if on_a_second.get(name) == band)
