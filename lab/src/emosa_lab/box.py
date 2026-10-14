@@ -3515,6 +3515,134 @@ async def gre_parent_child(box):
     )
 
 
+LEGACY_PARENT_IP, LEGACY_CHILD_IP = "169.254.5.1", "169.254.5.10"  # LEGACY_UNDERLAY's; pgd5_10
+
+
+async def legacy_parent_ready(box):
+    """As gre_parent_ready, on a legacy pod (spec 3.10): nm's State of the parent AP wl1.1 on its
+    underlay's .1 (updated when the seed has a row for it), and br-home from the Open_vSwitch
+    root unless the pod has one already."""
+    states = {r.get("if_name"): u for u, r in (await box.rows("Wifi_Inet_State")).items()}
+    row = {"if_name": LEGACY_PARENT, "if_type": "vif", "inet_addr": LEGACY_PARENT_IP}
+    ops = [
+        {
+            "op": "update",
+            "table": "Wifi_Inet_State",
+            "where": [["_uuid", "==", ["uuid", states[LEGACY_PARENT]]]],
+            "row": row,
+        }
+        if LEGACY_PARENT in states
+        else {"op": "insert", "table": "Wifi_Inet_State", "row": row}
+    ]
+    if not any(r.get("name") == "br-home" for r in (await box.rows("Bridge")).values()):
+        ops += [
+            {
+                "op": "insert",
+                "table": "Interface",
+                "uuid-name": "brhomeif",
+                "row": {"name": "br-home"},
+            },
+            {
+                "op": "insert",
+                "table": "Port",
+                "uuid-name": "brhomeport",
+                "row": {"name": "br-home", "interfaces": ["set", [["named-uuid", "brhomeif"]]]},
+            },
+            {
+                "op": "insert",
+                "table": "Bridge",
+                "uuid-name": "brhomebr",
+                "row": {"name": "br-home", "ports": ["set", [["named-uuid", "brhomeport"]]]},
+            },
+            {
+                "op": "insert",
+                "table": "Open_vSwitch",
+                "row": {"bridges": ["set", [["named-uuid", "brhomebr"]]]},
+            },
+        ]
+    await box.transact(ops)
+
+
+async def legacy_parent_child(box):
+    """spec 3.10, 8.6, a legacy pod as another pod's parent (the owner's mix and match, 14
+    October): with the legacy profile its GRE parent AP is wl1.1 on its underlay; a child (a
+    6.6 pod's station, say) that associated there and took a lease gets a gre Wifi_Inet_Config row
+    pgd5_10 from the AP's .1 to the lease (MTU 1562) and a port of br-home, in the pod's OpenSync
+    2.0 schema, as on a 6.6 parent (gre-parent-child)."""
+    ap, failure = await gre_parent_up(box, LEGACY_PARENT)
+    if failure:
+        return failure
+    await legacy_parent_ready(box)
+    await box.transact(
+        [
+            {
+                "op": "insert",
+                "table": "DHCP_leased_IP",
+                "row": {"hwaddr": GRE_CHILD_MAC, "inet_addr": LEGACY_CHILD_IP},
+            }
+        ]
+    )
+    await box.client_join(GRE_CHILD_MAC, LEGACY_PARENT)
+    made = await gre_await_tunnel(box, "pgd5_10", present=True)
+    row = await gre_inet(box, "pgd5_10")
+    bridged = await gre_port_in_home(box, "pgd5_10")
+    await gre_nm_apply(box)
+    applied = await gre_await_applied(box)
+    return box.result(
+        passed=bool(made)
+        and row is not None
+        and row.get("if_type") == "gre"
+        and row.get("gre_ifname") == LEGACY_PARENT
+        and row.get("gre_remote_inet_addr") == LEGACY_CHILD_IP
+        and row.get("gre_local_inet_addr") == LEGACY_PARENT_IP
+        and row.get("mtu") == 1562
+        and bridged
+        and bool(applied),
+        tunnel=row,
+        in_br_home=bridged,
+        gre_status=(box.status() or {}).get("gre_parent"),
+    )
+
+
+async def legacy_parent_child_gone(box):
+    """legacy-parent-child, then the child leaves: its lease and association end, and its tunnel
+    row and br-home port are removed, as on a 6.6 parent (gre-parent-child-gone)."""
+    ap, failure = await gre_parent_up(box, LEGACY_PARENT)
+    if failure:
+        return failure
+    await legacy_parent_ready(box)
+    await box.transact(
+        [
+            {
+                "op": "insert",
+                "table": "DHCP_leased_IP",
+                "row": {"hwaddr": GRE_CHILD_MAC, "inet_addr": LEGACY_CHILD_IP},
+            }
+        ]
+    )
+    await box.client_join(GRE_CHILD_MAC, LEGACY_PARENT)
+    if not await gre_await_tunnel(box, "pgd5_10", present=True):
+        return box.result(passed=False, failed="the tunnel was never made")
+    await gre_nm_apply(box)
+    await gre_await_applied(box)
+    await box.client_leave(GRE_CHILD_MAC, LEGACY_PARENT)
+    lease = next(
+        u
+        for u, r in (await box.rows("DHCP_leased_IP")).items()
+        if r.get("inet_addr") == LEGACY_CHILD_IP
+    )
+    await box.transact(
+        [{"op": "delete", "table": "DHCP_leased_IP", "where": [["_uuid", "==", ["uuid", lease]]]}]
+    )
+    removed = await gre_await_tunnel(box, "pgd5_10", present=False)
+    return box.result(
+        passed=bool(removed),
+        removed=bool(removed),
+        tunnel=await gre_inet(box, "pgd5_10"),
+        gre_status=(box.status() or {}).get("gre_parent"),
+    )
+
+
 async def gre_parent_child_gone(box):
     """spec 8.6: when a child's lease or association ends, its tunnel row and its br-home port are
     removed."""
@@ -5942,6 +6070,8 @@ SCENARIOS = {
     "restart-during-write": restart_during_write,
     "legacy-onboard": legacy_onboard,
     "legacy-parent": legacy_parent,
+    "legacy-parent-child": legacy_parent_child,
+    "legacy-parent-child-gone": legacy_parent_child_gone,
     "legacy-pod-6-6-profile": generation_refused,
     "pod-6-6-legacy-profile": generation_refused,
     "legacy-wired": legacy_wired,
@@ -6111,6 +6241,8 @@ OPTIONS["reconnect-channel-follows"] = OPTIONS["second-radio-moves-channel"]
 # spec 3.10: a legacy pod, and each generation's pod under the other's profile
 OPTIONS["legacy-onboard"] = {"legacy": True}
 OPTIONS["legacy-parent"] = {"legacy": True, "multi_bss": True, "underlay": LEGACY_UNDERLAY}
+OPTIONS["legacy-parent-child"] = OPTIONS["legacy-parent"]
+OPTIONS["legacy-parent-child-gone"] = OPTIONS["legacy-parent"]
 OPTIONS["legacy-pod-6-6-profile"] = {"legacy": True, "profile": PLAIN_PROFILE}
 OPTIONS["pod-6-6-legacy-profile"] = {"profile": LEGACY_PROFILE}
 OPTIONS["legacy-wired"] = {"legacy": True, "wired": True}

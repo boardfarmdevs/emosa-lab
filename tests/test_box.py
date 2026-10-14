@@ -739,6 +739,18 @@ def test_a_legacy_pod_switched_to_the_5ghz_profile_takes_wl0_without_a_conflict(
     assert result["passed"], result
 
 
+def test_a_legacy_parent_tunnels_a_child_into_br_home(agent, tmp_path):
+    # spec 3.10, 8.6: a legacy pod as another pod's GRE parent, its tunnel in the 2.0 schema
+    result = box("legacy-parent-child", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+
+
+def test_a_legacy_parent_removes_a_gone_childs_tunnel(agent, tmp_path):
+    # the same, the child gone: its tunnel and br-home port removed
+    result = box("legacy-parent-child-gone", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+
+
 def test_a_legacy_pods_5ghz_radio_serves_its_own_fronthaul(agent, tmp_path):
     # spec 3.10, 9: bcm-pod-2.4.3-gre-5g-v1, the backhaul staying on 2.4 GHz
     result = box("legacy-5g-fronthaul", agent, tmp_path / "box", timeout=240)
