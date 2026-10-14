@@ -29,6 +29,8 @@ Run: ``python -m emosa.agent.fleet serve /etc/emosa-fleet.json``
 
 import argparse
 import contextlib
+import ctypes
+import ctypes.util
 import errno
 import hashlib
 import http.server
@@ -58,6 +60,8 @@ SERIAL = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}")
 SHA256 = re.compile(r"[0-9a-f]{64}")
 FILES_PORT = 6650
 FILE_MAX = 1 << 20  # bytes of one served file, at most
+TIME_ERROR = 5  # adjtimex(2)'s clock state while the kernel says the clock is unsynchronized
+CLOCK_CHECK = 60  # seconds a clock check stands (a time_synced_command is not run more often)
 IDENTITY = ["id", "serial_number", "model", "firmware_version"]
 TIMEOUT = 5  # seconds for one pod's whole identify-and-hand-over exchange
 AGENT_DEFAULTS = {
@@ -283,21 +287,70 @@ def servable(directory, name):
     return content, None
 
 
+def kernel_clock_synchronized():
+    """The kernel's clock status, as ntpd keeps it (``ntpq -c kerninfo``): adjtimex(2) with no
+    change asked; synchronized unless it says TIME_ERROR (STA_UNSYNC, the kernel's state until a
+    time daemon synchronizes it) or fails."""
+    try:
+        libc = ctypes.CDLL(ctypes.util.find_library("c") or None, use_errno=True)
+        buf = ctypes.create_string_buffer(512)  # a struct timex, modes 0: read only
+        state = libc.adjtimex(buf)
+    except (OSError, AttributeError):
+        return False
+    return state >= 0 and state != TIME_ERROR
+
+
+def clock_synchronized(files, environ=None):
+    """Whether the fleet's host trusts its clock (spec 4, the pods' time): the box's test hook
+    EMOSA_FILES_CLOCK, else ``files.time_synced_command`` (exit 0: synchronized) when set, else the
+    kernel's clock status."""
+    environ = os.environ if environ is None else environ
+    forced = environ.get("EMOSA_FILES_CLOCK")
+    if forced in ("synchronized", "unsynchronized"):
+        return forced == "synchronized"
+    command = files.get("time_synced_command")
+    if command:
+        try:
+            return subprocess.run(["/bin/sh", "-c", command], timeout=10).returncode == 0
+        except (OSError, subprocess.SubprocessError):
+            return False
+    return kernel_clock_synchronized()
+
+
 class FileServer:
     """The fleet's file server (spec 4): plain HTTP on ``host``:``port``. GET or HEAD ``/``:
     200, an empty body (a pod reads the time from its Date header); ``/<sha256>``: a servable file
     of ``directory``, checked at each request, else 404. Every reply has a Date header (GMT, the
-    standard library's); each request is logged with the peer, the path and the answer."""
+    standard library's) while the host's clock is synchronized (``synchronized``); else none, and
+    ``/`` is 503 (Retry-After 60): a server without a reliable clock sends no Date (RFC 7231).
+    Each request is logged with the peer, the path and the answer."""
 
-    def __init__(self, directory, host, port):
+    def __init__(self, directory, host, port, synchronized=lambda: True):
         self.directory = Path(directory)
+        self.synchronized = synchronized
+        self.checked, self.trusted = None, None  # the last check (monotonic) and its answer
+        self.lock = threading.Lock()
         server = self
 
         class Handler(http.server.BaseHTTPRequestHandler):
             server_version, sys_version = "emosa-fleet", ""
 
+            def send_response(self, code, message=None):
+                if server.clock():
+                    super().send_response(code, message)
+                    return
+                self.log_request(code)  # no Date without a clock to trust
+                self.send_response_only(code, message)
+                self.send_header("Server", self.version_string())
+
             def answer(self, body):
                 path = self.path.split("?", 1)[0]
+                if path == "/" and not server.clock():
+                    self.send_response(503)
+                    self.send_header("Retry-After", "60")
+                    self.send_header("Content-Length", "0")
+                    self.end_headers()
+                    return
                 if path == "/":
                     content, why = b"", None
                 else:
@@ -337,6 +390,23 @@ class FileServer:
         self.httpd = http.server.ThreadingHTTPServer((host, port), Handler)
         self.httpd.daemon_threads = True
         self.address = self.httpd.server_address
+
+    def clock(self):
+        """Whether the host's clock is trusted now: checked at most once a CLOCK_CHECK, each change
+        logged."""
+        with self.lock:
+            now = time.monotonic()
+            if self.checked is None or now - self.checked >= CLOCK_CHECK:
+                trusted = bool(self.synchronized())
+                if trusted != self.trusted:
+                    log.warning(
+                        "files: the clock is %s",
+                        "synchronized: the time served"
+                        if trusted
+                        else "not synchronized: no time served",
+                    )
+                self.checked, self.trusted = now, trusted
+            return self.trusted
 
     def start(self):
         names = sorted(p.name for p in self.directory.iterdir()) if self.directory.is_dir() else []
@@ -561,7 +631,10 @@ class Fleet:
             port = self.config["files"].get("port", FILES_PORT)
             try:
                 files = FileServer(
-                    self.config["files"]["directory"], self.config["advertise"], port
+                    self.config["files"]["directory"],
+                    self.config["advertise"],
+                    port,
+                    lambda: clock_synchronized(self.config["files"]),
                 )
                 files.start()
             except OSError as exc:  # the fleet serves its pods without it

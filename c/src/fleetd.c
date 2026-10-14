@@ -31,6 +31,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/timex.h>
 #include <sys/un.h>
 #include <time.h>
 #include <unistd.h>
@@ -248,6 +249,8 @@ typedef struct {
     agents agents;
     int files_fd; /* the file server's listener, -1 without */
     const char *files_dir;
+    bool clock_known, clock_trusted; /* the host's clock, checked at clock_checked (monotonic) */
+    double clock_checked;
     http_conn http[HTTP_CONNS];
     size_t nhttp;
     int listener;
@@ -563,6 +566,42 @@ static int files_open(server *s)
     return fd;
 }
 
+/* fleet.clock_synchronized: the box's test hook EMOSA_FILES_CLOCK, else files.time_synced_command
+ * (exit 0: synchronized) when set, else the kernel's clock status (adjtimex: TIME_ERROR while
+ * unsynchronized, as ntpq's kerninfo shows) */
+static bool clock_synchronized(server *s)
+{
+    const char *forced = getenv("EMOSA_FILES_CLOCK");
+    if (forced && (!strcmp(forced, "synchronized") || !strcmp(forced, "unsynchronized")))
+        return !strcmp(forced, "synchronized");
+    const cJSON *files = cJSON_GetObjectItemCaseSensitive(s->fleet.config, "files");
+    const char *command = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(files, "time_synced_command"));
+    if (command) {
+        const char *argv[] = {"/bin/sh", "-c", command, NULL};
+        int status = -1;
+        return em_run(argv, NULL, NULL, &status) && status == 0;
+    }
+    struct timex tx;
+    memset(&tx, 0, sizeof(tx)); /* modes 0: read only */
+    int state = adjtimex(&tx);
+    return state >= 0 && state != TIME_ERROR;
+}
+
+/* FileServer.clock: checked at most once a minute, each change logged */
+static bool clock_trusted(server *s)
+{
+    double now = monotonic();
+    if (!s->clock_known || now - s->clock_checked >= 60) {
+        bool trusted = clock_synchronized(s);
+        if (!s->clock_known || trusted != s->clock_trusted)
+            WARN("files: the clock is %s", trusted ? "synchronized: the time served" : "not synchronized: no time served");
+        s->clock_known = true;
+        s->clock_trusted = trusted;
+        s->clock_checked = now;
+    }
+    return s->clock_trusted;
+}
+
 static void http_close(server *s, size_t i)
 {
     close(s->http[i].fd);
@@ -609,7 +648,8 @@ static bool http_step(server *s, http_conn *h, short revents)
         if (strstr(h->in, "\r\n\r\n") || strstr(h->in, "\n\n") || h->in_len == HTTP_REQUEST_MAX) {
             int status = 0;
             char note[300];
-            h->out = em_files_answer(s->files_dir, h->in, time(NULL), &h->out_len, &status, note, sizeof(note));
+            h->out = em_files_answer(s->files_dir, h->in, time(NULL), clock_trusted(s), &h->out_len, &status, note,
+                                     sizeof(note));
             if (!h->out)
                 return false;
             if (note[0] && status == 200)

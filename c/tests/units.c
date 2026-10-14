@@ -747,31 +747,40 @@ static void fleet_modules(const char *scratch)
     got = em_files_servable(dir, "../files", &len, &why);
     CHECK(!got && !strcmp(why, "not a SHA-256"), "not a SHA-256 name");
     time_t when = 1791936000; /* Wed, 14 Oct 2026 00:00:00 GMT */
-    char *answer = em_files_answer(dir, "HEAD / HTTP/1.1\r\nHost: x\r\n\r\n", when, &len, &status, note, sizeof(note));
+    char *answer = em_files_answer(dir, "HEAD / HTTP/1.1\r\nHost: x\r\n\r\n", when, true, &len, &status, note, sizeof(note));
     CHECK(answer && status == 200 && !note[0] && len > 0 &&
               strstr(answer, "HTTP/1.0 200 OK\r\n") == answer && strstr(answer, "\r\nDate: Wed, 14 Oct 2026 00:00:00 GMT\r\n") &&
               strstr(answer, "Content-Length: 0\r\n"),
           "HEAD /: 200, the date, no body, not logged");
     free(answer);
     snprintf(request, sizeof(request), "GET /%s HTTP/1.1\r\n\r\n", digest);
-    answer = em_files_answer(dir, request, when, &len, &status, note, sizeof(note));
+    answer = em_files_answer(dir, request, when, true, &len, &status, note, sizeof(note));
     CHECK(answer && status == 200 && len > strlen(content) && !memcmp(answer + len - strlen(content), content, strlen(content)) &&
               strstr(note, "GET /") == note,
           "GET /<sha256>: the file, logged");
     free(answer);
     snprintf(request, sizeof(request), "HEAD /%s HTTP/1.1\r\n\r\n", digest);
-    answer = em_files_answer(dir, request, when, &len, &status, note, sizeof(note));
+    answer = em_files_answer(dir, request, when, true, &len, &status, note, sizeof(note));
     CHECK(answer && status == 200 && strstr(answer, "\r\n\r\n") + 4 == answer + len, "HEAD /<sha256>: no body");
     free(answer);
     snprintf(request, sizeof(request), "GET /%s HTTP/1.1\r\n\r\n", sha);
-    answer = em_files_answer(dir, request, when, &len, &status, note, sizeof(note));
+    answer = em_files_answer(dir, request, when, true, &len, &status, note, sizeof(note));
     CHECK(answer && status == 404 && strstr(answer, "\r\nDate: ") && strstr(note, "not its name"), "a misnamed file: 404");
     free(answer);
-    answer = em_files_answer(dir, "POST / HTTP/1.1\r\n\r\n", when, &len, &status, note, sizeof(note));
+    answer = em_files_answer(dir, "POST / HTTP/1.1\r\n\r\n", when, true, &len, &status, note, sizeof(note));
     CHECK(answer && status == 501, "another method: 501");
     free(answer);
-    answer = em_files_answer(dir, "garbage", when, &len, &status, note, sizeof(note));
+    answer = em_files_answer(dir, "garbage", when, true, &len, &status, note, sizeof(note));
     CHECK(answer && status == 400, "not a request: 400");
+    free(answer);
+    /* the clock not synchronized: no Date anywhere, / is 503, a file still served */
+    answer = em_files_answer(dir, "HEAD / HTTP/1.1\r\n\r\n", when, false, &len, &status, note, sizeof(note));
+    CHECK(answer && status == 503 && !strstr(answer, "Date:") && strstr(answer, "\r\nRetry-After: 60\r\n"),
+          "HEAD / unsynchronized: 503, no Date");
+    free(answer);
+    snprintf(request, sizeof(request), "GET /%s HTTP/1.1\r\n\r\n", digest);
+    answer = em_files_answer(dir, request, when, false, &len, &status, note, sizeof(note));
+    CHECK(answer && status == 200 && !strstr(answer, "Date:"), "a file unsynchronized: served, no Date");
     free(answer);
 }
 

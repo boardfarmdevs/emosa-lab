@@ -369,3 +369,41 @@ def test_the_file_server_serves_only_files_named_by_their_sha256_with_a_date(tmp
     text = "\n".join(r.getMessage() for r in caplog.records)
     assert f"files: 127.0.0.1 GET /{good}: 200" in text
     assert "its content is not its name" in text and "files: 1 served" in text
+
+
+def test_without_a_synchronized_clock_no_time_is_served(tmp_path, caplog):
+    # spec 4, the pods' time: a server without a reliable clock sends no Date (RFC 7231); the
+    # pods keep their own saved clock (the router's bench never syncs, 14 October)
+    files = tmp_path / "files"
+    files.mkdir()
+    content = b"#!/bin/sh\n"
+    sha = hashlib.sha256(content).hexdigest()
+    (files / sha).write_bytes(content)
+    trusted = [False]
+    server = FileServer(files, "127.0.0.1", 0, lambda: trusted[0])
+    with caplog.at_level(logging.WARNING, logger="emosa.fleet"):
+        server.start()
+        base = f"http://127.0.0.1:{server.address[1]}"
+        try:
+            with pytest.raises(urllib.error.HTTPError) as refused:
+                urllib.request.urlopen(urllib.request.Request(base + "/", method="HEAD"))
+            assert refused.value.code == 503 and refused.value.headers["Retry-After"] == "60"
+            assert refused.value.headers["Date"] is None
+            with urllib.request.urlopen(f"{base}/{sha}") as r:  # updates keep working
+                assert r.read() == content and r.headers["Date"] is None
+            trusted[0], server.checked = True, None  # synchronized, checked again
+            with urllib.request.urlopen(urllib.request.Request(base + "/", method="HEAD")) as r:
+                assert r.status == 200 and r.headers["Date"].endswith(" GMT")
+        finally:
+            server.stop()
+    text = caplog.text
+    assert "not synchronized: no time served" in text and "synchronized: the time served" in text
+
+
+def test_the_clock_check_takes_the_command_when_the_fleet_names_one():
+    from emosa.agent.fleet import clock_synchronized
+
+    assert clock_synchronized({"time_synced_command": "true"}, environ={}) is True
+    assert clock_synchronized({"time_synced_command": "false"}, environ={}) is False
+    forced = {"EMOSA_FILES_CLOCK": "unsynchronized"}
+    assert clock_synchronized({"time_synced_command": "true"}, environ=forced) is False
