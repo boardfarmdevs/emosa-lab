@@ -39,6 +39,15 @@ typedef struct {
     bool unassociated_seen, retry_due;
     double since, retry_at;
     unsigned removed; /* stations removed unassociated, since the agent started */
+    /* on a converted pod (guard_all) every other station row is guarded the same way and never
+     * written again (GtpStation._guard_others) */
+    bool guard_all;
+    struct {
+        char uuid[40];
+        double since; /* unassociated since (monotonic) */
+    } others[16];
+    size_t nothers;
+    unsigned others_removed; /* other station rows removed unassociated, since the agent started */
 } em_gtp_scope;
 
 /* The intent from the agent configuration's uplink.bootstrap (ssid, secret_ref, bssid?) and the
@@ -55,7 +64,8 @@ void em_gtp_close(em_gtp_scope *g);
 void em_gtp_tick(em_gtp_scope *g);
 
 /* GtpStation.status: {"station", "ssid", "pinned", "present", "joined", "associated",
- * "removed_unassociated", "waiting", "operation"}; never the passphrase. */
+ * "removed_unassociated", "others_removed_unassociated", "waiting", "operation"}; never the
+ * passphrase. */
 cJSON *em_gtp_status(em_gtp_scope *g);
 
 #endif

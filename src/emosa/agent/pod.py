@@ -951,6 +951,8 @@ async def serve(config, stop):
             run_id=config.get("run_id", pod_id),
             unassociated=unassociated,
             retry=retry,
+            # a converted pod: every station row guarded (spec 3.10)
+            guard_all=profile.radio_plan == "emosa",
         )
     radio_plan = None
     if profile.radio_plan == "emosa":

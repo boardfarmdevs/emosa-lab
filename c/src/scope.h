@@ -36,4 +36,13 @@ const char *em_row_sole_map_value(const cJSON *row, const char *column);
 /* lower-case "aa:bb:.." copy of a MAC column; false when absent. */
 bool em_row_mac(const cJSON *row, const char *column, char out[18]);
 
+/* emosa.opensync.stations.deletion (spec 3.10): the operations deleting the station rows `uuids`
+ * (n of them) of `tables`, appended to ops in order: each row waited on as it is (if_name, mode,
+ * ssid), its radios' vif_configs references, the rows, the credentials no other VIF links and
+ * their Inet rows (no other VIF of the name). Each operation's count goes to counts (-1: none),
+ * at most max_counts; the number appended, or 0 when they do not fit. */
+#define EM_STATION_DELETION_MAX 64 /* station rows, credentials or references in one deletion */
+size_t em_station_deletion(const cJSON *tables, const char *const *uuids, size_t n, cJSON *ops, int *counts,
+                           size_t max_counts);
+
 #endif

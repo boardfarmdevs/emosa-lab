@@ -10,7 +10,9 @@ next start, or a new admission, tries again.
 The guard: the pods' vendor healthcheck reboots a pod after ten minutes of a configured station
 that is not associated. The station in the scope's form (the GTP's SSID) that stays unassociated
 for ``unassociated`` seconds (300) is deleted, and written again after a back-off (``retry``: 15,
-30, then 60 minutes; back to the first once a write associates).
+30, then 60 minutes; back to the first once a write associates). On a converted pod
+(``guard_all``) every other station row is guarded the same way, and never written again: the
+seed's onboarding stations or a hook's, which the radio plan deletes only while the pod is wired.
 """
 
 import logging
@@ -43,6 +45,7 @@ class GtpStation:
         unassociated=UNASSOCIATED,
         retry=RETRY,
         monotonic=time.monotonic,
+        guard_all=False,
     ):
         self.pod_id, self.backend, self.store, self.run_id = pod_id, backend, store, run_id
         self.intent = intent
@@ -56,6 +59,9 @@ class GtpStation:
         self.retry_at = None  # no write before (monotonic), after a removal
         self.backoff = 0  # the next removal's back-off: retry[backoff]
         self.removed = 0  # stations removed unassociated, since the agent started
+        self.guard_all = guard_all  # every station row guarded (a converted pod)
+        self.others = {}  # another station row's uuid -> unassociated since (monotonic)
+        self.others_removed = 0  # other station rows removed unassociated, since the agent started
 
     def latest(self):
         ops = self.store.operations()
@@ -132,6 +138,44 @@ class GtpStation:
         )
         return True
 
+    async def _guard_others(self, snap):
+        """The guard over every other station row (a converted pod): True once it removed one."""
+        if not (self.guard_all and snap.ready):
+            return False
+        now = self.monotonic()
+        stations = [s for s in snap.config.get("stations") or [] if not s["own"]]
+        for station in stations:
+            if station["associated"]:
+                self.others.pop(station["uuid"], None)
+            else:
+                self.others.setdefault(station["uuid"], now)
+        present = {s["uuid"] for s in stations}
+        self.others = {u: t for u, t in self.others.items() if u in present}
+        for station in stations:
+            since = self.others.get(station["uuid"])
+            if since is None or now - since < self.unassociated:
+                continue
+            try:
+                await self.backend.remove_station(station["uuid"])
+            except (EmosaError, ConnectionError, TimeoutError) as exc:
+                log.warning("the pod's station %s: not removed: %s", station["if_name"], exc)
+                return True
+            self.others.pop(station["uuid"], None)
+            self.others_removed += 1
+            self.store.event(
+                self.run_id,
+                "STATION_REMOVED",
+                {"station": station["if_name"], "unassociated_s": self.unassociated},
+                pod_id=self.pod_id,
+            )
+            log.warning(
+                "the pod's station %s (not EMOSA's) was not associated for %d s: removed",
+                station["if_name"],
+                self.unassociated,
+            )
+            return True
+        return False
+
     def _wanted(self, op, snap):
         if not snap.ready:
             self.waiting = "pod not bound"
@@ -180,7 +224,10 @@ class GtpStation:
                 None,
                 None,
             )
-        if await self._guard(snap) or not self._wanted(self.latest(), snap):
+            self.others = {}
+        if await self._guard(snap) or await self._guard_others(snap):
+            return
+        if not self._wanted(self.latest(), snap):
             return
         op = self.engine.request(
             self.intent, source=SOURCE, key=self.key(), run_id=self.run_id, deadline=DEADLINE
@@ -201,6 +248,7 @@ class GtpStation:
             "joined": None if snap is None else bool(snap.config.get("joined")),
             "associated": None if snap is None else bool(snap.config.get("associated")),
             "removed_unassociated": self.removed,
+            "others_removed_unassociated": self.others_removed,
             "waiting": self.waiting,
             "operation": None
             if op is None

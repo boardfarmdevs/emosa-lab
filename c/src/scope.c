@@ -9,6 +9,7 @@
 
 #include "canon.h"
 #include "ovs.h"
+#include "southbound.h"
 
 /* spec 3.10 (uplink._session_start): a legacy pod's start as its agent counts it, a token renewed
  * for every fresh session, empty on a 6.6 pod. One agent process serves one pod. */
@@ -132,4 +133,164 @@ bool em_row_mac(const cJSON *row, const char *column, char out[18])
         out[i] = (char)tolower((unsigned char)v[i]);
     out[17] = 0;
     return true;
+}
+
+/* -- deleting station rows (emosa.opensync.stations) ------------------------------------------ */
+
+static int text_order(const void *a, const void *b) { return strcmp(*(const char *const *)a, *(const char *const *)b); }
+
+static bool listed(const char *const *items, size_t n, const char *item)
+{
+    for (size_t k = 0; k < n; k++)
+        if (item && items[k] && !strcmp(items[k], item))
+            return true;
+    return false;
+}
+
+typedef struct {
+    const char *name, *uuid;
+} named_row;
+
+static int named_order(const void *a, const void *b)
+{
+    const named_row *x = a, *y = b;
+    int k = strcmp(x->name, y->name);
+    return k ? k : strcmp(x->uuid, y->uuid);
+}
+
+typedef struct {
+    const char *radio, *vif;
+} reference;
+
+static int reference_order(const void *a, const void *b)
+{
+    const reference *x = a, *y = b;
+    int k = strcmp(x->radio, y->radio);
+    return k ? k : strcmp(x->vif, y->vif);
+}
+
+static cJSON *empty_set(void)
+{
+    cJSON *set = cJSON_CreateArray();
+    cJSON_AddItemToArray(set, cJSON_CreateString("set"));
+    cJSON_AddItemToArray(set, cJSON_CreateArray());
+    return set;
+}
+
+static cJSON *uuid_set(const char *uuid)
+{
+    cJSON *set = cJSON_CreateArray(), *members = cJSON_CreateArray(), *ref = cJSON_CreateArray();
+    cJSON_AddItemToArray(ref, cJSON_CreateString("uuid"));
+    cJSON_AddItemToArray(ref, cJSON_CreateString(uuid));
+    cJSON_AddItemToArray(members, ref);
+    cJSON_AddItemToArray(set, cJSON_CreateString("set"));
+    cJSON_AddItemToArray(set, members);
+    return set;
+}
+
+size_t em_station_deletion(const cJSON *tables, const char *const *uuids, size_t n, cJSON *ops, int *counts,
+                           size_t max_counts)
+{
+    enum { MAX = EM_STATION_DELETION_MAX };
+    const cJSON *vifs = em_table(tables, "Wifi_VIF_Config"), *credentials = em_table(tables, "Wifi_Credential_Config");
+    named_row gone[MAX];
+    size_t ngone = 0;
+    for (size_t k = 0; k < n && ngone < MAX; k++) {
+        const cJSON *row = cJSON_GetObjectItemCaseSensitive(vifs, uuids[k]);
+        const char *name = ovs_str(row, "if_name");
+        bool twice = false;
+        for (size_t j = 0; j < ngone; j++)
+            twice = twice || !strcmp(gone[j].uuid, uuids[k]);
+        if (row && !twice)
+            gone[ngone++] = (named_row){name ? name : "", row->string};
+    }
+    qsort(gone, ngone, sizeof(*gone), named_order);
+    const char *gone_uuids[MAX], *gone_names[MAX];
+    for (size_t k = 0; k < ngone; k++) {
+        gone_uuids[k] = gone[k].uuid;
+        gone_names[k] = gone[k].name;
+    }
+    /* what the kept rows use */
+    const char *kept_refs[MAX], *kept_names[MAX];
+    size_t nkept_refs = 0, nkept_names = 0;
+    const cJSON *r;
+    cJSON_ArrayForEach(r, vifs)
+    {
+        if (listed(gone_uuids, ngone, r->string))
+            continue;
+        if (nkept_names < MAX)
+            kept_names[nkept_names++] = ovs_str(r, "if_name");
+        nkept_refs += ovs_uuids(r, "credential_configs", kept_refs + nkept_refs, MAX - nkept_refs);
+    }
+    const char *creds[MAX], *inets[MAX];
+    size_t ncreds = 0, ninets = 0, nrefs = 0;
+    for (size_t k = 0; k < ngone; k++) {
+        const char *refs[MAX];
+        size_t m = ovs_uuids(cJSON_GetObjectItemCaseSensitive(vifs, gone_uuids[k]), "credential_configs", refs, MAX);
+        for (size_t j = 0; j < m; j++)
+            if (cJSON_GetObjectItemCaseSensitive(credentials, refs[j]) && !listed(kept_refs, nkept_refs, refs[j]) &&
+                !listed(creds, ncreds, refs[j]) && ncreds < MAX)
+                creds[ncreds++] = refs[j];
+    }
+    cJSON_ArrayForEach(r, em_table(tables, "Wifi_Inet_Config"))
+    {
+        const char *name = ovs_str(r, "if_name");
+        if (listed(gone_names, ngone, name) && !listed(kept_names, nkept_names, name) && ninets < MAX)
+            inets[ninets++] = r->string;
+    }
+    reference refs[MAX];
+    cJSON_ArrayForEach(r, em_table(tables, "Wifi_Radio_Config"))
+    {
+        const char *members[MAX];
+        size_t m = ovs_uuids(r, "vif_configs", members, MAX);
+        for (size_t j = 0; j < m; j++)
+            if (listed(gone_uuids, ngone, members[j]) && nrefs < MAX)
+                refs[nrefs++] = (reference){r->string, members[j]};
+    }
+    qsort(creds, ncreds, sizeof(*creds), text_order);
+    qsort(inets, ninets, sizeof(*inets), text_order);
+    qsort(refs, nrefs, sizeof(*refs), reference_order);
+    size_t total = ngone * 2 + nrefs + ncreds + ninets;
+    if (total > max_counts)
+        return 0;
+    size_t c = 0;
+    const char *cols[] = {"if_name", "mode", "ssid"};
+    for (size_t k = 0; k < ngone; k++) {
+        const cJSON *row = cJSON_GetObjectItemCaseSensitive(vifs, gone_uuids[k]);
+        cJSON *as_it_is = cJSON_CreateObject();
+        const char *name = ovs_str(row, "if_name"), *ssid = ovs_str(row, "ssid");
+        cJSON_AddItemToObject(as_it_is, "if_name", name ? cJSON_CreateString(name) : empty_set());
+        cJSON_AddStringToObject(as_it_is, "mode", "sta");
+        cJSON_AddItemToObject(as_it_is, "ssid", ssid ? cJSON_CreateString(ssid) : empty_set());
+        cJSON *wait = em_ovs_op("wait", "Wifi_VIF_Config", em_ovs_where_uuid(gone_uuids[k]));
+        cJSON_AddItemToObject(wait, "columns", em_ovs_strings(cols, 3));
+        cJSON_AddStringToObject(wait, "until", "==");
+        cJSON_AddItemToArray(cJSON_AddArrayToObject(wait, "rows"), as_it_is);
+        cJSON_AddNumberToObject(wait, "timeout", 0);
+        cJSON_AddItemToArray(ops, wait);
+        counts[c++] = -1;
+    }
+    for (size_t k = 0; k < nrefs; k++) {
+        cJSON *mutate = em_ovs_op("mutate", "Wifi_Radio_Config", em_ovs_where_uuid(refs[k].radio));
+        cJSON *mutation = cJSON_CreateArray();
+        cJSON_AddItemToArray(mutation, cJSON_CreateString("vif_configs"));
+        cJSON_AddItemToArray(mutation, cJSON_CreateString("delete"));
+        cJSON_AddItemToArray(mutation, uuid_set(refs[k].vif));
+        cJSON_AddItemToArray(cJSON_AddArrayToObject(mutate, "mutations"), mutation);
+        cJSON_AddItemToArray(ops, mutate);
+        counts[c++] = 1;
+    }
+    for (size_t k = 0; k < ngone; k++) {
+        cJSON_AddItemToArray(ops, em_ovs_op("delete", "Wifi_VIF_Config", em_ovs_where_uuid(gone_uuids[k])));
+        counts[c++] = 1;
+    }
+    for (size_t k = 0; k < ncreds; k++) {
+        cJSON_AddItemToArray(ops, em_ovs_op("delete", "Wifi_Credential_Config", em_ovs_where_uuid(creds[k])));
+        counts[c++] = 1;
+    }
+    for (size_t k = 0; k < ninets; k++) {
+        cJSON_AddItemToArray(ops, em_ovs_op("delete", "Wifi_Inet_Config", em_ovs_where_uuid(inets[k])));
+        counts[c++] = 1;
+    }
+    return c;
 }

@@ -739,6 +739,12 @@ def test_a_converted_pods_seed_stations_go_and_only_its_gtp_station_stays(agent,
     assert result["passed"], result
 
 
+def test_an_unwired_converted_pods_unassociated_seed_station_is_removed(agent, tmp_path):
+    # spec 3.10: the station guard over every station row of a converted pod
+    result = box("legacy-seed-station-unwired", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+
+
 def test_a_converted_pods_operator_cloud_is_cleared_on_every_start(agent, tmp_path):
     # spec 3.10, a converted pod talks only to EMOSA: qm's broker and the statistics rows gone
     result = box("legacy-cloud-cleared", agent, tmp_path / "box", timeout=300)
