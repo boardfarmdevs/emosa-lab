@@ -1144,7 +1144,8 @@ static void uplink_vectors(const char *dir)
                                    str(in, "bssid"),
                                    stations,
                                    nstations,
-                                   imode && !strcmp(imode, "gre") ? "gre" : "multi_ap"};
+                                   imode && !strcmp(imode, "gre") ? "gre" : "multi_ap",
+                                   cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(in, "legacy"))};
         cJSON *sent = cJSON_CreateArray();
         em_ovs_session session = {tables, 1, record, sent};
         em_submit_result result;

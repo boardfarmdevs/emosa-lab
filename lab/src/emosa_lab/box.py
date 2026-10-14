@@ -4793,6 +4793,73 @@ async def legacy_wired_half_pair(box):
     )
 
 
+LEGACY_STATION = "02:00:00:00:41:01"  # wl1's MAC in the legacy pod's rows
+
+
+async def legacy_pin(box):
+    """The legacy pod's station row and its one linked credential, once the station is pinned to
+    the GRE parent AP by its parent column; else None."""
+    _, station = await box.vif("Wifi_VIF_Config", "wl1")
+    creds = await box.rows("Wifi_Credential_Config")
+    linked = [creds[u] for u in uuids((station or {}).get("credential_configs")) if u in creds]
+    if str((station or {}).get("parent") or "").lower() != GRE_PARENT_AP or len(linked) != 1:
+        return None
+    return station, linked[0]
+
+
+async def legacy_gre_move(box):
+    """spec 3.10, 8.6: a legacy pod as a GRE child, on its own GRE uplink (wl1, g-wl1), moved onto
+    a fleet GRE parent by the controller's Backhaul Steering Request. Its credential has no
+    bssid, priority or enabled: the agent writes one with ssid, security and onboard_type gre
+    only, and pins the parent in the station's own parent column (credential-list mode, ssid
+    empty). Once the pod joins there, the move is applied and answered."""
+    if not (await onboarded(box)).get("applied"):
+        return box.result(passed=False, failed="not onboarded")
+    peer_status(box, "RPIPOD0KEPTPARENT", al=PARENT_AL, gre_parent_ap=GRE_PARENT_AP)
+    await box.until(lambda: uplink_status(box).get("bootstrap"), seconds=30)
+    await asyncio.sleep(2.5)  # the agent's peer directory (1 s cache) picks up the GRE parent
+    answered = len(box.sent(0x801A))
+    mid = box.controller.send(0x8019, (backhaul_steering_request(LEGACY_STATION, GRE_PARENT_AP),))
+    await box.until(lambda: box.controller.reply(ACK, mid), seconds=5)
+    pinned = await until_async(lambda: legacy_pin(box), seconds=30)
+    if not pinned:
+        return box.result(passed=False, failed="no parent pin", uplink=uplink_status(box))
+    station, credential = pinned
+    uuid, _ = await box.vif("Wifi_VIF_State", "wl1")
+    await box.transact(  # the closed target joins the parent: the station on it, cm's GRE stays
+        [
+            {
+                "op": "update",
+                "table": "Wifi_VIF_State",
+                "where": [["_uuid", "==", ["uuid", uuid]]],
+                "row": {"parent": GRE_PARENT_AP, "ssid": "emosa-lab-bh", "wds": False},
+            }
+        ]
+    )
+    onto = await next_message(box, 0x801A, answered, seconds=60)
+    answer = steering_answer(onto)
+
+    def applied():
+        operation = uplink_status(box).get("operation") or {}
+        return operation.get("state") == "OBSERVED_APPLIED"
+
+    done = await box.until(applied, seconds=60)
+    security = ovsdb_map(credential.get("security"))
+    return box.result(
+        passed=answer == (LEGACY_STATION, GRE_PARENT_AP, 0)
+        and bool(done)
+        and credential.get("onboard_type") == "gre"
+        and credential.get("ssid") == "emosa-lab-bh"
+        and security.get("encryption") == "WPA-PSK"
+        and not {"bssid", "priority", "enabled"} & set(credential)
+        and station.get("ssid") == "",
+        answer=answer,
+        applied=bool(done),
+        credential={k: v for k, v in credential.items() if k != "security"},
+        station={k: station.get(k) for k in ("ssid", "parent", "enabled")},
+    )
+
+
 async def generation_refused(box):
     """spec 3.10: the pod's schema is not its profile's generation (a 6.6 profile on a legacy pod,
     or a legacy profile on a 6.6 pod). The agent refuses the pod (SCHEMA_MISMATCH in its status):
@@ -4889,6 +4956,7 @@ SCENARIOS = {
     "pod-6-6-legacy-profile": generation_refused,
     "legacy-wired": legacy_wired,
     "legacy-wired-half-pair": legacy_wired_half_pair,
+    "legacy-gre-move": legacy_gre_move,
 }
 OPTIONS = {  # the box each scenario needs beyond the default
     "write-lost-unapplied": {"reply_cut": "lost-write"},
@@ -5046,6 +5114,17 @@ OPTIONS["legacy-pod-6-6-profile"] = {"legacy": True, "profile": PLAIN_PROFILE}
 OPTIONS["pod-6-6-legacy-profile"] = {"profile": LEGACY_PROFILE}
 OPTIONS["legacy-wired"] = {"legacy": True, "wired": True}
 OPTIONS["legacy-wired-half-pair"] = {"legacy": True, "wired": True}
+OPTIONS["legacy-gre-move"] = {
+    "legacy": True,
+    "backhaul": True,
+    "uplink": {
+        "mode": "gre",
+        "station": "wl1",
+        "credentials": "config",
+        "ssid": "emosa-lab-bh",
+        "secret_ref": "backhaul",
+    },
+}
 
 
 async def run(scenario, agent, directory, *, binary=None):

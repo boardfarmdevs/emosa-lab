@@ -300,3 +300,58 @@ def test_a_legacy_pods_pair_in_place_is_its_bridge_and_half_a_pair_is_refused():
     with pytest.raises(EmosaError) as refused:
         asyncio.run(backend.plan(intent))
     assert refused.value.code == Reason.OWNERSHIP_CONFLICT
+
+
+# spec 3.10, 8.6 on a legacy pod: a GRE child's move pinned by its station's parent
+STA, STA_STATE, GRE_UPLINK = (f"00000000-0000-4000-8000-0000000003{n}" for n in ("01", "02", "03"))
+PARENT_AP = "72:00:00:00:0a:01"
+
+
+class GrePod(WiredPod):
+    def __init__(self):
+        super().__init__()
+        self.tables["Wifi_Radio_Config"][RADIO]["vif_configs"] = ["uuid", STA]
+        self.tables["Wifi_VIF_Config"] = {
+            STA: {"if_name": "wl1", "mode": "sta", "enabled": True, "ssid": "pod-onboarding"}
+        }
+        self.tables["Wifi_VIF_State"] = {
+            STA_STATE: {
+                "if_name": "wl1",
+                "mode": "sta",
+                "enabled": True,
+                "ssid": "pod-onboarding",
+                "parent": "02:00:00:00:1b:02",
+                "mac": "02:00:00:00:41:01",
+            }
+        }
+        self.tables["Connection_Manager_Uplink"] = {
+            GRE_UPLINK: {"if_name": "g-wl1", "if_type": "gre", "is_used": True}
+        }
+
+    async def transact(self, operations, transaction_id=None, generation=None, **_):
+        self.sent.append(operations)
+        return [{"count": 1} if op["op"] == "update" else {} for op in operations]
+
+
+def test_a_legacy_gre_childs_move_pins_its_stations_parent(tmp_path):
+    from emosa.opensync.uplink import GRE, UplinkBackend, UplinkIntent
+
+    vault = SecretStore(tmp_path / "secrets")
+    vault.write_simulated("backhaul", "EmosaBackhaul2026!")
+    pod = GrePod()
+    backend = UplinkBackend("pod-1", pod, vault, serial=SERIAL, station="wl1", legacy=True)
+    intent = UplinkIntent("pod-1", "wl1", "emosa-lab-bh", "backhaul", mode=GRE, bssid=PARENT_AP)
+    attempt = {"transaction_id": "t1", "session_generation": 1}
+    result = asyncio.run(backend.submit(intent, attempt))
+    assert result.status == "committed"
+    (ops,) = pod.sent
+    insert = next(op for op in ops if op["op"] == "insert")
+    assert insert["row"] == {
+        "ssid": "emosa-lab-bh",
+        "security": ["map", [["encryption", "WPA-PSK"], ["key", "EmosaBackhaul2026!"]]],
+        "onboard_type": "gre",
+    }  # no bssid, priority or enabled: a legacy pod's credential has none
+    update = next(op for op in ops if op["op"] == "update")
+    assert update["row"]["parent"] == PARENT_AP and update["row"]["ssid"] == ""
+    assert "multi_ap" not in update["row"]
+    assert result.evidence["restore"]["ssid"] == "pod-onboarding"  # the revert's snapshot

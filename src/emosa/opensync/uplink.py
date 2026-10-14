@@ -239,9 +239,22 @@ class UplinkBackend:
     mode = MODE
 
     def __init__(
-        self, pod_id, session, vault, *, serial, station, stations=(), fixed_band=None, loop=None
+        self,
+        pod_id,
+        session,
+        vault,
+        *,
+        serial,
+        station,
+        stations=(),
+        fixed_band=None,
+        loop=None,
+        legacy=False,
     ):
         self.pod_id, self.session, self.vault = pod_id, session, vault
+        # a legacy pod (spec 3.10): its credential has no bssid, priority or enabled; the station's
+        # Wifi_VIF_Config.parent pins the upstream BSSID instead
+        self.legacy = legacy
         self.expected_serial, self.station = serial, station
         self.stations = dict(stations)
         self.bound = set(self.stations.values()) | {station}
@@ -333,19 +346,18 @@ class UplinkBackend:
         linked = [creds[u] for u in vif.get("credential_configs") or [] if u in creds]
         sole = linked[0] if len(linked) == 1 else {}
         key = credential_key(sole)
-        listed = (
-            vif.get("enabled") is True
-            and not vif.get("ssid")
-            and sole.get("enabled") is True
-            and key is not None
-        )
+        # a legacy pod's credential has no enabled column: a linked one is used (spec 3.10)
+        enabled = sole.get("enabled") is True or (self.legacy and bool(sole))
+        listed = vif.get("enabled") is True and not vif.get("ssid") and enabled and key is not None
         kind = {"multi_ap": MULTI_AP, "gre": GRE}.get(sole.get("onboard_type")) if listed else None
+        # the pin: the credential's bssid, or a legacy pod's station's parent
+        pin = vif.get("parent") if self.legacy else sole.get("bssid")
         return {
             "uplink": kind or "other",
             "station": station,
             "ssid": sole.get("ssid") if kind else vif.get("ssid"),
             "credential_fingerprint": self.vault.fingerprint(key) if kind else None,
-            "bssid": lower_mac(sole.get("bssid")) if kind else None,
+            "bssid": lower_mac(pin) if kind else None,
         }, (sole if kind else None)
 
     async def snapshot(self):
@@ -415,6 +427,10 @@ class UplinkBackend:
                 Reason.INVALID_INPUT, "the upstream BSSID is a pod downstream of this one"
             )
 
+    def _guards(self):
+        """The station's guarded columns; on a legacy pod its parent pin too (spec 3.10)."""
+        return (*STATION_GUARDS, "parent") if self.legacy else STATION_GUARDS
+
     @staticmethod
     def _others_on(rows, station):
         """The pod's other backhaul stations that are enabled: the switch disables them."""
@@ -478,6 +494,15 @@ class UplinkBackend:
         if intent.mode == MULTI_AP:
             vif_row["multi_ap"] = ["set", []]
             vif_row["wds"] = ["set", []]
+        if self.legacy:  # the pin is the station's parent; the revert puts the pod's back
+            vif_row["parent"] = intent.bssid
+        credential = {
+            "ssid": intent.ssid,
+            "security": ["map", [["encryption", "WPA-PSK"], ["key", key]]],
+            "onboard_type": intent.onboard_type(),
+        }
+        if not self.legacy:  # a legacy pod's credential has no priority, enabled or bssid
+            credential |= {"priority": 1, "enabled": True, "bssid": intent.bssid}
         # Snapshot the pod columns this move overwrites, for the revert to put back (vconf mode),
         # but only when moving FROM the bootstrap (the pre-move station is in vconf mode, ssid set):
         # a move from one parent to another leaves the earlier snapshot in place, so the revert
@@ -495,19 +520,12 @@ class UplinkBackend:
                 "rows": [{"_uuid": ["uuid", node_uuid], "serial_number": self.expected_serial}],
                 "timeout": 0,
             },
-            guard("Wifi_VIF_Config", vif_uuid, vif, [c for c in STATION_GUARDS if c in vif]),
+            guard("Wifi_VIF_Config", vif_uuid, vif, [c for c in self._guards() if c in vif]),
             {
                 "op": "insert",
                 "table": "Wifi_Credential_Config",
                 "uuid-name": "backhaul",
-                "row": {
-                    "ssid": intent.ssid,
-                    "security": ["map", [["encryption", "WPA-PSK"], ["key", key]]],
-                    "onboard_type": intent.onboard_type(),
-                    "priority": 1,
-                    "enabled": True,
-                    "bssid": intent.bssid,
-                },
+                "row": credential,
             },
             {
                 "op": "update",

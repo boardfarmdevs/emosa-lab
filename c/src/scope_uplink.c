@@ -182,7 +182,9 @@ static const cJSON *listed_credential(em_uplink_scope *u, const cJSON *vif, cons
     const char *enc = sole ? ovs_map_get(sole, "security", "encryption") : NULL;
     *key = enc && !strcmp(enc, "WPA-PSK") ? ovs_map_get(sole, "security", "key") : NULL;
     const char *vssid = vif ? ovs_str(vif, "ssid") : NULL, *onboard = sole ? ovs_str(sole, "onboard_type") : NULL;
-    bool listed = vif && ovs_true(vif, "enabled") && !(vssid && *vssid) && onboard && ovs_true(sole, "enabled") && *key;
+    /* a legacy pod's credential has no enabled column: a linked one is used (spec 3.10) */
+    bool enabled = sole && (ovs_true(sole, "enabled") || (u->legacy && !cJSON_GetObjectItemCaseSensitive(sole, "enabled")));
+    bool listed = vif && ovs_true(vif, "enabled") && !(vssid && *vssid) && onboard && enabled && *key && **key;
     const char *k = NULL;
     if (listed && !strcmp(onboard, "multi_ap"))
         k = "multi-ap";
@@ -239,7 +241,9 @@ static cJSON *configured(em_uplink_scope *u, const cJSON *vif, const char *stati
         char fp[65], mac[18];
         em_vault_fingerprint_text(u->vault, key, fp);
         cJSON_AddStringToObject(c, "credential_fingerprint", fp);
-        cJSON_AddItemToObject(c, "bssid", em_row_mac(sole, "bssid", mac) ? cJSON_CreateString(mac) : cJSON_CreateNull());
+        /* the pin: the credential's bssid, or a legacy pod's station's parent */
+        bool pinned = u->legacy ? em_row_mac(vif, "parent", mac) : em_row_mac(sole, "bssid", mac);
+        cJSON_AddItemToObject(c, "bssid", pinned ? cJSON_CreateString(mac) : cJSON_CreateNull());
     } else {
         cJSON_AddItemToObject(c, "ssid", vssid ? cJSON_CreateString(vssid) : cJSON_CreateNull());
         cJSON_AddNullToObject(c, "credential_fingerprint");
@@ -471,7 +475,8 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
                                str(intent, "bssid"),
                                names,
                                nnames,
-                               mode && !strcmp(mode, "gre") ? "gre" : "multi_ap"};
+                               mode && !strcmp(mode, "gre") ? "gre" : "multi_ap",
+                               u->legacy};
         resolver r = {u->vault, NULL};
         e = em_uplink_submit(u->serial, &session, &in, resolve, &r, &result, &refusal, &restore_out);
         em_free_secret(r.key);

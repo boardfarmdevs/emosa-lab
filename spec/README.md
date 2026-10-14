@@ -594,10 +594,16 @@ is everything above. For a legacy pod, all of this specification applies, except
   `backhaul_mode` MUST be `gre-parent` (§8.6) when it has backhaul slots.
 - **The Ethernet uplink** (§8.4) is bridged by OpenSync's patch pair, there being no
   `Connection_Manager_Uplink.bridge`.
+- **A GRE child** (§8.6, uplink mode `gre`): its `Wifi_Credential_Config` has no `bssid`,
+  `priority` or `enabled`, so a move writes the credential with `ssid`, `security` and
+  `onboard_type=gre` only, and pins the parent in the station's own
+  `Wifi_VIF_Config.parent`, beside `credential_configs` (credential-list mode, `ssid`
+  empty). A linked credential counts as enabled. The station's `parent` is guarded with
+  its other columns and snapshotted for the revert, which puts the pod's back.
 - **Not served** on a legacy pod, refused at the agent's start
   (`INVALID_INPUT`) or turned off and said so in the status:
-  the uplink switch onto a Multi-AP backhaul (§8.3; `Wifi_Credential_Config`
-  has no `bssid`, `priority` or `enabled`); client steering (§3.7) and
+  the uplink switch onto a Multi-AP backhaul (§8.3: no Multi-AP station on such a
+  pod); client steering (§3.7) and
   the station watch (§3.9), whose `Band_Steering_Clients` columns do not
   exist. Statistics (§3.6) are served: their columns are the same.
 

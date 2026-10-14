@@ -669,3 +669,9 @@ def test_a_wired_legacy_pods_uplink_is_bridged_by_the_patch_pair(agent, tmp_path
 def test_half_a_patch_pair_is_another_managers_and_left_alone(agent, tmp_path):
     result = box("legacy-wired-half-pair", agent, tmp_path / "box", timeout=240)
     assert result["passed"], result
+
+
+def test_a_legacy_gre_child_is_moved_by_its_stations_parent_pin(agent, tmp_path):
+    # spec 3.10, 8.6: no Wifi_Credential_Config.bssid on a 2.x pod
+    result = box("legacy-gre-move", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result

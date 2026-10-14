@@ -1343,6 +1343,10 @@ em_reason em_uplink_submit(const char *serial, em_ovs_session *s, const em_uplin
                 if (v)
                     cJSON_AddItemToObject(snap, cols[i], cJSON_Duplicate(v, 1));
             }
+            /* a legacy pod's pin is the station's parent: the revert puts the pod's back */
+            const cJSON *parent = in->legacy ? cJSON_GetObjectItemCaseSensitive(vif, "parent") : NULL;
+            if (parent)
+                cJSON_AddItemToObject(snap, "parent", cJSON_Duplicate(parent, 1));
             *restore = snap;
         }
     }
@@ -1362,11 +1366,12 @@ em_reason em_uplink_submit(const char *serial, em_ovs_session *s, const em_uplin
         cJSON_AddNumberToObject(o, "timeout", 0);
         PUSH(o, -1);
     }
+    /* a legacy pod's pin is the station's parent, guarded with the rest (spec 3.10) */
     static const char *const station_guards[] = {"if_name", "mode", "enabled", "ssid",
-                                                 "credential_configs", "multi_ap"};
-    const char *cols[6];
+                                                 "credential_configs", "multi_ap", "parent"};
+    const char *cols[7];
     size_t nc = 0;
-    for (size_t i = 0; i < 6; i++)
+    for (size_t i = 0; i < (in->legacy ? 7u : 6u); i++)
         if (cJSON_GetObjectItemCaseSensitive(vif, station_guards[i]))
             cols[nc++] = station_guards[i];
     PUSH(guard("Wifi_VIF_Config", vif->string, vif, cols, nc), -1);
@@ -1375,9 +1380,11 @@ em_reason em_uplink_submit(const char *serial, em_ovs_session *s, const em_uplin
     cJSON_AddStringToObject(cred, "ssid", in->ssid);
     cJSON_AddItemToObject(cred, "security", map2("encryption", "WPA-PSK", "key", key));
     cJSON_AddStringToObject(cred, "onboard_type", in->onboard && *in->onboard ? in->onboard : "multi_ap");
-    cJSON_AddNumberToObject(cred, "priority", 1);
-    cJSON_AddTrueToObject(cred, "enabled");
-    cJSON_AddStringToObject(cred, "bssid", in->bssid);
+    if (!in->legacy) { /* a legacy pod's credential has no priority, enabled or bssid */
+        cJSON_AddNumberToObject(cred, "priority", 1);
+        cJSON_AddTrueToObject(cred, "enabled");
+        cJSON_AddStringToObject(cred, "bssid", in->bssid);
+    }
     cJSON_AddItemToObject(ins, "row", cred);
     PUSH(ins, -1);
     /* credential-list mode: owm then sets multi_ap, 4-address and br-home itself */
@@ -1390,6 +1397,8 @@ em_reason em_uplink_submit(const char *serial, em_ovs_session *s, const em_uplin
         cJSON_AddItemToObject(r, "multi_ap", tagged("set", cJSON_CreateArray()));
         cJSON_AddItemToObject(r, "wds", tagged("set", cJSON_CreateArray()));
     }
+    if (in->legacy)
+        cJSON_AddStringToObject(r, "parent", in->bssid);
     cJSON_AddItemToArray(links, named("backhaul"));
     cJSON_AddItemToObject(r, "credential_configs", tagged("set", links));
     cJSON_AddItemToObject(upd, "row", r);
@@ -1414,7 +1423,7 @@ em_reason em_uplink_submit(const char *serial, em_ovs_session *s, const em_uplin
         others[at] = row;
     }
     for (size_t k = 0; !is_gre && k < nothers; k++) {  /* a GRE move disables no other station */
-        const char *ocols[6];
+        const char *ocols[7];
         size_t onc = 0;
         for (size_t i = 0; i < 6; i++)
             if (cJSON_GetObjectItemCaseSensitive(others[k], station_guards[i]))

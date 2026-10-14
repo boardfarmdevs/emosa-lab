@@ -127,6 +127,9 @@ typedef struct {
     const char *const *stations; /* the pod's backhaul stations (any order; may hold `station`) */
     size_t nstations;
     const char *onboard; /* the credential's onboard_type: NULL/"multi_ap" (default), or "gre" (spec 8.6) */
+    /* a legacy pod (spec 3.10): the credential without priority, enabled or bssid; the pin in the
+     * station's parent, guarded and snapshotted for the revert */
+    bool legacy;
 } em_uplink_intent;
 
 /* `restore` (optional out): when moving from the bootstrap (the pre-move station in vconf mode),

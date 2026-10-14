@@ -2521,10 +2521,12 @@ static bool configure(agent *a, const char *path, const char *profiles)
         return false;
     if (a->profile.legacy) {
         /* spec 3.10: a legacy pod has no Multi-AP station (Wifi_Credential_Config without bssid,
-         * priority or enabled), its Ethernet uplink is bridged by the patch pair (spec 8.4), and its
-         * Band_Steering_Clients has not steering's or the watch's columns */
+         * priority or enabled): a GRE child's pin is its station's parent; its Ethernet uplink is
+         * bridged by the patch pair (spec 8.4); its Band_Steering_Clients has not steering's or
+         * the watch's columns */
         const char *legacy_uplink = cfg_str(cJSON_GetObjectItemCaseSensitive(c, "uplink"), "mode");
-        if (legacy_uplink && strcmp(legacy_uplink, "off") && strcmp(legacy_uplink, "ethernet")) {
+        if (legacy_uplink && strcmp(legacy_uplink, "off") && strcmp(legacy_uplink, "ethernet") &&
+            strcmp(legacy_uplink, "gre")) {
             FAIL("uplink: %s is not served on a legacy pod", legacy_uplink);
             return false;
         }
@@ -2547,6 +2549,7 @@ static bool configure(agent *a, const char *path, const char *profiles)
             a->uplink.nbands = i + 1;
         }
         a->uplink.fixed_band = a->profile.band;
+        a->uplink.legacy = a->profile.legacy; /* the station's parent is the pin (spec 3.10) */
         /* a failed switch's hold, bounded (spec 8.3): absent, the scope's defaults */
         const cJSON *backoff = cJSON_GetObjectItemCaseSensitive(uplink, "hold_backoff");
         const cJSON *backoff_cap = cJSON_GetObjectItemCaseSensitive(uplink, "hold_backoff_cap");

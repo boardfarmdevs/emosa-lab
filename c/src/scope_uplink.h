@@ -27,6 +27,9 @@ typedef struct {
     size_t nbands;
     /* the band of the radio that carries the pod's BSSes: a station on it keeps its channel */
     const char *fixed_band;
+    /* a legacy pod (spec 3.10): its credential has no bssid, priority or enabled; the station's
+     * parent is the pin */
+    bool legacy;
     em_vault *vault;
     cJSON *(*transact)(void *ctx, const cJSON *operations);
     void *transact_ctx;

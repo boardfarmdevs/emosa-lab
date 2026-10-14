@@ -785,9 +785,10 @@ async def serve(config, stop):
     # the fleet's other agents, beside this one's run directory (spec 8.5)
     directory = PeerDirectory(config["run_dir"], pod_id) if config.get("run_dir") else None
     uplink_config = config.get("uplink", {"mode": "off"})
-    if profile.legacy and uplink_config["mode"] not in ("off", WIRED):
+    if profile.legacy and uplink_config["mode"] not in ("off", WIRED, GRE):
         # spec 3.10: a legacy pod has no Multi-AP station (Wifi_Credential_Config without bssid,
-        # priority or enabled); its Ethernet uplink is bridged by the patch pair (spec 8.4)
+        # priority or enabled); a GRE child's pin is its station's parent, and its Ethernet uplink
+        # is bridged by the patch pair (spec 8.4)
         raise EmosaError(
             Reason.INVALID_INPUT, f"uplink: {uplink_config['mode']} is not served on a legacy pod"
         )
@@ -822,6 +823,7 @@ async def serve(config, stop):
                 station=station,
                 stations=backend.profile.uplink_stations,
                 fixed_band=backend.profile.band,
+                legacy=profile.legacy,
                 loop=None
                 if directory is None
                 else lambda target, own: loops(
