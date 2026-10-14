@@ -675,3 +675,9 @@ def test_a_legacy_gre_child_is_moved_by_its_stations_parent_pin(agent, tmp_path)
     # spec 3.10, 8.6: no Wifi_Credential_Config.bssid on a 2.x pod
     result = box("legacy-gre-move", agent, tmp_path / "box", timeout=240)
     assert result["passed"], result
+
+
+def test_a_legacy_pods_5ghz_radio_serves_its_own_fronthaul(agent, tmp_path):
+    # spec 3.10, 9: bcm-pod-2.4.3-gre-5g-v1, the backhaul staying on 2.4 GHz
+    result = box("legacy-5g-fronthaul", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result

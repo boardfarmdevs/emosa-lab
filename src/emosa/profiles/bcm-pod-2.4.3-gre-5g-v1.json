@@ -1,0 +1,95 @@
+{
+  "id": "bcm-pod-2.4.3-gre-5g-v1",
+  "description": "bcm-pod-2.4.3-gre-v1 with the pod's 5 GHz radio as a fronthaul only: wl0 (bcm4366, 11ac) serves the 5 GHz radio's M2 set on its home AP wl0.2, its other BSSes left out (no 5 GHz backhaul slot), and is reported on the channel it operates on, which EMOSA does not move (a channel selection that forbids it is declined, spec 3.4). The backhaul stays on wl1 (2.4 GHz): its station and the GRE parent AP wl1.1. wl0.2 is the 5 GHz home AP as the pod's own cloud writes it (oftag home--1).",
+  "opensync_version": "2.4.3",
+  "schema": "opensync-2.0",
+  "radio": {
+    "band": "2.4G",
+    "channel": 6,
+    "ht_mode": "HT20",
+    "chipset": "bcm47189"
+  },
+  "radios": [
+    {
+      "band": "5G",
+      "ht_mode": "HT80",
+      "chipset": "bcm4366"
+    }
+  ],
+  "fronthaul": {
+    "if_name": "wl1.2",
+    "vif": {
+      "mode": "ap",
+      "enabled": true,
+      "bridge": "br-home",
+      "ssid_broadcast": "enabled",
+      "ap_bridge": false,
+      "btm": 1,
+      "rrm": 1,
+      "uapsd_enable": true,
+      "min_hw_mode": "11b",
+      "vif_radio_idx": 2,
+      "security": [
+        "map",
+        [
+          [
+            "encryption",
+            "WPA-PSK"
+          ],
+          [
+            "oftag",
+            "home--1"
+          ]
+        ]
+      ]
+    }
+  },
+  "backhaul_vif": {
+    "ssid_broadcast": "disabled",
+    "min_hw_mode": "11g",
+    "security": [
+      "map",
+      [
+        [
+          "encryption",
+          "WPA-PSK"
+        ]
+      ]
+    ]
+  },
+  "backhaul_mode": "gre-parent",
+  "gre_parent": {
+    "vif": {},
+    "inet": {}
+  },
+  "extra_slots": [
+    {
+      "if_name": "wl1.1",
+      "role": "backhaul",
+      "vif_radio_idx": 1
+    },
+    {
+      "if_name": "wl0.2",
+      "role": "fronthaul",
+      "vif_radio_idx": 2,
+      "band": "5G"
+    }
+  ],
+  "inet": {
+    "if_type": "vif",
+    "enabled": true,
+    "network": true,
+    "NAT": false,
+    "ip_assign_scheme": "none",
+    "mtu": 1514
+  },
+  "uplink": {
+    "station": "wl1",
+    "stations": {
+      "2.4G": "wl1"
+    }
+  },
+  "ap_metrics": {
+    "esp_be": "3fff00"
+  }
+}

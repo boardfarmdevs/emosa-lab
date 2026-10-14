@@ -4860,6 +4860,38 @@ async def legacy_gre_move(box):
     )
 
 
+async def legacy_5g_fronthaul(box):
+    """spec 3.10, 9: the legacy pod's 5 GHz radio as a fronthaul only (bcm-pod-2.4.3-gre-5g-v1).
+    Its own M2 set configures it: the fronthaul BSS on its home AP wl0.2, created on wl0 with
+    WPA2-PSK in the security map and the profile's oftag, no multi_ap; the set's backhaul BSS has
+    no 5 GHz slot and is left out, so the backhaul stays on wl1 (2.4 GHz)."""
+    if not (await onboarded(box)).get("applied"):
+        return box.result(passed=False, failed="not onboarded")
+
+    async def created():
+        _, row = await box.vif("Wifi_VIF_Config", LEGACY_SLOT_5G)
+        return row
+
+    config = await until_async(created, seconds=60)
+    radios, vifs = await box.rows("Wifi_Radio_Config"), await box.rows("Wifi_VIF_Config")
+    wl0 = next((u for u, r in radios.items() if r.get("if_name") == "wl0"), None)
+    on_wl0 = any(
+        vifs.get(u, {}).get("if_name") == LEGACY_SLOT_5G
+        for u in uuids(radios.get(wl0, {}).get("vif_configs"))
+    )
+    names = {r.get("if_name") for r in vifs.values()}
+    wanted = {"encryption": "WPA-PSK", "key": REGISTRAR_KEY, "oftag": "home--1"}
+    return box.result(
+        passed=legacy_row_ok(config, wanted)
+        and on_wl0
+        and (config or {}).get("bridge") == "br-home"
+        and "wl0.1" not in names,
+        fronthaul_5g={k: (config or {}).get(k) for k in ("if_name", "ssid", "bridge")},
+        on_wl0=on_wl0,
+        vifs=sorted(n for n in names if n),
+    )
+
+
 async def generation_refused(box):
     """spec 3.10: the pod's schema is not its profile's generation (a 6.6 profile on a legacy pod,
     or a legacy profile on a 6.6 pod). The agent refuses the pod (SCHEMA_MISMATCH in its status):
@@ -4957,6 +4989,7 @@ SCENARIOS = {
     "legacy-wired": legacy_wired,
     "legacy-wired-half-pair": legacy_wired_half_pair,
     "legacy-gre-move": legacy_gre_move,
+    "legacy-5g-fronthaul": legacy_5g_fronthaul,
 }
 OPTIONS = {  # the box each scenario needs beyond the default
     "write-lost-unapplied": {"reply_cut": "lost-write"},
@@ -5114,6 +5147,12 @@ OPTIONS["legacy-pod-6-6-profile"] = {"legacy": True, "profile": PLAIN_PROFILE}
 OPTIONS["pod-6-6-legacy-profile"] = {"profile": LEGACY_PROFILE}
 OPTIONS["legacy-wired"] = {"legacy": True, "wired": True}
 OPTIONS["legacy-wired-half-pair"] = {"legacy": True, "wired": True}
+OPTIONS["legacy-5g-fronthaul"] = {
+    "legacy": True,
+    "multi_bss": True,
+    "underlay": LEGACY_UNDERLAY,
+    "profile": "bcm-pod-2.4.3-gre-5g-v1",
+}
 OPTIONS["legacy-gre-move"] = {
     "legacy": True,
     "backhaul": True,
