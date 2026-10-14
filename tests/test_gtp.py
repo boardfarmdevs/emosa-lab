@@ -72,6 +72,13 @@ def gtp(tmp_path, *leases, links=("podbh", "eth1")):
     return GTP(config, Links(fake)), fake
 
 
+def clocked(tmp_path, now):
+    """The GTP with its lease times on the monotonic clock now[0]."""
+    gateway, fake = gtp(tmp_path)
+    gateway.times.clock = lambda: now[0]
+    return gateway, fake
+
+
 def test_the_configuration_follows_opensyncs_rules():
     validate("gtp-config", CONFIG)
     check(copy.deepcopy(CONFIG))
@@ -119,7 +126,8 @@ def test_setup_addresses_the_underlay_and_bridges_the_lan_port(tmp_path):
 
 
 def test_one_gretap_per_lease_into_the_lan_bridge(tmp_path):
-    gateway, fake = gtp(tmp_path)
+    now = [100.0]  # the monotonic clock
+    gateway, fake = clocked(tmp_path, now)
     gateway.setup(tmp_path / "gtp.json")
     gateway.lease("add", "02:00:00:00:05:00", "169.254.2.57")
     tunnel = fake.links["gtp2_57"]
@@ -129,10 +137,59 @@ def test_one_gretap_per_lease_into_the_lan_bridge(tmp_path):
     calls = len(fake.calls)
     gateway.lease("old", "02:00:00:00:05:00", "169.254.2.57")  # a renewal changes nothing
     assert not [c for c in fake.calls[calls:] if c[:2] in (("link", "add"), ("link", "del"))]
+    now[0] += 3600  # the lease ran its length (1h)
     gateway.lease("del", "02:00:00:00:05:00", "169.254.2.57")
     assert "gtp2_57" not in fake.links
     with pytest.raises(ConfigError):
         gateway.lease("add", "02:00:00:00:05:00", "169.254.1.57")  # not our underlay
+
+
+def test_a_lease_ended_early_by_a_clock_step_keeps_its_tunnel_until_a_lease_passes(
+    tmp_path, caplog
+):
+    # 14 October: the gateway's clock stepped forward 43 min at its NTP sync, dnsmasq
+    # ended 1 h leases early and the pods' tunnels went while the pods held their leases
+    now = [100.0]
+    gateway, fake = clocked(tmp_path, now)
+    gateway.setup(tmp_path / "gtp.json")
+    pod, other = ("02:00:00:00:05:00", "169.254.2.57"), ("02:00:00:00:06:00", "169.254.2.60")
+    gateway.lease("add", *pod)
+    now[0] += 1200
+    gateway.lease("del", *pod)  # 40 min left on the monotonic clock
+    assert "gtp2_57" in fake.links and "the system clock stepped" in caplog.text
+    (tmp_path / "leases").write_text("")
+    assert "gtp2_57" in gateway.reconcile()  # kept across a reconcile too
+    now[0] += 3600  # a whole lease and no renewal: the pod left
+    gateway.lease("add", *other)
+    assert "gtp2_57" not in fake.links and "gtp2_60" in fake.links
+
+
+def test_a_renewal_after_an_early_end_is_the_lease_again(tmp_path):
+    now = [100.0]
+    gateway, fake = clocked(tmp_path, now)
+    gateway.setup(tmp_path / "gtp.json")
+    pod = ("02:00:00:00:05:00", "169.254.2.57")
+    gateway.lease("add", *pod)
+    gateway.lease("del", *pod)  # early: kept
+    now[0] += 1800
+    gateway.lease("old", *pod)  # the pod renews by its own clock
+    now[0] += 3000
+    gateway.lease("add", "02:00:00:00:06:00", "169.254.2.60")  # no sweep: it renewed
+    assert "gtp2_57" in fake.links
+    now[0] += 700
+    gateway.lease("del", *pod)  # its renewed lease ran its length
+    assert "gtp2_57" not in fake.links
+
+
+def test_a_leases_length_is_dnsmasqs_when_it_says(tmp_path):
+    now = [100.0]
+    gateway, fake = clocked(tmp_path, now)
+    gateway.setup(tmp_path / "gtp.json")
+    pod = ("02:00:00:00:05:00", "169.254.2.57")
+    gateway.lease("add", *pod, environ={"DNSMASQ_LEASE_LENGTH": "120"})
+    now[0] += 119
+    gateway.lease("del", *pod)  # within the margin (a quarter of 120 s): its own end
+    assert "gtp2_57" not in fake.links
 
 
 def test_a_tunnel_pinned_to_a_vanished_underlay_is_rebuilt(tmp_path):

@@ -626,27 +626,6 @@
        ],
        false,
        "7: gtp2_57@NONE: <UP> mtu 1562 \\    gretap remote 169.254.2.57 local 169.254.2.1 ttl inherit\n7: gtp2_60@NONE: <UP> mtu 1562 \\    gretap remote 169.254.2.60 local 169.254.2.1 ttl inherit\n"
-      ],
-      [
-       [
-        "link",
-        "del",
-        "gtp2_57"
-       ],
-       true,
-       ""
-      ],
-      [
-       [
-        "-d",
-        "-o",
-        "link",
-        "show",
-        "type",
-        "gretap"
-       ],
-       false,
-       "7: gtp2_60@NONE: <UP> mtu 1562 \\    gretap remote 169.254.2.60 local 169.254.2.1 ttl inherit\n"
       ]
      ],
      "command": [
@@ -657,6 +636,10 @@
      ],
      "error": null,
      "result": {
+      "gtp2_57": {
+       "mac": null,
+       "remote": "169.254.2.57"
+      },
       "gtp2_60": {
        "mac": null,
        "remote": "169.254.2.60"
@@ -697,7 +680,7 @@
         "gretap"
        ],
        false,
-       "7: gtp2_60@NONE: <UP> mtu 1562 \\    gretap remote 169.254.2.60 local 169.254.2.1 ttl inherit\n"
+       "7: gtp2_57@NONE: <UP> mtu 1562 \\    gretap remote 169.254.2.57 local 169.254.2.1 ttl inherit\n7: gtp2_60@NONE: <UP> mtu 1562 \\    gretap remote 169.254.2.60 local 169.254.2.1 ttl inherit\n"
       ]
      ],
      "command": [
@@ -705,6 +688,10 @@
      ],
      "error": null,
      "result": {
+      "gtp2_57": {
+       "mac": null,
+       "remote": "169.254.2.57"
+      },
       "gtp2_60": {
        "mac": null,
        "remote": "169.254.2.60"
