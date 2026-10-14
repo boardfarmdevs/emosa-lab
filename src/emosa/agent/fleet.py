@@ -560,7 +560,9 @@ class Fleet:
         if self.config.get("files"):
             port = self.config["files"].get("port", FILES_PORT)
             try:
-                files = FileServer(self.config["files"]["directory"], self.config["advertise"], port)
+                files = FileServer(
+                    self.config["files"]["directory"], self.config["advertise"], port
+                )
                 files.start()
             except OSError as exc:  # the fleet serves its pods without it
                 log.warning("files: cannot serve on %s:%d: %s", self.config["advertise"], port, exc)
