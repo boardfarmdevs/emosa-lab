@@ -505,7 +505,7 @@ char *em_files_answer(const char *directory, const char *request, time_t now, si
                     "HTTP/1.0 %d %s\r\nServer: emosa-fleet\r\nDate: %s\r\nContent-Type: application/octet-stream\r\n"
                     "Content-Length: %zu\r\nConnection: close\r\n\r\n",
                     code, phrase, date, clen); /* fits: 400 bytes */
-    size_t h = strlen(head_text), body = get ? clen : 0;
+    size_t h = strlen(head_text), body = get && content ? clen : 0;
     char *out = malloc(h + body + 1);
     if (out) {
         memcpy(out, head_text, h);
