@@ -712,7 +712,11 @@ is everything above. For a legacy pod, all of this specification applies, except
   pod's reboot the same day only its `Wifi_Radio_Config` rows kept their UUIDs; its radios'
   State rows and its VIFs' Config and State rows were new. Those tell a reboot apart, but a
   re-seed within one boot (the managers restarted) has not been sampled, so the agent does not
-  rely on them. On a legacy
+  rely on them. The radio rows' UUIDs are the seed's, the same on every unit of that firmware
+  (a second converted pod showed exactly the first one's), so their start instance is the same
+  for every such pod: neither it nor those UUIDs may serve as a device's or a session's
+  identity across pods. Nothing does: a journal is one agent's, for one pod, and a legacy
+  pod's start is one of its agent's sessions. On a legacy
   profile the agent counts the pod's starts itself: a start is one of its sessions with the
   pod, a token of the agent's renewed for the first, for every fresh session (another pod
   source, §2.5, whatever the reason) and for a kept reconnection that found its configuration
