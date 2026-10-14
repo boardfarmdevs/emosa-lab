@@ -461,8 +461,8 @@ char *em_files_servable(const char *directory, const char *name, size_t *len, co
     return content;
 }
 
-char *em_files_answer(const char *directory, const char *request, time_t now, size_t *len, int *status,
-                      char *note, size_t note_size)
+char *em_files_answer(const char *directory, const char *request, time_t now, bool synchronized, size_t *len,
+                      int *status, char *note, size_t note_size)
 {
     /* the request line: METHOD SP PATH SP VERSION */
     char method[8] = "", path[200] = "";
@@ -490,21 +490,29 @@ char *em_files_answer(const char *directory, const char *request, time_t now, si
         code = 501;
         why = "not GET or HEAD";
     } else if (!strcmp(path, "/")) {
-        code = 200;
+        code = synchronized ? 200 : 503; /* no time to give without a clock to trust */
+        why = synchronized ? NULL : "the clock is not synchronized";
     } else if (path[0] != '/') {
         why = "not a path";
     } else if ((content = em_files_servable(directory, path + 1, &clen, &why))) {
         code = 200;
     }
-    char date[40] = "", head_text[400];
+    /* a Date only from a clock to trust (RFC 7231: a server without a reliable clock sends none) */
+    char date[60] = "", head_text[400];
     struct tm tm;
-    if (!gmtime_r(&now, &tm) || !strftime(date, sizeof(date), "%a, %d %b %Y %H:%M:%S GMT", &tm))
+    if (synchronized && gmtime_r(&now, &tm) && strftime(date, sizeof(date), "Date: %a, %d %b %Y %H:%M:%S GMT\r\n", &tm))
+        ;
+    else
         date[0] = 0;
-    const char *phrase = code == 200 ? "OK" : code == 404 ? "Not Found" : code == 400 ? "Bad Request" : "Not Implemented";
+    const char *phrase = code == 200   ? "OK"
+                         : code == 404 ? "Not Found"
+                         : code == 400 ? "Bad Request"
+                         : code == 503 ? "Service Unavailable"
+                                       : "Not Implemented";
     (void)em_format(head_text, sizeof(head_text),
-                    "HTTP/1.0 %d %s\r\nServer: emosa-fleet\r\nDate: %s\r\nContent-Type: application/octet-stream\r\n"
+                    "HTTP/1.0 %d %s\r\nServer: emosa-fleet\r\n%s%sContent-Type: application/octet-stream\r\n"
                     "Content-Length: %zu\r\nConnection: close\r\n\r\n",
-                    code, phrase, date, clen); /* fits: 400 bytes */
+                    code, phrase, date, code == 503 ? "Retry-After: 60\r\n" : "", clen); /* fits: 400 bytes */
     size_t h = strlen(head_text), body = get && content ? clen : 0;
     char *out = malloc(h + body + 1);
     if (out) {

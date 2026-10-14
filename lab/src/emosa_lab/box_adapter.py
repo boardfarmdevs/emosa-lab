@@ -807,12 +807,15 @@ async def fleet_files(box):
     gets the module's settings with update_url (the fleet's file server on its advertise address)
     and update_sha256. HEAD / answers 200, an empty body and a Date in GMT (now); GET /<sha256>
     the file; the misnamed file and any other path 404, each with a Date. The fleet logs the
-    file served and the one it does not serve."""
+    file served and the one it does not serve. Its clock then not synchronized (the box's
+    EMOSA_FILES_CLOCK, as the kernel or files.time_synced_command would say): no reply carries a
+    Date, HEAD / is 503 with a Retry-After, the file is still served, and the fleet logs it."""
     files = box.directory / "files"
     files.mkdir()
     sha = hashlib.sha256(MODULE_FILE).hexdigest()
     (files / sha).write_bytes(MODULE_FILE)
     (files / ("0" * 64)).write_bytes(b"not its name")
+    box.fleet_env["EMOSA_FILES_CLOCK"] = "synchronized"  # whatever the host's clock says
     await box.restart_fleet(
         files={"directory": str(files), "port": FILES_PORT},
         modules={"hook": {"config": {"redirector": "auto"}, "update": sha}},
@@ -826,6 +829,11 @@ async def fleet_files(box):
     date = head[1].get("Date") or ""
     skew = abs(parsedate_to_datetime(date).timestamp() - time.time()) if date else None
     config = json.loads((box.config_dir / f"{box.serial}.json").read_text())
+    box.fleet_env["EMOSA_FILES_CLOCK"] = "unsynchronized"
+    await box.restart_fleet()
+    await wait_for_port(FILES_PORT)
+    untimed = await asyncio.to_thread(fetch, base + "/", "HEAD")
+    untimed_file = await asyncio.to_thread(fetch, f"{base}/{sha}")
     log = (box.directory / "fleet.log").read_text(errors="replace")
     passed = (
         head[0] == 200
@@ -848,6 +856,13 @@ async def fleet_files(box):
         }
         and f"files: 127.0.0.1 GET /{sha}: 200" in log
         and "not served" in log
+        and untimed[0] == 503
+        and untimed[1].get("Retry-After") == "60"
+        and not untimed[1].get("Date")
+        and untimed_file[0] == 200
+        and untimed_file[2] == MODULE_FILE
+        and not untimed_file[1].get("Date")
+        and "not synchronized: no time served" in log
     )
     return box.result(
         passed=passed,
@@ -856,6 +871,7 @@ async def fleet_files(box):
         misnamed=misnamed[0],
         other=other[0],
         modules=config.get("modules"),
+        unsynchronized=[untimed[0], untimed[1].get("Date"), untimed_file[0]],
     )
 
 

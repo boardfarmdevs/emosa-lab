@@ -845,8 +845,14 @@ for an update; the fleet refuses an update without `files`.
   vendor's healthcheck reboots a pod whose clock is not set (14 October). Its hook reads the
   `Date` of `HEAD http://<advertise>:<files.port>/` and sets the clock from it, refusing a time
   earlier than the one it saved or its own build's (a gateway whose clock is not set yet). The
-  fleet adds nothing for it: the answer is the file server's, so the gateway's own clock must be
-  set (NTP on its WAN).
+  fleet serves only a time it trusts: while the gateway's clock is not synchronized no reply
+  carries a `Date` (RFC 7231: a server without a reliable clock sends none) and `GET` or `HEAD /`
+  answers 503 with `Retry-After: 60`, so the hook keeps its saved clock; files are still served.
+  Synchronized is the kernel's clock status, as a time daemon keeps it (`adjtimex(2)` without a
+  change, not `TIME_ERROR`: what `ntpq -c kerninfo` shows; no daemon running leaves it
+  unsynchronized), or, when `files.time_synced_command` is set (a platform whose daemon does not
+  keep the kernel's status), that command's exit status 0. Checked at most once a minute, each
+  change logged. So the gateway's own clock must be set by NTP (on its WAN, or a lab's server).
 
 **The agents' processes.** With `agents` `systemd` (the default) each agent is the unit
 `emosa-agent@<pod_id>`:
