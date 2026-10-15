@@ -298,6 +298,8 @@ def test_an_agents_secret_is_provisioned_from_the_fleets_store(tmp_path):
     assert copied.stat().st_mode & 0o777 == 0o600
     assert (copied.parent.stat().st_mode & 0o777) == 0o700
     assert started == [("POD2", False)]
+    # a copy: the fleet's store keeps it for the next pod (14 October: gone from a gateway's)
+    assert (tmp_path / "fleet-secrets" / "gtp").read_text() == "FleetGtpPassphrase1"
 
 
 def test_an_agents_own_secret_is_never_replaced_and_a_missing_one_is_only_logged(tmp_path, caplog):

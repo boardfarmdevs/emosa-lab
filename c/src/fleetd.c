@@ -233,6 +233,7 @@ typedef struct {
 #define HTTP_CONNS 8
 #define HTTP_REQUEST_MAX 2048 /* bytes of a request's head, more is not read */
 #define HTTP_TIMEOUT 10.0     /* seconds a connection has for its request and the answer */
+#define FILES_RETRY 10        /* seconds between tries to listen while the address is not there */
 
 typedef struct {
     int fd;
@@ -248,6 +249,9 @@ typedef struct {
     em_fleet fleet;
     agents agents;
     int files_fd; /* the file server's listener, -1 without */
+    /* when to try listening again (monotonic; 0: never, no files) and the failed tries so far */
+    double files_retry_at;
+    unsigned files_failures;
     const char *files_dir;
     bool clock_known, clock_trusted; /* the host's clock, checked at clock_checked (monotonic) */
     double clock_checked;
@@ -530,11 +534,14 @@ static void reap_orphans(server *s)
 }
 
 /* The file server's listener on the advertise address, its files listed in the log; -1 without
- * files, or when it cannot listen (logged: the fleet serves its pods without it). */
+ * files, or when it cannot listen yet: the fleet serves its pods meanwhile and tries again every
+ * FILES_RETRY s (s->files_retry_at), as a gateway's LAN bridge may get the address minutes after
+ * the fleet starts (14 October); the first failure and the listener's start logged. */
 static int files_open(server *s)
 {
     const cJSON *files = cJSON_GetObjectItemCaseSensitive(s->fleet.config, "files");
     s->files_dir = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(files, "directory"));
+    s->files_retry_at = 0;
     if (!s->files_dir)
         return -1;
     const cJSON *port = cJSON_GetObjectItemCaseSensitive(files, "port");
@@ -543,9 +550,14 @@ static int files_open(server *s)
     int number = cJSON_IsNumber(port) ? port->valueint : EM_FILES_PORT;
     int fd = advertise && em_format(name, sizeof(name), "ptcp:%d:%s", number, advertise) ? listen_on(name, unused, sizeof(unused)) : -1;
     if (fd < 0) {
-        WARN("files: cannot serve on %s:%d: %s", advertise ? advertise : "?", number, strerror(errno));
+        if (!s->files_failures++)
+            WARN("files: cannot serve on %s:%d: %s; trying again every %d s", advertise ? advertise : "?", number,
+                 strerror(errno), FILES_RETRY);
+        s->files_retry_at = monotonic() + FILES_RETRY;
         return -1;
     }
+    if (s->files_failures)
+        LOG("files: serving on %s:%d after %u tries", advertise, number, s->files_failures + 1);
     size_t served = 0;
     DIR *dir = opendir(s->files_dir);
     for (struct dirent *e = dir ? readdir(dir) : NULL; e; e = readdir(dir)) {
@@ -705,7 +717,10 @@ static int serve(server *s)
             if ((c->child_running || c->ticket) && now + 0.05 < wake)
                 wake = now + 0.05; /* systemctl reaped, a supervised start seen, promptly */
         }
-        /* the file server after the pods: its listener while a connection is free, then each one */
+        /* the file server after the pods: its listener while a connection is free, then each one;
+         * listening once more when the address was not there */
+        if (s->files_fd < 0 && s->files_retry_at > 0 && now >= s->files_retry_at)
+            s->files_fd = files_open(s);
         nfds_t files_at = n;
         bool files_listening = s->files_fd >= 0 && s->nhttp < HTTP_CONNS;
         if (files_listening)

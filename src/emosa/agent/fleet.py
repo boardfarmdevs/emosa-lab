@@ -59,6 +59,7 @@ log = logging.getLogger("emosa.fleet")
 SERIAL = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}")
 SHA256 = re.compile(r"[0-9a-f]{64}")
 FILES_PORT = 6650
+FILES_RETRY = 10  # seconds between tries to listen while the advertise address is not there
 FILE_MAX = 1 << 20  # bytes of one served file, at most
 TIME_ERROR = 5  # adjtimex(2)'s clock state while the kernel says the clock is unsynchronized
 CLOCK_CHECK = 60  # seconds a clock check stands (a time_synced_command is not run more often)
@@ -624,28 +625,56 @@ class Fleet:
         pstream.socket.setblocking(False)
         return pstream
 
-    def serve(self, pstream=None, ready=None):
-        pstream = pstream or self.listen()
-        files = None
-        if self.config.get("files"):
-            port = self.config["files"].get("port", FILES_PORT)
-            try:
-                files = FileServer(
-                    self.config["files"]["directory"],
+    def _files(self, failures):
+        """The file server on the advertise address, or None when it cannot listen yet: the
+        fleet serves its pods meanwhile and tries again every FILES_RETRY s, as a gateway's LAN
+        bridge may get the address minutes after the fleet starts (14 October). ``failures``: the
+        tries failed so far; the first failure and the server's start after one are logged."""
+        port = self.config["files"].get("port", FILES_PORT)
+        try:
+            files = FileServer(
+                self.config["files"]["directory"],
+                self.config["advertise"],
+                port,
+                lambda: clock_synchronized(self.config["files"]),
+            )
+            files.start()
+        except OSError as exc:
+            if not failures:
+                log.warning(
+                    "files: cannot serve on %s:%d: %s; trying again every %d s",
                     self.config["advertise"],
                     port,
-                    lambda: clock_synchronized(self.config["files"]),
+                    exc,
+                    FILES_RETRY,
                 )
-                files.start()
-            except OSError as exc:  # the fleet serves its pods without it
-                log.warning("files: cannot serve on %s:%d: %s", self.config["advertise"], port, exc)
-                files = None
+            return None
+        if failures:
+            log.info(
+                "files: serving on %s:%d after %d tries",
+                self.config["advertise"],
+                port,
+                failures + 1,
+            )
+        return files
+
+    def serve(self, pstream=None, ready=None):
+        pstream = pstream or self.listen()
+        files, failures, retry_at = None, 0, None
+        if self.config.get("files"):
+            files = self._files(failures)
+            if files is None:
+                failures, retry_at = 1, time.monotonic() + FILES_RETRY
         self.start_registered()
         if ready is not None:
             ready.set()
         log.info("fleet: %s, agents on ports %s", self.config["listen"], self.config["ports"])
         try:
             while not self.stop.is_set():
+                if retry_at is not None and time.monotonic() >= retry_at:  # the address yet?
+                    files = self._files(failures)
+                    failures += files is None
+                    retry_at = None if files is not None else time.monotonic() + FILES_RETRY
                 error, stream = pstream.accept()
                 if error == errno.EAGAIN:
                     poller = ovs.poller.Poller()

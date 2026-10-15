@@ -19,6 +19,7 @@ import os
 import shlex
 import shutil
 import signal
+import socket
 import subprocess
 import sys
 import time
@@ -834,6 +835,24 @@ async def fleet_files(box):
     await wait_for_port(FILES_PORT)
     untimed = await asyncio.to_thread(fetch, base + "/", "HEAD")
     untimed_file = await asyncio.to_thread(fetch, f"{base}/{sha}")
+    # the fleet started before it can listen (a gateway's LAN bridge gets the address minutes
+    # later, 14 October; here another listener holds the port): it serves its pods meanwhile and
+    # tries again every 10 s, so the file server answers once the port is free
+    box.stop_fleet()
+    holder = socket.socket()
+    holder.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # the last replies' TIME_WAIT
+    holder.bind(("127.0.0.1", FILES_PORT))
+    holder.listen()
+    await box.start_fleet()
+    await asyncio.sleep(2)
+    waiting = "trying again every 10 s" in (box.directory / "fleet.log").read_text(errors="replace")
+    holder.close()
+    late = (None, {}, b"")
+    deadline = time.monotonic() + 30
+    while time.monotonic() < deadline and late[0] is None:
+        await asyncio.sleep(1)
+        with contextlib.suppress(OSError):
+            late = await asyncio.to_thread(fetch, base + "/", "HEAD")
     log = (box.directory / "fleet.log").read_text(errors="replace")
     passed = (
         head[0] == 200
@@ -863,6 +882,9 @@ async def fleet_files(box):
         and untimed_file[2] == MODULE_FILE
         and not untimed_file[1].get("Date")
         and "not synchronized: no time served" in log
+        and waiting
+        and late[0] == 503
+        and f"files: serving on 127.0.0.1:{FILES_PORT} after" in log
     )
     return box.result(
         passed=passed,
@@ -872,6 +894,7 @@ async def fleet_files(box):
         other=other[0],
         modules=config.get("modules"),
         unsynchronized=[untimed[0], untimed[1].get("Date"), untimed_file[0]],
+        late_listener=[waiting, late[0]],
     )
 
 

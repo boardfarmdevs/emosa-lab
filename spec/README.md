@@ -838,8 +838,12 @@ for an update; the fleet refuses an update without `files`.
   1 MiB whose content has that SHA-256 (checked at each request); anything else is 404. Every
   reply carries a `Date` header in GMT, the gateway's clock. Each request is logged (the peer,
   the path, the answer; `/` only when it is not 200); the files are listed at the fleet's start,
-  those not served with why. No file is pushed: the module fetches it, checks it and installs
-  it, and reports in `Node_State`. Both fleets.
+  those not served with why. A gateway's LAN bridge may get the advertise address minutes after
+  the fleet starts (seen 14 October): while it cannot listen, the fleet serves its pods and tries
+  again every 10 s, logging the first failure and the listener's start. No file is pushed: the
+  module fetches it, checks it and installs it, and reports in `Node_State`. The fleet's secret
+  store (`secrets`) is only read: a secret is copied into an agent's store, never moved. Both
+  fleets.
 - **The pods' time.** `HEAD /` on the file server is the pods' time source: a converted pod has
   no clock that survives a reboot (no RTC) and gets none without its operator's cloud, and its
   vendor's healthcheck reboots a pod whose clock is not set (14 October). Its hook reads the

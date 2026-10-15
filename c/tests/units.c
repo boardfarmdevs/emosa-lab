@@ -683,6 +683,11 @@ static void fleet_secrets(const char *scratch)
               notes_provisioned == 1,
           "the agent's store gets the fleet's secret, private");
     free(copied);
+    snprintf(path, sizeof(path), "%s/gtp", fleet_dir);
+    copied = em_read_file(path, 4096, &len);
+    CHECK(copied && !strcmp(copied, "FleetGtpPassphrase1"), "the fleet's store keeps it: a copy, never moved");
+    free(copied);
+    snprintf(path, sizeof(path), "%s/gtp", own_dir);
     CHECK(secret_file(fleet_dir, "other", "AnotherPassphrase2") && unlink(path) == 0 &&
               secret_file(own_dir, "gtp", "AgentsOwnPassphrase"),
           "the agent's own secret");
