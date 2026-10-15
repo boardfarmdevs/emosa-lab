@@ -335,6 +335,109 @@ em_reason em_capability_tlvs(const em_radio_view *r, int channel, uint8_t max_bs
     return em_capabilities_tlvs(&one, 1, out);
 }
 
+static void ruid_text(const em_tlv *t, char out[18])
+{
+    const uint8_t *v = t->value;
+    if (t->len < 6)
+        (void)em_copy(out, 18, "?");
+    else
+        EM_FORMAT_FIXED(out, 18, "%02x:%02x:%02x:%02x:%02x:%02x", v[0], v[1], v[2], v[3], v[4], v[5]);
+}
+
+/* An AP Radio Basic Capabilities TLV's operating classes without their channels: (class, maximum
+ * EIRP) pairs, how many; -1 when it does not parse */
+static int basic_classes(const em_tlv *t, uint8_t (*out)[2], int max)
+{
+    const uint8_t *v = t->value;
+    size_t off = 8;
+    if (t->len < 8 || v[7] > max)
+        return -1;
+    for (int k = 0; k < v[7]; k++) {
+        if (off + 3 > t->len)
+            return -1;
+        out[k][0] = v[off];
+        out[k][1] = v[off + 1];
+        off += 3 + (size_t)v[off + 2];
+    }
+    return off == t->len ? v[7] : -1;
+}
+
+static void class_list(uint8_t (*classes)[2], int n, char *out, size_t size)
+{
+    size_t used = 0;
+    out[0] = '\0';
+    for (int k = 0; k < n; k++) {
+        if (!em_format(out + used, size - used, "%s%u", k ? "," : "", classes[k][0]))
+            return; /* the list as far as it fits */
+        used += strlen(out + used);
+    }
+}
+
+const char *em_identity_difference(const em_tlv_list *x, const em_tlv_list *y, char *out, size_t size)
+{
+    static const struct {
+        uint8_t kind;
+        const char *name;
+    } per_radio[] = {{0x86, "HT"}, {0x87, "VHT"}, {0x88, "HE"}, {0xBE, "advanced"}};
+    out[0] = '\0';
+    if (x->count != y->count) {
+        (void)em_format(out, size, "TLVs %zu -> %zu", x->count, y->count);
+        return out;
+    }
+    for (size_t i = 0; i < x->count; i++) {
+        const em_tlv *p = &x->tlvs[i], *q = &y->tlvs[i];
+        char ruid[18], other[18], before[64], after[64];
+        ruid_text(p, ruid);
+        if (p->kind != q->kind) {
+            (void)em_format(out, size, "TLV 0x%02x -> 0x%02x", p->kind, q->kind);
+            return out;
+        }
+        if (p->kind == 0x85) {
+            uint8_t cp[32][2], cq[32][2];
+            int np = basic_classes(p, cp, 32), nq = basic_classes(q, cq, 32);
+            if (np < 0 || nq < 0) {
+                (void)em_format(out, size, "radio %s basic capabilities", ruid);
+                return out;
+            }
+            if (memcmp(p->value, q->value, 6)) {
+                ruid_text(q, other);
+                (void)em_format(out, size, "radio %s -> %s", ruid, other);
+                return out;
+            }
+            if (p->value[6] != q->value[6]) {
+                (void)em_format(out, size, "radio %s max BSS %u -> %u", ruid, p->value[6], q->value[6]);
+                return out;
+            }
+            bool same_classes = np == nq;
+            for (int k = 0; same_classes && k < np; k++)
+                same_classes = cp[k][0] == cq[k][0];
+            if (!same_classes) {
+                class_list(cp, np, before, sizeof(before));
+                class_list(cq, nq, after, sizeof(after));
+                (void)em_format(out, size, "radio %s operating classes %s -> %s", ruid, before, after);
+                return out;
+            }
+            for (int k = 0; k < np; k++)
+                if (cp[k][1] != cq[k][1]) {
+                    (void)em_format(out, size, "radio %s class %u max EIRP %u -> %u dBm", ruid, cp[k][0], cp[k][1],
+                                    cq[k][1]);
+                    return out;
+                }
+            continue; /* its operable channels only */
+        }
+        if (p->len == q->len && !memcmp(p->value, q->value, p->len))
+            continue;
+        for (size_t k = 0; k < sizeof(per_radio) / sizeof(per_radio[0]); k++)
+            if (per_radio[k].kind == p->kind && p->len >= 6) {
+                (void)em_format(out, size, "radio %s %s capabilities", ruid, per_radio[k].name);
+                return out;
+            }
+        (void)em_format(out, size, "TLV 0x%02x", p->kind);
+        return out;
+    }
+    return out;
+}
+
 static bool inventory_string(em_buf *b, const char *s, size_t max)
 {
     size_t n = strlen(s) < max ? strlen(s) : max;

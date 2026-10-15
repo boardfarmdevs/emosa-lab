@@ -100,6 +100,10 @@ typedef struct {
 
 /* AP Capability Report contents for every radio the agent reports, the fronthaul first. */
 em_reason em_capabilities_tlvs(const em_capability_radio *radios, size_t n, em_tlv_list *out);
+/* What differs between two capability reports apart from their radios' operable channels
+ * (reports.identity_difference, spec 2.5): the first radio field or TLV, in out, for the log of a
+ * fresh session (capabilities_changed); "" when their identities are the same. Returns out. */
+const char *em_identity_difference(const em_tlv_list *x, const em_tlv_list *y, char *out, size_t size);
 /* The Device Inventory TLV. */
 em_reason em_inventory_tlv(const em_device_view *d, const em_radio_view *r, const char *chipset,
                            em_tlv *out);

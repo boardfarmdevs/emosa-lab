@@ -15,7 +15,7 @@ import pytest
 
 from emosa.easymesh_payloads import BasicOperatingClass
 from emosa.wire.coordinator import ReportSource
-from emosa.wire.reports import capabilities_identity
+from emosa.wire.reports import capabilities_identity, identity_difference
 from test_autoconfiguration import BINDING
 from test_autoconfiguration import fixed_entropy as fixed_entropy
 from test_native_onboarding import lifecycle, receive, response
@@ -131,6 +131,40 @@ def test_the_identity_leaves_out_operable_channels_only():
         ),
     )
     assert capabilities_identity(replace(caps, radios=(extra,))) != capabilities_identity(caps)
+
+
+def test_a_capabilities_change_names_what_differs():
+    # the log of a fresh session (capabilities_changed) says which field or TLV changed
+    _, caps, _ = __import__("emosa_lab.simulation.wire_reports", fromlist=["fixtures"]).fixtures()
+    radio = caps.radios[0]
+    ruid = radio.basic.ruid.hex(":")
+    assert identity_difference(caps, moved(caps)) == ""  # its operable channels only
+    more = replace(radio, basic=replace(radio.basic, max_bss=radio.basic.max_bss + 1))
+    assert identity_difference(caps, replace(caps, radios=(more,))) == (
+        f"radio {ruid} max BSS {radio.basic.max_bss} -> {radio.basic.max_bss + 1}"
+    )
+    first = radio.basic.operating_classes[0]
+    eirp = replace(
+        radio,
+        basic=replace(
+            radio.basic,
+            operating_classes=tuple(
+                replace(c, max_eirp_dbm=c.max_eirp_dbm + 3) for c in radio.basic.operating_classes
+            ),
+        ),
+    )
+    assert identity_difference(caps, replace(caps, radios=(eirp,))) == (
+        f"radio {ruid} class {first.operating_class} max EIRP "
+        f"{first.max_eirp_dbm} -> {first.max_eirp_dbm + 3} dBm"
+    )
+    other = replace(radio, basic=replace(radio.basic, ruid=bytes(5) + b"\x09"))
+    assert identity_difference(caps, replace(caps, radios=(other,))) == (
+        f"radio {ruid} -> 00:00:00:00:00:09"
+    )
+    assert identity_difference(caps, replace(caps, radios=(radio, radio))) == "radios 1 -> 2"
+    assert identity_difference(caps, replace(caps, radios=(replace(radio, vht=True),))) == (
+        f"radio {ruid} VHT capabilities"
+    )
 
 
 def test_a_provisioned_session_is_kept_across_a_reconnection(rig):

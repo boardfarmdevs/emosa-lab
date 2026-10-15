@@ -190,7 +190,9 @@ Rules:
   reason in the status's `reconnections`: another pod (`another_pod`); a restart of its OpenSync
   (`pod_restarted`: its database comes from its template, and the agent writes a configuration
   only for an M2, so a restarted pod needs the fresh session's); the window passed
-  (`window_passed`); other capabilities (`capabilities_changed`, a power rise among them). A
+  (`window_passed`); other capabilities (`capabilities_changed`, a power rise among them, the
+  agent's log naming the first radio field or TLV that differs, e.g. `radio 02:..:00 class 81
+  max EIRP 20 -> 23 dBm`). A
   session not yet provisioned (discovering, or an M1 awaiting its M2) is not held either: its
   WSC exchange belongs to its source. Both agents (box `transport-cut`, `transport-cut-long`,
   `reconnect-moved-uplink`, `reconnect-not-provisioned`, and the pod restarts `new-source`,

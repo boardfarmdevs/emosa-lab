@@ -561,6 +561,17 @@ static void new_start(agent *a, const char *why)
     LOG("a legacy pod's new start (%s): its configuration claimed again", why);
 }
 
+/* spec 2.5: a fresh session's log line, with what differs when the capabilities changed (the
+ * first radio field or TLV of their identity, against the source's) */
+static void fresh_log(const agent *a, const char *why, const em_tlv_list *caps)
+{
+    char what[160];
+    if (strcmp(why, "capabilities_changed") || !*em_identity_difference(&a->caps, caps, what, sizeof(what)))
+        LOG("a new pod source (%s): a fresh session", why);
+    else
+        LOG("a new pod source (%s: %s): a fresh session", why, what);
+}
+
 /* Why a new database generation of a pod source already taken is another source (spec 2.5), or
  * NULL: it continues the last one (pod._fresh_reason). Only the link to the pod comes back in a
  * continuation: the same pod, the same start of its OpenSync (its database and the configuration
@@ -721,7 +732,7 @@ static bool refresh(agent *a)
             em_attempts_continue(&a->at, source);
         } else { /* another source: its own maxima, a fresh session */
             count(&a->reconnections_fresh, why);
-            LOG("a new pod source (%s): a fresh session", why);
+            fresh_log(a, why, &caps);
             new_start(a, "a fresh session");
             em_tlv_list_free(&caps);
             for (size_t k = 0; k < nreported; k++) {
@@ -799,7 +810,7 @@ static bool refresh(agent *a)
          * outage). Spec 9's 2.4 GHz contract is channel 6 only today: not kept with reports yet. */
         const char *why = same_identity(&a->caps, &caps) ? "fronthaul_moved" : "capabilities_changed";
         count(&a->reconnections_fresh, why);
-        LOG("a new pod source (%s): a fresh session", why);
+        fresh_log(a, why, &caps);
         new_start(a, "a fresh session");
         em_tlv_list_free(&a->caps);
         a->caps = caps;

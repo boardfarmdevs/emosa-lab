@@ -35,6 +35,7 @@
 #include "proc.h"
 #include "supervise.h"
 #include "vault.h"
+#include "view.h"
 
 static int checks, failures;
 
@@ -1425,6 +1426,32 @@ static void bridge_port_ops(const char *schemas)
     em_profile_free(&p);
 }
 
+/* spec 2.5 (reports.identity_difference): a fresh session's log names the first radio field or TLV
+ * whose identity changed; a channel move alone is none */
+static void capability_difference(void)
+{
+    static em_radio_view r;
+    static const uint8_t ruid[6] = {0x02, 0, 0, 0, 0x41, 0};
+    memcpy(r.ruid, ruid, 6);
+    (void)em_copy(r.band, sizeof(r.band), "2.4G");
+    em_tlv_list a, b, c, d;
+    char what[160];
+    bool built = em_capability_tlvs(&r, 6, 3, 20, &a) == EM_OK && em_capability_tlvs(&r, 1, 3, 20, &b) == EM_OK &&
+                 em_capability_tlvs(&r, 6, 3, 23, &c) == EM_OK && em_capability_tlvs(&r, 6, 4, 20, &d) == EM_OK;
+    CHECK(built, "four capability reports");
+    if (!built)
+        return;
+    CHECK(!*em_identity_difference(&a, &b, what, sizeof(what)), "a channel move alone: none (%s)", what);
+    (void)em_identity_difference(&a, &c, what, sizeof(what));
+    CHECK(!strcmp(what, "radio 02:00:00:00:41:00 class 81 max EIRP 20 -> 23 dBm"), "a power rise: %s", what);
+    (void)em_identity_difference(&a, &d, what, sizeof(what));
+    CHECK(!strcmp(what, "radio 02:00:00:00:41:00 max BSS 3 -> 4"), "the BSSes: %s", what);
+    em_tlv_list_free(&a);
+    em_tlv_list_free(&b);
+    em_tlv_list_free(&c);
+    em_tlv_list_free(&d);
+}
+
 int main(int argc, char **argv)
 {
     em_init();
@@ -1455,6 +1482,7 @@ int main(int argc, char **argv)
     second_radio_profile(argv[1], argv[2]);
     auth_reload_ops(argv[1]);
     bridge_port_ops(argv[1]);
+    capability_difference();
     printf("%d checks, %d failures\n", checks, failures);
     return failures != 0;
 }

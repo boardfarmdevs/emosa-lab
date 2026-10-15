@@ -170,6 +170,42 @@ def capabilities_identity(facts: EarlyCapabilities):
     )
 
 
+RADIO_CAPABILITIES = {"ht": "HT", "vht": "VHT", "he": "HE", "eht": "EHT", "advanced": "advanced"}
+
+
+def identity_difference(before: EarlyCapabilities, after: EarlyCapabilities):
+    """What differs between two capability reports apart from their operable channels (spec
+    2.5): the first radio field or TLV, for the log of a fresh session (capabilities_changed);
+    "" when their identities are the same."""
+    old, new = capabilities_identity(before), capabilities_identity(after)
+    if len(old.radios) != len(new.radios):
+        return f"radios {len(old.radios)} -> {len(new.radios)}"
+    for a, b in zip(old.radios, new.radios, strict=True):
+        ruid = a.basic.ruid.hex(":")
+        if a.basic.ruid != b.basic.ruid:
+            return f"radio {ruid} -> {b.basic.ruid.hex(':')}"
+        if a.basic.max_bss != b.basic.max_bss:
+            return f"radio {ruid} max BSS {a.basic.max_bss} -> {b.basic.max_bss}"
+        classes = [c.operating_class for c in a.basic.operating_classes]
+        others = [c.operating_class for c in b.basic.operating_classes]
+        if classes != others:
+            listed = ",".join(map(str, classes)), ",".join(map(str, others))
+            return f"radio {ruid} operating classes {listed[0]} -> {listed[1]}"
+        for c, d in zip(a.basic.operating_classes, b.basic.operating_classes, strict=True):
+            if c.max_eirp_dbm != d.max_eirp_dbm:
+                return (
+                    f"radio {ruid} class {c.operating_class} max EIRP "
+                    f"{c.max_eirp_dbm} -> {d.max_eirp_dbm} dBm"
+                )
+        for part, name in RADIO_CAPABILITIES.items():
+            if getattr(a, part) != getattr(b, part):
+                return f"radio {ruid} {name} capabilities"
+    for part in ("ap", "profile2", "akm", "ciphers"):
+        if getattr(old, part) != getattr(new, part):
+            return f"TLV 0x{getattr(old, part).kind:02x}"
+    return ""
+
+
 def operable_channels_moved(before: EarlyCapabilities, after: EarlyCapabilities):
     """The RUIDs of the radios whose operable channels differ between two capability reports of
     the same identity (spec 2.5), in report order."""

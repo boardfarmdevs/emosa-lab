@@ -114,7 +114,7 @@ from emosa.wire.link_metrics import BackhaulPair
 from emosa.wire.onboarding import OnboardingRecovery, OnboardingSession
 from emosa.wire.operation_bridge import ComponentTarget, WscComponentBridge
 from emosa.wire.reporting_policy import ReportingPolicyStore
-from emosa.wire.reports import capabilities_identity
+from emosa.wire.reports import capabilities_identity, identity_difference
 from emosa.wsc_messages import M1Device
 
 log = logging.getLogger("emosa.agent")
@@ -323,11 +323,22 @@ class PodReportSource:
         except EmosaError:
             return None
 
-    def _new_lineage(self, reason):
+    def _new_lineage(self, reason, capabilities=None):
+        """A fresh session's source; with capabilities_changed, ``capabilities`` the new ones,
+        whose first difference from the source's (their identity) the log names."""
         self.lineage += 1
         fresh = self.reconnections["fresh"]
         fresh[reason] = fresh.get(reason, 0) + 1
-        log.info("a new pod source (%s): a fresh session", reason.replace("_", " "))
+        what = (
+            identity_difference(self.capabilities, capabilities)
+            if reason == "capabilities_changed" and capabilities and self.capabilities
+            else ""
+        )
+        log.info(
+            "a new pod source (%s%s): a fresh session",
+            reason.replace("_", " "),
+            f": {what}" if what else "",
+        )
         if self.backend.profile.legacy:
             self.new_start("a fresh session")
 
@@ -464,7 +475,7 @@ class PodReportSource:
                     self.capabilities_generation = raw["generation"]
                     self.reconnections["continued"] += 1
                 else:
-                    self._new_lineage(why)
+                    self._new_lineage(why, continued)
             stored = previous if not fresh else {}
 
             def _eirp(r):
@@ -515,7 +526,8 @@ class PodReportSource:
                         "fronthaul_moved"
                         if capabilities_identity(capabilities)
                         == capabilities_identity(self.capabilities)
-                        else "capabilities_changed"
+                        else "capabilities_changed",
+                        capabilities,
                     )
                     self.capabilities = capabilities
                     self.inventory = inventory(device, radio, self.backend.profile.chipset.encode())
