@@ -902,12 +902,14 @@ class Box:
             ]
         )
 
-    async def new_pod_database(self, replace=None, *, away=0):
+    async def new_pod_database(self, replace=None, *, away=0, before_dial=None):
         """The pod's OpenSync started again (its container with its extender, say): a new
         database from the template, with new row UUIDs (and replace's changes: other
         radios), dialing the agent again, ``away`` seconds after the old one went. A legacy
         pod's is its vendor's seed again, every row with the UUID it had there (spec 3.10: its
-        radio rows too, so they do not tell the starts apart)."""
+        radio rows too, so they do not tell the starts apart). ``before_dial``, a coroutine
+        function, reads the new database before the agent can act on it (the C agent clears a
+        seed's stations within milliseconds of the dial): its result is returned."""
         old = self.db
         await old.close()
         await asyncio.sleep(away)
@@ -920,7 +922,9 @@ class Box:
             await self.transact(operations)
             if self.ethernet_first:  # the same legacy pod again, as its seed has it
                 await self.transact(ethernet_first(self.ethernet_first))
+        seen = await before_dial() if before_dial else None
         await dial(self.db, f"tcp:127.0.0.1:{AGENT_PORT}")
+        return seen
 
     def result(self, **extra):
         return {
@@ -6656,8 +6660,8 @@ async def legacy_seed_stations(box):
     failing = await healthcheck(box)
     searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
     continued = kept_reconnections(box)
-    await box.new_pod_database()
-    reseeded = await station_rows(box)
+    # the stations the seed brought back, read before the agent acts on them
+    reseeded = await box.new_pod_database(before_dial=lambda: station_rows(box))
     session = await back(box, searches, m1s, continued, seconds=90)
     again = await until_async(settled, seconds=90)
     failing_again = await healthcheck(box)
