@@ -739,6 +739,12 @@ def test_a_converted_pods_seed_stations_go_and_only_its_gtp_station_stays(agent,
     assert result["passed"], result
 
 
+def test_a_converted_pods_dark_idle_radio_is_turned_on_so_its_aps_beacon(agent, tmp_path):
+    # spec 3.10: every enabled AP beacons; wl0, neither bound nor placed, on at 36 when dark
+    result = box("legacy-dark-radio", agent, tmp_path / "box", timeout=360)
+    assert result["passed"], result
+
+
 def test_an_unwired_converted_pods_unassociated_seed_station_is_removed(agent, tmp_path):
     # spec 3.10: the station guard over every station row of a converted pod
     result = box("legacy-seed-station-unwired", agent, tmp_path / "box", timeout=240)

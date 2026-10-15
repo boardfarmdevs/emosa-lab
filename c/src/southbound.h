@@ -47,6 +47,12 @@ typedef struct {
      * APs left on), the fronthaul radio on the profile's channel while wired, once per start;
      * false: the pod's ("pod") */
     bool radio_plan;
+    /* idle_radios (with radio_plan): the radios the profile neither binds nor places, by band, each
+     * with the channel and width the plan turns it on at when it carries an enabled AP and wm
+     * shows it off or with no channel */
+    size_t nidle;
+    const char *idle_bands[2], *idle_ht_modes[2];
+    int idle_channels[2];
 } em_profile;
 
 em_reason em_profile_load(const char *path, em_profile *out);

@@ -5416,8 +5416,19 @@ def ethernet_first(kind):
             }
             for ssid in OPERATOR_CREDENTIALS
         ]
-    if kind == "operator":  # the seed with the operator's APs on wl0 and wl1 on channel 1
+    if kind in ("operator", "operator-dark"):  # the seed with the operator's APs on wl0, wl1 on 1
         operations += operator_aps()
+    if (
+        kind == "operator-dark"
+    ):  # a hooked boot's: wm shows wl0 with no channel, its cloud never came
+        operations.append(
+            {
+                "op": "update",
+                "table": "Wifi_Radio_State",
+                "where": [["if_name", "==", "wl0"]],
+                "row": {"channel": ["set", []]},
+            }
+        )
     for name, peer, bridge, tag in (
         ("patch-w2h", "patch-h2w", "br-wan", "w2h"),
         ("patch-h2w", "patch-w2h", "br-home", "h2w"),
@@ -5782,22 +5793,48 @@ async def associate_station(box):
 
 async def healthcheck(box):
     """The pods' vendor healthcheck in the box's terms (spec 3.10): every Wifi_VIF_Config row's
-    interface beacons (an AP: its State enabled) or is associated (a station: its State's parent),
-    whatever the row's own enabled. The interfaces that fail, sorted."""
+    interface beacons (an AP: its State enabled, and its radio's State on with a channel) or is
+    associated (a station: its State's parent), whatever the row's own enabled. The interfaces
+    that fail, sorted."""
     configs, states = await box.rows("Wifi_VIF_Config"), await box.rows("Wifi_VIF_State")
     state = {r.get("if_name"): r for r in states.values()}
+    radio_states = {r.get("if_name"): r for r in (await box.rows("Wifi_Radio_State")).values()}
+    on_air = {}  # each VIF Config row's radio, as wm shows it: on, with a channel
+    for radio in (await box.rows("Wifi_Radio_Config")).values():
+        shown = radio_states.get(radio.get("if_name")) or {}
+        up = shown.get("enabled") is True and isinstance(shown.get("channel"), int)
+        for uuid in uuids(radio.get("vif_configs")):
+            on_air[uuid] = up
     failing = []
-    for row in configs.values():
+    for uuid, row in configs.items():
         name = row.get("if_name")
         seen = state.get(name) or {}
         if row.get("mode") == "sta":
             parent = seen.get("parent")
             ok = isinstance(parent, str) and parent not in ("", "00:00:00:00:00:00")
         else:
-            ok = seen.get("enabled") is True
+            ok = seen.get("enabled") is True and on_air.get(uuid, True)
         if not ok:
             failing.append(name)
     return sorted(failing)
+
+
+async def wm_radios(box):
+    """wm's part for the radios, as the box plays it where a scenario needs it: a radio's State
+    takes its Config's enabled and channel once its Config names a channel."""
+    states = {r.get("if_name"): u for u, r in (await box.rows("Wifi_Radio_State")).items()}
+    changes = [
+        {
+            "op": "update",
+            "table": "Wifi_Radio_State",
+            "where": [["_uuid", "==", ["uuid", states[row.get("if_name")]]]],
+            "row": {"enabled": row.get("enabled") is True, "channel": row["channel"]},
+        }
+        for row in (await box.rows("Wifi_Radio_Config")).values()
+        if isinstance(row.get("channel"), int) and row.get("if_name") in states
+    ]
+    if changes:
+        await box.transact(changes)
 
 
 async def legacy_gtp_station_unassociated(box):
@@ -6399,6 +6436,91 @@ async def legacy_seed_stations(box):
     )
 
 
+async def legacy_dark_radio(box):
+    """spec 3.10, every enabled AP beacons: legacy-radio-plan's wired pod as a hooked boot leaves
+    its seed, its operator's cloud never come: wl0 (5 GHz, which the 2.4 profile neither binds nor
+    places) carries the operator's APs wl0.1 and wl0.2, enabled, but wm shows it with no channel,
+    so neither beacons and the vendor healthcheck fails them (14 October: "wl0.2 is not
+    beaconing"). The radio plan's write on the start turns wl0 on at the profile's idle channel, 36
+    at HT20; once wm shows it there the plan is applied and the pod passes the healthcheck. The
+    pod's OpenSync starts again on its seed (wl0 dark again): the same on the new start. Last, wm
+    showing wl0 dark again on that start: the healthcheck fails wl0.1 and wl0.2."""
+    # the seed the pod restores, as the box keeps it (read from the pod, the agent may have
+    # written already)
+    seed_wl0 = next((r for r in box.seed.get("Wifi_Radio_State", []) if r["if_name"] == "wl0"), {})
+    seeded_dark = not isinstance(seed_wl0.get("channel"), int)
+    ap, failure = await gre_parent_up(box, LEGACY_PARENT)
+    if failure:
+        return failure
+
+    async def applied(previous=None):
+        await apply_configuration(box.db)
+        await wm_radios(box)
+        operation = radio_plan_operation(box)
+        new = previous is None or operation.get("operation_id") != previous.get("operation_id")
+        return operation if new and operation.get("state") == "OBSERVED_APPLIED" else None
+
+    async def wl0():
+        radios = await box.rows("Wifi_Radio_Config")
+        row = next((r for r in radios.values() if r.get("if_name") == "wl0"), {})
+        return (row.get("enabled"), row.get("channel"), row.get("ht_mode"))
+
+    first = await until_async(applied, seconds=60)
+    if not first:
+        return box.result(
+            passed=False, failed="no radio plan", radio_plan=(box.status() or {}).get("radio_plan")
+        )
+    await until_async(lambda: gtp_station_written(box), seconds=30)
+    await associate_station(box)
+    on = await wl0()
+    failing = await healthcheck(box)
+    plan = (box.status() or {}).get("radio_plan") or {}
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    continued = kept_reconnections(box)
+    await box.new_pod_database()
+    session = await back(box, searches, m1s, continued)
+    second = await until_async(lambda: applied(first), seconds=60)
+    await until_async(lambda: gtp_station_written(box), seconds=30)  # the new start's too
+    await associate_station(box)
+    on_again = await wl0()
+    failing_again = await healthcheck(box)
+    # the healthcheck's radio: wm shows wl0 dark again on this start (the plan written already)
+    states = await box.rows("Wifi_Radio_State")
+    await box.transact(
+        [
+            {
+                "op": "update",
+                "table": "Wifi_Radio_State",
+                "where": [["_uuid", "==", ["uuid", u]]],
+                "row": {"channel": ["set", []]},
+            }
+            for u, r in states.items()
+            if r.get("if_name") == "wl0"
+        ]
+    )
+    failing_dark = await healthcheck(box)
+    return box.result(
+        passed=seeded_dark
+        and on == (True, 36, "HT20")
+        and not failing
+        and plan.get("dark_radios") == []
+        and session is not None
+        and second is not None
+        and second.get("instance") != first.get("instance")
+        and on_again == (True, 36, "HT20")
+        and not failing_again
+        and failing_dark == sorted(OPERATOR_APS),
+        seeded_dark=seeded_dark,
+        wl0=on,
+        healthcheck_failing=failing,
+        session_after_reseed=session,
+        wl0_after_reseed=on_again,
+        healthcheck_failing_after_reseed=failing_again,
+        healthcheck_failing_wl0_dark=failing_dark,
+        radio_plan=plan,
+    )
+
+
 async def legacy_seed_station_unwired(box):
     """spec 3.10, the station guard on a converted pod: the pod on its Wi-Fi uplink (its station wl1
     associated, cm on g-wl1), so the radio plan leaves its stations; its seed's onboarding station
@@ -6624,6 +6746,7 @@ SCENARIOS = {
     "legacy-cloud-cleared": legacy_cloud_cleared,
     "node-config": node_config,
     "legacy-seed-stations": legacy_seed_stations,
+    "legacy-dark-radio": legacy_dark_radio,
     "legacy-seed-station-unwired": legacy_seed_station_unwired,
 }
 OPTIONS = {  # the box each scenario needs beyond the default
@@ -6833,6 +6956,8 @@ OPTIONS["legacy-gtp-station-unassociated"] = {
 # fleet's telemetry on (off on a converted pod)
 # spec 3.10, the seed's stations: the radio plan's pod with the operator's onboarding stations
 OPTIONS["legacy-seed-stations"] = {**OPTIONS["legacy-radio-plan"], "seed_stations": True}
+# every enabled AP beacons: the radio plan's pod, wm showing wl0 with no channel (a hooked boot's)
+OPTIONS["legacy-dark-radio"] = {**OPTIONS["legacy-radio-plan"], "ethernet_first": "operator-dark"}
 # the station guard: the pod on its Wi-Fi uplink, a seed station on wl0, the guard's time shortened
 OPTIONS["legacy-seed-station-unwired"] = {
     "legacy": True,
