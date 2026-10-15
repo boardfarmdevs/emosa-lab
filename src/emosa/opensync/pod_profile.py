@@ -66,6 +66,12 @@ VIF_GUARDS = (
 )
 # a legacy pod's (spec 3.10): its WPA2-PSK is the security map
 LEGACY_VIF_GUARDS = ("if_name", "mode", "enabled", "ssid", "security")
+# spec 3.10: a legacy pod's wm restarts its authenticator (nas and eapd) in full only when an AP's
+# security changes in more than its ssid and key (its oftag, say); a new ssid or key alone is a
+# fast reload, which can leave it not serving the BSS. EMOSA's write that makes an AP or changes
+# its ssid or key gives the oftag this suffix, and once the pod's State shows that write the oftag
+# is restored: two full reloads.
+AUTH_RELOAD = "~reload"
 # the role an M2's Multi-AP extension gives a BSS, as OpenSync's multi_ap (spec 3.4): the pod's
 # AP takes it as a Multi-AP agent's AP does (hostapd multi_ap 2 or 1)
 MULTI_AP = {"fronthaul": "fronthaul_bss", "backhaul": "backhaul_bss"}
@@ -131,6 +137,7 @@ class PodBackend(OpenSyncBackend):
         self.state_provenance = PROVENANCE
         self.anchor = None
         self.identity = None  # radio MAC, BSSID (None before the VIF exists), channel, radio
+        self.auth_reloads = 0  # spec 3.10: the oftags auth_reload restored
 
     @property
     def mapping(self):
@@ -150,15 +157,65 @@ class PodBackend(OpenSyncBackend):
         """The guarded AP VIF fields of the pod's generation (spec 3.2, 3.10)."""
         return LEGACY_VIF_GUARDS if self.profile.legacy else VIF_GUARDS
 
-    def _secured(self, row, key):
+    def _secured(self, row, key, config=None):
         """The row with WPA2-PSK and the key in the pod's encoding: the single wpa_psks slot, or on
         a legacy pod the security map, the row's own entries then encryption WPA-PSK and the key
-        (spec 3.10)."""
+        (spec 3.10), its oftag with AUTH_RELOAD when the write makes the AP or changes its ssid or
+        key (``config``, the AP's decoded Config row, None when it is made)."""
         if not self.profile.legacy:
             return {**row, "wpa_psks": ["map", [["key", key]]]}
         security = row.get("security") or ["map", []]
         entries = {**dict(security[1]), "encryption": "WPA-PSK", "key": key}
+        if config is None or config.get("ssid") != row.get("ssid") or psk(config) != key:
+            entries["oftag"] = entries.get("oftag", "") + AUTH_RELOAD
         return {**row, "security": ["map", sorted([k, v] for k, v in entries.items())]}
+
+    async def auth_reload(self):
+        """spec 3.10: each legacy AP whose oftag carries AUTH_RELOAD gets its oftag back, guarded,
+        once the pod's State shows that write (its ssid, key and oftag): the second full reload of
+        the pod's authenticator, after wm has taken the first. The names restored."""
+        if not self.profile.legacy:
+            return []
+        raw = await self.session.snapshot()
+        schema, tables = raw["schema"], raw["tables"]
+        states = {}
+        for row in tables.get("Wifi_VIF_State", {}).values():
+            state = schema.row("Wifi_VIF_State", row)
+            states[state.get("if_name")] = state
+        ops, names = [], []
+        for uuid, row in sorted(tables.get("Wifi_VIF_Config", {}).items()):
+            config = schema.row("Wifi_VIF_Config", row)
+            oftag = (config.get("security") or {}).get("oftag", "")
+            if config.get("mode") != "ap" or not oftag.endswith(AUTH_RELOAD):
+                continue
+            state = states.get(config.get("if_name")) or {}
+            if (
+                (state.get("security") or {}).get("oftag") != oftag
+                or state.get("ssid") != config.get("ssid")
+                or psk(state) != psk(config)
+            ):
+                continue  # wm has not taken the write yet
+            mutations = [["security", "delete", ["set", ["oftag"]]]]
+            if oftag != AUTH_RELOAD:
+                mutations.append(
+                    ["security", "insert", ["map", [["oftag", oftag[: -len(AUTH_RELOAD)]]]]]
+                )
+            ops += [
+                guard("Wifi_VIF_Config", uuid, row, ["if_name", "ssid", "security"]),
+                {
+                    "op": "mutate",
+                    "table": "Wifi_VIF_Config",
+                    "where": where_uuid(uuid),
+                    "mutations": mutations,
+                },
+            ]
+            names.append(config["if_name"])
+        if not ops:
+            return []
+        self.write_count += 1
+        check_results(await self.session.transact(ops), [None, 1] * len(names))
+        self.auth_reloads += len(names)
+        return names
 
     def _role_row(self, row, multi_ap):
         """The row with its role in multi_ap (spec 3.4); a legacy pod has none (spec 3.10)."""
@@ -649,6 +706,7 @@ class PodBackend(OpenSyncBackend):
                                     "ssid": bss["ssid"],
                                 },
                                 key,
+                                present["config"],
                             ),
                         }
                     )
@@ -782,7 +840,9 @@ class PodBackend(OpenSyncBackend):
                         "op": "update",
                         "table": "Wifi_VIF_Config",
                         "where": where_uuid(vif_uuid),
-                        "row": self._secured({"ssid": intent.ssid, "security": security}, key),
+                        "row": self._secured(
+                            {"ssid": intent.ssid, "security": security}, key, config
+                        ),
                     }
                 )
                 counts = [None, None, None, 1]

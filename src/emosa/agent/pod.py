@@ -1140,8 +1140,13 @@ async def serve(config, stop):
             # spec 2.5: new database generations that continued the pod source (the session
             # kept when it was provisioned), and those that were another source, by reason
             "reconnections": report.reconnections,
-            # spec 3.10: a legacy pod's starts, counted by its agent's sessions
-            **({"session_starts": report.session_starts} if profile.legacy else {}),
+            # spec 3.10: a legacy pod's starts, counted by its agent's sessions, and the oftags
+            # restored after an AP's write (each the second full reload of its authenticator)
+            **(
+                {"session_starts": report.session_starts, "auth_reloads": backend.auth_reloads}
+                if profile.legacy
+                else {}
+            ),
             "operations": ops,
             # spec 9: each further radio's scope, by band: its operations, each the BSSes of the
             # radio's own M2 set its slots map
@@ -1369,6 +1374,13 @@ async def serve(config, stop):
                             await timed(f"reconcile {band}", radio_engine.reconcile(pod_id))
                         except (EmosaError, ConnectionError, TimeoutError) as exc:
                             log.warning("reconcile %s: %s", band, exc)
+                if refreshed and ready and profile.legacy and not writing():
+                    # spec 3.10: an AP's write taken by wm, its oftag back (a full reload)
+                    try:
+                        for name in await timed("auth reload", backend.auth_reload()):
+                            log.info("auth reload: %s oftag restored (wm restarts nas, eapd)", name)
+                    except (EmosaError, ConnectionError, TimeoutError) as exc:
+                        log.warning("auth reload: %s", exc)
                 if refreshed and switch:
                     # Also while the pod is away: an unconfirmed switch times out.
                     try:

@@ -1281,6 +1281,55 @@ static void second_radio_profile(const char *schemas, const char *scratch)
     em_profile_free(&p);
 }
 
+/* spec 3.10 (PodBackend.auth_reload): an AP whose oftag carries the marker gets it back once wm
+ * shows the write, a bare marker removed; one wm has not taken, or unmarked, is left */
+static void auth_reload_ops(void)
+{
+    static const char *const text =
+        "{\"Wifi_VIF_Config\": {"
+        "\"u1\": {\"if_name\": \"wl1.2\", \"mode\": \"ap\", \"ssid\": \"s\", \"security\": [\"map\", "
+        "[[\"encryption\", \"WPA-PSK\"], [\"key\", \"k\"], [\"oftag\", \"home--1~reload\"]]]},"
+        "\"u2\": {\"if_name\": \"wl1.1\", \"mode\": \"ap\", \"ssid\": \"b\", \"security\": [\"map\", "
+        "[[\"encryption\", \"WPA-PSK\"], [\"key\", \"k2\"], [\"oftag\", \"~reload\"]]]},"
+        "\"u3\": {\"if_name\": \"wl0.2\", \"mode\": \"ap\", \"ssid\": \"t\", \"security\": [\"map\", "
+        "[[\"encryption\", \"WPA-PSK\"], [\"key\", \"k3\"], [\"oftag\", \"home--1~reload\"]]]},"
+        "\"u4\": {\"if_name\": \"wl1.3\", \"mode\": \"ap\", \"ssid\": \"x\", \"security\": [\"map\", "
+        "[[\"encryption\", \"WPA-PSK\"], [\"key\", \"k4\"], [\"oftag\", \"home--1\"]]]}},"
+        "\"Wifi_VIF_State\": {"
+        "\"s1\": {\"if_name\": \"wl1.2\", \"ssid\": \"s\", \"security\": [\"map\", "
+        "[[\"encryption\", \"WPA-PSK\"], [\"key\", \"k\"], [\"oftag\", \"home--1~reload\"]]]},"
+        "\"s2\": {\"if_name\": \"wl1.1\", \"ssid\": \"b\", \"security\": [\"map\", "
+        "[[\"encryption\", \"WPA-PSK\"], [\"key\", \"k2\"], [\"oftag\", \"~reload\"]]]},"
+        "\"s3\": {\"if_name\": \"wl0.2\", \"ssid\": \"t\", \"security\": [\"map\", "
+        "[[\"encryption\", \"WPA-PSK\"], [\"key\", \"k3\"], [\"oftag\", \"home--1\"]]]},"
+        "\"s4\": {\"if_name\": \"wl1.3\", \"ssid\": \"x\", \"security\": [\"map\", "
+        "[[\"encryption\", \"WPA-PSK\"], [\"key\", \"k4\"], [\"oftag\", \"home--1\"]]]}}}";
+    cJSON *tables = cJSON_Parse(text);
+    char names[8][16];
+    size_t n = 0;
+    cJSON *ops = em_auth_reload_ops(tables, names, 8, &n);
+    CHECK(ops && n == 2 && cJSON_GetArraySize(ops) == 4, "two APs restored, a guard and a mutate each");
+    CHECK(n == 2 && !strcmp(names[0], "wl1.2") && !strcmp(names[1], "wl1.1"), "the taken, marked APs");
+    char *got = ops ? cJSON_PrintUnformatted(cJSON_GetObjectItemCaseSensitive(cJSON_GetArrayItem(ops, 1), "mutations"))
+                    : NULL;
+    CHECK(got && !strcmp(got, "[[\"security\",\"delete\",[\"set\",[\"oftag\"]]],"
+                              "[\"security\",\"insert\",[\"map\",[[\"oftag\",\"home--1\"]]]]]"),
+          "the oftag back: %s", got ? got : "none");
+    free(got);
+    got = ops ? cJSON_PrintUnformatted(cJSON_GetObjectItemCaseSensitive(cJSON_GetArrayItem(ops, 3), "mutations")) : NULL;
+    CHECK(got && !strcmp(got, "[[\"security\",\"delete\",[\"set\",[\"oftag\"]]]]"), "a bare marker removed: %s",
+          got ? got : "none");
+    free(got);
+    const cJSON *guard = cJSON_GetArrayItem(ops, 0);
+    CHECK(guard && !strcmp(cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(guard, "op")), "wait") &&
+              cJSON_GetArraySize(cJSON_GetObjectItemCaseSensitive(guard, "columns")) == 3,
+          "guarded on if_name, ssid and security");
+    cJSON_Delete(ops);
+    cJSON_DeleteItemFromObjectCaseSensitive(tables, "Wifi_VIF_State");
+    CHECK(!em_auth_reload_ops(tables, names, 8, &n) && n == 0, "nothing while wm has taken none");
+    cJSON_Delete(tables);
+}
+
 int main(int argc, char **argv)
 {
     em_init();
@@ -1309,6 +1358,7 @@ int main(int argc, char **argv)
     environment_files(argv[2]);
     supervisor(argv[2]);
     second_radio_profile(argv[1], argv[2]);
+    auth_reload_ops();
     printf("%d checks, %d failures\n", checks, failures);
     return failures != 0;
 }

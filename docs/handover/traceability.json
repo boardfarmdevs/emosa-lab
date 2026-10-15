@@ -91,8 +91,9 @@
       "python": ["test_unassociated.py", "test_probe_watch.py"]
     },
     "README 3.10 Legacy pods: the OpenSync 2.0 schema": {
-      "box": ["legacy-onboard", "legacy-parent", "legacy-parent-child", "legacy-parent-child-gone", "legacy-pod-6-6-profile", "pod-6-6-legacy-profile", "legacy-wired", "legacy-wired-half-pair", "legacy-gre-move", "legacy-5g-fronthaul", "legacy-ethernet-lost", "legacy-ethernet-lost-gre", "legacy-gtp-station", "legacy-gtp-station-present", "legacy-radio-plan", "legacy-reseed-reclaim", "legacy-reseed-reclaim-5g", "legacy-reseed-reclaim-late", "legacy-profile-5g", "legacy-gtp-station-unassociated", "legacy-cloud-cleared", "legacy-seed-stations", "legacy-seed-station-unwired", "legacy-dark-radio"],
-      "python": ["test_legacy_pod.py"]
+      "box": ["legacy-onboard", "legacy-auth-reload", "no-auth-reload-6-6", "legacy-parent", "legacy-parent-child", "legacy-parent-child-gone", "legacy-pod-6-6-profile", "pod-6-6-legacy-profile", "legacy-wired", "legacy-wired-half-pair", "legacy-gre-move", "legacy-5g-fronthaul", "legacy-ethernet-lost", "legacy-ethernet-lost-gre", "legacy-gtp-station", "legacy-gtp-station-present", "legacy-radio-plan", "legacy-reseed-reclaim", "legacy-reseed-reclaim-5g", "legacy-reseed-reclaim-late", "legacy-profile-5g", "legacy-gtp-station-unassociated", "legacy-cloud-cleared", "legacy-seed-stations", "legacy-seed-station-unwired", "legacy-dark-radio"],
+      "python": ["test_legacy_pod.py"],
+      "units": ["auth_reload_ops"]
     },
     "README 4. The fleet": {
       "vectors": ["fleet.json", "fleet-sessions.json"],

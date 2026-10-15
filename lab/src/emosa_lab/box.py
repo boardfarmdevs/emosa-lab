@@ -518,8 +518,12 @@ class Box:
         stations_off=False,
         modules=None,
         seed_stations=False,
+        seeded_fronthaul=False,
     ):
         self.agent, self.directory, self.binary = agent, directory, binary
+        # seeded_fronthaul (legacy): the seed with wl1.2 on, as the operator's cloud left it (its
+        # SSID, key and oftag), its State taken by wm: a hooked boot's fronthaul (15 October)
+        self.seeded_fronthaul = seeded_fronthaul
         # seed_stations (legacy): the seed with onboarding stations on wl0 and wl1, as a converted
         # pod's own seed brings them back at a hooked boot (14 October)
         self.seed_stations = seed_stations
@@ -674,6 +678,8 @@ class Box:
             if self.seed_stations:  # True: on wl0 and wl1; else the radios named
                 names = ("wl0", "wl1") if self.seed_stations is True else self.seed_stations
                 await session.transact(seed_stations(names))
+            if self.seeded_fronthaul:
+                await session.transact(seeded_fronthaul())
         finally:
             await session.close()
         if self.legacy:  # its vendor's seed, as every start of its OpenSync restores it
@@ -928,10 +934,33 @@ class Box:
         }
 
 
+# spec 3.10: OpenSync 2.4.3's Broadcom wm (bcmwl_nas_update_security) restarts a legacy pod's
+# authenticator (nas, eapd) in full for a new AP or a change of its security entries beyond the
+# ssid and key (encryption, mode, oftag); a new ssid or key alone is a fast reload
+FULL_RELOAD = ("encryption", "mode", "oftag")
+AUTH_RELOAD = "~reload"  # the suffix the agent's write gives an AP's oftag (PodBackend)
+
+
+def auth_reload(state, config):
+    """The reload a legacy pod's wm makes applying an AP's Config over its State (raw rows, the
+    State None for a new AP): "full", "fast" or None."""
+    if state is None:
+        return "full"
+    old, new = ovsdb_map(state.get("security")), ovsdb_map(config.get("security"))
+    if any(old.get(k) != new.get(k) for k in FULL_RELOAD):
+        return "full"
+    if state.get("ssid") != config.get("ssid") or old.get("key") != new.get("key"):
+        return "fast"
+    return None
+
+
 async def apply_configuration(db):
     """The pod's managers: each VIF's State takes its Config's applied columns (a new
-    VIF gets its State row), as OpenSync's wm does once the radio has applied them."""
+    VIF gets its State row), as OpenSync's wm does once the radio has applied them. On a
+    legacy pod, each AP's authenticator reload is recorded (db.applied), and an oftag the
+    agent marked is applied again once the agent restores it (wm takes every change)."""
     session = OvsSession(db.endpoint, schema_generation=db.generation)
+    marked = set()
     try:
         snapshot = await session.snapshot()
         tables, schema = snapshot["tables"], snapshot["schema"]
@@ -945,6 +974,12 @@ async def apply_configuration(db):
                 continue  # a station's State is cm's and its supplicant's, not wm's
             name = schema.decode("Wifi_VIF_Config", "if_name", row["if_name"])
             applied = {c: row[c] for c in [*APPLY_COLUMNS, "multi_ap"] if c in row}
+            oftag = ovsdb_map(row.get("security")).get("oftag")
+            state = tables["Wifi_VIF_State"].get(states.get(name))
+            legacy = db.generation == LEGACY
+            db.applied.append((name, auth_reload(state, row) if legacy else None, oftag))
+            if legacy and (oftag or "").endswith(AUTH_RELOAD):
+                marked.add(name)
             if name in states:
                 where = [["_uuid", "==", ["uuid", states[name]]]]
                 changes.append(
@@ -954,8 +989,22 @@ async def apply_configuration(db):
                 applied |= {"if_name": row["if_name"], "vif_config": ["uuid", uuid]}
                 changes.append({"op": "insert", "table": "Wifi_VIF_State", "row": applied})
         await session.transact(changes)
+        deadline = time.monotonic() + 15
+        while marked and time.monotonic() < deadline:
+            await asyncio.sleep(0.3)
+            rows = (await session.snapshot())["tables"]["Wifi_VIF_Config"].values()
+            if not any(
+                (ovsdb_map(r.get("security")).get("oftag") or "").endswith(AUTH_RELOAD)
+                for r in rows
+                if schema.decode("Wifi_VIF_Config", "if_name", r["if_name"]) in marked
+            ):
+                break
+        else:
+            marked = set()  # none marked, or the agent restored none in time: nothing to apply
     finally:
         await session.close()
+    if marked:
+        await apply_configuration(db)  # the agent's restore, as wm takes it
 
 
 async def boot(box):
@@ -5007,6 +5056,59 @@ async def legacy_onboard(box):
     )
 
 
+async def legacy_auth_reload(box):
+    """spec 3.10: a hooked boot's fronthaul, the seed's wl1.2 with the operator's SSID and key
+    under the profile's oftag. Its SSID and key alone would be a fast reload of the pod's
+    authenticator (wm's model, auth_reload); the agent's write marks the oftag, a full reload, and
+    once wm shows that write the agent restores it, a second full reload. Nothing fast, and the
+    row ends as the profile has it."""
+    seed = seeded_fronthaul()[0]["row"]
+    wanted = {"encryption": "WPA-PSK", "key": REGISTRAR_KEY, "oftag": "home--1"}
+    plain = auth_reload(seed, {"ssid": REGISTRAR_SSID, "security": ["map", list(wanted.items())]})
+    state = await onboarded(box)
+    if not state.get("applied"):
+        return box.result(passed=False, failed=state.get("failed", "not applied"))
+    _, config = await box.vif("Wifi_VIF_Config", LEGACY_FRONTHAUL)
+    _, observed = await box.vif("Wifi_VIF_State", LEGACY_FRONTHAUL)
+    reloads = [(k, o) for name, k, o in box.db.applied if name == LEGACY_FRONTHAUL and k]
+    restored = (box.status() or {}).get("auth_reloads")
+    return box.result(
+        passed=plain == "fast"
+        and reloads[-2:] == [("full", "home--1" + AUTH_RELOAD), ("full", "home--1")]
+        and all(k == "full" for k, _ in reloads)
+        and (restored or 0) >= 1
+        and legacy_row_ok(config, wanted)
+        and legacy_row_ok(observed, wanted)
+        and (config or {}).get("ssid") == REGISTRAR_SSID,
+        without_marker=plain,
+        reloads=reloads,
+        auth_reloads=restored,
+    )
+
+
+async def no_auth_reload_6_6(box):
+    """spec 3.10: the authenticator's reload is a legacy pod's only: on a 6.6 pod (the Pis'
+    generation) the agent's write of the controller's fronthaul carries no oftag marker, and no
+    further write follows it (no auth_reloads in its status)."""
+    state = await onboarded(box)
+    if not state.get("applied"):
+        return box.result(passed=False, failed=state.get("failed", "not applied"))
+    writes = (box.status() or {}).get("writes")
+    await asyncio.sleep(6)  # a restore would come on the agent's refresh cadence
+    status = box.status() or {}
+    _, config = await box.vif("Wifi_VIF_Config", COLD_VIF)
+    marks = [o for _, _, o in box.db.applied if (o or "").endswith(AUTH_RELOAD)]
+    return box.result(
+        passed=bool(config)
+        and not marks
+        and AUTH_RELOAD not in json.dumps(config)
+        and "auth_reloads" not in status
+        and status.get("writes") == writes,
+        writes=[writes, status.get("writes")],
+        marks=marks,
+    )
+
+
 async def legacy_parent(box):
     """spec 3.10, 8.6: on a legacy pod the M2 set's backhaul BSS is the GRE parent AP wl1.1, with
     no multi_ap (the pod has none), its WPA2-PSK in the security map, hidden, no bridge, no
@@ -5261,6 +5363,46 @@ def seed_stations(names=("wl0", "wl1")):
             },
         ]
     return operations
+
+
+def seeded_fronthaul():
+    """A hooked boot's fronthaul (15 October): wl1.2 on, in br-home, as the operator's cloud left
+    it (its SSID, key and the profile's oftag), its State taken by wm and its radio wl1's."""
+    security = ["map", [["encryption", "WPA-PSK"], ["key", "operator-key"], ["oftag", "home--1"]]]
+    row = {
+        "if_name": LEGACY_FRONTHAUL,
+        "mode": "ap",
+        "enabled": True,
+        "ssid": "operator-home",
+        "bridge": "br-home",
+        "vif_radio_idx": 2,
+        "security": security,
+    }
+    return [
+        {"op": "insert", "table": "Wifi_VIF_Config", "uuid-name": "c_fh", "row": row},
+        {
+            "op": "insert",
+            "table": "Wifi_VIF_State",
+            "uuid-name": "s_fh",
+            "row": {
+                **{k: row[k] for k in ("if_name", "mode", "enabled", "ssid", "security")},
+                "mac": "02:00:00:00:41:02",
+                "vif_config": ["named-uuid", "c_fh"],
+            },
+        },
+        {
+            "op": "mutate",
+            "table": "Wifi_Radio_Config",
+            "where": [["if_name", "==", "wl1"]],
+            "mutations": [["vif_configs", "insert", ["set", [["named-uuid", "c_fh"]]]]],
+        },
+        {
+            "op": "mutate",
+            "table": "Wifi_Radio_State",
+            "where": [["if_name", "==", "wl1"]],
+            "mutations": [["vif_states", "insert", ["set", [["named-uuid", "s_fh"]]]]],
+        },
+    ]
 
 
 def operator_aps():
@@ -6729,6 +6871,8 @@ SCENARIOS = {
     "write-lost-unapplied": write_lost_unapplied,
     "restart-during-write": restart_during_write,
     "legacy-onboard": legacy_onboard,
+    "legacy-auth-reload": legacy_auth_reload,
+    "no-auth-reload-6-6": no_auth_reload_6_6,
     "legacy-parent": legacy_parent,
     "legacy-parent-child": legacy_parent_child,
     "legacy-parent-child-gone": legacy_parent_child_gone,
@@ -6907,6 +7051,8 @@ OPTIONS["reconnect-moved-uplink"] = OPTIONS["restart-during-move"]
 OPTIONS["reconnect-channel-follows"] = OPTIONS["second-radio-moves-channel"]
 # spec 3.10: a legacy pod, and each generation's pod under the other's profile
 OPTIONS["legacy-onboard"] = {"legacy": True}
+# a hooked boot's fronthaul: the seed's wl1.2 as the operator's cloud left it
+OPTIONS["legacy-auth-reload"] = {"legacy": True, "seeded_fronthaul": True}
 OPTIONS["legacy-parent"] = {"legacy": True, "multi_bss": True, "underlay": LEGACY_UNDERLAY}
 OPTIONS["legacy-parent-child"] = OPTIONS["legacy-parent"]
 OPTIONS["legacy-parent-child-gone"] = OPTIONS["legacy-parent"]

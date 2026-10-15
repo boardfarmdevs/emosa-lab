@@ -182,6 +182,8 @@ def backend(tmp_path, vif=True):
 
 
 WANTED = ["map", [["encryption", "WPA-PSK"], ["key", "EmosaMesh2026!"], ["oftag", "home--1"]]]
+# the write that changes the AP's ssid or key: its oftag marked, a full reload of the authenticator
+MARKED = ["map", [*WANTED[1][:2], ["oftag", "home--1~reload"]]]
 
 
 def test_a_legacy_pods_fronthaul_is_read_from_its_security_map(tmp_path):
@@ -203,7 +205,7 @@ def test_a_legacy_update_writes_the_whole_security_map_under_its_guards(tmp_path
     (ops,) = pod.session.sent
     assert [op["op"] for op in ops] == ["wait", "wait", "wait", "update"]
     assert ops[2]["columns"] == list(LEGACY_VIF_GUARDS)
-    assert ops[3]["row"] == {"ssid": "emosa-mesh", "security": WANTED}  # no multi_ap, no wpa_psks
+    assert ops[3]["row"] == {"ssid": "emosa-mesh", "security": MARKED}  # no multi_ap, no wpa_psks
 
 
 def test_a_cold_legacy_pods_fronthaul_is_created_in_its_encoding(tmp_path):
@@ -215,8 +217,83 @@ def test_a_cold_legacy_pods_fronthaul_is_created_in_its_encoding(tmp_path):
     insert = next(op for ops in pod.session.sent for op in ops if op["op"] == "insert")
     row = insert["row"]
     assert row["if_name"] == "wl1.2" and row["ssid"] == "emosa-mesh"
-    assert row["security"] == WANTED
+    assert row["security"] == MARKED  # made: its oftag marked too
     assert not {"multi_ap", "wpa", "wpa_psks", "wpa_key_mgmt"} & set(row)
+
+
+def test_a_legacy_write_that_keeps_the_ssid_and_key_leaves_the_oftag(tmp_path):
+    pod, vault = backend(tmp_path)
+    vault.write_simulated("same", "operator-psk")
+    asyncio.run(pod.context())
+    intent = Intent("pod-1", "radio-1", "bss-1", "operator-home", "same")
+    asyncio.run(pod.submit(intent, {"transaction_id": "t1", "session_generation": 1}))
+    (ops,) = pod.session.sent
+    assert ops[3]["row"]["security"] == [
+        "map",
+        [["encryption", "WPA-PSK"], ["key", "operator-psk"], ["oftag", "home--1"]],
+    ]
+
+
+def marked(raw, oftag, *, state=True, ssid="emosa-mesh"):
+    """The pod's fronthaul after EMOSA's write with ``oftag``, wm having taken it (state) or not."""
+    security = ["map", [["encryption", "WPA-PSK"], ["key", "EmosaMesh2026!"], ["oftag", oftag]]]
+    raw["Wifi_VIF_Config"][VIF] |= {"ssid": ssid, "security": security}
+    if state:
+        raw["Wifi_VIF_State"][VIF_STATE] |= {"ssid": ssid, "security": security}
+    return raw
+
+
+def test_auth_reload_restores_the_oftag_once_wm_has_taken_the_write(tmp_path):
+    pod, _ = backend(tmp_path)
+    marked(pod.session.tables, "home--1~reload")
+    assert asyncio.run(pod.auth_reload()) == ["wl1.2"]
+    (ops,) = pod.session.sent
+    assert ops[0]["op"] == "wait" and ops[0]["columns"] == ["if_name", "ssid", "security"]
+    assert ops[1] == {
+        "op": "mutate",
+        "table": "Wifi_VIF_Config",
+        "where": [["_uuid", "==", ["uuid", VIF]]],
+        "mutations": [
+            ["security", "delete", ["set", ["oftag"]]],
+            ["security", "insert", ["map", [["oftag", "home--1"]]]],
+        ],
+    }
+    assert pod.auth_reloads == 1
+
+
+def test_auth_reload_removes_a_bare_marker(tmp_path):
+    pod, _ = backend(tmp_path)
+    marked(pod.session.tables, "~reload")  # a row without an oftag of its own (a backhaul's)
+    assert asyncio.run(pod.auth_reload()) == ["wl1.2"]
+    assert pod.session.sent[0][1]["mutations"] == [["security", "delete", ["set", ["oftag"]]]]
+
+
+@pytest.mark.parametrize(
+    "case",
+    ["not taken", "old ssid in state", "unmarked"],
+)
+def test_auth_reload_waits_for_wm_and_leaves_other_rows(tmp_path, case):
+    pod, _ = backend(tmp_path)
+    raw = pod.session.tables
+    if case == "not taken":
+        marked(raw, "home--1~reload", state=False)
+    elif case == "old ssid in state":
+        marked(raw, "home--1~reload")
+        raw["Wifi_VIF_State"][VIF_STATE]["ssid"] = "operator-home"
+    else:
+        marked(raw, "home--1")
+    assert asyncio.run(pod.auth_reload()) == []
+    assert pod.session.sent == [] and pod.auth_reloads == 0
+
+
+def test_auth_reload_is_a_legacy_pods_only(tmp_path):
+    vault = SecretStore(tmp_path / "secrets")
+    profile = load_profile("opensync-lab-hwsim-6.6.1-v1")
+    pod = PodBackend("pod-1", Session(tables()), vault, serial=SERIAL, profile=profile)
+    marked(pod.session.tables, "home--1~reload")
+    assert asyncio.run(pod.auth_reload()) == [] and pod.session.sent == []
+    row = pod._secured({"ssid": "s", "security": ["map", [["oftag", "home--1"]]]}, "k")
+    assert row["wpa_psks"] == ["map", [["key", "k"]]]  # no marker: the 6.6 encoding as before
 
 
 # spec 8.4 on a legacy pod: the Ethernet uplink bridged by OpenSync's patch pair

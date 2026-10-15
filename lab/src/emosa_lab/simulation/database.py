@@ -52,6 +52,9 @@ class SimDatabase:
         self.process = None
         self.log = None
         self.tls_files = tls_files
+        # what the pod's managers applied to each AP: (if_name, its authenticator's reload, the
+        # oftag), the reload a legacy pod's wm's ("full", "fast" or None), None on a 6.6 pod
+        self.applied = []
 
     async def start(self):
         server, tool = binary("ovsdb-server"), binary("ovsdb-tool")

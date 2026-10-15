@@ -590,6 +590,23 @@ is everything above. For a legacy pod, all of this specification applies, except
   VIF). A BSS is WPA2-PSK in this encoding while its map's `encryption` is
   `WPA-PSK` and it has a `key`. Guarded AP VIF fields: `if_name`, `mode`,
   `enabled`, `ssid` and `security`.
+- **The authenticator's reload.** OpenSync 2.4.3's Broadcom wm restarts the
+  pod's authenticator (nas and eapd) in full only for a new AP or a change of
+  its `security` entries beyond the key (`encryption`, `mode`, `oftag`); an
+  `ssid` or `key` alone is a fast reload, after which the authenticator may
+  not serve the BSS (associated clients get no EAPOL M1, 15 October). So an
+  EMOSA write that makes an AP or changes its `ssid` or key gives the map's
+  `oftag` the suffix `~reload` (the profile's `home--1` becomes
+  `home--1~reload`; a row without one gets `~reload`), a full reload. Once the
+  pod's `Wifi_VIF_State` shows that write (its `ssid`, key and marked `oftag`)
+  and no EMOSA write is in flight, the agent restores the `oftag` with one
+  guarded `mutate` (the marker deleted, the profile's `oftag` inserted), a
+  second full reload, and counts it in its status (`auth_reloads`). The marker
+  is the pod's own state: an agent restarted in between restores it. The AP
+  stays up (beacons continue; its clients reassociate within seconds of each
+  reload). A write that keeps the `ssid` and key, and the radio plan's neutral
+  APs (hidden, their Inet off: they serve no client), carry no marker. A 6.6
+  pod has none.
 - **Roles.** There is no `multi_ap`, so EMOSA writes none. A BSS's role is its
   slot's (§3.4): the fronthaul VIF and fronthaul slots are fronthaul,
   backhaul slots backhaul, and the BSS Configuration Report flags follow from it.

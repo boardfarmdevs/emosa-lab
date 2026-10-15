@@ -668,6 +668,19 @@ def test_a_legacy_pods_fronthaul_is_written_in_its_security_map(agent, tmp_path)
     assert result["passed"], result
 
 
+def test_a_legacy_pods_ssid_and_key_write_ends_in_a_full_auth_reload(agent, tmp_path):
+    # spec 3.10 (15 October): on a hooked boot the SSID and key alone were a fast reload of the
+    # pods' authenticator, which then sent no EAPOL M1
+    result = box("legacy-auth-reload", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+    assert result["without_marker"] == "fast" and result["reloads"][-1] == ["full", "home--1"]
+
+
+def test_a_6_6_pods_write_has_no_auth_reload(agent, tmp_path):
+    result = box("no-auth-reload-6-6", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+
+
 def test_a_legacy_pods_backhaul_bss_is_its_gre_parent_ap_on_its_underlay(agent, tmp_path):
     # spec 3.10, 8.6: the former manager's 169.254.2.1 on wl1.1 replaced by the pod's underlay
     result = box("legacy-parent", agent, tmp_path / "box", timeout=240)

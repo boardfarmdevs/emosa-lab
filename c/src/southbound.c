@@ -569,25 +569,37 @@ static void set_parent(cJSON *row, const em_profile *p)
 
 /* the row with WPA2-PSK and the key in the pod's encoding (PodBackend._secured): the single
  * wpa_psks slot, or on a legacy pod the security map, the row's own entries then encryption
- * WPA-PSK and the key, in key order (spec 3.10) */
-static void set_secured(cJSON *row, const em_profile *p, const char *key)
+ * WPA-PSK and the key, in key order (spec 3.10), its oftag with EM_AUTH_RELOAD when the write
+ * makes the AP or changes its ssid or key (config: the AP's raw Config row, NULL when made) */
+static void set_secured(cJSON *row, const em_profile *p, const char *key, const cJSON *config)
 {
     if (!p->legacy) {
         cJSON_DeleteItemFromObjectCaseSensitive(row, "wpa_psks");
         cJSON_AddItemToObject(row, "wpa_psks", psk_map(key));
         return;
     }
-    const char *keys[16], *values[16];
+    const char *ssid = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(row, "ssid"));
+    const char *was = config ? ovs_str(config, "ssid") : NULL, *was_key = config ? em_row_psk(config) : NULL;
+    bool reload = !config || !ssid || !was || strcmp(ssid, was) || !was_key || strcmp(key, was_key);
+    const char *keys[16], *values[16], *oftag = "";
     size_t n = 0;
     const cJSON *pair, *pairs = cJSON_GetArrayItem(cJSON_GetObjectItemCaseSensitive(row, "security"), 1);
     cJSON_ArrayForEach(pair, pairs)
     {
         const char *k = cJSON_GetStringValue(cJSON_GetArrayItem(pair, 0));
         const char *v = cJSON_GetStringValue(cJSON_GetArrayItem(pair, 1));
-        if (k && v && n < 14 && strcmp(k, "encryption") && strcmp(k, "key")) {
+        if (k && v && reload && !strcmp(k, "oftag"))
+            oftag = v;
+        else if (k && v && n < 13 && strcmp(k, "encryption") && strcmp(k, "key")) {
             keys[n] = k;
             values[n++] = v;
         }
+    }
+    char marked[80]; /* an oftag (a short tag) and the suffix */
+    if (reload) {
+        EM_FORMAT_FIXED(marked, sizeof(marked), "%.60s%s", oftag, EM_AUTH_RELOAD);
+        keys[n] = "oftag";
+        values[n++] = marked;
     }
     keys[n] = "encryption";
     values[n++] = "WPA-PSK";
@@ -609,6 +621,56 @@ static void set_secured(cJSON *row, const em_profile *p, const char *key)
     cJSON *map = tagged("map", list); /* built before the old map, whose strings it copied, goes */
     cJSON_DeleteItemFromObjectCaseSensitive(row, "security");
     cJSON_AddItemToObject(row, "security", map);
+}
+
+static bool same_text(const char *a, const char *b) { return a && b && !strcmp(a, b); }
+
+cJSON *em_auth_reload_ops(const cJSON *tables, char (*names)[16], size_t max, size_t *n)
+{
+    static const char *const cols[] = {"if_name", "ssid", "security"};
+    const size_t suffix = strlen(EM_AUTH_RELOAD);
+    cJSON *ops = cJSON_CreateArray();
+    const cJSON *r, *s;
+    *n = 0;
+    cJSON_ArrayForEach(r, em_table(tables, "Wifi_VIF_Config"))
+    {
+        const char *mode = ovs_str(r, "mode"), *name = ovs_str(r, "if_name");
+        const char *oftag = ovs_map_get(r, "security", "oftag");
+        size_t len = oftag ? strlen(oftag) : 0;
+        if (*n >= max || !same_text(mode, "ap") || !name || strlen(name) > 15 || len < suffix ||
+            strcmp(oftag + len - suffix, EM_AUTH_RELOAD))
+            continue;
+        const cJSON *state = NULL;
+        cJSON_ArrayForEach(s, em_table(tables, "Wifi_VIF_State"))
+        {
+            if (same_text(ovs_str(s, "if_name"), name))
+                state = s;
+        }
+        if (!state || !same_text(ovs_map_get(state, "security", "oftag"), oftag) ||
+            !same_text(ovs_str(state, "ssid"), ovs_str(r, "ssid")) || !same_text(em_row_psk(state), em_row_psk(r)))
+            continue; /* wm has not taken the write yet */
+        cJSON_AddItemToArray(ops, guard("Wifi_VIF_Config", r->string, r, cols, 3));
+        cJSON *o = op("mutate", "Wifi_VIF_Config", where_uuid(r->string)), *m = cJSON_CreateArray();
+        const char *gone = "oftag";
+        cJSON_AddItemToArray(m, mutation("security", "delete", tagged("set", strings(&gone, 1))));
+        if (len > suffix) {
+            char restored[80];
+            EM_FORMAT_FIXED(restored, sizeof(restored), "%.*s", (int)(len - suffix < 79 ? len - suffix : 79), oftag);
+            cJSON *pairs = cJSON_CreateArray(), *pair = cJSON_CreateArray();
+            cJSON_AddItemToArray(pair, cJSON_CreateString("oftag"));
+            cJSON_AddItemToArray(pair, cJSON_CreateString(restored));
+            cJSON_AddItemToArray(pairs, pair);
+            cJSON_AddItemToArray(m, mutation("security", "insert", tagged("map", pairs)));
+        }
+        cJSON_AddItemToObject(o, "mutations", m);
+        cJSON_AddItemToArray(ops, o);
+        (void)em_copy(names[(*n)++], 16, name); /* an interface name (15) */
+    }
+    if (!*n) {
+        cJSON_Delete(ops);
+        return NULL;
+    }
+    return ops;
 }
 
 static void ipv4_text(uint32_t address, char out[16])
@@ -731,7 +793,7 @@ static em_reason slot_ops(const em_profile *p, const em_profile *own, const char
                 cJSON_DeleteItemFromObjectCaseSensitive(row, "ssid");
                 cJSON_AddStringToObject(row, "ssid", intent->additional[k].ssid);
                 if (p->legacy) /* the whole security map, in the update (spec 3.10) */
-                    set_secured(row, p, bkey);
+                    set_secured(row, p, bkey, found[i].config);
                 cJSON_AddItemToObject(upd, "row", row);
                 PUSH(upd, 1);
                 if (!p->legacy)
@@ -749,7 +811,7 @@ static em_reason slot_ops(const em_profile *p, const em_profile *own, const char
                 cJSON_AddStringToObject(row, "if_name", name);
                 cJSON_AddStringToObject(row, "ssid", intent->additional[k].ssid);
                 cJSON_AddNumberToObject(row, "vif_radio_idx", own->slots[i].vif_radio_idx);
-                set_secured(row, p, bkey);
+                set_secured(row, p, bkey, NULL);
                 cJSON_AddItemToObject(ins, "row", row);
                 PUSH(ins, -1);
                 PUSH(vif_configs_mutate(radio_uuid, "insert", named(label)), 1);
@@ -942,7 +1004,7 @@ em_reason em_ap_submit(const em_profile *p, const char *serial, bool multi_bss,
         cJSON_DeleteItemFromObjectCaseSensitive(row, "ssid");
         cJSON_AddStringToObject(row, "ssid", intent->ssid);
         set_role(row, p, "fronthaul");
-        set_secured(row, p, key);
+        set_secured(row, p, key, NULL);
         cJSON_AddItemToObject(ins, "row", row);
         PUSH(ins, -1);
         PUSH(vif_configs_mutate(b.radio_uuid, "insert", named("fh")), 1);
@@ -966,7 +1028,7 @@ em_reason em_ap_submit(const em_profile *p, const char *serial, bool multi_bss,
         const cJSON *security = cJSON_GetObjectItemCaseSensitive(p->fronthaul_vif, "security");
         cJSON_AddItemToObject(row, "security",
                               security ? cJSON_Duplicate(security, 1) : tagged("map", cJSON_CreateArray()));
-        set_secured(row, p, key);
+        set_secured(row, p, key, b.config);
         cJSON_AddItemToObject(upd, "row", row);
         PUSH(upd, 1);
     } else {

@@ -191,6 +191,7 @@ typedef struct {
     unsigned reconnections_continued, reconnections_config_lost;
     counters reconnections_fresh;
     unsigned session_starts; /* spec 3.10: a legacy pod's starts, counted by its agent's sessions */
+    unsigned auth_reloads;   /* spec 3.10: the oftags auth_reload restored */
     bool notify_due, check_drift;
     uint8_t channel_moves[1 + EXTRA_RADIOS][6];
     size_t nchannel_moves;
@@ -909,6 +910,33 @@ static bool writing(agent *a)
             active || em_state_active(em_state_of(op));
     }
     return active;
+}
+
+/* spec 3.10 (PodBackend.auth_reload): each AP's write wm has taken, its oftag back, guarded (the
+ * second full reload of the pod's authenticator) */
+static void auth_reload(agent *a)
+{
+    char names[8][16];
+    size_t n = 0;
+    cJSON *ops = em_ovsdb_ready(a->ovs) ? em_auth_reload_ops(em_ovsdb_tables(a->ovs), names, 8, &n) : NULL;
+    if (!ops)
+        return;
+    int counts[16];
+    for (size_t i = 0; i < n; i++) {
+        counts[2 * i] = -1;
+        counts[2 * i + 1] = 1;
+    }
+    cJSON *results = transact(a, ops);
+    em_reason r = results ? em_check_results(results, counts, 2 * n) : EM_OUTCOME_UNKNOWN;
+    if (r == EM_OK) {
+        a->auth_reloads += (unsigned)n;
+        for (size_t i = 0; i < n; i++)
+            LOG("auth reload: %s oftag restored (wm restarts nas, eapd)", names[i]);
+    } else {
+        WARN("auth reload: %s", em_reason_name(r));
+    }
+    cJSON_Delete(results);
+    cJSON_Delete(ops);
 }
 
 static void renew(agent *a, const char *why);
@@ -2349,8 +2377,11 @@ static cJSON *status(agent *a)
     if (a->reconnections_config_lost)
         cJSON_AddNumberToObject(reconnections, "config_lost", a->reconnections_config_lost);
     cJSON_AddItemToObject(reconnections, "fresh", counters_json(&a->reconnections_fresh, ""));
-    if (a->profile.legacy) /* spec 3.10: a legacy pod's starts, counted by its agent's sessions */
+    if (a->profile.legacy) { /* spec 3.10: a legacy pod's starts, counted by its agent's sessions, */
         cJSON_AddNumberToObject(o, "session_starts", a->session_starts);
+        /* and the oftags restored after an AP's write (each the second full reload of its authenticator) */
+        cJSON_AddNumberToObject(o, "auth_reloads", a->auth_reloads);
+    }
     cJSON_AddStringToObject(session, "state", SESSION_NAMES[a->at.state]);
     cJSON *issues = cJSON_AddArrayToObject(session, "admission_issues");
     for (size_t i = 0; i < a->nadmission_issues; i++)
@@ -3108,6 +3139,8 @@ int main(int argc, char **argv)
             receive_frame(&a, frame, len);
         if (refreshed && source_current(&a))
             reconcile(&a);
+        if (refreshed && source_current(&a) && a.profile.legacy && !writing(&a))
+            auth_reload(&a); /* spec 3.10: an AP's write taken by wm, its oftag back (a full reload) */
         /* the scopes step on the refresh cadence, also while the pod is away: a write
          * in flight times out */
         if (refreshed && a.uplink_on)

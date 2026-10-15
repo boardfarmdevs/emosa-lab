@@ -100,6 +100,18 @@ em_reason em_ap_submit(const em_profile *profile, const char *serial, bool multi
                        const char *underlay, em_ovs_session *session, const em_ap_intent *intent,
                        em_secret_resolver resolve, void *resolve_ctx, em_submit_result *out);
 
+/* spec 3.10 (PodBackend AUTH_RELOAD): a legacy pod's wm restarts its authenticator (nas and eapd)
+ * in full only when an AP's security changes in more than its ssid and key (its oftag, say); a new
+ * ssid or key alone is a fast reload, which can leave it not serving the BSS. EMOSA's write that
+ * makes an AP or changes its ssid or key gives the oftag this suffix, and once the pod's State
+ * shows that write the oftag is restored: two full reloads. */
+#define EM_AUTH_RELOAD "~reload"
+
+/* PodBackend.auth_reload: the guarded operations giving each legacy AP whose oftag carries
+ * EM_AUTH_RELOAD its oftag back once its State shows that write (its ssid, key and oftag), the
+ * APs' names in names (at most max), *n their count; NULL when there is none. */
+cJSON *em_auth_reload_ops(const cJSON *tables, char (*names)[16], size_t max, size_t *n);
+
 /* A further radio's scope (spec 9, RadioBackend.submit): make its slot VIFs on the radio of
  * `band` exactly the intent's additional BSSes (the BSSes of that radio's own M2 set fitted to
  * its slots; intent->ssid and secret_ref unused). Guards the pod and the radio's if_name only,
