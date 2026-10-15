@@ -77,6 +77,16 @@ AUTH_RELOAD = "~reload"
 # Port), and Wifi_VIF_State.bridge shows the bridge regardless (from the pod's NVRAM). An AP of
 # EMOSA's with a bridge and no Port gets one, its oftag marked so the authenticator restarts after.
 PORT_GUARDS = ("if_name", "enabled", "bridge", "security")
+# What shows whether such a port carries its stations, read only (spec 3.10): the bridge's fail
+# mode (a secure bridge forwards only what its OpenFlow rules allow) and OpenSync's rules for it,
+# and each port's Interface as Open vSwitch opened it (its ofport, or the error)
+BRIDGE_MONITOR = {
+    "Bridge": ["name", "ports", "fail_mode", "controller", "other_config", "status"],
+    "Port": ["name", "interfaces", "tag", "trunks", "vlan_mode"],
+    "Interface": ["name", "type", "ofport", "error", "link_state", "admin_state"],
+    "Openflow_Config": ["bridge", "table", "priority", "rule", "action", "token"],
+    "Openflow_State": ["bridge", "openflow_config", "success", "token"],
+}
 # the role an M2's Multi-AP extension gives a BSS, as OpenSync's multi_ap (spec 3.4): the pod's
 # AP takes it as a Multi-AP agent's AP does (hostapd multi_ap 2 or 1)
 MULTI_AP = {"fronthaul": "fronthaul_bss", "backhaul": "backhaul_bss"}

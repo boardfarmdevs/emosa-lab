@@ -69,7 +69,7 @@ from emosa.opensync.gre_parent import GreParentBackend
 from emosa.opensync.gtp_station import GtpStationBackend, GtpStationIntent
 from emosa.opensync.node_config import MONITOR as NODE_CONFIG_MONITOR
 from emosa.opensync.node_config import NodeConfigBackend, NodeConfigIntent
-from emosa.opensync.pod_profile import PodBackend, RadioBackend, wpa2_psk
+from emosa.opensync.pod_profile import BRIDGE_MONITOR, PodBackend, RadioBackend, wpa2_psk
 from emosa.opensync.probe_watch import MONITOR as WATCH_MONITOR
 from emosa.opensync.probe_watch import WatchBackend
 from emosa.opensync.profiles import DEFAULT as DEFAULT_PROFILE
@@ -156,6 +156,7 @@ for _scope in (
     GRE_PARENT_MONITOR,
     RADIO_PLAN_MONITOR,
     NODE_CONFIG_MONITOR,
+    BRIDGE_MONITOR,
 ):
     for _table, _columns in _scope.items():  # the other scopes, each column once
         MONITOR[_table] = list(dict.fromkeys([*MONITOR.get(_table, []), *_columns]))

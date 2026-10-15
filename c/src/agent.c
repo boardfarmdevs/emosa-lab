@@ -2944,8 +2944,12 @@ int main(int argc, char **argv)
         "Wifi_Credential_Config", "Connection_Manager_Uplink", "Band_Steering_Config",
         "Band_Steering_Clients", "Wifi_VIF_Neighbors", "Wifi_Stats_Config",
         /* a GRE parent's children and tunnels (spec 8.6), their columns only */
-        "DHCP_leased_IP:hwaddr,inet_addr", "Wifi_Inet_State:if_name,inet_addr", "Bridge:name,ports",
-        "Port:name,interfaces", "Interface:name",
+        "DHCP_leased_IP:hwaddr,inet_addr", "Wifi_Inet_State:if_name,inet_addr",
+        /* and, read only, whether an AP's bridge port carries its stations (spec 3.10, BRIDGE_MONITOR):
+         * the bridge's fail mode and OpenSync's OpenFlow rules, each Interface as Open vSwitch opened it */
+        "Bridge:name,ports,fail_mode,controller,other_config,status", "Port:name,interfaces,tag,trunks,vlan_mode",
+        "Interface:name,type,ofport,error,link_state,admin_state", "Openflow_Config:bridge,table,priority,rule,action,token",
+        "Openflow_State:bridge,openflow_config,success,token",
         /* the pods' modules (spec 4), only with modules configured: the last two */
         "Node_Config:module,key,value,persist", "Node_State:module,key,value"};
     size_t ntables = sizeof(tables) / sizeof(*tables) - (a.node_on ? 0 : 2);
