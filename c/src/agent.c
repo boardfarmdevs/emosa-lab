@@ -851,15 +851,16 @@ static bool refresh(agent *a)
         }
     }
     a->nradios = em_backhaul_radios(tables, names, nnames, in_use, a->radios, EM_UPLINK_BANDS + 1);
+    /* radio points into *view: its fields are read before view goes */
+    a->has_observed = radio->has_channel;
+    a->observed_channel = radio->has_channel ? radio->channel : 0;
+    a->tx_power = radio->has_tx_power ? radio->tx_power : 0;
     a->view = *view;
     free(view);
     a->represented = rep;
     a->has_primary = primary;
     backhaul_links(a, t);
     a->channel = channel;
-    a->has_observed = radio->has_channel;
-    a->observed_channel = radio->has_channel ? radio->channel : 0;
-    a->tx_power = radio->has_tx_power ? radio->tx_power : 0;
     a->generation = em_ovsdb_generation(a->ovs);
     a->revision = em_ovsdb_revision(a->ovs);
     a->refreshed_at = t;
