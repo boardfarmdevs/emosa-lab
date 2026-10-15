@@ -345,13 +345,17 @@ jobs:
             .cache/upstream/openvswitch-4.0.0/*-emosa.log
   box:
     # the lab in a box (spec/box-scenarios.md): every scenario with one agent, C or Python,
-    # the real binary in a private network namespace with a pod, a controller and a broker
+    # the real binary in a private network namespace with a pod, a controller and a broker;
+    # the C agent, fleet and GTP once more with the sanitizers (their main loops run only here)
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        agent: [python, c]
-    name: box (${{ matrix.agent }})
+        include:
+          - {name: python, agent: python, slug: python, flags: ""}
+          - {name: c, agent: c, slug: c, flags: ""}
+          - {name: "c, sanitizers", agent: c, slug: c-sanitizers, flags: "-DEMOSA_SANITIZE=ON -DCMAKE_BUILD_TYPE=Debug"}
+    name: box (${{ matrix.name }})
     steps:
       - uses: actions/checkout@v4
       - name: The evidence files kept outside git
@@ -366,18 +370,20 @@ jobs:
           cmake libcjson-dev libsqlite3-dev mosquitto dnsmasq-base
       - run: bash scripts/build-ovsdb.sh
       - run: python3 scripts/build-wsc-registrar.py
-      - run: cmake -S c -B c/build && cmake --build c/build -j
+      - run: cmake -S c -B c/build ${{ matrix.flags }} && cmake --build c/build -j
       - name: The scenarios
         run: |
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
           sudo modprobe ip_gre    # the GTP's gretaps, created in the box's own namespace
+          # a sanitized binary stops at its first error, its report in the scenario's agent.log
+          ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=print_stacktrace=1 \
           EMOSA_BOX_REQUIRED=1 EMOSA_BOX_AGENTS=${{ matrix.agent }} \
-            uv run pytest -m box --durations=10 --junitxml=box-results-${{ matrix.agent }}.xml
+            uv run pytest -m box --durations=10 --junitxml=box-results-${{ matrix.slug }}.xml
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: box-results-${{ matrix.agent }}
-          path: box-results-${{ matrix.agent }}.xml
+          name: box-results-${{ matrix.slug }}
+          path: box-results-${{ matrix.slug }}.xml
   c:
     # the C agent's bar (c/QUALITY.md): the warning set as errors on both
     # compilers, the vectors and units, the sanitizers, the static analyzer

@@ -7,6 +7,9 @@
 #   scripts/run-box-in-container.sh [PYTEST ARGUMENTS...]     e.g. -k steering -x
 #   scripts/run-box-in-container.sh -- COMMAND...             e.g. -- python -m emosa_lab.box
 #                                                                  onboard --agent c --directory /tmp/b
+# EMOSA_BOX_SANITIZE=1: the C agent, fleet and GTP built with AddressSanitizer and
+# UndefinedBehaviorSanitizer (EMOSA_SANITIZE, as CI's box (c, sanitizers)): a memory error stops
+# the binary, and its scenario fails with the report in agent.log.
 # SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 root=$(cd "$(dirname "$0")/.." && pwd)
@@ -16,7 +19,7 @@ docker run --rm --user "$(id -u):$(id -g)" \
     --security-opt seccomp=unconfined --security-opt apparmor=unconfined \
     -e HOME=/tmp/home -e XDG_CACHE_HOME=/src/.cache/xdg \
     -e UV_CACHE_DIR=/src/.cache/uv -e UV_PYTHON_INSTALL_DIR=/src/.cache/uv-python \
-    -e UV_PROJECT_ENVIRONMENT=/src/.cache/box-venv \
+    -e UV_PROJECT_ENVIRONMENT=/src/.cache/box-venv -e EMOSA_BOX_SANITIZE="${EMOSA_BOX_SANITIZE:-}" \
     -v "$root:/src" -w /src "$image" bash -ec '
         mkdir -p "$HOME"
         uv python install 3.13.7 >/dev/null 2>&1
@@ -24,8 +27,13 @@ docker run --rm --user "$(id -u):$(id -g)" \
         python3 scripts/fetch-evidence.py >/dev/null    # the test session checks for it (cached)
         [ -x .cache/upstream/openvswitch-4.0.0/ovsdb/ovsdb-server ] || bash scripts/build-ovsdb.sh
         [ -x .cache/wsc-registrar/component-registrar ] || python3 scripts/build-wsc-registrar.py
-        cmake -S c -B .cache/box-c-build >/dev/null
-        cmake --build .cache/box-c-build -j >/dev/null
-        export EMOSA_BOX_REQUIRED=1 EMOSA_C_AGENT=.cache/box-c-build/emosa-agent-c
+        build=.cache/box-c-build flags=
+        if [ -n "$EMOSA_BOX_SANITIZE" ]; then
+            build=.cache/box-c-asan flags="-DEMOSA_SANITIZE=ON -DCMAKE_BUILD_TYPE=Debug"
+            export ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=print_stacktrace=1
+        fi
+        cmake -S c -B "$build" $flags >/dev/null
+        cmake --build "$build" -j >/dev/null
+        export EMOSA_BOX_REQUIRED=1 EMOSA_C_AGENT="$build/emosa-agent-c"
         if [ "${1:-}" = -- ]; then shift; uv run "$@"; else uv run pytest -m box "$@"; fi
     ' bash "$@"
