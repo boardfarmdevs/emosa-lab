@@ -975,11 +975,11 @@ async def apply_configuration(db):
             name = schema.decode("Wifi_VIF_Config", "if_name", row["if_name"])
             applied = {c: row[c] for c in [*APPLY_COLUMNS, "multi_ap"] if c in row}
             oftag = ovsdb_map(row.get("security")).get("oftag")
-            state = tables["Wifi_VIF_State"].get(states.get(name))
+            state = tables.get("Wifi_VIF_State", {}).get(states.get(name))
             legacy = db.generation == LEGACY
             db.applied.append((name, auth_reload(state, row) if legacy else None, oftag))
-            if legacy and (oftag or "").endswith(AUTH_RELOAD):
-                marked.add(name)
+            if legacy and state and (oftag or "").endswith(AUTH_RELOAD):
+                marked.add(name)  # a new AP's: once the box has attached its State (onboarded)
             if name in states:
                 where = [["_uuid", "==", ["uuid", states[name]]]]
                 changes.append(
@@ -1005,6 +1005,25 @@ async def apply_configuration(db):
         await session.close()
     if marked:
         await apply_configuration(db)  # the agent's restore, as wm takes it
+
+
+async def auth_reload_settled(db, seconds=15):
+    """A legacy pod's APs the agent made: once their State is attached the agent restores the
+    oftags it marked (spec 3.10), and wm takes that change too."""
+    session = OvsSession(db.endpoint, schema_generation=db.generation)
+    try:
+        deadline = time.monotonic() + seconds
+        while time.monotonic() < deadline:
+            rows = (await session.snapshot())["tables"].get("Wifi_VIF_Config", {}).values()
+            if not any(
+                (ovsdb_map(r.get("security")).get("oftag") or "").endswith(AUTH_RELOAD)
+                for r in rows
+            ):
+                break
+            await asyncio.sleep(0.3)
+    finally:
+        await session.close()
+    await apply_configuration(db)
 
 
 async def boot(box):
@@ -1048,6 +1067,7 @@ async def onboarded(box):
         return {"failed": "no search"}
     deadline, searches, m1s, ruid, wrote = time.monotonic() + 90, 0, 0, None, False
     pending = False  # an M2 sent whose credentials the pod's managers have not applied yet
+    settle = False  # a legacy pod's APs the agent made: their oftags restored once applied
 
     def applied():
         operations = (box.status() or {}).get("operations") or []
@@ -1076,7 +1096,10 @@ async def onboarded(box):
                 await apply_configuration(box.db)  # the pod's managers apply it, once
                 if box.cold or box.legacy:  # VIFs the agent created (the legacy pod has none)
                     await attach_vifs(box.db)
+                    settle = box.legacy  # its oftags restored once applied (spec 3.10)
         if wrote and applied():
+            if settle:
+                await auth_reload_settled(box.db)
             break
         await asyncio.sleep(0.3)
     if ruid is None:
