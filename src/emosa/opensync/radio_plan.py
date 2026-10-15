@@ -18,10 +18,14 @@ statistics it samples for that broker) removed, in the same write. While the pod
 site has a GTP (``uplink.bootstrap``), every station row not on the GTP's SSID (its own or a
 linked credential's: EMOSA's GTP station, or one a start-up hook wrote) is deleted in that write
 too, with its Inet row, its credentials and its radio's reference: the seed's onboarding stations,
-which can associate to nothing on a converted site and fail the vendor healthcheck. Applied when,
-on the same start, those APs are neutral, their Inet rows off, the operator's cloud cleared, no
-such station left and the radio on the profile's channel (or the pod not wired, its
-radio then its upstream's, which ``wm`` follows).
+which can associate to nothing on a converted site and fail the vendor healthcheck. Every enabled
+AP beacons: a radio the profile neither binds nor places (its ``idle_radios``) that carries an
+enabled AP while its ``Wifi_Radio_State`` shows it off or with no channel is turned on, at the
+profile's channel and width for it, in that write too (a seed's 5 GHz radio has no channel until
+its operator's cloud sets one; one that beacons is never moved).
+Applied when, on the same start, those APs are neutral, their Inet rows off, the operator's cloud
+cleared, no such station left, no such radio dark and the radio on the profile's channel (or the
+pod not wired, its radio then its upstream's, which ``wm`` follows).
 """
 
 import json
@@ -47,7 +51,7 @@ MONITOR = {
     # an unclaimed AP neutral: hidden (with bridge, security); a station's credentials
     "Wifi_VIF_Config": ["ssid_broadcast", "credential_configs"],
     "Wifi_Credential_Config": ["ssid"],
-    "Wifi_Radio_Config": ["channel", "ht_mode"],
+    "Wifi_Radio_Config": ["channel", "ht_mode"],  # with the schema's enabled and vif_configs
     "Wifi_Inet_Config": ["if_name", "enabled"],
     "Connection_Manager_Uplink": ["if_name", "if_type", "is_used"],
     "AWLAN_Node": list(CLOUD),
@@ -59,7 +63,8 @@ MONITOR = {
 class RadioPlanIntent:
     """The pod's radio plan: only the VIFs named ``claimed`` may be APs with an Inet row on (an
     address of their own); the radio of ``band`` on ``channel`` at ``ht_mode`` while the pod is
-    wired."""
+    wired; each of ``idle_radios`` on, at its channel and ht_mode, when it carries an enabled AP
+    but cannot beacon."""
 
     pod_id: str
     claimed: tuple
@@ -70,6 +75,8 @@ class RadioPlanIntent:
     # the site's GTP SSID (uplink.bootstrap): while the pod is wired, every station row not on it is
     # deleted (None: no GTP, no station judged)
     gtp_ssid: str | None = None
+    # the radios the profile neither binds nor places: ({"band", "channel", "ht_mode"}, ...)
+    idle_radios: tuple = ()
 
     def record(self):
         return {
@@ -80,6 +87,7 @@ class RadioPlanIntent:
             "ht_mode": self.ht_mode,
             "neutral_ref": self.neutral_ref,
             **({"gtp_ssid": self.gtp_ssid} if self.gtp_ssid else {}),
+            **({"idle_radios": [dict(r) for r in self.idle_radios]} if self.idle_radios else {}),
         }
 
     def validate(self):
@@ -93,6 +101,16 @@ class RadioPlanIntent:
             not isinstance(self.gtp_ssid, str) or not 1 <= len(self.gtp_ssid) <= 32
         ):
             raise EmosaError(Reason.INVALID_INPUT, "the GTP's SSID is 1 to 32 characters")
+        idle = self.idle_radios
+        if not all(
+            isinstance(r, dict)
+            and isinstance(r.get("band"), str)
+            and r["band"] != self.band
+            and isinstance(r.get("channel"), int)
+            and isinstance(r.get("ht_mode"), str)
+            for r in idle
+        ) or len({r["band"] for r in idle}) != len(idle):
+            raise EmosaError(Reason.INVALID_INPUT, "an idle radio is a band, channel and ht_mode")
 
     def target(self, vault=None):
         self.validate()
@@ -101,6 +119,7 @@ class RadioPlanIntent:
             "unclaimed_exposed": [],
             "operator_cloud": [],
             "foreign_stations": [],
+            "dark_radios": [],
             "radio_planned": True,
         }
 
@@ -180,9 +199,10 @@ class RadioPlanBackend:
         """What the plan writes now: the unclaimed APs not neutral ((uuid, if_name) each: hidden,
         in no bridge, on EMOSA's own passphrase), their Inet rows on ((uuid, if_name)), the radio
         ((uuid, row) or None: wired and not on the profile's channel), the operator's cloud
-        ({column: map} as it is, or None: no MQTT setting left) and the statistics rows ((uuid,
-        row) each). And the configured view, with the unclaimed APs on in their Config or State
-        (left on)."""
+        ({column: map} as it is, or None: no MQTT setting left), the statistics rows ((uuid,
+        row) each), the foreign stations (uuids, or None) and the dark idle radios ((uuid, row,
+        idle radio) each: an enabled AP on it, wm showing it off or with no channel). And the
+        configured view, with the unclaimed APs on in their Config or State (left on)."""
         claimed = set(intent.claimed)
         aps = sorted(
             (r.get("if_name"), u)
@@ -230,6 +250,23 @@ class RadioPlanBackend:
         node = next(iter(decoded.get("AWLAN_Node", {}).values()), {})
         cloud = {c: dict(node.get(c) or {}) for c in CLOUD}
         stats = sorted(decoded.get("Wifi_Stats_Config", {}).items())
+        # every enabled AP beacons: an idle radio carrying one goes on when wm shows it off or
+        # with no channel (a seed's Config has no channel even where its radio beacons)
+        idle = {r["band"]: r for r in intent.idle_radios}
+        shown = {
+            r.get("if_name"): r.get("enabled") is True and r.get("channel") is not None
+            for r in decoded.get("Wifi_Radio_State", {}).values()
+        }
+        dark = sorted(
+            (r.get("if_name") or "", u, idle[r.get("freq_band")])
+            for u, r in decoded.get("Wifi_Radio_Config", {}).items()
+            if r.get("freq_band") in idle
+            and not shown.get(r.get("if_name"))
+            and any(
+                vifs.get(v, {}).get("mode") == "ap" and vifs.get(v, {}).get("enabled") is True
+                for v in r.get("vif_configs") or []
+            )
+        )
         changes = (
             [(u, n) for n, u in exposed],
             [(u, n) for n, u in inets],
@@ -237,6 +274,7 @@ class RadioPlanBackend:
             cloud if any(cloud.values()) else None,
             stats,
             [u for _, u in foreign] or None,
+            [(u, decoded["Wifi_Radio_Config"][u], d) for _, u, d in dark],
         )
         configured = {
             "unclaimed": sorted(names),
@@ -246,6 +284,7 @@ class RadioPlanBackend:
             "operator_cloud": [c for c in CLOUD if cloud[c]]
             + (["Wifi_Stats_Config"] if stats else []),
             "foreign_stations": sorted({n for n, _ in foreign}),
+            "dark_radios": [n for n, _, _ in dark],
             "channel": radio[1].get("channel"),
             "ht_mode": radio[1].get("ht_mode"),
             "wired": wired,
@@ -295,7 +334,7 @@ class RadioPlanBackend:
         decoded, _ = self._binding(raw)
         if not raw["ready"]:
             raise EmosaError(Reason.NOT_READY, "the pod's database is not ready")
-        (exposed, inets, radio, _, _, _), configured = self._changes(decoded, intent)
+        (exposed, inets, radio, _, _, _, _), configured = self._changes(decoded, intent)
         return {
             "mapping": MODE,
             "action": "radio-plan",
@@ -304,6 +343,7 @@ class RadioPlanBackend:
             "channel": None if radio is None else intent.channel,
             "cloud_cleared": configured["operator_cloud"],
             "stations_removed": configured["foreign_stations"],
+            "radios_on": configured["dark_radios"],
             "instance": self.instance,
             "fields": [
                 "Wifi_VIF_Config.security",
@@ -312,6 +352,7 @@ class RadioPlanBackend:
                 "Wifi_Inet_Config.enabled",
                 "Wifi_Radio_Config.channel",
                 "Wifi_Radio_Config.ht_mode",
+                "Wifi_Radio_Config.enabled",
                 *(f"AWLAN_Node.{c}" for c in CLOUD),
                 "Wifi_Stats_Config",
                 "Wifi_VIF_Config (stations)",
@@ -323,8 +364,8 @@ class RadioPlanBackend:
 
     def transaction(self, intent, decoded, node_uuid):
         """The guarded write: its operations and the counts each must match (None: no write)."""
-        (exposed, inets, radio, cloud, stats, stations), _ = self._changes(decoded, intent)
-        if not (exposed or inets or radio or cloud or stats or stations):
+        (exposed, inets, radio, cloud, stats, stations, dark), _ = self._changes(decoded, intent)
+        if not (exposed or inets or radio or cloud or stats or stations or dark):
             return None, None
         operations = [
             {
@@ -400,6 +441,36 @@ class RadioPlanBackend:
                     "table": "Wifi_Radio_Config",
                     "where": where_uuid(uuid),
                     "row": {"channel": intent.channel, "ht_mode": intent.ht_mode},
+                },
+            ]
+            counts += [None, 1]
+        for uuid, row, idle in dark:  # each dark idle radio as it is, on at its channel
+            operations += [
+                {
+                    "op": "wait",
+                    "table": "Wifi_Radio_Config",
+                    "where": where_uuid(uuid),
+                    "columns": ["if_name", "enabled", "channel", "ht_mode"],
+                    "until": "==",
+                    "rows": [
+                        {
+                            "if_name": row.get("if_name"),
+                            "enabled": optional(row.get("enabled")),
+                            "channel": optional(row.get("channel")),
+                            "ht_mode": optional(row.get("ht_mode")),
+                        }
+                    ],
+                    "timeout": 0,
+                },
+                {
+                    "op": "update",
+                    "table": "Wifi_Radio_Config",
+                    "where": where_uuid(uuid),
+                    "row": {
+                        "enabled": True,
+                        "channel": idle["channel"],
+                        "ht_mode": idle["ht_mode"],
+                    },
                 },
             ]
             counts += [None, 1]

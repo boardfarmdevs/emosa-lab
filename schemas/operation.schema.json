@@ -508,6 +508,21 @@
               "type": "string",
               "minLength": 1,
               "maxLength": 32
+            },
+            "idle_radios": {
+              "description": "The radios the profile neither binds nor places: the plan turns one on at its channel and ht_mode when it carries an enabled AP while its state shows it off or with no channel (absent: none)",
+              "type": "array",
+              "maxItems": 2,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "band": {"enum": ["5G", "6G"]},
+                  "channel": {"type": "integer", "minimum": 1, "maximum": 233},
+                  "ht_mode": {"type": "string", "minLength": 1, "maxLength": 16}
+                },
+                "required": ["band", "channel", "ht_mode"],
+                "additionalProperties": false
+              }
             }
           },
           "required": [

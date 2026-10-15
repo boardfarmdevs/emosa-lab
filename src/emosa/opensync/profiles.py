@@ -56,6 +56,10 @@ class PodProfile:
     # a legacy pod's radio plan (spec 3.10): "pod", left as its seed brings it back, or "emosa",
     # the APs the profile does not name disabled and the fronthaul radio on the profile's channel
     radio_plan: str = "pod"
+    # with radio_plan "emosa": the radios the profile neither binds nor places, each with the
+    # channel and width the plan turns it on at when it carries an enabled AP but cannot beacon
+    # ({"band", "channel", "ht_mode"}, ...)
+    idle_radios: tuple = ()
 
     @property
     def backhaul_row(self):
@@ -107,6 +111,23 @@ def load(ref=DEFAULT):
         raise EmosaError(
             Reason.INVALID_INPUT, f"pod profile {data['id']}: radio_plan is a legacy pod's"
         )
+    # an idle radio is one the profile neither binds nor places, once, on a channel EMOSA maps;
+    # only the radio plan turns it on
+    idle = [r["band"] for r in data.get("idle_radios", ())]
+    if idle and data.get("radio_plan", "pod") != "emosa":
+        raise EmosaError(
+            Reason.INVALID_INPUT, f"pod profile {data['id']}: idle_radios need radio_plan emosa"
+        )
+    if len(set(idle)) != len(idle) or set(idle) & {data["radio"]["band"], *bands}:
+        raise EmosaError(
+            Reason.INVALID_INPUT, f"pod profile {data['id']}: an idle radio is a radio not bound"
+        )
+    for radio in data.get("idle_radios", ()):
+        if operating_class(radio["band"], radio["channel"]) is None:
+            raise EmosaError(
+                Reason.INVALID_INPUT,
+                f"pod profile {data['id']}: idle {radio['band']} channel unmapped",
+            )
     return PodProfile(
         data["id"],
         data["radio"]["band"],
@@ -129,4 +150,5 @@ def load(ref=DEFAULT):
         data.get("schema", "opensync-6.6"),
         data.get("wan_bridge", "br-wan"),
         data.get("radio_plan", "pod"),
+        tuple(dict(r) for r in data.get("idle_radios", ())),
     )

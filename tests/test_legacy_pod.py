@@ -769,6 +769,116 @@ def test_stations_are_left_alone_unwired_or_without_a_gtp(tmp_path):
     assert asyncio.run(backend.snapshot()).config["foreign_stations"] == []
 
 
+IDLE_5G = {"band": "5G", "channel": 36, "ht_mode": "HT20"}
+RADIO0_STATE = "00000000-0000-4000-8000-000000000615"
+
+
+def with_dark_radio(pod, state=None):
+    """The seed's wl0 as a hooked boot leaves it, its operator's cloud never come: no channel in
+    its Config, its APs wl0.1 and wl0.2 enabled (14 October: "wl0.2 is not beaconing"), and its
+    State as wm shows it (``state``; None: no State row yet)."""
+    pod.tables["Wifi_Radio_Config"][RADIO0] = {
+        "if_name": "wl0",
+        "freq_band": "5G",
+        "enabled": True,
+        "vif_configs": ["set", [["uuid", OP_AP1], ["uuid", OP_AP2]]],
+    }
+    if state is not None:
+        pod.tables["Wifi_Radio_State"] = {
+            RADIO0_STATE: {"if_name": "wl0", "freq_band": "5G", **state}
+        }
+    return pod
+
+
+def plan_with_idle(pod, tmp_path, idle=(IDLE_5G,)):
+    from dataclasses import replace
+
+    backend, intent, vault = radio_plan(pod, tmp_path)
+    backend.intent = replace(intent, idle_radios=idle)
+    return backend, backend.intent, vault
+
+
+def test_an_idle_radio_carrying_an_enabled_ap_is_turned_on_at_the_profiles_channel(tmp_path):
+    # every enabled AP beacons: the 2.4.3 pods' vendor healthcheck reboots a pod one of whose
+    # APs does not, and the 2.4 profile neither binds nor places wl0
+    pod = with_dark_radio(OperatorPod(), state={"enabled": True})  # up, no channel
+    backend, intent, vault = plan_with_idle(pod, tmp_path)
+    config = asyncio.run(backend.snapshot()).config
+    assert config["dark_radios"] == ["wl0"] and config["pending"] is True
+    plan = asyncio.run(backend.plan(intent))
+    assert plan["radios_on"] == ["wl0"] and "Wifi_Radio_Config.enabled" in plan["fields"]
+    attempt = {"transaction_id": "t1", "session_generation": 1}
+    assert asyncio.run(backend.submit(intent, attempt)).status == "committed"
+    (ops,) = pod.sent
+    where = [["_uuid", "==", ["uuid", RADIO0]]]
+    radio0 = [o for o in ops if o.get("where") == where]
+    assert [o["op"] for o in radio0] == ["wait", "update"]
+    assert radio0[0]["rows"] == [
+        {"if_name": "wl0", "enabled": True, "channel": ["set", []], "ht_mode": ["set", []]}
+    ]
+    assert radio0[1]["row"] == {"enabled": True, "channel": 36, "ht_mode": "HT20"}
+    assert intent.record()["idle_radios"] == [IDLE_5G]
+    # applied once wm shows the radio on its channel, the rest of the plan applied too
+    key = vault.generated("emosa-unclaimed")
+    for uuid in (OP_AP1, OP_AP2):
+        pod.tables["Wifi_VIF_Config"][uuid].update(neutral(key))
+    pod.tables["Wifi_Inet_Config"][OP_INET]["enabled"] = False
+    pod.tables["Wifi_Radio_Config"][RADIO].update({"channel": 6, "ht_mode": "HT20"})
+    pod.tables["Wifi_Radio_Config"][RADIO0].update(radio0[1]["row"])
+    assert asyncio.run(backend.snapshot()).config["dark_radios"] == ["wl0"]  # not yet in State
+    assert not all(
+        asyncio.run(backend.snapshot()).config.get(k) == v for k, v in intent.target(vault).items()
+    )
+    pod.tables["Wifi_Radio_State"][RADIO0_STATE]["channel"] = 36
+    config = asyncio.run(backend.snapshot()).config
+    assert config["dark_radios"] == [] and config["pending"] is False
+    assert all(config.get(k) == v for k, v in intent.target(vault).items())
+
+
+def test_an_idle_radio_is_left_alone_beaconing_or_with_no_enabled_ap(tmp_path):
+    # wm shows it on a channel, its Config with none, as the recorded seed: never moved
+    pod = with_dark_radio(OperatorPod(), state={"enabled": True, "channel": 108})
+    backend, _, _ = plan_with_idle(pod, tmp_path)
+    assert asyncio.run(backend.snapshot()).config["dark_radios"] == []
+    # no State row yet: dark
+    backend, _, _ = plan_with_idle(with_dark_radio(OperatorPod()), tmp_path)
+    assert asyncio.run(backend.snapshot()).config["dark_radios"] == ["wl0"]
+    # off, but its APs disabled
+    pod = with_dark_radio(OperatorPod(), state={"enabled": False, "channel": 36})
+    for uuid in (OP_AP1, OP_AP2):
+        pod.tables["Wifi_VIF_Config"][uuid]["enabled"] = False
+    backend, _, _ = plan_with_idle(pod, tmp_path)
+    assert asyncio.run(backend.snapshot()).config["dark_radios"] == []
+    # a profile with no idle radio
+    backend, _, _ = plan_with_idle(with_dark_radio(OperatorPod()), tmp_path, idle=())
+    assert asyncio.run(backend.snapshot()).config["dark_radios"] == []
+
+
+def test_an_idle_radio_is_one_the_profile_neither_binds_nor_places(tmp_path):
+    from importlib.resources import files
+
+    from emosa.opensync.radio_plan import RadioPlanIntent
+
+    assert load_profile("bcm-pod-2.4.3-gre-v1").idle_radios == (IDLE_5G,)
+    five = json.loads(files("emosa").joinpath("profiles/bcm-pod-2.4.3-gre-5g-v1.json").read_text())
+    two = json.loads(files("emosa").joinpath("profiles/bcm-pod-2.4.3-gre-v1.json").read_text())
+    for name, data in (
+        ("placed", {**five, "idle_radios": [IDLE_5G]}),
+        ("bound", {**two, "idle_radios": [{**IDLE_5G, "band": "2.4G"}]}),
+        ("twice", {**two, "idle_radios": [IDLE_5G, IDLE_5G]}),
+        ("unmapped", {**two, "idle_radios": [{**IDLE_5G, "channel": 100}]}),
+        ("no plan", {**two, "radio_plan": "pod"}),
+    ):
+        path = tmp_path / f"{name}.json"
+        path.write_text(json.dumps(data))
+        with pytest.raises(EmosaError) as refused:
+            load_profile(str(path))
+        assert refused.value.code == Reason.INVALID_INPUT, name
+    for idle in (({**IDLE_5G, "band": "2.4G"},), (IDLE_5G, IDLE_5G), ({"band": "5G"},), ("5G",)):
+        with pytest.raises(EmosaError):
+            RadioPlanIntent("pod-1", ("wl1.2",), "2.4G", 6, "HT20", idle_radios=idle).validate()
+
+
 def test_the_agent_monitors_every_column_the_radio_plan_compares():
     # the session sees only the columns monitored: the neutral AP's hidden flag, bridge and key,
     # the radio's channel and width, the Inet rows and cm's uplink (the box found the hidden flag
@@ -786,7 +896,8 @@ def test_the_agent_monitors_every_column_the_radio_plan_compares():
             "security",
             "credential_configs",
         ),
-        "Wifi_Radio_Config": ("channel", "ht_mode"),
+        "Wifi_Radio_Config": ("channel", "ht_mode", "enabled", "vif_configs", "freq_band"),
+        "Wifi_Radio_State": ("if_name", "enabled", "channel"),
         "Wifi_Inet_Config": ("if_name", "enabled"),
         "Connection_Manager_Uplink": ("if_name", "if_type", "is_used"),
         "AWLAN_Node": ("mqtt_settings", "mqtt_headers", "mqtt_topics"),
