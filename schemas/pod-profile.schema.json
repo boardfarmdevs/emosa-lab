@@ -65,6 +65,21 @@
     "inet": {"$ref": "#/$defs/row"},
     "wan_bridge": {"$ref": "#/$defs/if_name", "description": "A legacy pod's WAN bridge (spec 8.4), the one its cm puts the Ethernet uplink port in; the patch pair joins it to the fronthaul's bridge. br-wan when absent."},
     "radio_plan": {"enum": ["pod", "emosa"], "description": "A legacy pod's radio plan (spec 3.10): pod (the default), left as the pod's seed brings it back; emosa, the Inet row of every AP VIF the profile does not name off (the VIF left on: an AP is never disabled), and the fronthaul radio on the profile's channel while the pod is wired, once per start."},
+    "idle_radios": {
+      "type": "array",
+      "maxItems": 2,
+      "description": "With radio_plan emosa (spec 3.10): the pod's radios the profile neither binds (`radio`) nor places (`radios`), each with a channel and ht_mode. Every enabled AP must beacon (the 2.4.3 pods' vendor healthcheck reboots a pod one of whose APs does not), so the plan turns such a radio on at this channel and width when it carries an enabled AP while its Wifi_Radio_State shows it off or with no channel (a radio that beacons is never moved). It must be a channel EMOSA maps (5 GHz: 36-48 or 149-177).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["band", "channel", "ht_mode"],
+        "properties": {
+          "band": {"enum": ["5G", "6G"]},
+          "channel": {"type": "integer", "minimum": 1, "maximum": 233},
+          "ht_mode": {"type": "string", "minLength": 1, "maxLength": 16}
+        }
+      }
+    },
     "schema": {"enum": ["opensync-6.6", "opensync-2.0"], "description": "The pod's database generation (spec 3.10): opensync-6.6 (the default) or opensync-2.0, a legacy pod with no wpa_* columns or multi_ap, its WPA2-PSK in the security map and its BSS roles from the profile's slots."},
     "backhaul_mode": {"enum": ["multi-ap", "gre-parent"], "description": "How the pod's radios carry a backhaul BSS of the controller's M2 set: a Multi-AP 4-address BSS (spec 8.5, the default) or a parent AP its children reach by GRE (spec 8.6)."},
     "gre_parent": {

@@ -972,6 +972,8 @@ async def serve(config, stop):
                     profile.ht_mode,
                     # the GTP's SSID: a station not on it is deleted while the pod is wired
                     gtp_ssid=gtp_station.intent.ssid if gtp_station else None,
+                    # every enabled AP beacons: the radios the profile neither binds nor places
+                    idle_radios=profile.idle_radios,
                 ),
             ),
             Store(state_dir / "radio-plan"),

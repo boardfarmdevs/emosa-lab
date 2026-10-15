@@ -116,6 +116,7 @@ class RadioPlan:
             "unclaimed_exposed": config.get("unclaimed_exposed"),
             "operator_cloud": config.get("operator_cloud"),
             "foreign_stations": config.get("foreign_stations"),
+            "dark_radios": config.get("dark_radios"),
             "channel": config.get("channel"),
             "wired": config.get("wired"),
             "waiting": self.waiting,
