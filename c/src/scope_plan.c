@@ -40,7 +40,24 @@ static em_reason validate(const em_plan_intent *i)
     for (size_t k = 0; k < i->nclaimed; k++)
         if (!*i->claimed[k])
             return EM_INVALID_INPUT;
+    for (size_t k = 0; k < i->nidle; k++) { /* an idle radio: a band besides the plan's, once */
+        if (!*i->idle[k].band || !*i->idle[k].ht_mode || !strcmp(i->idle[k].band, i->band))
+            return EM_INVALID_INPUT;
+        for (size_t j = 0; j < k; j++)
+            if (!strcmp(i->idle[j].band, i->idle[k].band))
+                return EM_INVALID_INPUT;
+    }
     return EM_OK;
+}
+
+/* adds an idle radio; false when it does not fit */
+static bool add_idle(em_plan_intent *i, const char *band, int channel, const char *ht_mode)
+{
+    if (i->nidle == 2 || !band || !ht_mode || !em_copy(i->idle[i->nidle].band, sizeof(i->idle[0].band), band) ||
+        !em_copy(i->idle[i->nidle].ht_mode, sizeof(i->idle[0].ht_mode), ht_mode))
+        return false;
+    i->idle[i->nidle++].channel = channel;
+    return true;
 }
 
 /* adds a name to the claimed set, once; false when it does not fit */
@@ -69,6 +86,9 @@ bool em_plan_intent_from(const char *pod_id, const em_profile *profile, em_plan_
         return false;
     out->channel = profile->channel;
     EM_FORMAT_FIXED(out->neutral_ref, sizeof(out->neutral_ref), "%s", NEUTRAL_REF);
+    for (size_t k = 0; k < profile->nidle; k++)
+        if (!add_idle(out, profile->idle_bands[k], profile->idle_channels[k], profile->idle_ht_modes[k]))
+            return false;
     *why = validate(out);
     return *why == EM_OK;
 }
@@ -87,6 +107,16 @@ static cJSON *record(const em_plan_intent *i)
     cJSON_AddStringToObject(r, "neutral_ref", i->neutral_ref);
     if (*i->gtp_ssid)
         cJSON_AddStringToObject(r, "gtp_ssid", i->gtp_ssid);
+    if (i->nidle) {
+        cJSON *idle = cJSON_AddArrayToObject(r, "idle_radios");
+        for (size_t k = 0; k < i->nidle; k++) {
+            cJSON *radio = cJSON_CreateObject();
+            cJSON_AddStringToObject(radio, "band", i->idle[k].band);
+            cJSON_AddNumberToObject(radio, "channel", i->idle[k].channel);
+            cJSON_AddStringToObject(radio, "ht_mode", i->idle[k].ht_mode);
+            cJSON_AddItemToArray(idle, radio);
+        }
+    }
     return r;
 }
 
@@ -116,6 +146,16 @@ static bool from_record(const cJSON *r, em_plan_intent *i)
     /* absent: no GTP, no station judged */
     if (str(r, "gtp_ssid") && (!*str(r, "gtp_ssid") || !em_copy(i->gtp_ssid, sizeof(i->gtp_ssid), str(r, "gtp_ssid"))))
         return false;
+    /* absent: no idle radio */
+    const cJSON *idle = cJSON_GetObjectItemCaseSensitive(r, "idle_radios"), *radio;
+    if (idle && !cJSON_IsArray(idle))
+        return false;
+    cJSON_ArrayForEach(radio, idle)
+    {
+        const cJSON *ch = cJSON_GetObjectItemCaseSensitive(radio, "channel");
+        if (!cJSON_IsNumber(ch) || !add_idle(i, str(radio, "band"), ch->valueint, str(radio, "ht_mode")))
+            return false;
+    }
     return validate(i) == EM_OK;
 }
 
@@ -133,6 +173,7 @@ static cJSON *target(void *ctx, const cJSON *intent, em_reason *why)
     cJSON_AddArrayToObject(t, "unclaimed_exposed");
     cJSON_AddArrayToObject(t, "operator_cloud");
     cJSON_AddArrayToObject(t, "foreign_stations");
+    cJSON_AddArrayToObject(t, "dark_radios");
     cJSON_AddTrueToObject(t, "radio_planned");
     return t;
 }
@@ -157,6 +198,11 @@ typedef struct {
     /* to delete while wired, with what only they use: the stations not on the GTP's SSID */
     size_t nstations;
     const cJSON *stations[STATIONS];
+    /* to turn on: the idle radios carrying an enabled AP that wm shows off or with no channel, and
+     * the idle radio (intent's index) each is */
+    size_t ndark;
+    const cJSON *dark[2];
+    size_t dark_idle[2];
 } plan_changes;
 
 static int named_order(const void *a, const void *b) { return strcmp(((const named *)a)->name, ((const named *)b)->name); }
@@ -343,6 +389,47 @@ static cJSON *changes(const em_plan_intent *i, const cJSON *tables, const char *
             c->stations[c->nstations++] = r;
     }
     qsort(c->stations, c->nstations, sizeof(c->stations[0]), row_name_order);
+    /* every enabled AP beacons: an idle radio carrying one goes on when wm shows it off or with no
+     * channel (a seed's Config has no channel even where its radio beacons) */
+    cJSON_ArrayForEach(r, em_table(tables, "Wifi_Radio_Config"))
+    {
+        const char *band = ovs_str(r, "freq_band"), *name = ovs_str(r, "if_name");
+        size_t idle = i->nidle;
+        for (size_t k = 0; band && k < i->nidle; k++)
+            if (!strcmp(band, i->idle[k].band))
+                idle = k;
+        if (idle == i->nidle || c->ndark == 2)
+            continue;
+        bool shown = false; /* the last State row of its name: on, with a channel */
+        const cJSON *st;
+        cJSON_ArrayForEach(st, em_table(tables, "Wifi_Radio_State"))
+        {
+            const char *seen = ovs_str(st, "if_name");
+            long ch;
+            if (name && seen && !strcmp(seen, name))
+                shown = ovs_true(st, "enabled") && ovs_int(st, "channel", &ch);
+        }
+        const char *refs[REFS];
+        size_t n = ovs_uuids(r, "vif_configs", refs, REFS);
+        bool ap_on = false;
+        for (size_t k = 0; k < n && !ap_on; k++) {
+            const cJSON *vif = cJSON_GetObjectItemCaseSensitive(em_table(tables, "Wifi_VIF_Config"), refs[k]);
+            const char *mode = ovs_str(vif, "mode");
+            ap_on = mode && !strcmp(mode, "ap") && ovs_true(vif, "enabled");
+        }
+        if (!shown && ap_on) {
+            c->dark[c->ndark] = r;
+            c->dark_idle[c->ndark++] = idle;
+        }
+    }
+    if (c->ndark == 2 && row_name_order(&c->dark[0], &c->dark[1]) > 0) { /* by name, as sorted() */
+        const cJSON *row = c->dark[0];
+        size_t idle = c->dark_idle[0];
+        c->dark[0] = c->dark[1];
+        c->dark_idle[0] = c->dark_idle[1];
+        c->dark[1] = row;
+        c->dark_idle[1] = idle;
+    }
     const char *gone_names[STATIONS] = {0};
     for (size_t k = 0; k < c->nstations; k++)
         gone_names[k] = ovs_str(c->stations[k], "if_name");
@@ -369,11 +456,17 @@ static cJSON *changes(const em_plan_intent *i, const cJSON *tables, const char *
     for (size_t k = 0; k < c->nstations; k++) /* sorted: each name once */
         if (gone_names[k] && (k == 0 || !gone_names[k - 1] || strcmp(gone_names[k], gone_names[k - 1])))
             cJSON_AddItemToArray(list, cJSON_CreateString(gone_names[k]));
+    list = cJSON_AddArrayToObject(v, "dark_radios");
+    for (size_t k = 0; k < c->ndark; k++) {
+        const char *name = ovs_str(c->dark[k], "if_name");
+        cJSON_AddItemToArray(list, cJSON_CreateString(name ? name : ""));
+    }
     cJSON_AddItemToObject(v, "channel", has_channel ? cJSON_CreateNumber((double)channel) : cJSON_CreateNull());
     cJSON_AddItemToObject(v, "ht_mode", ht_mode ? cJSON_CreateString(ht_mode) : cJSON_CreateNull());
     cJSON_AddBoolToObject(v, "wired", wired);
     cJSON_AddBoolToObject(v, "radio_planned", !wired || on_plan);
-    cJSON_AddBoolToObject(v, "pending", c->nexposed || c->ninets || c->radio || c->node || c->nstats || c->nstations);
+    cJSON_AddBoolToObject(v, "pending",
+                          c->nexposed || c->ninets || c->radio || c->node || c->nstats || c->nstations || c->ndark);
     return v;
 }
 
@@ -455,14 +548,15 @@ static cJSON *plan(void *ctx, const cJSON *intent, em_reason *why)
     cJSON_AddItemToObject(p, "channel", c.radio ? cJSON_CreateNumber(i.channel) : cJSON_CreateNull());
     cJSON_AddItemToObject(p, "cloud_cleared", cJSON_DetachItemFromObjectCaseSensitive(view, "operator_cloud"));
     cJSON_AddItemToObject(p, "stations_removed", cJSON_DetachItemFromObjectCaseSensitive(view, "foreign_stations"));
+    cJSON_AddItemToObject(p, "radios_on", cJSON_DetachItemFromObjectCaseSensitive(view, "dark_radios"));
     cJSON_Delete(view);
     cJSON_AddStringToObject(p, "instance", s->instance);
-    const char *fields[] = {"Wifi_VIF_Config.security",  "Wifi_VIF_Config.ssid_broadcast", "Wifi_VIF_Config.bridge",
-                            "Wifi_Inet_Config.enabled",  "Wifi_Radio_Config.channel",      "Wifi_Radio_Config.ht_mode",
-                            "AWLAN_Node.mqtt_headers",   "AWLAN_Node.mqtt_settings",       "AWLAN_Node.mqtt_topics",
-                            "Wifi_Stats_Config",         "Wifi_VIF_Config (stations)",     "Wifi_Credential_Config",
-                            "Wifi_Inet_Config (stations)"};
-    cJSON_AddItemToObject(p, "fields", em_ovs_strings(fields, 13));
+    const char *fields[] = {"Wifi_VIF_Config.security",   "Wifi_VIF_Config.ssid_broadcast", "Wifi_VIF_Config.bridge",
+                            "Wifi_Inet_Config.enabled",   "Wifi_Radio_Config.channel",      "Wifi_Radio_Config.ht_mode",
+                            "Wifi_Radio_Config.enabled",  "AWLAN_Node.mqtt_headers",        "AWLAN_Node.mqtt_settings",
+                            "AWLAN_Node.mqtt_topics",     "Wifi_Stats_Config",              "Wifi_VIF_Config (stations)",
+                            "Wifi_Credential_Config",     "Wifi_Inet_Config (stations)"};
+    cJSON_AddItemToObject(p, "fields", em_ovs_strings(fields, 14));
     cJSON_AddStringToObject(p, "guard", "pod serial and each changed row as it is");
     return p;
 }
@@ -526,14 +620,14 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
     if (node)
         cJSON_Delete(changes(&i, em_ovsdb_tables(s->ovs), key, &c));
     if (!node || em_ovsdb_generation(s->ovs) != generation ||
-        !(c.nexposed || c.ninets || c.radio || c.node || c.nstats || c.nstations) || (c.nexposed && !key)) {
+        !(c.nexposed || c.ninets || c.radio || c.node || c.nstats || c.nstations || c.ndark) || (c.nexposed && !key)) {
         em_free_secret(key);
         strcpy(out->status, "rejected"); /* not bound, another session, nothing differs, or no key */
         out->reason = EM_NOT_READY;
         return;
     }
     cJSON *ops = cJSON_CreateArray(), *row;
-    int counts[1 + 2 * (ROWS + ROWS + 1 + 1 + STATS) + 5 * EM_STATION_DELETION_MAX];
+    int counts[1 + 2 * (ROWS + ROWS + 1 + 2 + 1 + STATS) + 5 * EM_STATION_DELETION_MAX];
     size_t n = 0;
     const char *node_cols[] = {"serial_number"};
     row = cJSON_CreateObject();
@@ -581,6 +675,26 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
         cJSON_AddNumberToObject(row, "channel", i.channel);
         cJSON_AddStringToObject(row, "ht_mode", i.ht_mode);
         cJSON_AddItemToArray(ops, update_row("Wifi_Radio_Config", c.radio_uuid, row));
+        counts[n++] = -1;
+        counts[n++] = 1;
+    }
+    for (size_t k = 0; k < c.ndark; k++) { /* each dark idle radio as it is, on at its channel */
+        const char *dark_cols[] = {"if_name", "enabled", "channel", "ht_mode"};
+        const char *name = ovs_str(c.dark[k], "if_name"), *ht_mode = ovs_str(c.dark[k], "ht_mode");
+        const cJSON *enabled = cJSON_GetObjectItemCaseSensitive(c.dark[k], "enabled");
+        long channel;
+        row = cJSON_CreateObject();
+        cJSON_AddItemToObject(row, "if_name", name ? cJSON_CreateString(name) : empty_set());
+        cJSON_AddItemToObject(row, "enabled", cJSON_IsBool(enabled) ? cJSON_Duplicate(enabled, 0) : empty_set());
+        cJSON_AddItemToObject(row, "channel",
+                              ovs_int(c.dark[k], "channel", &channel) ? cJSON_CreateNumber((double)channel) : empty_set());
+        cJSON_AddItemToObject(row, "ht_mode", ht_mode ? cJSON_CreateString(ht_mode) : empty_set());
+        cJSON_AddItemToArray(ops, wait_row("Wifi_Radio_Config", c.dark[k]->string, dark_cols, 4, row));
+        row = cJSON_CreateObject();
+        cJSON_AddTrueToObject(row, "enabled");
+        cJSON_AddNumberToObject(row, "channel", i.idle[c.dark_idle[k]].channel);
+        cJSON_AddStringToObject(row, "ht_mode", i.idle[c.dark_idle[k]].ht_mode);
+        cJSON_AddItemToArray(ops, update_row("Wifi_Radio_Config", c.dark[k]->string, row));
         counts[n++] = -1;
         counts[n++] = 1;
     }
@@ -784,8 +898,9 @@ cJSON *em_plan_status(em_plan_scope *s)
     cJSON *o = cJSON_CreateObject(), *op = em_journal_latest(s->journal);
     const cJSON *config = s->has_last ? s->last.config : NULL;
     const char *keys[] = {"unclaimed",      "unclaimed_enabled", "unclaimed_inet_on", "unclaimed_exposed",
-                          "operator_cloud", "foreign_stations",  "channel",           "wired"};
-    for (size_t k = 0; k < 8; k++) {
+                          "operator_cloud", "foreign_stations",  "dark_radios",       "channel",
+                          "wired"};
+    for (size_t k = 0; k < 9; k++) {
         const cJSON *v = cJSON_GetObjectItemCaseSensitive(config, keys[k]);
         cJSON_AddItemToObject(o, keys[k], v ? cJSON_Duplicate(v, 1) : cJSON_CreateNull());
     }

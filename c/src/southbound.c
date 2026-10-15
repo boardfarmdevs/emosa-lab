@@ -100,6 +100,24 @@ em_reason em_profile_load(const char *path, em_profile *out)
             channel ? cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(extra_radio, "ht_mode")) : NULL;
         out->radio_bands[out->nradios++] = band;
     }
+    /* an idle radio is one the profile neither binds nor places, once, on a channel EMOSA maps;
+     * only the radio plan turns it on */
+    const cJSON *idle;
+    cJSON_ArrayForEach(idle, cJSON_GetObjectItemCaseSensitive(d, "idle_radios"))
+    {
+        const char *band = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(idle, "band"));
+        const char *ht_mode = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(idle, "ht_mode"));
+        const cJSON *channel = cJSON_GetObjectItemCaseSensitive(idle, "channel");
+        if (!out->radio_plan || out->nidle == 2 || !band || !ht_mode || !cJSON_IsNumber(channel) ||
+            !strcmp(band, out->band) || em_profile_has_radio(out, band) || !em_operating_class(band, channel->valueint))
+            goto invalid;
+        for (size_t k = 0; k < out->nidle; k++)
+            if (!strcmp(out->idle_bands[k], band))
+                goto invalid;
+        out->idle_bands[out->nidle] = band;
+        out->idle_ht_modes[out->nidle] = ht_mode;
+        out->idle_channels[out->nidle++] = channel->valueint;
+    }
     for (size_t i = 0; i < out->nslots; i++) {
         if (out->slots[i].band && strcmp(out->slots[i].band, out->band) &&
             !em_profile_has_radio(out, out->slots[i].band))

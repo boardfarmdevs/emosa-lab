@@ -706,6 +706,15 @@ is everything above. For a legacy pod, all of this specification applies, except
     on the fronthaul's radio while the uplink in use is not its station (the pod wired). On its
     Wi-Fi uplink, `wm` moves the radio to its upstream's channel, which a legacy profile then
     shares (the GTP BSS on channel 6).
+  - **Every enabled AP beacons.** The vendor healthcheck fails an enabled AP that does not beacon
+    (14 October: "wl0.2 is not beaconing" until the operator's cloud set the 5 GHz radio). A
+    seed's radio has no channel in its Config until its cloud sets one; on a hooked boot no cloud
+    comes, and the 2.4 profile neither binds nor places `wl0`, whose unclaimed APs stay enabled.
+    So a profile names its idle radios (`idle_radios`: a band it neither binds nor places, each
+    with a channel EMOSA maps and an `ht_mode`; the 2.4 profile's `wl0` at 36, HT20), and the
+    plan turns such a radio on (`enabled`, the channel and `ht_mode`) when it carries an enabled
+    AP and its `Wifi_Radio_State` shows it off or with no channel. A radio that beacons is never
+    moved, whatever its Config says. The status shows the idle radios left dark (`dark_radios`).
   - **The operator's cloud.** A converted pod talks only to EMOSA (the owner, 14 October). The
     seed points `qm` at its operator's cloud: `AWLAN_Node`'s `mqtt_settings` (the broker, port
     and topic), `mqtt_headers` and `mqtt_topics`, and `Wifi_Stats_Config` rows asking the pod's
@@ -716,14 +725,16 @@ is everything above. For a legacy pod, all of this specification applies, except
     OpenSync (a log upload, say) is not the agent's to change.
   - **Write:** once per start of the pod's OpenSync, in one guarded transaction: `wait` on the
     serial and on each changed row as it is (`if_name` and `mode` of a VIF; `if_name` and
-    `enabled` of an Inet row; `if_name`, `channel` and `ht_mode` of the radio; the node's three
+    `enabled` of an Inet row; `if_name`, `channel` and `ht_mode` of the radio, `enabled` too for
+    an idle radio; the node's three
     MQTT maps; `stats_type` and `radio_type` of a statistics row; `if_name`, `mode` and `ssid`
     of a station row), then each `update` (a statistics row's, a station's and its rows'
     `delete`, its radio's `mutate`). Nothing is written when nothing differs. **Applied** when, on the
     same start, every unclaimed AP is neutral (`unclaimed_exposed` empty), its Inet row off
     (`unclaimed_inet_on` empty), the operator's cloud cleared (`operator_cloud` empty: none of the
-    three maps set, no statistics row), no seed station left (`foreign_stations` empty) and the
-    radio's Config has the profile's channel. Not
+    three maps set, no statistics row), no seed station left (`foreign_stations` empty), no idle
+    radio dark (`dark_radios` empty: `wm` shows each on a channel) and the radio's Config has the
+    profile's channel. Not
     repeated on that start, even when a row is changed again: the next start writes it again. The
     status shows the unclaimed APs left on (`unclaimed_enabled`), those not neutral yet, their
     Inet rows still on and what is left of the cloud. The vendor's target may rebuild a VIF to
@@ -731,9 +742,11 @@ is everything above. For a legacy pod, all of this specification applies, except
     round.
 
   Both agents. Box `legacy-radio-plan` (every VIF beaconing or associated, the box's terms for the
-  vendor healthcheck), `legacy-cloud-cleared` (the cloud cleared on the start and again after
-  a re-seed, the fleet's telemetry ignored) and `legacy-seed-stations` (the seed's stations
-  deleted, only the GTP station left, on the start and after a re-seed).
+  vendor healthcheck: an AP's State on and its radio's State on a channel), `legacy-cloud-cleared`
+  (the cloud cleared on the start and again after a re-seed, the fleet's telemetry ignored),
+  `legacy-seed-stations` (the seed's stations deleted, only the GTP station left, on the start
+  and after a re-seed) and `legacy-dark-radio` (`wl0` shown with no channel turned on at 36, on
+  the start and after a re-seed).
 - **Its starts, counted by its agent's sessions.** A legacy pod's database is its vendor's seed
   again at every start of its OpenSync (a reboot, or its connection manager restarting the
   managers after more than 120 s without its uplink), every row with the UUID it had in the
