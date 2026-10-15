@@ -74,7 +74,8 @@ cJSON *em_module_settings(const cJSON *fleet, const char *serial);
  * NULL with *why. em_files_answer: the whole HTTP response to one request (`request`, its head):
  * GET or HEAD / is 200 with an empty body, /<sha256> a servable file, anything else 404 (501 for
  * another method); every response with a Date header in GMT (`now`) while the clock is
- * `synchronized`, else none and / is 503 (Retry-After 60); malloc'd, its size in *len.
+ * `synchronized`, else none and / is 503 (Retry-After 60); malloc'd, its size in *len, a NUL
+ * after it.
  * *status is its status code; `note` says what was asked and answered, for the log ("" for a
  * GET or HEAD / answered). */
 #define EM_FILES_PORT 6650

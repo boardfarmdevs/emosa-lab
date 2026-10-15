@@ -519,6 +519,7 @@ char *em_files_answer(const char *directory, const char *request, time_t now, bo
         memcpy(out, head_text, h);
         if (body)
             memcpy(out + h, content, body);
+        out[h + body] = 0; /* a string too, its body text or not (a caller's strstr stops here) */
         *len = h + body;
     }
     free(content);
