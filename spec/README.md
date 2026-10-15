@@ -590,23 +590,38 @@ is everything above. For a legacy pod, all of this specification applies, except
   VIF). A BSS is WPA2-PSK in this encoding while its map's `encryption` is
   `WPA-PSK` and it has a `key`. Guarded AP VIF fields: `if_name`, `mode`,
   `enabled`, `ssid` and `security`.
+- **The AP's bridge port.** A legacy pod's wm and its authenticator (Broadcom's
+  nas and eapd) hear an AP's stations on the AP's bridge, whose members are
+  that bridge's Open vSwitch ports. The pod never adds an AP there: its cloud
+  writes the `Port`. `Wifi_VIF_State.bridge` shows the bridge either way, from
+  the pod's NVRAM. An AP with no port associates its clients, which then get no
+  EAPOL M1 (pods after a hooked boot, which starts with no VIF rows, 15
+  October). So each AP of EMOSA's (the fronthaul, a slot) that is on, has a
+  `bridge` naming the pod's one `Bridge` of that name, has a `Wifi_VIF_State`
+  row, and has no `Port` of its name anywhere gets one guarded transaction:
+  the `Bridge`'s `ports` unchanged, no such `Port`, and the AP's `if_name`,
+  `enabled`, `bridge` and `security` unchanged; then an `Interface` and a
+  `Port` of the AP's name, the `Port` into the `Bridge`'s `ports`, and the
+  `oftag` marked (`~reload`, below) unless it already is. This needs no
+  restart of the pod, and the agent counts it in its status (`bridge_ports`).
+  A `Port` of that name elsewhere is another manager's and is left alone.
 - **The authenticator's reload.** OpenSync 2.4.3's Broadcom wm restarts the
   pod's authenticator (nas and eapd) in full only for a new AP or a change of
-  its `security` entries beyond the key (`encryption`, `mode`, `oftag`); an
-  `ssid` or `key` alone is a fast reload, after which the authenticator may
-  not serve the BSS (associated clients get no EAPOL M1, 15 October). So an
-  EMOSA write that makes an AP or changes its `ssid` or key gives the map's
-  `oftag` the suffix `~reload` (the profile's `home--1` becomes
-  `home--1~reload`; a row without one gets `~reload`), a full reload. Once the
-  pod's `Wifi_VIF_State` shows that write (its `ssid`, key and marked `oftag`)
-  and no EMOSA write is in flight, the agent restores the `oftag` with one
-  guarded `mutate` (the marker deleted, the profile's `oftag` inserted), a
-  second full reload, and counts it in its status (`auth_reloads`). The marker
-  is the pod's own state: an agent restarted in between restores it. The AP
-  stays up (beacons continue; its clients reassociate within seconds of each
-  reload). A write that keeps the `ssid` and key, and the radio plan's neutral
-  APs (hidden, their Inet off: they serve no client), carry no marker. A 6.6
-  pod has none.
+  its `security` entries beyond the key (`encryption`, `mode`, `oftag`). An
+  `ssid` or `key` alone is a fast reload. An EMOSA write that makes an AP or
+  changes its `ssid` or key gives the map's `oftag` the suffix `~reload` (the
+  profile's `home--1` becomes `home--1~reload`; a row without one gets
+  `~reload`), a full reload, as does the bridge port's write. The agent
+  restores the `oftag` with one guarded `mutate` (the marker deleted, the
+  profile's `oftag` inserted), a second full reload, once all of these hold:
+  the pod's `Wifi_VIF_State` shows that write (its `ssid`, key and marked
+  `oftag`), the AP needs no bridge port, and no EMOSA write is in flight. It
+  counts the restore in its status (`auth_reloads`). So the authenticator's
+  last restart comes after the AP's port is in place. The marker is the pod's
+  own state: an agent restarted in between restores it. The AP stays up
+  (beacons continue; its clients reassociate within seconds of each reload). A
+  write that keeps the `ssid` and key, and the radio plan's neutral APs (hidden,
+  their Inet off: they serve no client), carry no marker. A 6.6 pod has none.
 - **Roles.** There is no `multi_ap`, so EMOSA writes none. A BSS's role is its
   slot's (§3.4): the fronthaul VIF and fronthaul slots are fronthaul,
   backhaul slots backhaul, and the BSS Configuration Report flags follow from it.

@@ -55,6 +55,9 @@ class SimDatabase:
         # what the pod's managers applied to each AP: (if_name, its authenticator's reload, the
         # oftag), the reload a legacy pod's wm's ("full", "fast" or None), None on a 6.6 pod
         self.applied = []
+        # a legacy pod's authenticator (spec 3.10): whether it serves each AP, as of the AP's last
+        # full reload: its bridge's ports had the AP's Port then (an AP with no bridge: served)
+        self.served = {}
 
     async def start(self):
         server, tool = binary("ovsdb-server"), binary("ovsdb-tool")

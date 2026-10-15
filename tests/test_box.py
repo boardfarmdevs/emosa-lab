@@ -669,8 +669,8 @@ def test_a_legacy_pods_fronthaul_is_written_in_its_security_map(agent, tmp_path)
 
 
 def test_a_legacy_pods_ssid_and_key_write_ends_in_a_full_auth_reload(agent, tmp_path):
-    # spec 3.10 (15 October): on a hooked boot the SSID and key alone were a fast reload of the
-    # pods' authenticator, which then sent no EAPOL M1
+    # spec 3.10 (15 October): on a hooked boot the SSID and key alone are a fast reload of the
+    # pods' authenticator; EMOSA's write ends in full ones
     result = box("legacy-auth-reload", agent, tmp_path / "box", timeout=240)
     assert result["passed"], result
     assert result["without_marker"] == "fast" and result["reloads"][-1] == ["full", "home--1"]
@@ -679,6 +679,20 @@ def test_a_legacy_pods_ssid_and_key_write_ends_in_a_full_auth_reload(agent, tmp_
 def test_a_6_6_pods_write_has_no_auth_reload(agent, tmp_path):
     result = box("no-auth-reload-6-6", agent, tmp_path / "box", timeout=240)
     assert result["passed"], result
+
+
+def test_a_legacy_ap_the_agent_makes_gets_its_bridge_port(agent, tmp_path):
+    # spec 3.10 (15 October): the converted pods' clients associated and got no EAPOL M1 after a
+    # hooked boot: their home APs were in no Open vSwitch port of br-home, which the pod never adds
+    result = box("legacy-bridge-port", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+    assert result["port"] == [True, True] and result["served"] is True
+
+
+def test_a_live_legacy_ap_without_its_port_is_repaired_without_a_restart(agent, tmp_path):
+    result = box("legacy-bridge-port-repair", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+    assert result["reloads"][-2:] == [["full", "home--1~reload"], ["full", "home--1"]]
 
 
 def test_a_legacy_pods_backhaul_bss_is_its_gre_parent_ap_on_its_underlay(agent, tmp_path):

@@ -1140,10 +1140,15 @@ async def serve(config, stop):
             # spec 2.5: new database generations that continued the pod source (the session
             # kept when it was provisioned), and those that were another source, by reason
             "reconnections": report.reconnections,
-            # spec 3.10: a legacy pod's starts, counted by its agent's sessions, and the oftags
-            # restored after an AP's write (each the second full reload of its authenticator)
+            # spec 3.10: a legacy pod's starts, counted by its agent's sessions, the oftags
+            # restored after an AP's write (each the second full reload of its authenticator),
+            # and the APs EMOSA put into their bridge
             **(
-                {"session_starts": report.session_starts, "auth_reloads": backend.auth_reloads}
+                {
+                    "session_starts": report.session_starts,
+                    "auth_reloads": backend.auth_reloads,
+                    "bridge_ports": backend.ports_added,
+                }
                 if profile.legacy
                 else {}
             ),
@@ -1375,8 +1380,13 @@ async def serve(config, stop):
                         except (EmosaError, ConnectionError, TimeoutError) as exc:
                             log.warning("reconcile %s: %s", band, exc)
                 if refreshed and ready and profile.legacy and not writing():
-                    # spec 3.10: an AP's write taken by wm, its oftag back (a full reload)
+                    # spec 3.10: an AP of EMOSA's into its bridge (its oftag marked), then an AP's
+                    # write taken by wm, its oftag back (a full reload)
                     try:
+                        for name in await timed("bridge port", backend.bridge_ports()):
+                            log.info(
+                                "bridge port: %s into its bridge (wm restarts nas, eapd)", name
+                            )
                         for name in await timed("auth reload", backend.auth_reload()):
                             log.info("auth reload: %s oftag restored (wm restarts nas, eapd)", name)
                     except (EmosaError, ConnectionError, TimeoutError) as exc:

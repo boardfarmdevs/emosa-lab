@@ -296,6 +296,113 @@ def test_auth_reload_is_a_legacy_pods_only(tmp_path):
     assert row["wpa_psks"] == ["map", [["key", "k"]]]  # no marker: the 6.6 encoding as before
 
 
+# spec 3.10: an AP of EMOSA's in its bridge, the bridge's Open vSwitch Port written by EMOSA
+BRIDGE, HOME_PORT, FH_PORT = (f"00000000-0000-4000-8000-0000000001{n}" for n in ("10", "11", "12"))
+
+
+def bridged(raw, ports=(), members=()):
+    """The fronthaul naming br-home (its State shows it whatever the ports: the pod's NVRAM), and
+    br-home with its own port and ``members``; ``ports`` further Ports outside any bridge."""
+    raw["Wifi_VIF_Config"][VIF]["bridge"] = "br-home"
+    raw["Wifi_VIF_State"][VIF_STATE]["bridge"] = "br-home"
+    inside = {"br-home": HOME_PORT, **dict(members)}
+    raw["Bridge"] = {
+        BRIDGE: {"name": "br-home", "ports": ["set", [["uuid", u] for u in inside.values()]]}
+    }
+    raw["Port"] = {u: {"name": n} for n, u in {**inside, **dict(ports)}.items()}
+    return raw
+
+
+def test_an_ap_not_in_its_bridge_gets_its_port_and_its_oftag_marked(tmp_path):
+    pod, _ = backend(tmp_path)
+    raw = bridged(pod.session.tables)
+    assert asyncio.run(pod.bridge_ports()) == ["wl1.2"]
+    (ops,) = pod.session.sent
+    assert ops[0] == {
+        "op": "wait",
+        "table": "Bridge",
+        "where": [["_uuid", "==", ["uuid", BRIDGE]]],
+        "columns": ["name", "ports"],
+        "until": "==",
+        "rows": [{"name": "br-home", "ports": raw["Bridge"][BRIDGE]["ports"]}],
+        "timeout": 0,
+    }
+    assert ops[1]["table"] == "Wifi_VIF_Config"
+    assert ops[1]["columns"] == ["if_name", "enabled", "bridge", "security"]
+    assert ops[2] == {
+        "op": "wait",
+        "table": "Port",
+        "where": [["name", "==", "wl1.2"]],
+        "columns": ["name"],
+        "until": "==",
+        "rows": [],
+        "timeout": 0,
+    }
+    assert ops[3:6] == [
+        {"op": "insert", "table": "Interface", "uuid-name": "ap0_if", "row": {"name": "wl1.2"}},
+        {
+            "op": "insert",
+            "table": "Port",
+            "uuid-name": "ap0_port",
+            "row": {"name": "wl1.2", "interfaces": ["set", [["named-uuid", "ap0_if"]]]},
+        },
+        {
+            "op": "mutate",
+            "table": "Bridge",
+            "where": [["_uuid", "==", ["uuid", BRIDGE]]],
+            "mutations": [["ports", "insert", ["set", [["named-uuid", "ap0_port"]]]]],
+        },
+    ]
+    assert ops[6]["mutations"] == [
+        ["security", "delete", ["set", ["oftag"]]],
+        ["security", "insert", ["map", [["oftag", "home--1~reload"]]]],
+    ]
+    assert len(ops) == 7 and pod.ports_added == 1
+
+
+def test_an_ap_already_marked_gets_its_port_alone_and_its_restore_waits_for_it(tmp_path):
+    pod, _ = backend(tmp_path)
+    raw = bridged(marked(pod.session.tables, "home--1~reload"))
+    assert asyncio.run(pod.auth_reload()) == []  # the port first
+    assert asyncio.run(pod.bridge_ports()) == ["wl1.2"]
+    (ops,) = pod.session.sent
+    assert len(ops) == 6 and ops[-1]["table"] == "Bridge"  # no second marker
+    bridged(raw, members={"wl1.2": FH_PORT})  # the port there, as wm sees it
+    assert asyncio.run(pod.auth_reload()) == ["wl1.2"]
+
+
+@pytest.mark.parametrize(
+    "case",
+    ["in its bridge", "a port elsewhere", "not taken", "off", "no bridge", "not the profile's"],
+)
+def test_bridge_ports_leaves_an_ap_it_need_not_or_may_not_bridge(tmp_path, case):
+    pod, _ = backend(tmp_path)
+    raw = bridged(pod.session.tables)
+    if case == "in its bridge":
+        bridged(raw, members={"wl1.2": FH_PORT})
+    elif case == "a port elsewhere":  # another manager's
+        bridged(raw, ports={"wl1.2": FH_PORT})
+    elif case == "not taken":
+        raw["Wifi_VIF_State"] = {}
+    elif case == "off":
+        raw["Wifi_VIF_Config"][VIF]["enabled"] = False
+    elif case == "no bridge":
+        raw["Bridge"] = {}
+    else:
+        for table in ("Wifi_VIF_Config", "Wifi_VIF_State"):
+            next(iter(raw[table].values()))["if_name"] = "wl1.3"
+    assert asyncio.run(pod.bridge_ports()) == []
+    assert pod.session.sent == [] and pod.ports_added == 0
+
+
+def test_bridge_ports_is_a_legacy_pods_only(tmp_path):
+    vault = SecretStore(tmp_path / "secrets")
+    profile = load_profile("opensync-lab-hwsim-6.6.1-v1")
+    pod = PodBackend("pod-1", Session(tables()), vault, serial=SERIAL, profile=profile)
+    bridged(pod.session.tables)
+    assert asyncio.run(pod.bridge_ports()) == [] and pod.session.sent == []
+
+
 # spec 8.4 on a legacy pod: the Ethernet uplink bridged by OpenSync's patch pair
 UPLINK, WAN, HOME = (f"00000000-0000-4000-8000-0000000002{n}" for n in ("01", "02", "03"))
 PW, PH = "00000000-0000-4000-8000-000000000211", "00000000-0000-4000-8000-000000000212"

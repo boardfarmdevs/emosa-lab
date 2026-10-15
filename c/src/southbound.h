@@ -102,15 +102,30 @@ em_reason em_ap_submit(const em_profile *profile, const char *serial, bool multi
 
 /* spec 3.10 (PodBackend AUTH_RELOAD): a legacy pod's wm restarts its authenticator (nas and eapd)
  * in full only when an AP's security changes in more than its ssid and key (its oftag, say); a new
- * ssid or key alone is a fast reload, which can leave it not serving the BSS. EMOSA's write that
- * makes an AP or changes its ssid or key gives the oftag this suffix, and once the pod's State
- * shows that write the oftag is restored: two full reloads. */
+ * ssid or key alone is a fast reload. EMOSA's write that makes an AP, changes its ssid or key, or
+ * puts it into its bridge gives the oftag this suffix, and once the pod's State shows that write
+ * (and the AP is in its bridge) the oftag is restored: two full reloads, the last with the port. */
 #define EM_AUTH_RELOAD "~reload"
 
 /* PodBackend.auth_reload: the guarded operations giving each legacy AP whose oftag carries
- * EM_AUTH_RELOAD its oftag back once its State shows that write (its ssid, key and oftag), the
- * APs' names in names (at most max), *n their count; NULL when there is none. */
-cJSON *em_auth_reload_ops(const cJSON *tables, char (*names)[16], size_t max, size_t *n);
+ * EM_AUTH_RELOAD its oftag back once its State shows that write (its ssid, key and oftag) and it
+ * needs no bridge port (em_bridge_port_ops), the APs' names in names (at most max), *n their
+ * count; NULL when there is none. */
+cJSON *em_auth_reload_ops(const em_profile *p, bool multi_bss, const cJSON *tables, char (*names)[16], size_t max,
+                          size_t *n);
+
+/* PodBackend.bridge_ports (spec 3.10): a legacy pod's wm and authenticator hear an AP's stations
+ * on its bridge, whose members are the bridge's Open vSwitch ports, and the pod never adds an AP
+ * there (its cloud writes the Port). The guarded operations giving each AP of the profile's (the
+ * fronthaul, a slot with multi_bss) that wm has taken (its State), that is on and names the pod's
+ * one Bridge of that name, and that has no Port of its name anywhere: an Interface and a Port of
+ * its name, the Port into the Bridge's ports, its oftag marked (EM_AUTH_RELOAD) unless it is. The
+ * APs' names in names (at most max, EM_BRIDGE_PORTS_MAX), *n their count, the results' expected
+ * counts in counts (-1 unchecked; room for EM_BRIDGE_PORTS_MAX * 7), *ncounts theirs; NULL when
+ * there is none. */
+#define EM_BRIDGE_PORTS_MAX 8
+cJSON *em_bridge_port_ops(const em_profile *p, bool multi_bss, const cJSON *tables, char (*names)[16], size_t max,
+                          size_t *n, int *counts, size_t *ncounts);
 
 /* A further radio's scope (spec 9, RadioBackend.submit): make its slot VIFs on the radio of
  * `band` exactly the intent's additional BSSes (the BSSes of that radio's own M2 set fitted to

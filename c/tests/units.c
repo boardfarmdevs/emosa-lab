@@ -1281,10 +1281,22 @@ static void second_radio_profile(const char *schemas, const char *scratch)
     em_profile_free(&p);
 }
 
+static bool legacy_profile(const char *schemas, em_profile *p)
+{
+    char path[1024];
+    snprintf(path, sizeof(path), "%s/../src/emosa/profiles/bcm-pod-2.4.3-gre-5g-v1.json", schemas);
+    return em_profile_load(path, p) == EM_OK;
+}
+
 /* spec 3.10 (PodBackend.auth_reload): an AP whose oftag carries the marker gets it back once wm
  * shows the write, a bare marker removed; one wm has not taken, or unmarked, is left */
-static void auth_reload_ops(void)
+static void auth_reload_ops(const char *schemas)
 {
+    em_profile p;
+    if (!legacy_profile(schemas, &p)) {
+        CHECK(false, "the legacy 5 GHz profile loads");
+        return;
+    }
     static const char *const text =
         "{\"Wifi_VIF_Config\": {"
         "\"u1\": {\"if_name\": \"wl1.2\", \"mode\": \"ap\", \"ssid\": \"s\", \"security\": [\"map\", "
@@ -1307,7 +1319,7 @@ static void auth_reload_ops(void)
     cJSON *tables = cJSON_Parse(text);
     char names[8][16];
     size_t n = 0;
-    cJSON *ops = em_auth_reload_ops(tables, names, 8, &n);
+    cJSON *ops = em_auth_reload_ops(&p, true, tables, names, 8, &n);
     CHECK(ops && n == 2 && cJSON_GetArraySize(ops) == 4, "two APs restored, a guard and a mutate each");
     CHECK(n == 2 && !strcmp(names[0], "wl1.2") && !strcmp(names[1], "wl1.1"), "the taken, marked APs");
     char *got = ops ? cJSON_PrintUnformatted(cJSON_GetObjectItemCaseSensitive(cJSON_GetArrayItem(ops, 1), "mutations"))
@@ -1326,8 +1338,91 @@ static void auth_reload_ops(void)
           "guarded on if_name, ssid and security");
     cJSON_Delete(ops);
     cJSON_DeleteItemFromObjectCaseSensitive(tables, "Wifi_VIF_State");
-    CHECK(!em_auth_reload_ops(tables, names, 8, &n) && n == 0, "nothing while wm has taken none");
+    CHECK(!em_auth_reload_ops(&p, true, tables, names, 8, &n) && n == 0, "nothing while wm has taken none");
     cJSON_Delete(tables);
+    em_profile_free(&p);
+}
+
+/* spec 3.10 (PodBackend.bridge_ports): the profile's APs wm has taken that are on, name the pod's
+ * bridge and have no Port get one (the bridge's ports guarded once), their oftag marked unless it
+ * is; an AP with no bridge, not the profile's, or with a Port is left, and its restore waits */
+static void bridge_port_ops(const char *schemas)
+{
+    em_profile p;
+    if (!legacy_profile(schemas, &p)) {
+        CHECK(false, "the legacy 5 GHz profile loads");
+        return;
+    }
+    static const char *const text =
+        "{\"Wifi_VIF_Config\": {"
+        "\"u1\": {\"if_name\": \"wl1.2\", \"mode\": \"ap\", \"enabled\": true, \"bridge\": \"br-home\", \"ssid\": \"s\", "
+        "\"security\": [\"map\", [[\"encryption\", \"WPA-PSK\"], [\"key\", \"k\"], [\"oftag\", \"home--1\"]]]},"
+        "\"u2\": {\"if_name\": \"wl0.2\", \"mode\": \"ap\", \"enabled\": true, \"bridge\": \"br-home\", \"ssid\": \"t\", "
+        "\"security\": [\"map\", [[\"encryption\", \"WPA-PSK\"], [\"key\", \"k\"], [\"oftag\", \"home--1~reload\"]]]},"
+        "\"u3\": {\"if_name\": \"wl1.1\", \"mode\": \"ap\", \"enabled\": true, \"bridge\": \"\", \"ssid\": \"b\", "
+        "\"security\": [\"map\", [[\"encryption\", \"WPA-PSK\"], [\"key\", \"k\"]]]},"
+        "\"u4\": {\"if_name\": \"wl1.3\", \"mode\": \"ap\", \"enabled\": true, \"bridge\": \"br-home\", \"ssid\": \"x\", "
+        "\"security\": [\"map\", [[\"encryption\", \"WPA-PSK\"], [\"key\", \"k\"]]]}},"
+        "\"Wifi_VIF_State\": {"
+        "\"s1\": {\"if_name\": \"wl1.2\", \"ssid\": \"s\", \"security\": [\"map\", "
+        "[[\"encryption\", \"WPA-PSK\"], [\"key\", \"k\"], [\"oftag\", \"home--1\"]]]},"
+        "\"s2\": {\"if_name\": \"wl0.2\", \"ssid\": \"t\", \"security\": [\"map\", "
+        "[[\"encryption\", \"WPA-PSK\"], [\"key\", \"k\"], [\"oftag\", \"home--1~reload\"]]]},"
+        "\"s3\": {\"if_name\": \"wl1.1\"}, \"s4\": {\"if_name\": \"wl1.3\"}},"
+        "\"Bridge\": {\"b1\": {\"name\": \"br-home\", \"ports\": [\"uuid\", \"p1\"]}},"
+        "\"Port\": {\"p1\": {\"name\": \"br-home\", \"interfaces\": [\"uuid\", \"i1\"]}}}";
+    cJSON *tables = cJSON_Parse(text);
+    char names[EM_BRIDGE_PORTS_MAX][16];
+    int counts[EM_BRIDGE_PORTS_MAX * 7];
+    size_t n = 0, ncounts = 0;
+    cJSON *ops = em_bridge_port_ops(&p, true, tables, names, EM_BRIDGE_PORTS_MAX, &n, counts, &ncounts);
+    CHECK(ops && n == 2 && !strcmp(names[0], "wl1.2") && !strcmp(names[1], "wl0.2"), "the profile's two home APs");
+    CHECK(ops && cJSON_GetArraySize(ops) == 12 && ncounts == 12, "one bridge guard, six and five operations");
+    static const int want[] = {-1, -1, -1, -1, -1, 1, 1, -1, -1, -1, -1, 1};
+    bool same = ncounts == 12;
+    for (size_t i = 0; same && i < 12; i++)
+        same = counts[i] == want[i];
+    CHECK(same, "the bridge mutates and the one oftag mutate counted");
+    char *got = ops ? cJSON_PrintUnformatted(cJSON_GetArrayItem(ops, 0)) : NULL;
+    CHECK(got && strstr(got, "\"table\":\"Bridge\"") && strstr(got, "\"columns\":[\"name\",\"ports\"]"),
+          "the bridge's ports guarded: %s", got ? got : "none");
+    free(got);
+    got = ops ? cJSON_PrintUnformatted(cJSON_GetArrayItem(ops, 4)) : NULL;
+    CHECK(got && !strcmp(got, "{\"op\":\"insert\",\"table\":\"Port\",\"uuid-name\":\"ap0_port\",\"row\":{\"name\":"
+                              "\"wl1.2\",\"interfaces\":[\"set\",[[\"named-uuid\",\"ap0_if\"]]]}}"),
+          "the AP's Port: %s", got ? got : "none");
+    free(got);
+    got = ops ? cJSON_PrintUnformatted(cJSON_GetObjectItemCaseSensitive(cJSON_GetArrayItem(ops, 6), "mutations"))
+              : NULL;
+    CHECK(got && !strcmp(got, "[[\"security\",\"delete\",[\"set\",[\"oftag\"]]],"
+                              "[\"security\",\"insert\",[\"map\",[[\"oftag\",\"home--1~reload\"]]]]]"),
+          "its oftag marked: %s", got ? got : "none");
+    free(got);
+    cJSON_Delete(ops);
+    /* the restore of wl0.2's marker waits for its port */
+    char restored[8][16];
+    size_t r = 0;
+    cJSON *reload = em_auth_reload_ops(&p, true, tables, restored, 8, &r);
+    CHECK(!reload && r == 0, "no restore before the port");
+    cJSON_Delete(reload);
+    ops = em_bridge_port_ops(&p, false, tables, names, EM_BRIDGE_PORTS_MAX, &n, counts, &ncounts);
+    CHECK(ops && n == 1 && !strcmp(names[0], "wl1.2"), "without multi_bss the fronthaul alone");
+    cJSON_Delete(ops);
+    /* wl0.2's Port there (in the bridge or not): left, and its restore goes ahead */
+    cJSON *port = cJSON_CreateObject();
+    cJSON_AddStringToObject(port, "name", "wl0.2");
+    cJSON_AddItemToObject(cJSON_GetObjectItemCaseSensitive(tables, "Port"), "p2", port);
+    ops = em_bridge_port_ops(&p, true, tables, names, EM_BRIDGE_PORTS_MAX, &n, counts, &ncounts);
+    CHECK(ops && n == 1 && !strcmp(names[0], "wl1.2"), "an AP with a Port left");
+    cJSON_Delete(ops);
+    reload = em_auth_reload_ops(&p, true, tables, restored, 8, &r);
+    CHECK(reload && r == 1 && !strcmp(restored[0], "wl0.2"), "its restore once it has one");
+    cJSON_Delete(reload);
+    p.legacy = false;
+    CHECK(!em_bridge_port_ops(&p, true, tables, names, EM_BRIDGE_PORTS_MAX, &n, counts, &ncounts) && n == 0,
+          "none on a 6.6 pod");
+    cJSON_Delete(tables);
+    em_profile_free(&p);
 }
 
 int main(int argc, char **argv)
@@ -1358,7 +1453,8 @@ int main(int argc, char **argv)
     environment_files(argv[2]);
     supervisor(argv[2]);
     second_radio_profile(argv[1], argv[2]);
-    auth_reload_ops();
+    auth_reload_ops(argv[1]);
+    bridge_port_ops(argv[1]);
     printf("%d checks, %d failures\n", checks, failures);
     return failures != 0;
 }

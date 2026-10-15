@@ -625,7 +625,152 @@ static void set_secured(cJSON *row, const em_profile *p, const char *key, const 
 
 static bool same_text(const char *a, const char *b) { return a && b && !strcmp(a, b); }
 
-cJSON *em_auth_reload_ops(const cJSON *tables, char (*names)[16], size_t max, size_t *n)
+/* a guard over the columns the row has (one the monitor never sent is left out) */
+static cJSON *present_guard(const char *table, const char *uuid, const cJSON *row, const char *const *columns,
+                            size_t n)
+{
+    const char *have[8];
+    size_t k = 0;
+    for (size_t i = 0; i < n && k < 8; i++)
+        if (cJSON_GetObjectItemCaseSensitive(row, columns[i]))
+            have[k++] = columns[i];
+    return guard(table, uuid, row, have, k);
+}
+
+/* PodBackend._unbridged (spec 3.10): the uuid of the Bridge a legacy AP of the profile's (the
+ * fronthaul, a slot with multi_bss) names when the AP is on and no Port of its name is anywhere;
+ * NULL when it has a Port, no bridge, or the bridge is not the pod's one Bridge of that name */
+static const char *unbridged(const em_profile *p, bool multi_bss, const cJSON *tables, const cJSON *config)
+{
+    const char *name = ovs_str(config, "if_name"), *bridge = ovs_str(config, "bridge");
+    if (!same_text(ovs_str(config, "mode"), "ap") || !cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(config, "enabled")) ||
+        !name || !bridge || !*bridge)
+        return NULL;
+    bool ours = same_text(name, p->fronthaul_if);
+    for (size_t i = 0; multi_bss && !ours && i < p->nslots; i++)
+        ours = same_text(name, p->slots[i].if_name);
+    const cJSON *r, *found = NULL;
+    cJSON_ArrayForEach(r, em_table(tables, "Port"))
+    {
+        if (same_text(ovs_str(r, "name"), name))
+            ours = false;
+    }
+    size_t count = 0;
+    cJSON_ArrayForEach(r, em_table(tables, "Bridge"))
+    {
+        if (same_text(ovs_str(r, "name"), bridge)) {
+            found = r;
+            count++;
+        }
+    }
+    return ours && count == 1 ? found->string : NULL;
+}
+
+/* the AP's oftag mutated to `oftag` (its old one deleted) */
+static cJSON *oftag_mutate(const char *uuid, const char *oftag)
+{
+    cJSON *o = op("mutate", "Wifi_VIF_Config", where_uuid(uuid)), *m = cJSON_CreateArray();
+    const char *gone = "oftag";
+    cJSON_AddItemToArray(m, mutation("security", "delete", tagged("set", strings(&gone, 1))));
+    if (*oftag) {
+        cJSON *pairs = cJSON_CreateArray(), *pair = cJSON_CreateArray();
+        cJSON_AddItemToArray(pair, cJSON_CreateString("oftag"));
+        cJSON_AddItemToArray(pair, cJSON_CreateString(oftag));
+        cJSON_AddItemToArray(pairs, pair);
+        cJSON_AddItemToArray(m, mutation("security", "insert", tagged("map", pairs)));
+    }
+    cJSON_AddItemToObject(o, "mutations", m);
+    return o;
+}
+
+cJSON *em_bridge_port_ops(const em_profile *p, bool multi_bss, const cJSON *tables, char (*names)[16], size_t max,
+                          size_t *n, int *counts, size_t *ncounts)
+{
+    static const char *const vif_cols[] = {"if_name", "enabled", "bridge", "security"};
+    static const char *const bridge_cols[] = {"name", "ports"};
+    const size_t suffix = strlen(EM_AUTH_RELOAD);
+    cJSON *ops = cJSON_CreateArray(), *changes = cJSON_CreateArray();
+    const char *guarded[EM_BRIDGE_PORTS_MAX];
+    int after[EM_BRIDGE_PORTS_MAX * 6];
+    size_t nguarded = 0, nafter = 0;
+    const cJSON *r, *s;
+    *n = *ncounts = 0;
+    if (max > EM_BRIDGE_PORTS_MAX)
+        max = EM_BRIDGE_PORTS_MAX;
+    cJSON_ArrayForEach(r, em_table(tables, "Wifi_VIF_Config"))
+    {
+        const char *name = ovs_str(r, "if_name"), *bridge = p->legacy ? unbridged(p, multi_bss, tables, r) : NULL;
+        if (*n >= max || !bridge || !name || strlen(name) > 15)
+            continue;
+        bool applied = false;
+        cJSON_ArrayForEach(s, em_table(tables, "Wifi_VIF_State")) applied = applied || same_text(ovs_str(s, "if_name"), name);
+        if (!applied)
+            continue; /* wm has not taken the AP yet */
+        bool seen = false;
+        for (size_t i = 0; i < nguarded; i++)
+            seen = seen || !strcmp(guarded[i], bridge);
+        if (!seen) { /* each bridge's ports guarded once, before any change */
+            const cJSON *row = cJSON_GetObjectItemCaseSensitive(em_table(tables, "Bridge"), bridge);
+            cJSON_AddItemToArray(ops, present_guard("Bridge", bridge, row, bridge_cols, 2));
+            guarded[nguarded++] = bridge;
+        }
+        char interface[24], port[24];
+        EM_FORMAT_FIXED(interface, sizeof(interface), "ap%zu_if", *n);
+        EM_FORMAT_FIXED(port, sizeof(port), "ap%zu_port", *n);
+        cJSON_AddItemToArray(changes, present_guard("Wifi_VIF_Config", r->string, r, vif_cols, 4));
+        cJSON_AddItemToArray(changes, absent("Port", where_eq("name", name), "name"));
+        cJSON *o = op("insert", "Interface", NULL), *row = cJSON_CreateObject();
+        cJSON_AddStringToObject(o, "uuid-name", interface);
+        cJSON_AddStringToObject(row, "name", name);
+        cJSON_AddItemToObject(o, "row", row);
+        cJSON_AddItemToArray(changes, o);
+        o = op("insert", "Port", NULL);
+        row = cJSON_CreateObject();
+        cJSON *set = cJSON_CreateArray();
+        cJSON_AddItemToArray(set, named(interface));
+        cJSON_AddStringToObject(o, "uuid-name", port);
+        cJSON_AddStringToObject(row, "name", name);
+        cJSON_AddItemToObject(row, "interfaces", tagged("set", set));
+        cJSON_AddItemToObject(o, "row", row);
+        cJSON_AddItemToArray(changes, o);
+        o = op("mutate", "Bridge", where_uuid(bridge));
+        cJSON *m = cJSON_CreateArray();
+        set = cJSON_CreateArray();
+        cJSON_AddItemToArray(set, named(port));
+        cJSON_AddItemToArray(m, mutation("ports", "insert", tagged("set", set)));
+        cJSON_AddItemToObject(o, "mutations", m);
+        cJSON_AddItemToArray(changes, o);
+        int expected[] = {-1, -1, -1, -1, 1};
+        for (size_t i = 0; i < 5; i++)
+            after[nafter++] = expected[i];
+        const char *oftag = ovs_map_get(r, "security", "oftag");
+        size_t len = oftag ? strlen(oftag) : 0;
+        if (len < suffix || strcmp(oftag + len - suffix, EM_AUTH_RELOAD)) {
+            char marked[80]; /* an oftag (a short tag) and the suffix */
+            EM_FORMAT_FIXED(marked, sizeof(marked), "%.60s%s", oftag ? oftag : "", EM_AUTH_RELOAD);
+            cJSON_AddItemToArray(changes, oftag_mutate(r->string, marked));
+            after[nafter++] = 1;
+        }
+        (void)em_copy(names[(*n)++], 16, name); /* an interface name (15) */
+    }
+    if (!*n) {
+        cJSON_Delete(ops);
+        cJSON_Delete(changes);
+        return NULL;
+    }
+    for (size_t i = 0; i < nguarded; i++)
+        counts[(*ncounts)++] = -1;
+    for (size_t i = 0; i < nafter; i++)
+        counts[(*ncounts)++] = after[i];
+    cJSON *item;
+    while ((item = cJSON_DetachItemFromArray(changes, 0)))
+        cJSON_AddItemToArray(ops, item);
+    cJSON_Delete(changes);
+    return ops;
+}
+
+cJSON *em_auth_reload_ops(const em_profile *p, bool multi_bss, const cJSON *tables, char (*names)[16], size_t max,
+                          size_t *n)
 {
     static const char *const cols[] = {"if_name", "ssid", "security"};
     const size_t suffix = strlen(EM_AUTH_RELOAD);
@@ -649,21 +794,12 @@ cJSON *em_auth_reload_ops(const cJSON *tables, char (*names)[16], size_t max, si
         if (!state || !same_text(ovs_map_get(state, "security", "oftag"), oftag) ||
             !same_text(ovs_str(state, "ssid"), ovs_str(r, "ssid")) || !same_text(em_row_psk(state), em_row_psk(r)))
             continue; /* wm has not taken the write yet */
+        if (unbridged(p, multi_bss, tables, r))
+            continue; /* its port first (em_bridge_port_ops), then the restore's full reload */
         cJSON_AddItemToArray(ops, guard("Wifi_VIF_Config", r->string, r, cols, 3));
-        cJSON *o = op("mutate", "Wifi_VIF_Config", where_uuid(r->string)), *m = cJSON_CreateArray();
-        const char *gone = "oftag";
-        cJSON_AddItemToArray(m, mutation("security", "delete", tagged("set", strings(&gone, 1))));
-        if (len > suffix) {
-            char restored[80];
-            EM_FORMAT_FIXED(restored, sizeof(restored), "%.*s", (int)(len - suffix < 79 ? len - suffix : 79), oftag);
-            cJSON *pairs = cJSON_CreateArray(), *pair = cJSON_CreateArray();
-            cJSON_AddItemToArray(pair, cJSON_CreateString("oftag"));
-            cJSON_AddItemToArray(pair, cJSON_CreateString(restored));
-            cJSON_AddItemToArray(pairs, pair);
-            cJSON_AddItemToArray(m, mutation("security", "insert", tagged("map", pairs)));
-        }
-        cJSON_AddItemToObject(o, "mutations", m);
-        cJSON_AddItemToArray(ops, o);
+        char restored[80];
+        EM_FORMAT_FIXED(restored, sizeof(restored), "%.*s", (int)(len - suffix < 79 ? len - suffix : 79), oftag);
+        cJSON_AddItemToArray(ops, oftag_mutate(r->string, restored));
         (void)em_copy(names[(*n)++], 16, name); /* an interface name (15) */
     }
     if (!*n) {

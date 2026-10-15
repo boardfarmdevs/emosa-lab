@@ -192,6 +192,7 @@ typedef struct {
     counters reconnections_fresh;
     unsigned session_starts; /* spec 3.10: a legacy pod's starts, counted by its agent's sessions */
     unsigned auth_reloads;   /* spec 3.10: the oftags auth_reload restored */
+    unsigned bridge_ports;   /* spec 3.10: the APs bridge_port put into their bridge */
     bool notify_due, check_drift;
     uint8_t channel_moves[1 + EXTRA_RADIOS][6];
     size_t nchannel_moves;
@@ -919,7 +920,9 @@ static void auth_reload(agent *a)
 {
     char names[8][16];
     size_t n = 0;
-    cJSON *ops = em_ovsdb_ready(a->ovs) ? em_auth_reload_ops(em_ovsdb_tables(a->ovs), names, 8, &n) : NULL;
+    cJSON *ops = em_ovsdb_ready(a->ovs)
+                     ? em_auth_reload_ops(&a->profile, a->multi_bss, em_ovsdb_tables(a->ovs), names, 8, &n)
+                     : NULL;
     if (!ops)
         return;
     int counts[16];
@@ -935,6 +938,31 @@ static void auth_reload(agent *a)
             LOG("auth reload: %s oftag restored (wm restarts nas, eapd)", names[i]);
     } else {
         WARN("auth reload: %s", em_reason_name(r));
+    }
+    cJSON_Delete(results);
+    cJSON_Delete(ops);
+}
+
+/* spec 3.10 (PodBackend.bridge_ports): each AP of EMOSA's that wm has taken and that is not in its
+ * bridge, its Interface and Port into it and its oftag marked (a full reload with the port there) */
+static void bridge_port(agent *a)
+{
+    char names[EM_BRIDGE_PORTS_MAX][16];
+    int counts[EM_BRIDGE_PORTS_MAX * 7];
+    size_t n = 0, ncounts = 0;
+    cJSON *ops = em_ovsdb_ready(a->ovs) ? em_bridge_port_ops(&a->profile, a->multi_bss, em_ovsdb_tables(a->ovs),
+                                                             names, EM_BRIDGE_PORTS_MAX, &n, counts, &ncounts)
+                                        : NULL;
+    if (!ops)
+        return;
+    cJSON *results = transact(a, ops);
+    em_reason r = results ? em_check_results(results, counts, ncounts) : EM_OUTCOME_UNKNOWN;
+    if (r == EM_OK) {
+        a->bridge_ports += (unsigned)n;
+        for (size_t i = 0; i < n; i++)
+            LOG("bridge port: %s into its bridge (wm restarts nas, eapd)", names[i]);
+    } else {
+        WARN("bridge port: %s", em_reason_name(r));
     }
     cJSON_Delete(results);
     cJSON_Delete(ops);
@@ -2382,6 +2410,7 @@ static cJSON *status(agent *a)
         cJSON_AddNumberToObject(o, "session_starts", a->session_starts);
         /* and the oftags restored after an AP's write (each the second full reload of its authenticator) */
         cJSON_AddNumberToObject(o, "auth_reloads", a->auth_reloads);
+        cJSON_AddNumberToObject(o, "bridge_ports", a->bridge_ports); /* the APs put into their bridge */
     }
     cJSON_AddStringToObject(session, "state", SESSION_NAMES[a->at.state]);
     cJSON *issues = cJSON_AddArrayToObject(session, "admission_issues");
@@ -3140,8 +3169,10 @@ int main(int argc, char **argv)
             receive_frame(&a, frame, len);
         if (refreshed && source_current(&a))
             reconcile(&a);
-        if (refreshed && source_current(&a) && a.profile.legacy && !writing(&a))
+        if (refreshed && source_current(&a) && a.profile.legacy && !writing(&a)) {
+            bridge_port(&a); /* spec 3.10: an AP of EMOSA's into its bridge, its oftag marked */
             auth_reload(&a); /* spec 3.10: an AP's write taken by wm, its oftag back (a full reload) */
+        }
         /* the scopes step on the refresh cadence, also while the pod is away: a write
          * in flight times out */
         if (refreshed && a.uplink_on)

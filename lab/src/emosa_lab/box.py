@@ -522,7 +522,8 @@ class Box:
     ):
         self.agent, self.directory, self.binary = agent, directory, binary
         # seeded_fronthaul (legacy): the seed with wl1.2 on, as the operator's cloud left it (its
-        # SSID, key and oftag), its State taken by wm: a hooked boot's fronthaul (15 October)
+        # SSID, key and oftag), its State taken by wm: a hooked boot's fronthaul (15 October);
+        # "applied": with the controller's SSID and key, as EMOSA made it, but in no bridge port
         self.seeded_fronthaul = seeded_fronthaul
         # seed_stations (legacy): the seed with onboarding stations on wl0 and wl1, as a converted
         # pod's own seed brings them back at a hooked boot (14 October)
@@ -679,7 +680,7 @@ class Box:
                 names = ("wl0", "wl1") if self.seed_stations is True else self.seed_stations
                 await session.transact(seed_stations(names))
             if self.seeded_fronthaul:
-                await session.transact(seeded_fronthaul())
+                await session.transact(seeded_fronthaul(self.seeded_fronthaul == "applied"))
         finally:
             await session.close()
         if self.legacy:  # its vendor's seed, as every start of its OpenSync restores it
@@ -954,13 +955,25 @@ def auth_reload(state, config):
     return None
 
 
+async def bridges_ports(db):
+    """Each Bridge's name -> the names of the Ports in its ports."""
+    ports = await table_rows(db, "Port")
+    return {
+        b.get("name"): {ports[u].get("name") for u in uuids(b.get("ports")) if u in ports}
+        for b in (await table_rows(db, "Bridge")).values()
+    }
+
+
 async def apply_configuration(db):
     """The pod's managers: each VIF's State takes its Config's applied columns (a new
     VIF gets its State row), as OpenSync's wm does once the radio has applied them. On a
-    legacy pod, each AP's authenticator reload is recorded (db.applied), and an oftag the
-    agent marked is applied again once the agent restores it (wm takes every change)."""
+    legacy pod, each AP's authenticator reload is recorded (db.applied) with whether the
+    authenticator serves the AP after a full one (db.served: its Port in its bridge, spec
+    3.10), and an oftag the agent marked is applied again once the agent restores it (wm
+    takes every change)."""
     session = OvsSession(db.endpoint, schema_generation=db.generation)
     marked = set()
+    members = await bridges_ports(db) if db.generation == LEGACY else {}
     try:
         snapshot = await session.snapshot()
         tables, schema = snapshot["tables"], snapshot["schema"]
@@ -977,7 +990,11 @@ async def apply_configuration(db):
             oftag = ovsdb_map(row.get("security")).get("oftag")
             state = tables.get("Wifi_VIF_State", {}).get(states.get(name))
             legacy = db.generation == LEGACY
-            db.applied.append((name, auth_reload(state, row) if legacy else None, oftag))
+            kind = auth_reload(state, row) if legacy else None
+            db.applied.append((name, kind, oftag))
+            if kind == "full":  # the authenticator's start: it hears the AP's bridge's ports
+                bridge = row.get("bridge")
+                db.served[name] = not bridge or name in members.get(bridge, set())
             if legacy and state and (oftag or "").endswith(AUTH_RELOAD):
                 marked.add(name)  # a new AP's: once the box has attached its State (onboarded)
             if name in states:
@@ -5126,9 +5143,75 @@ async def no_auth_reload_6_6(box):
         and not marks
         and AUTH_RELOAD not in json.dumps(config)
         and "auth_reloads" not in status
+        and "bridge_ports" not in status
         and status.get("writes") == writes,
         writes=[writes, status.get("writes")],
         marks=marks,
+    )
+
+
+async def home_port(box, name):
+    """The AP `name`'s Port and Interface: (in br-home's ports, an Interface of its name)."""
+    interfaces = {r.get("name") for r in (await box.rows("Interface")).values()}
+    return name in await bridge_members(box, "br-home"), name in interfaces
+
+
+async def legacy_bridge_port(box):
+    """spec 3.10: a hooked boot (the pod's seed has no VIF rows and br-home only its own port).
+    The controller's fronthaul made as wl1.2 naming br-home gets its Interface and Port into
+    br-home from the agent, and the authenticator's last full reload (the oftag's restore) comes
+    after it: the box's authenticator serves wl1.2 (its Port in br-home at that reload)."""
+    state = await onboarded(box)
+    if not state.get("applied"):
+        return box.result(passed=False, failed=state.get("failed", "not applied"))
+    port = await home_port(box, LEGACY_FRONTHAUL)
+    reloads = [(k, o) for name, k, o in box.db.applied if name == LEGACY_FRONTHAUL and k]
+    status = box.status() or {}
+    return box.result(
+        passed=port == (True, True)
+        and box.db.served.get(LEGACY_FRONTHAUL) is True
+        and reloads[-1:] == [("full", "home--1")]
+        and status.get("bridge_ports") == 1,
+        port=port,
+        served=box.db.served.get(LEGACY_FRONTHAUL),
+        reloads=reloads,
+        bridge_ports=status.get("bridge_ports"),
+    )
+
+
+async def legacy_bridge_port_repair(box):
+    """spec 3.10: a live pod whose fronthaul EMOSA made before it wrote bridge ports (wl1.2 with
+    the controller's SSID and key, naming br-home, no Port): without a restart of the pod the
+    agent puts wl1.2 into br-home and marks its oftag, then restores it once wm shows the marker,
+    two full reloads with the port there; the AP's SSID and key untouched."""
+    state = await onboarded(box)
+    if not state.get("applied"):
+        return box.result(passed=False, failed=state.get("failed", "not applied"))
+    ported, deadline = False, time.monotonic() + 20  # the agent's refresh cadence
+    while time.monotonic() < deadline and not ported:
+        ported = (await home_port(box, LEGACY_FRONTHAUL))[0]
+        if not ported:
+            await asyncio.sleep(0.3)
+    if ported:
+        await apply_configuration(box.db)  # wm takes the marker (and then the restore)
+    port = await home_port(box, LEGACY_FRONTHAUL)
+    _, config = await box.vif("Wifi_VIF_Config", LEGACY_FRONTHAUL)
+    reloads = [(k, o) for name, k, o in box.db.applied if name == LEGACY_FRONTHAUL and k]
+    wanted = {"encryption": "WPA-PSK", "key": REGISTRAR_KEY, "oftag": "home--1"}
+    status = box.status() or {}
+    return box.result(
+        passed=port == (True, True)
+        and box.db.served.get(LEGACY_FRONTHAUL) is True
+        and reloads[-2:] == [("full", "home--1" + AUTH_RELOAD), ("full", "home--1")]
+        and legacy_row_ok(config, wanted)
+        and (config or {}).get("ssid") == REGISTRAR_SSID
+        and status.get("bridge_ports") == 1
+        and (status.get("auth_reloads") or 0) >= 1,
+        port=port,
+        served=box.db.served.get(LEGACY_FRONTHAUL),
+        reloads=reloads,
+        bridge_ports=status.get("bridge_ports"),
+        auth_reloads=status.get("auth_reloads"),
     )
 
 
@@ -5388,15 +5471,18 @@ def seed_stations(names=("wl0", "wl1")):
     return operations
 
 
-def seeded_fronthaul():
-    """A hooked boot's fronthaul (15 October): wl1.2 on, in br-home, as the operator's cloud left
-    it (its SSID, key and the profile's oftag), its State taken by wm and its radio wl1's."""
-    security = ["map", [["encryption", "WPA-PSK"], ["key", "operator-key"], ["oftag", "home--1"]]]
+def seeded_fronthaul(applied=False):
+    """A hooked boot's fronthaul (15 October): wl1.2 on, naming br-home, as the operator's cloud
+    left it (its SSID, key and the profile's oftag), its State taken by wm and its radio wl1's;
+    applied: with the controller's SSID and key (an AP EMOSA made before it wrote bridge ports).
+    Neither has a Port: wm never adds one."""
+    key, ssid = (REGISTRAR_KEY, REGISTRAR_SSID) if applied else ("operator-key", "operator-home")
+    security = ["map", [["encryption", "WPA-PSK"], ["key", key], ["oftag", "home--1"]]]
     row = {
         "if_name": LEGACY_FRONTHAUL,
         "mode": "ap",
         "enabled": True,
-        "ssid": "operator-home",
+        "ssid": ssid,
         "bridge": "br-home",
         "vif_radio_idx": 2,
         "security": security,
@@ -6896,6 +6982,8 @@ SCENARIOS = {
     "legacy-onboard": legacy_onboard,
     "legacy-auth-reload": legacy_auth_reload,
     "no-auth-reload-6-6": no_auth_reload_6_6,
+    "legacy-bridge-port": legacy_bridge_port,
+    "legacy-bridge-port-repair": legacy_bridge_port_repair,
     "legacy-parent": legacy_parent,
     "legacy-parent-child": legacy_parent_child,
     "legacy-parent-child-gone": legacy_parent_child_gone,
@@ -7076,6 +7164,9 @@ OPTIONS["reconnect-channel-follows"] = OPTIONS["second-radio-moves-channel"]
 OPTIONS["legacy-onboard"] = {"legacy": True}
 # a hooked boot's fronthaul: the seed's wl1.2 as the operator's cloud left it
 OPTIONS["legacy-auth-reload"] = {"legacy": True, "seeded_fronthaul": True}
+# a hooked boot (no VIF rows), and a live pod's fronthaul EMOSA made before bridge ports
+OPTIONS["legacy-bridge-port"] = {"legacy": True}
+OPTIONS["legacy-bridge-port-repair"] = {"legacy": True, "seeded_fronthaul": "applied"}
 OPTIONS["legacy-parent"] = {"legacy": True, "multi_bss": True, "underlay": LEGACY_UNDERLAY}
 OPTIONS["legacy-parent-child"] = OPTIONS["legacy-parent"]
 OPTIONS["legacy-parent-child-gone"] = OPTIONS["legacy-parent"]

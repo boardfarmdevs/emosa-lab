@@ -68,10 +68,15 @@ VIF_GUARDS = (
 LEGACY_VIF_GUARDS = ("if_name", "mode", "enabled", "ssid", "security")
 # spec 3.10: a legacy pod's wm restarts its authenticator (nas and eapd) in full only when an AP's
 # security changes in more than its ssid and key (its oftag, say); a new ssid or key alone is a
-# fast reload, which can leave it not serving the BSS. EMOSA's write that makes an AP or changes
-# its ssid or key gives the oftag this suffix, and once the pod's State shows that write the oftag
-# is restored: two full reloads.
+# fast reload. EMOSA's write that makes an AP, changes its ssid or key, or puts it into its bridge
+# gives the oftag this suffix, and once the pod's State shows that write (and the AP is in its
+# bridge) the oftag is restored: two full reloads, the last with the AP's port there.
 AUTH_RELOAD = "~reload"
+# spec 3.10: a legacy pod's wm and authenticator (eapd) hear an AP's stations on its bridge, whose
+# members are the bridge's Open vSwitch ports; the pod never adds an AP there (its cloud writes the
+# Port), and Wifi_VIF_State.bridge shows the bridge regardless (from the pod's NVRAM). An AP of
+# EMOSA's with a bridge and no Port gets one, its oftag marked so the authenticator restarts after.
+PORT_GUARDS = ("if_name", "enabled", "bridge", "security")
 # the role an M2's Multi-AP extension gives a BSS, as OpenSync's multi_ap (spec 3.4): the pod's
 # AP takes it as a Multi-AP agent's AP does (hostapd multi_ap 2 or 1)
 MULTI_AP = {"fronthaul": "fronthaul_bss", "backhaul": "backhaul_bss"}
@@ -138,6 +143,7 @@ class PodBackend(OpenSyncBackend):
         self.anchor = None
         self.identity = None  # radio MAC, BSSID (None before the VIF exists), channel, radio
         self.auth_reloads = 0  # spec 3.10: the oftags auth_reload restored
+        self.ports_added = 0  # spec 3.10: the APs bridge_ports put into their bridge
 
     @property
     def mapping(self):
@@ -170,21 +176,120 @@ class PodBackend(OpenSyncBackend):
             entries["oftag"] = entries.get("oftag", "") + AUTH_RELOAD
         return {**row, "security": ["map", sorted([k, v] for k, v in entries.items())]}
 
-    async def auth_reload(self):
-        """spec 3.10: each legacy AP whose oftag carries AUTH_RELOAD gets its oftag back, guarded,
-        once the pod's State shows that write (its ssid, key and oftag): the second full reload of
-        the pod's authenticator, after wm has taken the first. The names restored."""
+    def _unbridged(self, decoded, config):
+        """spec 3.10: the uuid of the bridge a legacy AP of EMOSA's (the fronthaul, a slot) names
+        when the AP is on and no Port of its name is anywhere (the pod never adds one); None when
+        it has a Port, no bridge, or the bridge is not the pod's one Bridge of that name."""
+        name, bridge = config.get("if_name"), config.get("bridge")
+        if (
+            config.get("mode") != "ap"
+            or config.get("enabled") is not True
+            or name not in {self.profile.fronthaul_if, *(s for s, _, _ in self.pod_slots)}
+            or not isinstance(bridge, str)
+            or not bridge
+            or any(r.get("name") == name for r in decoded.get("Port", {}).values())
+        ):
+            return None
+        found = [u for u, r in decoded.get("Bridge", {}).items() if r.get("name") == bridge]
+        return found[0] if len(found) == 1 else None
+
+    @staticmethod
+    def _decoded(raw):
+        schema = raw["schema"]
+        return {
+            t: {u: schema.row(t, r) for u, r in rows.items()} for t, rows in raw["tables"].items()
+        }
+
+    async def bridge_ports(self):
+        """spec 3.10: each legacy AP of EMOSA's that the pod has applied (its State) and that is
+        not in its bridge gets its Interface and Port into the bridge, guarded (the bridge's
+        ports, no Port of its name, the AP's row), and its oftag marked (AUTH_RELOAD) unless it
+        is already: the authenticator restarts in full with the port there, and auth_reload
+        restores the oftag after. The names put into their bridge."""
         if not self.profile.legacy:
             return []
         raw = await self.session.snapshot()
-        schema, tables = raw["schema"], raw["tables"]
-        states = {}
-        for row in tables.get("Wifi_VIF_State", {}).values():
-            state = schema.row("Wifi_VIF_State", row)
-            states[state.get("if_name")] = state
+        tables, decoded = raw["tables"], self._decoded(raw)
+        states = {r.get("if_name") for r in decoded.get("Wifi_VIF_State", {}).values()}
+        bridges, ops, counts, names = {}, [], [], []
+        for uuid, config in sorted(decoded.get("Wifi_VIF_Config", {}).items()):
+            bridge = self._unbridged(decoded, config)
+            name = config.get("if_name")
+            if bridge is None or name not in states:
+                continue
+            if bridge not in bridges:  # each bridge's ports guarded once, before any change
+                row = tables["Bridge"][bridge]
+                bridges[bridge] = guard(
+                    "Bridge", bridge, row, [c for c in ("name", "ports") if c in row]
+                )
+            row, tag = tables["Wifi_VIF_Config"][uuid], f"ap{len(names)}"
+            ops += [
+                guard("Wifi_VIF_Config", uuid, row, [c for c in PORT_GUARDS if c in row]),
+                {
+                    "op": "wait",
+                    "table": "Port",
+                    "where": [["name", "==", name]],
+                    "columns": ["name"],
+                    "until": "==",
+                    "rows": [],
+                    "timeout": 0,
+                },
+                {
+                    "op": "insert",
+                    "table": "Interface",
+                    "uuid-name": f"{tag}_if",
+                    "row": {"name": name},
+                },
+                {
+                    "op": "insert",
+                    "table": "Port",
+                    "uuid-name": f"{tag}_port",
+                    "row": {"name": name, "interfaces": ["set", [["named-uuid", f"{tag}_if"]]]},
+                },
+                {
+                    "op": "mutate",
+                    "table": "Bridge",
+                    "where": where_uuid(bridge),
+                    "mutations": [["ports", "insert", ["set", [["named-uuid", f"{tag}_port"]]]]],
+                },
+            ]
+            counts += [None, None, None, None, 1]
+            oftag = (config.get("security") or {}).get("oftag", "")
+            if not oftag.endswith(AUTH_RELOAD):
+                ops.append(
+                    {
+                        "op": "mutate",
+                        "table": "Wifi_VIF_Config",
+                        "where": where_uuid(uuid),
+                        "mutations": [
+                            ["security", "delete", ["set", ["oftag"]]],
+                            ["security", "insert", ["map", [["oftag", oftag + AUTH_RELOAD]]]],
+                        ],
+                    }
+                )
+                counts.append(1)
+            names.append(name)
+        if not names:
+            return []
+        self.write_count += 1
+        guards = list(bridges.values())
+        check_results(await self.session.transact(guards + ops), [None] * len(guards) + counts)
+        self.ports_added += len(names)
+        return names
+
+    async def auth_reload(self):
+        """spec 3.10: each legacy AP whose oftag carries AUTH_RELOAD gets its oftag back, guarded,
+        once the pod's State shows that write (its ssid, key and oftag) and the AP is in its bridge
+        (bridge_ports): the second full reload of the pod's authenticator, after wm has taken the
+        first. The names restored."""
+        if not self.profile.legacy:
+            return []
+        raw = await self.session.snapshot()
+        tables, decoded = raw["tables"], self._decoded(raw)
+        states = {s.get("if_name"): s for s in decoded.get("Wifi_VIF_State", {}).values()}
         ops, names = [], []
         for uuid, row in sorted(tables.get("Wifi_VIF_Config", {}).items()):
-            config = schema.row("Wifi_VIF_Config", row)
+            config = decoded["Wifi_VIF_Config"][uuid]
             oftag = (config.get("security") or {}).get("oftag", "")
             if config.get("mode") != "ap" or not oftag.endswith(AUTH_RELOAD):
                 continue
@@ -195,6 +300,8 @@ class PodBackend(OpenSyncBackend):
                 or psk(state) != psk(config)
             ):
                 continue  # wm has not taken the write yet
+            if self._unbridged(decoded, config) is not None:
+                continue  # its port first (bridge_ports), then the restore's full reload
             mutations = [["security", "delete", ["set", ["oftag"]]]]
             if oftag != AUTH_RELOAD:
                 mutations.append(
