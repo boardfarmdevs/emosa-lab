@@ -583,6 +583,10 @@ class PodReportSource:
                 "ruid": ident["radio_mac"],
                 "bssid": ident["bssid"],
                 "channel": channel,
+                # the fronthaul radio's channel as wm shows it (None: none), and whether the
+                # reported one differs (a pod whose radio is up on another channel than reported)
+                "observed_channel": radio.channel,
+                "channel_mismatch": radio.channel is not None and radio.channel != channel,
                 # spec 9: every radio EMOSA binds and reports (the fronthaul first), for the
                 # status and the lab proofs - a second radio appears once the pod brings it up
                 "radios": [

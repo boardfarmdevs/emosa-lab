@@ -6475,6 +6475,9 @@ async def legacy_dark_radio(box):
     on = await wl0()
     failing = await healthcheck(box)
     plan = (box.status() or {}).get("radio_plan") or {}
+    # the fronthaul radio's channel as wm shows it, beside the reported one: the same here
+    pod = (box.status() or {}).get("pod") or {}
+    observed = (pod.get("observed_channel"), pod.get("channel"), pod.get("channel_mismatch"))
     searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
     continued = kept_reconnections(box)
     await box.new_pod_database()
@@ -6504,6 +6507,7 @@ async def legacy_dark_radio(box):
         and on == (True, 36, "HT20")
         and not failing
         and plan.get("dark_radios") == []
+        and observed == (6, 6, False)
         and session is not None
         and second is not None
         and second.get("instance") != first.get("instance")
@@ -6517,6 +6521,7 @@ async def legacy_dark_radio(box):
         wl0_after_reseed=on_again,
         healthcheck_failing_after_reseed=failing_again,
         healthcheck_failing_wl0_dark=failing_dark,
+        fronthaul_channel=observed,
         radio_plan=plan,
     )
 

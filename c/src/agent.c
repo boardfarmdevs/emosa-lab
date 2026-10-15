@@ -200,6 +200,9 @@ typedef struct {
     em_radio_view represented; /* the radio with only the BSSes the agent represents */
     bool has_primary;
     int channel, tx_power;
+    /* the fronthaul radio's channel as wm shows it (has_observed: it shows one) */
+    int observed_channel;
+    bool has_observed;
     int8_t max_eirp;
     em_tlv_list caps;
     em_tlv inventory;
@@ -853,6 +856,8 @@ static bool refresh(agent *a)
     a->has_primary = primary;
     backhaul_links(a, t);
     a->channel = channel;
+    a->has_observed = radio->has_channel;
+    a->observed_channel = radio->has_channel ? radio->channel : 0;
     a->tx_power = radio->has_tx_power ? radio->tx_power : 0;
     a->generation = em_ovsdb_generation(a->ovs);
     a->revision = em_ovsdb_revision(a->ovs);
@@ -2225,6 +2230,10 @@ static cJSON *pod_facts(agent *a)
         cJSON_AddNullToObject(o, "ssid");
     }
     cJSON_AddNumberToObject(o, "channel", a->channel);
+    /* the radio's channel as wm shows it, and whether the reported one differs */
+    cJSON_AddItemToObject(o, "observed_channel",
+                          a->has_observed ? cJSON_CreateNumber(a->observed_channel) : cJSON_CreateNull());
+    cJSON_AddBoolToObject(o, "channel_mismatch", a->has_observed && a->observed_channel != a->channel);
     /* spec 9: every radio the agent binds and reports (the fronthaul first) */
     em_topology_radio shown[1 + EXTRA_RADIOS];
     size_t nshown = shown_radios(a, shown);
