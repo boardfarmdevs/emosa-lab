@@ -25,6 +25,8 @@
             "ruid": {"type": "string"},
             "bssid": {"type": ["string", "null"]},
             "channel": {"type": "integer"},
+            "observed_channel": {"description": "The fronthaul radio's channel as the pod's Wifi_Radio_State shows it; null without one.", "type": ["integer", "null"]},
+            "channel_mismatch": {"description": "The radio is up on another channel than the one reported.", "type": "boolean"},
             "ssid": {"type": ["string", "null"]},
             "bsses": {"type": "array", "items": {"type": "object", "required": ["role", "bssid", "ssid"], "properties": {"role": {"enum": ["fronthaul", "backhaul"]}, "bssid": {"type": "string"}, "ssid": {"type": "string"}}}},
             "stations": {"type": "array", "items": {"type": "string"}},
