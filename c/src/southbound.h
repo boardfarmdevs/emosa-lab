@@ -137,6 +137,18 @@ cJSON *em_auth_reload_ops(const em_profile *p, bool multi_bss, const cJSON *tabl
 #define EM_BRIDGE_MODE_COUNTS 48
 cJSON *em_bridge_mode_ops(const em_profile *p, bool multi_bss, const cJSON *tables, char *done, size_t size,
                           int *counts, size_t *ncounts);
+
+/* PodBackend.anchor_aps (spec 3.10, an experiment, the fleet's anchor_ap, off by default): with
+ * `on`, an AP of EMOSA's own on each fronthaul-only radio the profile places (its first slot,
+ * wl0.1 for wl0) where no row has that name: hidden, in no bridge, no Inet row, on `key` (the radio
+ * plan's neutral passphrase) and `ssid` (random, the pod's own), its oftag EM_ANCHOR_TAG; off,
+ * every row with that oftag removed. The home APs on the radios touched get their oftags marked
+ * (EM_AUTH_RELOAD). What it did in done ("wl0.1 written"; never the SSID or key), the results'
+ * expected counts in counts (room for EM_BRIDGE_MODE_COUNTS), *ncounts theirs; NULL when there is
+ * nothing to do. */
+#define EM_ANCHOR_TAG "emosa-anchor"
+cJSON *em_anchor_ops(const em_profile *p, bool multi_bss, const cJSON *tables, bool on, const char *key,
+                     const char *ssid, char *done, size_t size, int *counts, size_t *ncounts);
 cJSON *em_bridge_port_ops(const em_profile *p, bool multi_bss, const cJSON *tables, char (*names)[16], size_t max,
                           size_t *n, int *counts, size_t *ncounts);
 

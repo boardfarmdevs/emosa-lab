@@ -45,6 +45,7 @@ from emosa.errors import EmosaError, Reason
 from emosa.model import Observation
 from emosa.opensync.mapping import OpenSyncBackend, check_results, guard, where_uuid
 from emosa.opensync.profiles import load as load_profile
+from emosa.opensync.radio_plan import NEUTRAL_REF
 from emosa.opensync.radio_scope import psk, wpa2_psk
 from emosa.opensync.uplink import start_instance
 from emosa.opensync.wired import pair_ops, paired
@@ -86,6 +87,15 @@ HOME_UP = {"enabled": True, "network": True, "NAT": False}
 # the cloud's values, which the profile's fronthaul row may set otherwise; in code too, so an agent
 # on an older profile (the image's, a binary deployed alone) still sets them
 HOME_VIF = {"group_rekey": 86400, "ft_psk": 0}
+# spec 3.10, an experiment (the fleet's anchor_ap, off by default; 15 October): a converted pod's
+# cloud leaves an AP on its 5 GHz radio's first slot (wl0.1), and only there did a home AP on that
+# radio send its clients EAPOL M1. With the switch on, each fronthaul-only radio the profile
+# places gets an AP of EMOSA's own there: hidden, in no bridge, with no Inet row, on the radio
+# plan's neutral passphrase (so the plan leaves it as it is) and a random SSID of the pod's own
+# (the vault's ANCHOR_REF value, cut to 12); its oftag marks it EMOSA's. Off, EMOSA's goes. A slot
+# taken by another manager's row is left alone.
+ANCHOR_TAG = "emosa-anchor"
+ANCHOR_REF = "emosa-anchor"
 # What shows whether such a port carries its stations, read only (spec 3.10): the bridge's fail
 # mode (a secure bridge forwards only what its OpenFlow rules allow) and OpenSync's rules for it,
 # and each port's Interface as Open vSwitch opened it (its ofport, or the error)
@@ -139,8 +149,12 @@ class PodBackend(OpenSyncBackend):
         profile=None,
         multi_bss=False,
         underlay=None,
+        anchor_ap=False,
     ):
         self.profile = profile or load_profile()
+        # spec 3.10, an experiment (the fleet's anchor_ap, off by default): EMOSA's own hidden AP
+        # on each fronthaul-only radio's first slot (anchor_aps)
+        self.anchor_ap = anchor_ap is True
         # the pod's 169.254.N.0/24 as a GRE parent (spec 8.6), from the fleet registry
         self.underlay = underlay
         super().__init__(
@@ -167,6 +181,7 @@ class PodBackend(OpenSyncBackend):
         self.auth_reloads = 0  # spec 3.10: the oftags auth_reload restored
         self.ports_added = 0  # spec 3.10: the APs bridge_ports put into their bridge
         self.bridge_modes = 0  # spec 3.10: the writes bridge_mode made
+        self.anchor_writes = 0  # spec 3.10: the writes anchor_aps made (the experiment)
 
     @property
     def mapping(self):
@@ -422,6 +437,120 @@ class PodBackend(OpenSyncBackend):
         self.write_count += 1
         check_results(await self.session.transact(ops), counts)
         self.bridge_modes += 1
+        return done
+
+    async def anchor_aps(self):
+        """spec 3.10, the experiment (anchor_ap): with the switch on, an AP of EMOSA's own on each
+        fronthaul-only radio's first slot where none is; off, EMOSA's own removed. One guarded
+        write, the home APs on those radios marked (AUTH_RELOAD) so the authenticator restarts
+        after it. What it did ("wl0.1 written", "wl0.1 removed"), never the SSID or key."""
+        if not self.profile.legacy or self.profile.radio_plan != "emosa":
+            return []
+        raw = await self.session.snapshot()
+        tables, decoded = raw["tables"], self._decoded(raw)
+        vifs, radios = decoded.get("Wifi_VIF_Config", {}), decoded.get("Wifi_Radio_Config", {})
+        ops, counts, done, touched = [], [], [], set()
+        if not self.anchor_ap:
+            for uuid, row in sorted(vifs.items()):
+                if (row.get("security") or {}).get("oftag") != ANCHOR_TAG:
+                    continue
+                raw_row = tables["Wifi_VIF_Config"][uuid]
+                ops += [
+                    guard(
+                        "Wifi_VIF_Config",
+                        uuid,
+                        raw_row,
+                        [c for c in ("if_name", "security") if c in raw_row],
+                    ),
+                    {"op": "delete", "table": "Wifi_VIF_Config", "where": where_uuid(uuid)},
+                ]
+                counts += [None, 1]
+                for radio_uuid, radio in radios.items():
+                    if uuid in (radio.get("vif_configs") or []):
+                        ops.append(
+                            {
+                                "op": "mutate",
+                                "table": "Wifi_Radio_Config",
+                                "where": where_uuid(radio_uuid),
+                                "mutations": [["vif_configs", "delete", ["set", [["uuid", uuid]]]]],
+                            }
+                        )
+                        counts.append(1)
+                        touched.add(radio_uuid)
+                done.append(f"{row.get('if_name')} removed")
+        else:
+            bands = {r["band"] for r in self.profile.radios}
+            names = {r.get("if_name") for r in vifs.values()}
+            placed = [(u, r) for u, r in sorted(radios.items()) if r.get("freq_band") in bands]
+            if placed:
+                key = self.vault.generated(NEUTRAL_REF)
+                ssid = self.vault.generated(ANCHOR_REF)[:12]
+            for radio_uuid, radio in placed:
+                name = f"{radio.get('if_name')}.1"
+                if name in names:
+                    continue  # EMOSA's already, or another manager's: left alone
+                tag = f"anchor{len(done)}"
+                row = {
+                    "if_name": name,
+                    "mode": "ap",
+                    "enabled": True,
+                    "ssid": ssid,
+                    "ssid_broadcast": "disabled",
+                    "bridge": "",
+                    "ap_bridge": False,
+                    "vif_radio_idx": 1,
+                    "security": [
+                        "map",
+                        [["encryption", "WPA-PSK"], ["key", key], ["oftag", ANCHOR_TAG]],
+                    ],
+                }
+                raw_radio = tables["Wifi_Radio_Config"][radio_uuid]
+                ops += [
+                    guard("Wifi_Radio_Config", radio_uuid, raw_radio, ["if_name", "vif_configs"]),
+                    {
+                        "op": "wait",
+                        "table": "Wifi_VIF_Config",
+                        "where": [["if_name", "==", name]],
+                        "columns": ["if_name"],
+                        "until": "==",
+                        "rows": [],
+                        "timeout": 0,
+                    },
+                    {"op": "insert", "table": "Wifi_VIF_Config", "uuid-name": tag, "row": row},
+                    {
+                        "op": "mutate",
+                        "table": "Wifi_Radio_Config",
+                        "where": where_uuid(radio_uuid),
+                        "mutations": [["vif_configs", "insert", ["set", [["named-uuid", tag]]]]],
+                    },
+                ]
+                counts += [None, None, None, 1]
+                touched.add(radio_uuid)
+                done.append(f"{name} written")
+        if not ops:
+            return []
+        on_touched = {u for r in touched for u in (radios[r].get("vif_configs") or [])}
+        for uuid, config in sorted(self._home_aps(decoded).items()):
+            oftag = (config.get("security") or {}).get("oftag", "")
+            if uuid not in on_touched or oftag.endswith(AUTH_RELOAD):
+                continue
+            raw_row = tables["Wifi_VIF_Config"][uuid]
+            ops += [
+                guard("Wifi_VIF_Config", uuid, raw_row, [c for c in PORT_GUARDS if c in raw_row]),
+                {
+                    "op": "mutate",
+                    "table": "Wifi_VIF_Config",
+                    "where": where_uuid(uuid),
+                    "mutations": [
+                        ["security", "delete", ["set", ["oftag"]]],
+                        ["security", "insert", ["map", [["oftag", oftag + AUTH_RELOAD]]]],
+                    ],
+                },
+            ]
+            counts += [None, 1]
+        self.write_count += 1
+        check_results(await self.session.transact(ops), counts)
+        self.anchor_writes += 1
         return done
 
     async def auth_reload(self):

@@ -14,6 +14,7 @@
     "controller_al": {"type": "string", "pattern": "^[0-9a-f]{2}(:[0-9a-f]{2}){5}$"},
     "message_set": {"enum": ["easymesh-6.1", "r1"]},
     "multi_bss": {"type": "boolean"},
+    "anchor_ap": {"type": "boolean", "description": "spec 3.10, an experiment (15 October), off by default: on a legacy pod with radio_plan emosa, an AP of EMOSA's own on each fronthaul-only radio's first slot (wl0.1): hidden, in no bridge, no Inet row, the radio plan's neutral passphrase, a random SSID; off, EMOSA's own is removed."},
     "m2_session": {"enum": ["distinct", "shared"]},
     "profile": {"type": "string", "minLength": 1},
     "uplink": {
@@ -56,6 +57,7 @@
         "properties": {
           "message_set": {"enum": ["easymesh-6.1", "r1"]},
           "multi_bss": {"type": "boolean"},
+          "anchor_ap": {"type": "boolean"},
           "m2_session": {"enum": ["distinct", "shared"]},
           "profile": {"type": "string", "minLength": 1},
           "uplink": {"$ref": "#/properties/uplink"},

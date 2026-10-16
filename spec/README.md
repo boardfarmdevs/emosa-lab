@@ -629,6 +629,21 @@ is everything above. For a legacy pod, all of this specification applies, except
 
   Its status counts the writes (`bridge_mode_writes`). The cloud's taps and its
   OpenFlow rules (its analytics and portal features) are not written.
+- **The anchor AP (an experiment).** On a converted pod's 5 GHz radio (`wl0`, a
+  Broadcom radio in DHD offload mode) the home AP associated its clients but no
+  EAPOL M1 reached the air (15 October). Only the cloud-made pod served them,
+  and it carries an AP on that radio's first slot (`wl0.1`). With the fleet's
+  `anchor_ap` setting on (off by default, settable per pod), the agent writes its
+  own AP there, on each fronthaul-only radio the profile places, where no row of
+  that name exists:
+  - hidden, in no bridge, `ap_bridge` false, no Inet row;
+  - WPA2-PSK on the radio plan's neutral passphrase, so the plan leaves it as it is;
+  - a random 12-character SSID of the pod's own (neither it nor the key logged);
+  - its `oftag` `emosa-anchor`.
+
+  With the setting off, the agent removes every row with that `oftag`, and its
+  radio's reference. Either write marks the home APs on that radio (`~reload`,
+  below). Its status gives the setting and the writes (`anchor_ap`).
 - **The authenticator's reload.** OpenSync 2.4.3's Broadcom wm restarts the
   pod's authenticator (nas and eapd) in full only for a new AP or a change of
   its `security` entries beyond the key (`encryption`, `mode`, `oftag`). An

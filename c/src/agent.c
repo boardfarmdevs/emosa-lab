@@ -170,6 +170,7 @@ typedef struct {
     const char *status_dir; /* run_dir when configured (a RAM disk), else state_dir */
     uint8_t al[6], controller[6];
     bool r1, multi_bss, shared_session, steering_on;
+    bool anchor_ap;          /* spec 3.10, an experiment: the fleet's anchor_ap (em_anchor_ops) */
     bool watch_on; /* the probe watch (§3.9): with telemetry, never on a legacy pod (spec 3.10) */
     double topology_query_window; /* 0: the renewal rule is off */
     const char *underlay;          /* the pod's underlay as a GRE parent (spec 8.6); NULL: none */
@@ -194,6 +195,7 @@ typedef struct {
     unsigned auth_reloads;   /* spec 3.10: the oftags auth_reload restored */
     unsigned bridge_ports;   /* spec 3.10: the APs bridge_port put into their bridge */
     unsigned bridge_modes;   /* spec 3.10: the writes bridge_mode made */
+    unsigned anchor_writes;  /* spec 3.10: the writes anchor_ap made (the experiment) */
     bool notify_due, check_drift;
     uint8_t channel_moves[1 + EXTRA_RADIOS][6];
     size_t nchannel_moves;
@@ -1002,6 +1004,45 @@ static void bridge_mode(agent *a)
     }
     cJSON_Delete(results);
     cJSON_Delete(ops);
+}
+
+/* spec 3.10, the experiment (PodBackend.anchor_aps): with the fleet's anchor_ap, EMOSA's own hidden
+ * AP on each fronthaul-only radio's first slot (on the radio plan's neutral passphrase and a random
+ * SSID of the pod's own, neither ever logged); off, EMOSA's own removed */
+static void anchor_ap(agent *a)
+{
+    if (!em_ovsdb_ready(a->ovs))
+        return;
+    char done[128];
+    int counts[EM_BRIDGE_MODE_COUNTS];
+    size_t ncounts = 0;
+    em_reason why;
+    char *key = a->anchor_ap ? em_vault_generated(&a->vault, "emosa-unclaimed", &why) : NULL;
+    char *made = a->anchor_ap ? em_vault_generated(&a->vault, "emosa-anchor", &why) : NULL;
+    char ssid[13] = "";
+    if (made)
+        (void)em_format(ssid, sizeof(ssid), "%.12s", made);
+    em_free_secret(made);
+    if (a->anchor_ap && (!key || !*ssid)) {
+        WARN("anchor ap: no passphrase or SSID from the vault");
+        em_free_secret(key);
+        return;
+    }
+    cJSON *ops = em_anchor_ops(&a->profile, a->multi_bss, em_ovsdb_tables(a->ovs), a->anchor_ap, key, ssid, done,
+                               sizeof(done), counts, &ncounts);
+    em_free_secret(key);
+    if (!ops)
+        return;
+    cJSON *results = transact(a, ops);
+    em_reason r = results ? em_check_results(results, counts, ncounts) : EM_OUTCOME_UNKNOWN;
+    if (r == EM_OK) {
+        a->anchor_writes++;
+        LOG("anchor ap: %s (wm restarts nas, eapd)", done);
+    } else {
+        WARN("anchor ap: %s", em_reason_name(r));
+    }
+    cJSON_Delete(results);
+    cJSON_Delete(ops); /* the key in it is the vault's, as every write of a key */
 }
 
 static void renew(agent *a, const char *why);
@@ -2448,6 +2489,9 @@ static cJSON *status(agent *a)
         cJSON_AddNumberToObject(o, "auth_reloads", a->auth_reloads);
         cJSON_AddNumberToObject(o, "bridge_ports", a->bridge_ports); /* the APs put into their bridge */
         cJSON_AddNumberToObject(o, "bridge_mode_writes", a->bridge_modes); /* the pod's bridge mode written */
+        cJSON *anchor = cJSON_AddObjectToObject(o, "anchor_ap"); /* the experiment: its switch, its writes */
+        cJSON_AddBoolToObject(anchor, "on", a->anchor_ap);
+        cJSON_AddNumberToObject(anchor, "writes", a->anchor_writes);
     }
     cJSON_AddStringToObject(session, "state", SESSION_NAMES[a->at.state]);
     cJSON *issues = cJSON_AddArrayToObject(session, "admission_issues");
@@ -2623,6 +2667,7 @@ static bool configure(agent *a, const char *path, const char *profiles)
     const char *set = cfg_str(c, "message_set"), *m2 = cfg_str(c, "m2_session");
     a->r1 = set && !strcmp(set, "r1");
     a->multi_bss = cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(c, "multi_bss"));
+    a->anchor_ap = cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(c, "anchor_ap"));
     a->shared_session = m2 && !strcmp(m2, "shared");
     const cJSON *window = cJSON_GetObjectItemCaseSensitive(c, "topology_query_window");
     a->topology_query_window = cJSON_IsNumber(window) ? window->valuedouble : 0;
@@ -3213,6 +3258,7 @@ int main(int argc, char **argv)
         if (refreshed && source_current(&a) && a.profile.legacy && !writing(&a)) {
             bridge_port(&a); /* spec 3.10: an AP of EMOSA's into its bridge, its oftag marked */
             bridge_mode(&a); /* spec 3.10: the converted pod's bridge mode, its home APs' oftags marked */
+            anchor_ap(&a);   /* spec 3.10, the experiment: EMOSA's own hidden AP on wl0.1 (anchor_ap) */
             auth_reload(&a); /* spec 3.10: an AP's write taken by wm, its oftag back (a full reload) */
         }
         /* the scopes step on the refresh cadence, also while the pod is away: a write

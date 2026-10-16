@@ -228,6 +228,13 @@ def agent_config(entry, fleet):
         "al_mac": entry["al_mac"],
         "controller_al": fleet["controller_al"],
         **{k: own.get(k, fleet.get(k, v)) for k, v in AGENT_DEFAULTS.items()},
+        # the experiment's switch (spec 3.10, anchor_ap), the pod's or the fleet's, only when set:
+        # off otherwise, and the configurations of a fleet without it stay as they were
+        **(
+            {"anchor_ap": own.get("anchor_ap", fleet.get("anchor_ap"))}
+            if "anchor_ap" in own or "anchor_ap" in fleet
+            else {}
+        ),
         # a property of the controller, so the fleet's only, and only when set: the
         # configurations of a fleet without it stay as they were
         **(

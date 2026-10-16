@@ -997,6 +997,136 @@ cJSON *em_bridge_mode_ops(const em_profile *p, bool multi_bss, const cJSON *tabl
     return ops;
 }
 
+/* a radio the profile places (spec 9): a fronthaul-only radio, by its band */
+static bool placed_radio(const em_profile *p, const cJSON *radio)
+{
+    for (size_t i = 0; i < p->nradios; i++)
+        if (same_text(ovs_str(radio, "freq_band"), p->radio_bands[i]))
+            return true;
+    return false;
+}
+
+static bool references(const cJSON *radio, const char *uuid)
+{
+    const char *refs[64];
+    size_t n = ovs_uuids(radio, "vif_configs", refs, 64);
+    for (size_t i = 0; i < n; i++)
+        if (!strcmp(refs[i], uuid))
+            return true;
+    return false;
+}
+
+cJSON *em_anchor_ops(const em_profile *p, bool multi_bss, const cJSON *tables, bool on, const char *key,
+                     const char *ssid, char *done, size_t size, int *counts, size_t *ncounts)
+{
+    static const char *const vif_cols[] = {"if_name", "security"};
+    static const char *const radio_cols[] = {"if_name", "vif_configs"};
+    static const char *const home_cols[] = {"if_name", "enabled", "bridge", "security"};
+    const size_t suffix = strlen(EM_AUTH_RELOAD);
+    *ncounts = 0;
+    done[0] = '\0';
+    if (!p->legacy || !p->radio_plan)
+        return NULL;
+    cJSON *ops = cJSON_CreateArray();
+    const char *touched[8];
+    size_t ntouched = 0;
+    const cJSON *r, *radio;
+    char text[48];
+    if (!on) {
+        cJSON_ArrayForEach(r, em_table(tables, "Wifi_VIF_Config"))
+        {
+            if (!same_text(ovs_map_get(r, "security", "oftag"), EM_ANCHOR_TAG) || *ncounts + 3 > EM_BRIDGE_MODE_COUNTS)
+                continue;
+            cJSON_AddItemToArray(ops, present_guard("Wifi_VIF_Config", r->string, r, vif_cols, 2));
+            cJSON_AddItemToArray(ops, op("delete", "Wifi_VIF_Config", where_uuid(r->string)));
+            counts[(*ncounts)++] = -1;
+            counts[(*ncounts)++] = 1;
+            cJSON_ArrayForEach(radio, em_table(tables, "Wifi_Radio_Config"))
+            {
+                if (!references(radio, r->string))
+                    continue;
+                cJSON_AddItemToArray(ops, vif_configs_mutate(radio->string, "delete", uuid_ref(r->string)));
+                counts[(*ncounts)++] = 1;
+                if (ntouched < 8)
+                    touched[ntouched++] = radio->string;
+            }
+            EM_FORMAT_FIXED(text, sizeof(text), "%.15s removed", ovs_str(r, "if_name") ? ovs_str(r, "if_name") : "?");
+            add_done(done, size, text);
+        }
+    } else if (key && ssid) {
+        cJSON_ArrayForEach(radio, em_table(tables, "Wifi_Radio_Config"))
+        {
+            const char *radio_name = ovs_str(radio, "if_name");
+            if (!placed_radio(p, radio) || !radio_name || strlen(radio_name) > 12 || ntouched >= 8 ||
+                *ncounts + 4 > EM_BRIDGE_MODE_COUNTS)
+                continue;
+            char name[16], tag[16];
+            EM_FORMAT_FIXED(name, sizeof(name), "%s.1", radio_name);
+            bool taken = false;
+            cJSON_ArrayForEach(r, em_table(tables, "Wifi_VIF_Config")) taken = taken || same_text(ovs_str(r, "if_name"), name);
+            if (taken)
+                continue; /* EMOSA's already, or another manager's: left alone */
+            EM_FORMAT_FIXED(tag, sizeof(tag), "anchor%zu", ntouched);
+            cJSON *row = cJSON_CreateObject(), *pairs = cJSON_CreateArray();
+            const char *const keys[3] = {"encryption", "key", "oftag"}, *const values[3] = {"WPA-PSK", key, EM_ANCHOR_TAG};
+            for (size_t k = 0; k < 3; k++) {
+                cJSON *pair = cJSON_CreateArray();
+                cJSON_AddItemToArray(pair, cJSON_CreateString(keys[k]));
+                cJSON_AddItemToArray(pair, cJSON_CreateString(values[k]));
+                cJSON_AddItemToArray(pairs, pair);
+            }
+            cJSON_AddStringToObject(row, "if_name", name);
+            cJSON_AddStringToObject(row, "mode", "ap");
+            cJSON_AddTrueToObject(row, "enabled");
+            cJSON_AddStringToObject(row, "ssid", ssid);
+            cJSON_AddStringToObject(row, "ssid_broadcast", "disabled");
+            cJSON_AddStringToObject(row, "bridge", "");
+            cJSON_AddFalseToObject(row, "ap_bridge");
+            cJSON_AddNumberToObject(row, "vif_radio_idx", 1);
+            cJSON_AddItemToObject(row, "security", tagged("map", pairs));
+            cJSON *insert = op("insert", "Wifi_VIF_Config", NULL);
+            cJSON_AddStringToObject(insert, "uuid-name", tag);
+            cJSON_AddItemToObject(insert, "row", row);
+            cJSON_AddItemToArray(ops, present_guard("Wifi_Radio_Config", radio->string, radio, radio_cols, 2));
+            cJSON_AddItemToArray(ops, absent("Wifi_VIF_Config", where_eq("if_name", name), "if_name"));
+            cJSON_AddItemToArray(ops, insert);
+            cJSON_AddItemToArray(ops, vif_configs_mutate(radio->string, "insert", named(tag)));
+            counts[(*ncounts)++] = -1;
+            counts[(*ncounts)++] = -1;
+            counts[(*ncounts)++] = -1;
+            counts[(*ncounts)++] = 1;
+            touched[ntouched++] = radio->string;
+            EM_FORMAT_FIXED(text, sizeof(text), "%.15s written", name);
+            add_done(done, size, text);
+        }
+    }
+    if (!*ncounts) {
+        cJSON_Delete(ops);
+        return NULL;
+    }
+    /* the home APs on the radios touched: their oftags marked (the authenticator restarts after) */
+    cJSON_ArrayForEach(r, em_table(tables, "Wifi_VIF_Config"))
+    {
+        bool on_touched = false;
+        for (size_t t = 0; t < ntouched && !on_touched; t++) {
+            const cJSON *tr = cJSON_GetObjectItemCaseSensitive(em_table(tables, "Wifi_Radio_Config"), touched[t]);
+            on_touched = tr && references(tr, r->string);
+        }
+        const char *oftag = ovs_map_get(r, "security", "oftag");
+        size_t len = oftag ? strlen(oftag) : 0;
+        bool marked = len >= suffix && !strcmp(oftag + len - suffix, EM_AUTH_RELOAD);
+        if (!on_touched || marked || !home_ap(p, multi_bss, r) || *ncounts + 2 > EM_BRIDGE_MODE_COUNTS)
+            continue;
+        char tagged_oftag[80]; /* an oftag (a short tag) and the suffix */
+        EM_FORMAT_FIXED(tagged_oftag, sizeof(tagged_oftag), "%.60s%s", oftag ? oftag : "", EM_AUTH_RELOAD);
+        cJSON_AddItemToArray(ops, present_guard("Wifi_VIF_Config", r->string, r, home_cols, 4));
+        cJSON_AddItemToArray(ops, oftag_mutate(r->string, tagged_oftag));
+        counts[(*ncounts)++] = -1;
+        counts[(*ncounts)++] = 1;
+    }
+    return ops;
+}
+
 cJSON *em_auth_reload_ops(const em_profile *p, bool multi_bss, const cJSON *tables, char (*names)[16], size_t max,
                           size_t *n)
 {

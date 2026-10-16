@@ -550,6 +550,11 @@ cJSON *em_agent_config(const em_fleet_entry *e, const cJSON *fleet)
     cJSON_AddItemToObject(c, "profile", setting(fleet, e->pod_id, "profile", cJSON_CreateString("opensync-lab-hwsim-6.6.1-v1")));
     cJSON_AddItemToObject(c, "uplink", setting(fleet, e->pod_id, "uplink", mode_off()));
     cJSON_AddItemToObject(c, "telemetry", setting(fleet, e->pod_id, "telemetry", mode_off()));
+    /* the experiment's switch (spec 3.10, em_anchor_ops), the pod's or the fleet's, only when set: off
+     * otherwise, and the configurations of a fleet without it stay as they were */
+    cJSON *anchor = setting(fleet, e->pod_id, "anchor_ap", NULL);
+    if (anchor)
+        cJSON_AddItemToObject(c, "anchor_ap", anchor);
     /* a property of the controller, so the fleet's only, and only when set */
     const cJSON *window = cJSON_GetObjectItemCaseSensitive(fleet, "topology_query_window");
     if (window)

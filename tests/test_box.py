@@ -709,6 +709,12 @@ def test_a_live_pods_bridge_mode_is_repaired_without_a_restart(agent, tmp_path):
     assert result["reloads"][-2:] == [["full", "home--1~reload"], ["full", "home--1"]]
 
 
+def test_the_anchor_ap_experiment_writes_its_own_hidden_ap_and_removes_it(agent, tmp_path):
+    # spec 3.10 (15 October): the fleet's anchor_ap on, EMOSA's hidden AP on wl0.1; off, gone
+    result = box("legacy-anchor-ap", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+
+
 def test_an_agent_on_an_older_profile_still_sets_the_home_aps_rekey_and_ft(agent, tmp_path):
     # spec 3.10 (15 October): an agent binary bind-mounted on the router read the image's profile,
     # which had no group_rekey or ft_psk, and set neither on the home APs

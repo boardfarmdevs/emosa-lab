@@ -798,6 +798,7 @@ async def serve(config, stop):
         profile=profile,
         multi_bss=config.get("multi_bss", False) is True,
         underlay=config.get("underlay"),
+        anchor_ap=config.get("anchor_ap", False) is True,
     )
     engine = Engine(store, vault, {pod_id: backend})
     engine.recover()
@@ -1162,6 +1163,8 @@ async def serve(config, stop):
                     "auth_reloads": backend.auth_reloads,
                     "bridge_ports": backend.ports_added,
                     "bridge_mode_writes": backend.bridge_modes,
+                    # the experiment (anchor_ap): its switch, and the writes it made
+                    "anchor_ap": {"on": backend.anchor_ap, "writes": backend.anchor_writes},
                 }
                 if profile.legacy
                 else {}
@@ -1404,6 +1407,9 @@ async def serve(config, stop):
                         done = await timed("bridge mode", backend.bridge_mode())
                         if done:
                             log.info("bridge mode: %s (wm restarts nas, eapd)", "; ".join(done))
+                        done = await timed("anchor ap", backend.anchor_aps())
+                        if done:
+                            log.info("anchor ap: %s (wm restarts nas, eapd)", "; ".join(done))
                         for name in await timed("auth reload", backend.auth_reload()):
                             log.info("auth reload: %s oftag restored (wm restarts nas, eapd)", name)
                     except (EmosaError, ConnectionError, TimeoutError) as exc:
