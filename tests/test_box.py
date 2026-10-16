@@ -709,6 +709,14 @@ def test_a_live_pods_bridge_mode_is_repaired_without_a_restart(agent, tmp_path):
     assert result["reloads"][-2:] == [["full", "home--1~reload"], ["full", "home--1"]]
 
 
+def test_an_agent_on_an_older_profile_still_sets_the_home_aps_rekey_and_ft(agent, tmp_path):
+    # spec 3.10 (15 October): an agent binary bind-mounted on the router read the image's profile,
+    # which had no group_rekey or ft_psk, and set neither on the home APs
+    result = box("legacy-bridge-mode-old-profile", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+    assert result["bridge_mode"]["vif"] == [86400, 0]
+
+
 def test_a_legacy_pods_backhaul_bss_is_its_gre_parent_ap_on_its_underlay(agent, tmp_path):
     # spec 3.10, 8.6: the former manager's 169.254.2.1 on wl1.1 replaced by the pod's underlay
     result = box("legacy-parent", agent, tmp_path / "box", timeout=240)

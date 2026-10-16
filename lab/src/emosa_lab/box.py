@@ -380,10 +380,17 @@ async def wait_for_port(port, seconds=5):
     raise RuntimeError(f"nothing listens on port {port}")
 
 
-def agent_command(agent, config_path, binary=None):
+def agent_command(agent, config_path, binary=None, profiles=None):
+    """The agent's command line; ``profiles`` the profiles' directory (EMOSA_PROFILES for the
+    Python agent, ``--profiles`` for the C), the bundled ones by default."""
     if agent == "c":
         path = Path(binary) if binary else ROOT / "c/build/emosa-agent-c"
-        return [str(path), str(config_path), "--profiles", str(ROOT / "src/emosa/profiles")]
+        return [
+            str(path),
+            str(config_path),
+            "--profiles",
+            str(profiles or ROOT / "src/emosa/profiles"),
+        ]
     return [sys.executable, "-m", "emosa.agent.pod", str(config_path)]
 
 
@@ -520,6 +527,7 @@ class Box:
         seed_stations=False,
         seeded_fronthaul=False,
         vendor_bridges=False,
+        old_profiles=False,
     ):
         self.agent, self.directory, self.binary = agent, directory, binary
         # seeded_fronthaul (legacy): the seed with wl1.2 on, as the operator's cloud left it (its
@@ -529,6 +537,9 @@ class Box:
         # vendor_bridges (legacy): the bridges' Inet rows as a hooked boot's seed has them (15
         # October): br-home's down (network false), br-wan's NAT on (no patch pair: the seed's)
         self.vendor_bridges = vendor_bridges
+        # old_profiles: the agents read the profiles as an image before 15 October has them (the
+        # legacy ones' fronthaul rows without group_rekey and ft_psk), a binary deployed alone
+        self.old_profiles = old_profiles
         # seed_stations (legacy): the seed with onboarding stations on wl0 and wl1, as a converted
         # pod's own seed brings them back at a hooked boot (14 October)
         self.seed_stations = seed_stations
@@ -770,7 +781,9 @@ class Box:
         self.env = {
             **os.environ,
             "EMOSA_SCHEMAS": str(ROOT / "schemas"),
-            "EMOSA_PROFILES": str(ROOT / "src/emosa/profiles"),
+            "EMOSA_PROFILES": str(
+                old_profiles(self.directory) if self.old_profiles else ROOT / "src/emosa/profiles"
+            ),
             **({"EMOSA_NETNS": self.netns_path} if self.netns else {}),
         }
         if self.reply_cut:
@@ -783,7 +796,9 @@ class Box:
         config_path = self.directory / "agent.json"
         config_path.write_text(json.dumps(config, indent=2) + "\n")
         self.log = (self.directory / "agent.log").open("w")
-        self.command = agent_command(self.agent, config_path, self.binary)
+        self.command = agent_command(
+            self.agent, config_path, self.binary, self.env["EMOSA_PROFILES"]
+        )
         self.process = subprocess.Popen(
             self.command, stdout=self.log, stderr=self.log, env=self.env
         )
@@ -5592,6 +5607,20 @@ def seed_stations(names=("wl0", "wl1")):
     return operations
 
 
+def old_profiles(directory):
+    """The bundled profiles as an image before 15 October has them: the legacy ones' fronthaul
+    rows without group_rekey and ft_psk. The directory written."""
+    out = directory / "profiles-old"
+    out.mkdir(exist_ok=True)
+    for path in (ROOT / "src/emosa/profiles").glob("*.json"):
+        data = json.loads(path.read_text())
+        if data.get("schema") == "opensync-2.0":
+            for column in ("group_rekey", "ft_psk"):
+                data["fronthaul"]["vif"].pop(column, None)
+        (out / path.name).write_text(json.dumps(data, indent=2) + "\n")
+    return out
+
+
 def vendor_bridges():
     """A hooked boot's bridges (15 October, a converted pod's monitor): br-home's Inet row with
     its interface down (network false), br-wan's with NAT on, as the vendor's seed has them; the
@@ -7152,6 +7181,7 @@ SCENARIOS = {
     "legacy-bridge-port-repair": legacy_bridge_port_repair,
     "legacy-bridge-mode": legacy_bridge_mode,
     "legacy-bridge-mode-repair": legacy_bridge_mode_repair,
+    "legacy-bridge-mode-old-profile": legacy_bridge_mode_repair,
     "legacy-parent": legacy_parent,
     "legacy-parent-child": legacy_parent_child,
     "legacy-parent-child-gone": legacy_parent_child_gone,
@@ -7341,6 +7371,11 @@ OPTIONS["legacy-bridge-mode-repair"] = {
     "legacy": True,
     "vendor_bridges": True,
     "seeded_fronthaul": "applied",
+}
+# the same on profiles without the cloud's group_rekey and ft_psk (an agent binary deployed alone)
+OPTIONS["legacy-bridge-mode-old-profile"] = {
+    **OPTIONS["legacy-bridge-mode-repair"],
+    "old_profiles": True,
 }
 OPTIONS["legacy-parent"] = {"legacy": True, "multi_bss": True, "underlay": LEGACY_UNDERLAY}
 OPTIONS["legacy-parent-child"] = OPTIONS["legacy-parent"]

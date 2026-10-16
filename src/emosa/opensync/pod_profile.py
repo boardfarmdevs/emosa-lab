@@ -83,7 +83,9 @@ PORT_GUARDS = ("if_name", "enabled", "bridge", "security")
 # the WAN bridge's NAT off, and OpenSync's patch pair joining the two; a hooked boot's seed has
 # the home bridge down and NAT on, and no pair. The home APs' VIF columns the cloud writes too.
 HOME_UP = {"enabled": True, "network": True, "NAT": False}
-HOME_VIF_COLUMNS = ("group_rekey", "ft_psk")
+# the cloud's values, which the profile's fronthaul row may set otherwise; in code too, so an agent
+# on an older profile (the image's, a binary deployed alone) still sets them
+HOME_VIF = {"group_rekey": 86400, "ft_psk": 0}
 # What shows whether such a port carries its stations, read only (spec 3.10): the bridge's fail
 # mode (a secure bridge forwards only what its OpenFlow rules allow) and OpenSync's rules for it,
 # and each port's Interface as Open vSwitch opened it (its ofport, or the error)
@@ -95,7 +97,7 @@ BRIDGE_MONITOR = {
     "Openflow_State": ["bridge", "openflow_config", "success", "token"],
     # bridge_mode's: the bridges' Inet rows and the home APs' columns it sets
     "Wifi_Inet_Config": ["if_name", "enabled", "network", "NAT"],
-    "Wifi_VIF_Config": list(HOME_VIF_COLUMNS),
+    "Wifi_VIF_Config": list(HOME_VIF),
 }
 # the role an M2's Multi-AP extension gives a BSS, as OpenSync's multi_ap (spec 3.4): the pod's
 # AP takes it as a Multi-AP agent's AP does (hostapd multi_ap 2 or 1)
@@ -309,11 +311,15 @@ class PodBackend(OpenSyncBackend):
             if r.get("mode") == "ap" and r.get("if_name") in names
         }
 
+    def _home_vif(self):
+        """The home APs' group_rekey and ft_psk: the cloud's (HOME_VIF), or the profile's."""
+        return {k: self.profile.fronthaul_vif.get(k, v) for k, v in HOME_VIF.items()}
+
     def _bridge_mode(self, decoded):
         """spec 3.10: what a converted pod (a legacy profile with radio_plan emosa) lacks of the
         bridge mode its cloud runs: {"home": the home bridge's Inet uuid, when not up; "wan": the
         WAN bridge's, when its NAT is on; "pair": True, when neither patch Port exists; "vifs":
-        the home APs' uuids whose group_rekey or ft_psk is not the profile's}, only the keys it
+        the home APs' uuids whose group_rekey or ft_psk is not _home_vif's}, only the keys it
         needs; None when the pod has no Inet row for either bridge (nothing of its seed to set)."""
         if not self.profile.legacy or self.profile.radio_plan != "emosa":
             return None
@@ -329,11 +335,7 @@ class PodBackend(OpenSyncBackend):
             needs["wan"] = inets[wan]
         if paired(decoded, wan, home) == "none":  # "other": another manager's, left alone
             needs["pair"] = True
-        wanted = {
-            k: self.profile.fronthaul_vif[k]
-            for k in HOME_VIF_COLUMNS
-            if k in self.profile.fronthaul_vif
-        }
+        wanted = self._home_vif()
         vifs = [
             u
             for u, r in sorted(self._home_aps(decoded).items())
@@ -382,11 +384,7 @@ class PodBackend(OpenSyncBackend):
             ops += pair
             counts += pair_counts
             done.append("patch pair")
-        wanted = {
-            k: self.profile.fronthaul_vif[k]
-            for k in HOME_VIF_COLUMNS
-            if k in self.profile.fronthaul_vif
-        }
+        wanted = self._home_vif()
         for uuid, config in sorted(self._home_aps(decoded).items()):
             raw_row = tables["Wifi_VIF_Config"][uuid]
             oftag = (config.get("security") or {}).get("oftag", "")

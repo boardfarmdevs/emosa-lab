@@ -621,7 +621,10 @@ is everything above. For a legacy pod, all of this specification applies, except
   - the patch pair, when neither of its `Port`s exists anywhere (half a pair is
     another manager's and is left alone);
   - the home APs' (the fronthaul and the fronthaul slots) `group_rekey` and
-    `ft_psk`, as the profile has them (they are also in the rows EMOSA makes);
+    `ft_psk`: the cloud's 86400 and 0, which the agents carry themselves (an
+    agent deployed alone reads an older profile without them), unless the
+    profile's fronthaul row sets others (the bundled ones set the same, so the
+    rows EMOSA makes have them);
   - their `oftag`s marked (`~reload`, below) unless they already are.
 
   Its status counts the writes (`bridge_mode_writes`). The cloud's taps and its

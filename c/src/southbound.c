@@ -806,25 +806,23 @@ static bool port_exists(const cJSON *tables, const char *port)
 #define PATCH_WAN "patch-w2h"
 #define PATCH_HOME "patch-h2w"
 
-/* the profile's value of a home AP's integer column (group_rekey, ft_psk); false when it has none */
-static bool profile_int(const em_profile *p, const char *column, int *value)
+/* the home APs' group_rekey and ft_psk (PodBackend._home_vif): the cloud's values, in code so an
+ * agent on an older profile still sets them, or the profile's fronthaul row's */
+static const char *const home_vif_columns[] = {"group_rekey", "ft_psk"};
+static const int home_vif_defaults[] = {86400, 0};
+
+static int home_vif(const em_profile *p, size_t k)
 {
-    const cJSON *v = cJSON_GetObjectItemCaseSensitive(p->fronthaul_vif, column);
-    if (!cJSON_IsNumber(v))
-        return false;
-    *value = v->valueint;
-    return true;
+    const cJSON *v = cJSON_GetObjectItemCaseSensitive(p->fronthaul_vif, home_vif_columns[k]);
+    return cJSON_IsNumber(v) ? v->valueint : home_vif_defaults[k];
 }
 
-static const char *const home_vif_columns[] = {"group_rekey", "ft_psk"};
-
-/* a home AP whose group_rekey or ft_psk is not the profile's */
+/* a home AP whose group_rekey or ft_psk is not home_vif's */
 static bool vif_lacking(const em_profile *p, const cJSON *config)
 {
     for (size_t k = 0; k < 2; k++) {
-        int want;
         const cJSON *v = cJSON_GetObjectItemCaseSensitive(config, home_vif_columns[k]);
-        if (profile_int(p, home_vif_columns[k], &want) && (!cJSON_IsNumber(v) || v->valueint != want))
+        if (!cJSON_IsNumber(v) || v->valueint != home_vif(p, k))
             return true;
     }
     return false;
@@ -981,11 +979,8 @@ cJSON *em_bridge_mode_ops(const em_profile *p, bool multi_bss, const cJSON *tabl
         counts[(*ncounts)++] = -1;
         if (update) {
             cJSON *o = op("update", "Wifi_VIF_Config", where_uuid(r->string)), *row = cJSON_CreateObject();
-            for (size_t k = 0; k < 2; k++) {
-                int want;
-                if (profile_int(p, home_vif_columns[k], &want))
-                    cJSON_AddNumberToObject(row, home_vif_columns[k], want);
-            }
+            for (size_t k = 0; k < 2; k++)
+                cJSON_AddNumberToObject(row, home_vif_columns[k], home_vif(p, k));
             cJSON_AddItemToObject(o, "row", row);
             cJSON_AddItemToArray(ops, o);
             counts[(*ncounts)++] = 1;

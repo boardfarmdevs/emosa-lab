@@ -10,6 +10,7 @@ A new pod model needs a new profile, not new code.
 """
 
 import json
+import os
 from dataclasses import dataclass
 from importlib.resources import files
 from pathlib import Path
@@ -71,9 +72,12 @@ class PodProfile:
 
 
 def load(ref=DEFAULT):
-    """A bundled profile by ID, or a profile file by path."""
+    """A profile by ID, from the directory EMOSA_PROFILES names when set (as the C agent reads
+    them) else the bundled ones, or a profile file by path."""
     if ref.endswith(".json") or "/" in ref:
         text = Path(ref).read_text()
+    elif os.environ.get("EMOSA_PROFILES"):
+        text = (Path(os.environ["EMOSA_PROFILES"]) / f"{ref}.json").read_text()
     else:
         text = files("emosa").joinpath(f"profiles/{ref}.json").read_text()
     data = json.loads(text)

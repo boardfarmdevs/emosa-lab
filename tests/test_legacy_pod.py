@@ -457,6 +457,22 @@ def test_auth_reload_waits_for_the_bridge_mode(tmp_path):
     assert asyncio.run(pod.auth_reload()) == ["wl1.2"]
 
 
+def test_an_older_profile_still_gives_the_home_aps_the_clouds_rekey_and_ft(tmp_path):
+    # an agent binary deployed alone reads the image's profile, without group_rekey or ft_psk
+    pod, _ = backend(tmp_path)
+    row = {k: v for k, v in pod.profile.fronthaul_vif.items() if k not in ("group_rekey", "ft_psk")}
+    pod.profile = dataclasses.replace(pod.profile, fronthaul_vif=row)
+    hooked(pod.session.tables)
+    assert "wl1.2 group_rekey, ft_psk" in asyncio.run(pod.bridge_mode())
+    (ops,) = pod.session.sent
+    assert {
+        "op": "update",
+        "table": "Wifi_VIF_Config",
+        "where": [["_uuid", "==", ["uuid", VIF]]],
+        "row": {"group_rekey": 86400, "ft_psk": 0},
+    } in ops
+
+
 @pytest.mark.parametrize("case", ["no wan row", "another's half pair", "the pod's plan"])
 def test_bridge_mode_leaves_what_it_does_not_own(tmp_path, case):
     pod, _ = backend(tmp_path)
