@@ -997,15 +997,22 @@ cJSON *em_bridge_mode_ops(const em_profile *p, bool multi_bss, const cJSON *tabl
     return ops;
 }
 
+/* one of the profile's station names (PodBackend._stations): a netdev EMOSA's station runs on */
+static bool station_netdev(const em_profile *p, const char *name)
+{
+    bool station = same_text(name, p->uplink_station);
+    for (size_t i = 0; !station && i < p->nuplink_bands; i++)
+        station = same_text(name, p->uplink_band_stations[i]);
+    return station;
+}
+
 /* a VIF name EMOSA writes on the pod (PodBackend._own_vifs): the fronthaul, its slots with
  * multi_bss, the profile's stations */
 static bool own_vif(const em_profile *p, bool multi_bss, const char *name)
 {
-    bool own = same_text(name, p->fronthaul_if) || same_text(name, p->uplink_station);
+    bool own = same_text(name, p->fronthaul_if) || station_netdev(p, name);
     for (size_t i = 0; multi_bss && !own && i < p->nslots; i++)
         own = same_text(name, p->slots[i].if_name);
-    for (size_t i = 0; !own && i < p->nuplink_bands; i++)
-        own = same_text(name, p->uplink_band_stations[i]);
     return own;
 }
 
@@ -1021,11 +1028,13 @@ static bool carries_home_ap(const em_profile *p, bool multi_bss, const cJSON *ta
     return false;
 }
 
-/* such a radio to raise: every VIF on it EMOSA's, no VIF or Inet row on its own netdev */
+/* such a radio to raise: every VIF on it EMOSA's, no VIF or Inet row on its own netdev, and that
+ * netdev not a station's of the profile (wm raises it with EMOSA's station, whose writer keeps an
+ * Inet row it finds: the station would come back on this one, without its address) */
 static bool phy_raise(const em_profile *p, bool multi_bss, const cJSON *tables, const cJSON *radio)
 {
     const char *name = ovs_str(radio, "if_name"), *uuids[64];
-    if (!name || inet_named(tables, name) || !carries_home_ap(p, multi_bss, tables, radio))
+    if (!name || station_netdev(p, name) || inet_named(tables, name) || !carries_home_ap(p, multi_bss, tables, radio))
         return false;
     const cJSON *v, *vifs = em_table(tables, "Wifi_VIF_Config");
     cJSON_ArrayForEach(v, vifs)

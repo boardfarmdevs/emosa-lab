@@ -5371,8 +5371,8 @@ async def legacy_phy_netdev(box):
     """spec 3.10, the radios' own netdevs (16 October): by default the agent writes a tap Inet row
     (enabled, network, ip_assign_scheme none, NAT off) for each radio carrying a home AP whose VIFs
     are all EMOSA's and with no VIF or Inet row on its own netdev: wl0 here, the 5 GHz home AP
-    wl0.2's radio, whose own netdev a pod converted at boot leaves down; not wl1, whose own netdev
-    carries the pod's station. Its status gives each home AP's radio's port_state as nm reports it
+    wl0.2's radio, whose own netdev a pod converted at boot leaves down; not wl1, the profile's
+    station netdev. Its status gives each home AP's radio's port_state as nm reports it
     (the box plays nm's Wifi_Master_State row). Restarted with the fleet's phy_netdev_up false, the
     agent removes its row and only it (wl1.1's Inet row stays)."""
     if not (await onboarded(box)).get("applied"):
@@ -6418,6 +6418,10 @@ async def legacy_gtp_station_unassociated(box):
     _, kept = await box.vif("Wifi_VIF_Config", "wl1")
     final = (box.status() or {}).get("gtp_station") or {}
     failing_end = await healthcheck(box)
+    # the station written again on its own Inet row (a DHCP client), never on a tap row the
+    # radios' netdev step might have written while the station had none (spec 3.10)
+    inets = [r for r in (await box.rows("Wifi_Inet_Config")).values() if r.get("if_name") == "wl1"]
+    own_inet = [(r.get("if_type"), r.get("ip_assign_scheme")) for r in inets]
     return box.result(
         passed=failing_while == ["wl1"]
         and bool(removed)
@@ -6430,8 +6434,10 @@ async def legacy_gtp_station_unassociated(box):
         and kept is not None
         and final.get("associated") is True
         and final.get("removed_unassociated") == 1
-        and not failing_end,
+        and not failing_end
+        and own_inet == [("vif", "dhcp")],
         healthcheck_failing_while_unassociated=failing_while,
+        station_inet=own_inet,
         removed_after_s=round(removed_after, 1),
         radio_reference_left=referenced,
         credential_removed=credential_gone,

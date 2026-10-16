@@ -1553,6 +1553,16 @@ static void phy_netdev_ops(const char *schemas)
     CHECK(got && !strcmp(got, "{\"wl0\":null,\"wl1\":\"active\"}"), "the radios' port_state: %s", got ? got : "none");
     free(got);
     cJSON_Delete(ports);
+    /* the station's rows gone (before EMOSA writes it at a hooked boot, or after its guard removed
+     * it): wl1 is the profile's station netdev, never raised, so the station comes back on its own
+     * Inet row */
+    cJSON_DeleteItemFromObjectCaseSensitive(cJSON_GetObjectItemCaseSensitive(tables, "Wifi_VIF_Config"), "u4");
+    cJSON_DeleteItemFromObjectCaseSensitive(cJSON_GetObjectItemCaseSensitive(tables, "Wifi_Inet_Config"), "i4");
+    cJSON *r1 = cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(tables, "Wifi_Radio_Config"), "r1");
+    cJSON_ReplaceItemInObjectCaseSensitive(r1, "vif_configs", cJSON_Parse("[\"set\", [[\"uuid\", \"u1\"]]]"));
+    ops = em_phy_netdev_ops(&p, true, tables, true, done, sizeof(done), counts, &ncounts);
+    CHECK(ops && ncounts == 2 && !strcmp(done, "wl0 raised"), "no station rows: still wl0 alone: %s", done);
+    cJSON_Delete(ops);
     /* a cloud-made pod: its cloud's wl0.1 on the radio, which its onboarding raised: none */
     cJSON *vifs = cJSON_GetObjectItemCaseSensitive(tables, "Wifi_VIF_Config"), *cloud = cJSON_CreateObject();
     cJSON_AddStringToObject(cloud, "if_name", "wl0.1");

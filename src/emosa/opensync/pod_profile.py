@@ -93,11 +93,13 @@ HOME_VIF = {"group_rekey": 86400, "ft_psk": 0}
 # mode passed no frame of the host's (the authenticator's M1) while it was down (16 October). For
 # a radio carrying a home AP whose VIFs are all EMOSA's (a cloud-made pod's radio carries its
 # cloud's too, and its cloud's onboarding raised it), with no VIF or Inet row on its own netdev,
-# EMOSA writes this Inet row: nm runs a tap row as a plain interface (as eth and bridge rows: the
-# link set up, no address, nothing created), and the connection manager, which takes eth rows for
-# uplinks, leaves it alone. Side effects: nm's accept rules for that netdev's own traffic, and one
-# down and up of it when the row is inserted. The fleet's phy_netdev_up (on by default) false: the
-# tap rows on the pod's radios removed, and nm sets the link down again.
+# and that netdev not one the profile runs a station on (wm raises it with EMOSA's station, which
+# would otherwise come back on this row, without its address), EMOSA writes this Inet row: nm runs
+# a tap row as a plain interface (as eth and bridge rows: the link set up, no address, nothing
+# created), and the connection manager, which takes eth rows for uplinks, leaves it alone. Side
+# effects: nm's accept rules for that netdev's own traffic, and one down and up of it when the row
+# is inserted. The fleet's phy_netdev_up (on by default) false: the tap rows on the pod's radios
+# removed, and nm sets the link down again.
 PHY_UP = {
     "if_type": "tap",
     "enabled": True,
@@ -452,20 +454,25 @@ class PodBackend(OpenSyncBackend):
         self.bridge_modes += 1
         return done
 
+    def _stations(self):
+        """The profile's station names: the netdevs EMOSA's stations run on."""
+        return {self.profile.uplink_station, *dict(self.profile.uplink_stations).values()} - {None}
+
     def _own_vifs(self):
         """The VIF names EMOSA writes on the pod: the fronthaul, its slots (multi_bss) and the
         profile's stations."""
         names = {self.profile.fronthaul_if, *(s for s, _, _ in self.pod_slots)}
-        names |= {self.profile.uplink_station, *dict(self.profile.uplink_stations).values()}
-        return names - {None}
+        return (names - {None}) | self._stations()
 
     def _phy_radios(self, decoded):
         """spec 3.10: the radios carrying a home AP (their names, sorted); of those, the ones to
-        raise (every VIF on the radio EMOSA's, no VIF or Inet row on its own netdev); and the tap
-        rows on the pod's radios (uuid -> name)."""
+        raise (every VIF on the radio EMOSA's, no VIF or Inet row on its own netdev, and the
+        netdev not a station's of the profile: wm raises that one when it applies EMOSA's station,
+        and the station's writer keeps an Inet row it finds, so a row of this kind would leave the
+        station with no address); and the tap rows on the pod's radios (uuid -> name)."""
         radios = decoded.get("Wifi_Radio_Config", {}).values()
         vifs = decoded.get("Wifi_VIF_Config", {})
-        homes, own = set(self._home_aps(decoded)), self._own_vifs()
+        homes, own, stations = set(self._home_aps(decoded)), self._own_vifs(), self._stations()
         inets = {r.get("if_name") for r in decoded.get("Wifi_Inet_Config", {}).values()}
         named = {r.get("if_name") for r in vifs.values()}
         carrying, raise_ = [], []
@@ -478,6 +485,7 @@ class PodBackend(OpenSyncBackend):
                 all(vifs.get(u, {}).get("if_name") in own for u in on)
                 and name not in named
                 and name not in inets
+                and name not in stations
             ):
                 raise_.append(name)
         names = {r.get("if_name") for r in radios}

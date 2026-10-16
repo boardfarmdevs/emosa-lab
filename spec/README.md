@@ -641,7 +641,11 @@ is everything above. For a legacy pod, all of this specification applies, except
   `ip_assign_scheme` none, NAT off. nm runs it as a plain interface (the link set
   up, no address, nothing created), and the connection manager, which takes `eth`
   rows for uplinks, leaves it alone. A radio that also carries a VIF EMOSA did
-  not make (a cloud-made pod's, whose onboarding raised the netdev) gets none.
+  not make (a cloud-made pod's, whose onboarding raised the netdev) gets none,
+  and so does a netdev the profile runs a station on (`wl1`), also while the
+  station has no row: wm raises it when it applies EMOSA's station, and the
+  station's writer keeps an Inet row it finds there, so the station would come
+  back on this row without its address.
   The row brings nm's accept rules for that netdev's own traffic, and one down
   and up of the netdev when it is inserted. The fleet's `phy_netdev_up` (on by
   default, settable per pod) false removes the `tap` rows on the pod's radios,

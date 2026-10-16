@@ -1208,40 +1208,76 @@ def test_a_6_6_profile_may_not_take_the_radio_plan(tmp_path):
     assert refused.value.code == Reason.INVALID_INPUT
 
 
-def test_a_home_aps_radio_with_only_emosas_vifs_gets_its_own_netdev_raised(tmp_path):
-    # spec 3.10 (16 October), on by default: a tap Inet row for wl1 (wl1.2's radio), nm sets it up
-    pod, _ = backend(tmp_path)
+RADIO_5G, VIF_5G = "00000000-0000-4000-8000-000000000151", "00000000-0000-4000-8000-000000000152"
+
+
+def backend_5g(tmp_path):
+    """A legacy pod on the 5 GHz profile: wl1 with wl1.2, and wl0 with its home AP wl0.2; no
+    station row and no Inet row on either radio's own netdev (a hooked boot's, before EMOSA's
+    station)."""
+    vault = SecretStore(tmp_path / "secrets")
+    raw = tables()
+    raw["Wifi_Radio_Config"][RADIO_5G] = {
+        "if_name": "wl0",
+        "freq_band": "5G",
+        "enabled": True,
+        "vif_configs": ["set", [["uuid", VIF_5G]]],
+    }
+    raw["Wifi_VIF_Config"][VIF_5G] = {
+        "if_name": "wl0.2",
+        "mode": "ap",
+        "ssid": "operator-home",
+        "enabled": True,
+        "security": SECURITY,
+    }
+    profile = load_profile("bcm-pod-2.4.3-gre-5g-v1")
+    return PodBackend("pod-1", Session(raw), vault, serial=SERIAL, profile=profile, multi_bss=True)
+
+
+def test_the_5ghz_home_aps_radio_gets_its_own_netdev_raised(tmp_path):
+    # spec 3.10 (16 October), on by default: a tap Inet row for wl0 (wl0.2's radio), nm sets it up;
+    # wl1, the profile's station netdev, never gets one, also while its station has no row
+    pod = backend_5g(tmp_path)
     assert pod.phy_netdev_up is True
-    assert asyncio.run(pod.phy_netdev()) == ["wl1 raised"]
+    assert asyncio.run(pod.phy_netdev()) == ["wl0 raised"]
     (ops,) = pod.session.sent
-    assert ops[0]["op"] == "wait" and ops[0]["where"] == [["if_name", "==", "wl1"]]
-    assert ops[1]["row"] == {"if_name": "wl1", **PHY_UP} and PHY_UP["if_type"] == "tap"
-    assert pod.phy_ports == {"wl1": None} and pod.phy_writes == 1
+    assert ops[0]["op"] == "wait" and ops[0]["where"] == [["if_name", "==", "wl0"]]
+    assert ops[1]["row"] == {"if_name": "wl0", **PHY_UP} and PHY_UP["if_type"] == "tap"
+    assert pod.phy_ports == {"wl0": None, "wl1": None} and pod.phy_writes == 1
+
+
+def test_the_station_netdev_is_never_raised(tmp_path):
+    # spec 3.10: wl1 carries the home AP wl1.2 and no station row (before EMOSA writes its station
+    # at a hooked boot, or after the station's guard removed it): a tap row there would be kept by
+    # the station's writer, which would bring the station back with no address, so none
+    pod, _ = backend(tmp_path)
+    assert asyncio.run(pod.phy_netdev()) == [] and pod.session.sent == []
+    assert pod.phy_ports == {"wl1": None} and pod.phy_writes == 0
 
 
 @pytest.mark.parametrize(
     "row",
     [
         # an AP EMOSA did not make on the radio (a cloud-made pod's, whose onboarding raised it)
-        {"if_name": "wl1.3", "mode": "ap", "enabled": True},
+        {"if_name": "wl0.1", "mode": "ap", "enabled": True},
         # a station on the radio's own netdev (wm raises the netdev with it)
-        {"if_name": "wl1", "mode": "sta", "enabled": True},
+        {"if_name": "wl0", "mode": "sta", "enabled": True},
     ],
 )
 def test_a_radio_with_another_vif_gets_no_netdev_row(tmp_path, row):
-    pod, _ = backend(tmp_path)
+    pod = backend_5g(tmp_path)
     other = "00000000-0000-4000-8000-000000000150"
     pod.session.tables["Wifi_VIF_Config"][other] = row
-    radio = next(iter(pod.session.tables["Wifi_Radio_Config"].values()))
+    radio = pod.session.tables["Wifi_Radio_Config"][RADIO_5G]
     radio["vif_configs"] = ["set", [*radio["vif_configs"][1], ["uuid", other]]]
     assert asyncio.run(pod.phy_netdev()) == [] and pod.session.sent == []
-    assert pod.phy_ports == {"wl1": None} and pod.phy_writes == 0
+    assert pod.phy_ports == {"wl0": None, "wl1": None} and pod.phy_writes == 0
 
 
 def test_a_radio_with_an_inet_row_of_its_own_gets_no_netdev_row(tmp_path):
-    pod, _ = backend(tmp_path)
-    station = {"if_name": "wl1", "if_type": "vif", "enabled": True, "network": True}
-    pod.session.tables["Wifi_Inet_Config"] = {"00000000-0000-4000-8000-000000000140": station}
+    pod = backend_5g(tmp_path)
+    own = {"if_name": "wl0", "if_type": "vif", "enabled": True, "network": True}
+    pod.session.tables["Wifi_Inet_Config"] = {"00000000-0000-4000-8000-000000000140": own}
     assert asyncio.run(pod.phy_netdev()) == [] and pod.session.sent == []
 
 
