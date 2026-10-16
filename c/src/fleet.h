@@ -63,10 +63,16 @@ cJSON *em_agent_config(const em_fleet_entry *e, const cJSON *fleet);
 /* Its file's text: json.dumps(indent=2) and a newline. */
 char *em_agent_config_text(const em_fleet_entry *e, const cJSON *fleet);
 
+/* fleet.recognised (spec 4, the pods' models): the fleet's models entry that recognises a pod of
+ * this model and firmware, the first whose model is the pod's and whose firmware_prefix, when it
+ * has one, starts the pod's firmware; NULL when none does (a pod with no model). *index its place. */
+const cJSON *em_fleet_model(const cJSON *fleet, const char *model, const char *firmware, int *index);
+
 /* fleet.module_settings (spec 4, the pods' modules): the agent configuration's modules from the
- * fleet's (or the pod's own, pods.<serial>.modules): each module's settings, with update_url
- * (http://<advertise>:<files.port>/<sha256>) and update_sha256 for its update; NULL when none. */
-cJSON *em_module_settings(const cJSON *fleet, const char *serial);
+ * fleet's (or its model's, `model` from em_fleet_model, or the pod's own, pods.<serial>.modules):
+ * each module's settings, with update_url (http://<advertise>:<files.port>/<sha256>) and
+ * update_sha256 for its update; NULL when none. */
+cJSON *em_module_settings(const cJSON *fleet, const char *serial, const cJSON *model);
 
 /* The fleet's file server (spec 4, the pods' modules). em_files_servable: the file `name` of
  * `directory` when it is served (a SHA-256 name; a regular file, not a link, of at most
@@ -124,6 +130,7 @@ typedef struct {
     char node[65];        /* the pod's node ID, for the log (cut to fit) */
     bool changed;         /* its agent configuration changed: restart, not start */
     cJSON *update;        /* the transact params that hand it over (owned) */
+    char admission[96];   /* HANDOVER: how it was admitted, and its models entry (spec 4), for the log */
     char why[192];        /* otherwise: what to log */
 } em_fleet_handover;
 

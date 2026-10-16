@@ -443,6 +443,14 @@ def test_pods_the_fleet_must_not_take_are_left_unchanged(agent, tmp_path):
     assert result["units"] == [] and f"{result['serial']}.json" not in result["configs"]
 
 
+def test_a_pod_of_a_known_model_is_admitted_by_it_only_with_the_switch_on(agent, tmp_path):
+    if agent == "c":
+        adapter(agent, "emosa-fleet-c")
+    result = box("fleet-admit-by-model", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+    assert result["refused_while_off"] and result["profile"] == "bcm-pod-2.4.3-gre-v1"
+
+
 def test_either_fleet_takes_over_from_the_other(agent, tmp_path):
     adapter(agent, "emosa-fleet-c")  # the C fleet runs first or second
     result = box("fleet-takeover", agent, tmp_path / "box")

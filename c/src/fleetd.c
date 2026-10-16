@@ -386,8 +386,9 @@ static const char *on_reply(server *s, conn *c, const cJSON *result, char *probl
     }
     const em_fleet_entry *e = &c->handover.entry;
     const cJSON *row = cJSON_GetObjectItemCaseSensitive(cJSON_GetArrayItem(c->handover.update, 1), "row");
-    LOG("pod %s (node %s, %s) -> agent AL %s on %s, manager_addr %s", c->handover.serial, c->handover.node,
-        c->peer, e->al_mac, e->interface, cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(row, "manager_addr")));
+    LOG("pod %s (node %s, %s) -> agent AL %s on %s, manager_addr %s; admitted by %s", c->handover.serial,
+        c->handover.node, c->peer, e->al_mac, e->interface,
+        cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(row, "manager_addr")), c->handover.admission);
     return "";
 }
 

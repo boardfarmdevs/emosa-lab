@@ -574,6 +574,41 @@ async def fleet_refusals(box):
     )
 
 
+LEGACY_MODEL = "BCM_LEGACY_POD"  # the legacy fixture's AWLAN_Node model (firmware 2.4.3-0-legacy)
+LEGACY_PROFILE = "bcm-pod-2.4.3-gre-v1"
+PLAIN_PROFILE = "opensync-lab-hwsim-6.6.1-v1"
+
+
+async def fleet_admit_by_model(box):
+    """spec 4, the pods' models: a legacy pod that no serial admits, of a model the fleet's
+    models know (firmware 2.4.3), whose profile only that entry names (the fleet's own is 6.6's,
+    which the agent would refuse the pod on). With the router's admit switch off the fleet
+    refuses it and writes nothing; turned on, the fleet admits it by its model and says so, its
+    agent gets the model's profile and onboards it."""
+    refused = not box.handed and not list(box.config_dir.glob("*.json"))
+    await box.restart_fleet(admit_by_model=True)
+    handed = await box.hand_over(box.handover_seconds)
+    path = box.config_dir / f"{box.serial}.json"
+    profile = json.loads(path.read_text()).get("profile") if path.is_file() else None
+    said = (
+        f"admitted by model, models[0] ({LEGACY_MODEL})"
+        in (box.directory / "fleet.log").read_text()
+    )
+    onboarding = await onboarded(box) if handed else {"failed": "not handed over"}
+    refused_pod = (box.status() or {}).get("pod_refused")
+    passed = refused and handed and profile == LEGACY_PROFILE and said
+    passed = passed and bool(onboarding.get("applied")) and not refused_pod
+    return box.result(
+        passed=passed,
+        refused_while_off=refused,
+        handed_over=handed,
+        profile=profile,
+        logged=said,
+        onboarding=onboarding,
+        pod_refused=refused_pod,
+    )
+
+
 async def fleet_takeover(box):
     """Either fleet takes over from the other: the other implementation's fleet hands
     the pod over first; this one, started on the same registry and configurations, lists
@@ -975,6 +1010,7 @@ SCENARIOS = {
     "fleet-return": fleet_return,
     "fleet-upgrade": fleet_upgrade,
     "fleet-refusals": fleet_refusals,
+    "fleet-admit-by-model": fleet_admit_by_model,
     "fleet-takeover": fleet_takeover,
     "fleet-forget": fleet_forget,
     "fleet-supervised": fleet_supervised,
@@ -984,6 +1020,17 @@ SCENARIOS = {
 }
 OPTIONS = {
     "fleet-refusals": {"fleet": {"admit": [OTHER_POD]}, "handover_seconds": 6},
+    "fleet-admit-by-model": {
+        "legacy": True,
+        "fleet": {
+            "admit": [OTHER_POD],
+            "profile": PLAIN_PROFILE,
+            "models": [
+                {"model": LEGACY_MODEL, "firmware_prefix": "2.4.3", "profile": LEGACY_PROFILE}
+            ],
+        },
+        "handover_seconds": 6,
+    },
     "fleet-supervised": {"supervised": True},
 }
 STANDALONE = {"gtp": gtp}  # no pod, agent or controller: links of the box's own

@@ -213,13 +213,32 @@ def module_settings(modules, fleet):
     return settings
 
 
+def recognised(models, model, firmware):
+    """The fleet's ``models`` entry that recognises a pod of this model and firmware (spec 4,
+    the pods' models), with its index: the first whose model is the pod's and whose
+    firmware_prefix, when it has one, starts the pod's firmware. (None, None) when none does."""
+    if not isinstance(model, str):
+        return None, None
+    for index, own in enumerate(models or ()):
+        prefix = own.get("firmware_prefix")
+        if own["model"] == model and (
+            prefix is None or (isinstance(firmware, str) and firmware.startswith(prefix))
+        ):
+            return index, own
+    return None, None
+
+
 def agent_config(entry, fleet):
     """The per-pod agent configuration (the format ``emosa.agent.pod`` reads).
 
-    The fleet's settings apply to every agent; ``pods.<serial>`` overrides them
-    for one pod (a different pod model's profile, or its uplink policy).
+    The fleet's settings apply to every agent; the pod's model's (``models``, spec 4) override
+    them, and ``pods.<serial>`` overrides both for one pod (its uplink policy, say).
     """
-    own = fleet.get("pods", {}).get(entry["pod_id"], {})
+    _, model = recognised(fleet.get("models"), entry.get("model"), entry.get("firmware"))
+    own = {
+        **{k: v for k, v in (model or {}).items() if k not in ("model", "firmware_prefix")},
+        **fleet.get("pods", {}).get(entry["pod_id"], {}),
+    }
     return {
         "pod_id": entry["pod_id"],
         "serial": entry["pod_id"],
@@ -443,7 +462,8 @@ def check_config(config):
     fleet's files. EmosaError when it fails one."""
     validate("fleet-config", config)
     modules = [config.get("modules") or {}] + [
-        own.get("modules") or {} for own in (config.get("pods") or {}).values()
+        own.get("modules") or {}
+        for own in [*(config.get("pods") or {}).values(), *(config.get("models") or [])]
     ]
     if not config.get("files") and any(m.get("update") for ms in modules for m in ms.values()):
         raise EmosaError(Reason.INVALID_INPUT, "a module's update needs the fleet's files")
@@ -529,8 +549,23 @@ class Fleet:
         self.starter, self.stopper = starter, stopper
         admit = config.get("admit", "*")
         self.admit = None if admit == "*" else set(admit)
+        self.admit_by_model = config.get("admit_by_model", False)
         self.stop = threading.Event()
         self.slots = threading.BoundedSemaphore(config.get("concurrency", 16))
+
+    def admission(self, serial, model, firmware):
+        """How the fleet admits a pod (spec 4 step 2), for its log: "all" (admit is *), "serial"
+        (admit lists it) or "model" (admit_by_model on and one of its models recognises it),
+        with the recognising models entry's description, if any. (None, ...) when not admitted."""
+        index, own = recognised(self.config.get("models"), model, firmware)
+        known = f", models[{index}] ({own['model']})" if own is not None else ""
+        if self.admit is None:
+            return "all", known
+        if serial in self.admit:
+            return "serial", known
+        if self.admit_by_model and own is not None:
+            return "model", known
+        return None, known
 
     # -- one pod connection --------------------------------------------------
 
@@ -572,7 +607,8 @@ class Fleet:
         serial = identity["serial_number"]
         if not isinstance(serial, str) or not SERIAL.fullmatch(serial):
             raise ValueError(f"{peer}: unusable serial {serial!r}")
-        if self.admit is not None and serial not in self.admit:
+        how, known = self.admission(serial, identity["model"], identity["firmware_version"])
+        if how is None:
             log.warning("pod %s (%s) not admitted: left unchanged", serial, peer)
             return None
         entry = self.registry.assign(identity)
@@ -591,13 +627,15 @@ class Fleet:
         if not result or result[0].get("error") or result[0].get("count") != 1:
             raise ConnectionError(f"{serial}: manager_addr update failed: {result}")
         log.info(
-            "pod %s (node %s, %s) -> agent AL %s on %s, manager_addr %s",
+            "pod %s (node %s, %s) -> agent AL %s on %s, manager_addr %s; admitted by %s%s",
             serial,
             identity["id"],
             peer,
             entry["al_mac"],
             entry["interface"],
             target,
+            how,
+            known,
         )
         return entry
 
@@ -667,7 +705,10 @@ class Fleet:
             agents = self.registry.agents
             entries = [dict(agents[serial]) for serial in sorted(agents)]
         for entry in entries:
-            if self.admit is not None and entry["pod_id"] not in self.admit:
+            if (
+                self.admission(entry["pod_id"], entry.get("model"), entry.get("firmware"))[0]
+                is None
+            ):
                 continue
             try:
                 changed = self.bind(entry)

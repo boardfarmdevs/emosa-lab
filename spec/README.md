@@ -867,8 +867,10 @@ is everything above. For a legacy pod, all of this specification applies, except
 For each connection on the front port, the fleet:
 1. selects `AWLAN_Node` and requires exactly one row with a usable serial:
    letters, digits, `.`, `_` and `-`, at most 64 characters;
-2. refuses the pod, leaving it unchanged, if it is not admitted (`admit`) or if
-   no port is free;
+2. refuses the pod, leaving it unchanged, if it is not admitted or if no port is
+   free. A pod is admitted when `admit` is `*` or lists its serial, or when the
+   fleet's `admit_by_model` is on (it is off unless set) and one of its `models`
+   recognises the pod (below);
 3. finds or creates the pod's registry entry: the AL MAC (§2.2), the first free
    port, and interface `em<index>`;
 4. writes the agent configuration; if it changed, restarts the agent,
@@ -896,10 +898,27 @@ registry has, in the registry's order, without waiting for the pod: an image
 upgrade keeps the registry and the configurations on persistent storage but not
 the agents' enabled units. The registry file is the fleet's state: a serving fleet MUST read it
 again for each pod, so a `forget` run as another process takes effect at once. With `run_root` each agent's configuration has `run_dir` `<run_root>/<pod_id>`. The agent configuration takes the fleet's settings (`message_set`,
-`multi_bss`, `m2_session`, `profile`, `uplink`), overridden per pod by
-`pods.<serial>`, and the fleet's `topology_query_window` (§2.5), a property of the
+`multi_bss`, `m2_session`, `profile`, `uplink`), overridden by the pod's model's
+(`models`) and over that per pod by `pods.<serial>`, and the fleet's
+`topology_query_window` (§2.5), a property of the
 controller, when it has one: a different pod model needs its own profile, and the uplink
-switch (§8.3) is enabled per pod. `forget SERIAL` stops the agent, deletes the entry and the
+switch (§8.3) is enabled per pod.
+
+**The pods' models.** A pod reports its model and firmware (`AWLAN_Node`'s `model` and
+`firmware_version`, which the registry keeps with its entry). The fleet's `models` is a list,
+in order of preference, of the models it knows: each names a `model` (equal to the pod's) and
+optionally a `firmware_prefix` (the pod's firmware starts with it), with the settings a pod of
+that model and firmware takes (the keys of `pods.<serial>`: a converted legacy pod's profile,
+§3.10, say). The first that matches recognises the pod, and its settings apply to it unless
+`pods.<serial>` sets them. A pod that reports no model is recognised by none, and one that
+reports no firmware only by an entry without a `firmware_prefix`. So a site
+names a model's profile once, and every pod of that model gets it, admitted by serial or by
+its model. With `admit_by_model` on, the fleet admits every pod one of its `models`
+recognises, whatever `admit` lists: a router whose owner turned it on takes any converted pod
+of a model it knows, with no serial written down first, and a pod of another model is refused
+as before. The fleet's log of a handover says how the pod was admitted (`serial`, `model` or
+`all`) and, for one recognised, which `models` entry applies. At the fleet's start (above) the same rules
+hold with the model and firmware its registry keeps. Both fleets. `forget SERIAL` stops the agent, deletes the entry and the
 configuration, and archives the agent's state directory as
 `<pod_id>.released-<stamp>`, without the agent's status (a running agent's: in its run
 directory, its link would show the next agent's). A pod handed over

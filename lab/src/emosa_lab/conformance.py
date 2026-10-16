@@ -878,6 +878,27 @@ def fleet_session_vectors():
     def node(serial, **extra):
         return {"id": serial, "serial_number": serial, "model": "HWSIM_POD", **extra}
 
+    def legacy(serial, **extra):
+        return {
+            "id": serial,
+            "serial_number": serial,
+            "model": legacy_model,
+            "firmware_version": "2.4.3-0-legacy",
+            **extra,
+        }
+
+    legacy_model, legacy_a, legacy_b = "BCM_LEGACY_POD", "BCMPOD0000000001", "BCMPOD0000000002"
+    legacy_5g = "bcm-pod-2.4.3-gre-5g-v1"
+    plain = "HWSIMPOD00000003"  # a 6.6 pod of a model the models do not name
+    models = [
+        {
+            "model": legacy_model,
+            "firmware_prefix": "2.4.3",
+            "profile": "bcm-pod-2.4.3-gre-v1",
+            "phy_netdev_up": True,
+        }
+    ]
+
     base = {
         "listen": "ptcp:6650:127.0.0.1",
         "advertise": "10.101.0.1",
@@ -960,6 +981,43 @@ def fleet_session_vectors():
             {"fleet_config": {**base, "ports": [6651, 6651]}},
             {"arrival": [{"rows": [{"serial_number": SERIAL}]}], "now": 1759500002.25},
             {"arrival": [{"rows": [node("MVXPOD02D7777EF0D9")]}], "now": 1759500002.5},
+        ],
+        # spec 4, the pods' models: the first models entry whose model is the pod's and whose
+        # firmware_prefix starts its firmware recognises it and gives it its settings,
+        # pods.<serial> over them; admit_by_model (off unless set) admits every pod one
+        # recognises, listed or not; a pod of another model or firmware is refused as before,
+        # and the fleet's start keeps to the same rules with the registry's model and firmware
+        "pods-admitted-and-set-by-their-model": [
+            {"fleet_config": {**base, "admit": [], "models": models}},
+            {"arrival": [{"rows": [legacy(legacy_a)]}], "now": 1759500000.25},
+            {"fleet_config": {**base, "admit": [], "models": models, "admit_by_model": True}},
+            {"arrival": [{"rows": [legacy(legacy_a)]}], "now": 1759500000.5},
+            {
+                "arrival": [{"rows": [legacy(legacy_b, firmware_version="2.6.0")]}],
+                "now": 1759500000.75,
+            },
+            {
+                "arrival": [
+                    {"rows": [{"id": legacy_b, "serial_number": legacy_b, "model": legacy_model}]}
+                ],
+                "now": 1759500001.0,
+            },
+            {"arrival": [{"rows": [node(plain)]}], "now": 1759500001.25},
+            {
+                "fleet_config": {
+                    **base,
+                    "admit": [plain],
+                    "models": models + [{"model": legacy_model, "profile": legacy_5g}],
+                    "admit_by_model": True,
+                    "pods": {legacy_a: {"phy_netdev_up": False}},
+                }
+            },
+            {
+                "arrival": [{"rows": [legacy(legacy_b, firmware_version="2.6.0")]}],
+                "now": 1759500001.5,
+            },
+            {"arrival": [{"rows": [node(plain)]}], "now": 1759500001.75},
+            {"fleet_config": {**base, "admit": [plain], "models": models}},
         ],
         "forget-releases-and-archives": [
             {"fleet_config": base},

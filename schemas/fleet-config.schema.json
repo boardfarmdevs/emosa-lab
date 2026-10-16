@@ -45,6 +45,28 @@
     "run_root": {"type": "string", "minLength": 1, "description": "Each agent's run directory is run_root/<pod_id> (its status, on a RAM disk on a gateway). Absent: the agents write their status in their state directories."},
     "config_dir": {"type": "string", "minLength": 1},
     "admit": {"oneOf": [{"const": "*"}, {"type": "array", "items": {"type": "string", "minLength": 1, "maxLength": 64}}], "default": "*"},
+    "admit_by_model": {"type": "boolean", "default": false, "description": "The router's admit switch (spec 4, the pods' models): on, the fleet admits every pod one of its models recognises, whatever admit lists; off (the default), only admit's."},
+    "models": {
+      "type": "array",
+      "description": "The pod models the fleet knows, in order of preference (spec 4, the pods' models): the first whose model equals the pod's AWLAN_Node model and whose firmware_prefix, when given, starts its firmware_version recognises it, and its settings apply to the pod unless pods.<serial> sets them.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["model"],
+        "properties": {
+          "model": {"type": "string", "minLength": 1, "maxLength": 64},
+          "firmware_prefix": {"type": "string", "minLength": 1, "maxLength": 64},
+          "message_set": {"enum": ["easymesh-6.1", "r1"]},
+          "multi_bss": {"type": "boolean"},
+          "phy_netdev_up": {"type": "boolean"},
+          "m2_session": {"enum": ["distinct", "shared"]},
+          "profile": {"type": "string", "minLength": 1},
+          "uplink": {"$ref": "#/properties/uplink"},
+          "telemetry": {"$ref": "#/properties/telemetry"},
+          "modules": {"$ref": "#/properties/modules"}
+        }
+      }
+    },
     "concurrency": {"type": "integer", "minimum": 1, "maximum": 256, "default": 16},
     "agents": {"enum": ["systemd", "supervised"], "default": "systemd", "description": "How the agents run (spec §4). systemd: an emosa-agent@POD unit each, enabled and started by the fleet. supervised: the C fleet's own children, for a system without systemd (a router's busybox init): the link helper, then the agent, with /etc/default/emosa and /etc/default/emosa-POD in their environment, started again 3 s after one ends, stopped when its pod is forgotten and when the fleet ends; each one's output in LOG_ROOT/POD/agent.log (the run root, else the state root), kept to two files of 256 KiB. Absent: EMOSA_AGENTS from the fleet's environment or /etc/default/emosa, else systemd."},
     "pods": {

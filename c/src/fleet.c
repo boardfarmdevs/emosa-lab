@@ -339,12 +339,35 @@ bool em_registry_load(em_registry *r, const char *text)
 
 /* -- the agent configuration and the handover ---------------------------------------- */
 
-/* fleet[key] (or pods.<serial>[key]) with a default */
-static cJSON *setting(const cJSON *fleet, const char *serial, const char *key, cJSON *fallback)
+const cJSON *em_fleet_model(const cJSON *fleet, const char *model, const char *firmware, int *index)
+{
+    int i = 0;
+    const cJSON *own;
+    *index = -1;
+    if (!model)
+        return NULL;
+    cJSON_ArrayForEach(own, cJSON_GetObjectItemCaseSensitive(fleet, "models"))
+    {
+        const char *name = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(own, "model"));
+        const char *prefix = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(own, "firmware_prefix"));
+        if (name && !strcmp(name, model) && (!prefix || (firmware && !strncmp(firmware, prefix, strlen(prefix))))) {
+            *index = i;
+            return own;
+        }
+        i++;
+    }
+    return NULL;
+}
+
+/* pods.<serial>[key], else the pod's model's (its models entry, spec 4), else fleet[key], else
+ * a default */
+static cJSON *setting(const cJSON *fleet, const char *serial, const cJSON *model, const char *key, cJSON *fallback)
 {
     const cJSON *own = cJSON_GetObjectItemCaseSensitive(
         cJSON_GetObjectItemCaseSensitive(fleet, "pods"), serial);
     const cJSON *v = cJSON_GetObjectItemCaseSensitive(own, key);
+    if (!v)
+        v = cJSON_GetObjectItemCaseSensitive(model, key);
     if (!v)
         v = cJSON_GetObjectItemCaseSensitive(fleet, key);
     if (v) {
@@ -379,9 +402,9 @@ static size_t member_names(const cJSON *o, const char **out, size_t max)
     return n;
 }
 
-cJSON *em_module_settings(const cJSON *fleet, const char *serial)
+cJSON *em_module_settings(const cJSON *fleet, const char *serial, const cJSON *model)
 {
-    cJSON *modules = setting(fleet, serial, "modules", NULL);
+    cJSON *modules = setting(fleet, serial, model, "modules", NULL);
     const cJSON *port = cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(fleet, "files"), "port");
     const char *advertise = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(fleet, "advertise"));
     const char *names[64], *keys[64];
@@ -544,15 +567,20 @@ cJSON *em_agent_config(const em_fleet_entry *e, const cJSON *fleet)
     cJSON_AddStringToObject(c, "al_mac", e->al_mac);
     cJSON_AddItemToObject(c, "controller_al",
                           cJSON_Duplicate(cJSON_GetObjectItemCaseSensitive(fleet, "controller_al"), 1));
-    cJSON_AddItemToObject(c, "message_set", setting(fleet, e->pod_id, "message_set", cJSON_CreateString("easymesh-6.1")));
-    cJSON_AddItemToObject(c, "multi_bss", setting(fleet, e->pod_id, "multi_bss", cJSON_CreateFalse()));
-    cJSON_AddItemToObject(c, "m2_session", setting(fleet, e->pod_id, "m2_session", cJSON_CreateString("distinct")));
-    cJSON_AddItemToObject(c, "profile", setting(fleet, e->pod_id, "profile", cJSON_CreateString("opensync-lab-hwsim-6.6.1-v1")));
-    cJSON_AddItemToObject(c, "uplink", setting(fleet, e->pod_id, "uplink", mode_off()));
-    cJSON_AddItemToObject(c, "telemetry", setting(fleet, e->pod_id, "telemetry", mode_off()));
-    /* the radios' own netdevs (spec 3.10, em_phy_netdev_ops, on by default), the pod's or the fleet's,
-     * only when set: the configurations of a fleet without it stay as they were */
-    cJSON *phy = setting(fleet, e->pod_id, "phy_netdev_up", NULL);
+    /* the pod's model's settings (spec 4, the pods' models), by the model and firmware it reported */
+    int index;
+    const cJSON *model = em_fleet_model(fleet, e->model, e->firmware, &index);
+    const char *id = e->pod_id;
+    cJSON_AddItemToObject(c, "message_set", setting(fleet, id, model, "message_set", cJSON_CreateString("easymesh-6.1")));
+    cJSON_AddItemToObject(c, "multi_bss", setting(fleet, id, model, "multi_bss", cJSON_CreateFalse()));
+    cJSON_AddItemToObject(c, "m2_session", setting(fleet, id, model, "m2_session", cJSON_CreateString("distinct")));
+    cJSON_AddItemToObject(c, "profile",
+                          setting(fleet, id, model, "profile", cJSON_CreateString("opensync-lab-hwsim-6.6.1-v1")));
+    cJSON_AddItemToObject(c, "uplink", setting(fleet, id, model, "uplink", mode_off()));
+    cJSON_AddItemToObject(c, "telemetry", setting(fleet, id, model, "telemetry", mode_off()));
+    /* the radios' own netdevs (spec 3.10, em_phy_netdev_ops, on by default), the pod's, its model's
+     * or the fleet's, only when set: the configurations of a fleet without it stay as they were */
+    cJSON *phy = setting(fleet, id, model, "phy_netdev_up", NULL);
     if (phy)
         cJSON_AddItemToObject(c, "phy_netdev_up", phy);
     /* a property of the controller, so the fleet's only, and only when set */
@@ -560,7 +588,7 @@ cJSON *em_agent_config(const em_fleet_entry *e, const cJSON *fleet)
     if (window)
         cJSON_AddItemToObject(c, "topology_query_window", cJSON_Duplicate(window, 1));
     /* its modules' settings (spec 4), only when there are any */
-    cJSON *modules = em_module_settings(fleet, e->pod_id);
+    cJSON *modules = em_module_settings(fleet, id, model);
     if (modules)
         cJSON_AddItemToObject(c, "modules", modules);
     /* its underlay as a GRE parent (spec 8.6), while the fleet allocates them */
@@ -653,6 +681,11 @@ bool em_fleet_open(em_fleet *f, cJSON *config, char *why, size_t size)
         cJSON_ArrayForEach(module, cJSON_GetObjectItemCaseSensitive(own, "modules"))
             update = update || cJSON_GetObjectItemCaseSensitive(module, "update");
     }
+    cJSON_ArrayForEach(own, cJSON_GetObjectItemCaseSensitive(config, "models"))
+    {
+        cJSON_ArrayForEach(module, cJSON_GetObjectItemCaseSensitive(own, "modules"))
+            update = update || cJSON_GetObjectItemCaseSensitive(module, "update");
+    }
     if (update && !cJSON_GetObjectItemCaseSensitive(config, "files")) {
         (void)em_format(why, size, "a module's update needs the fleet's files");
         return false;
@@ -690,17 +723,35 @@ void em_fleet_handover_clear(em_fleet_handover *h)
     h->update = NULL;
 }
 
-static bool admitted(const cJSON *config, const char *serial)
+/* how the fleet admits a pod (spec 4 step 2): "all" (admit is *), "serial" (admit lists it) or
+ * "model" (admit_by_model on and one of its models recognises it); NULL when not admitted. With
+ * how (when not NULL) the route and the recognising models entry, for the log. */
+static const char *admitted(const cJSON *config, const char *serial, const char *model, const char *firmware,
+                            char *how, size_t size)
 {
     const cJSON *admit = cJSON_GetObjectItemCaseSensitive(config, "admit"), *s;
-    if (!cJSON_IsArray(admit))
-        return true; /* "*" or absent */
-    cJSON_ArrayForEach(s, admit)
-    {
-        if (cJSON_IsString(s) && !strcmp(s->valuestring, serial))
-            return true;
+    int index;
+    const cJSON *known = em_fleet_model(config, model, firmware, &index);
+    const char *route = NULL;
+    if (!cJSON_IsArray(admit)) {
+        route = "all"; /* "*" or absent */
+    } else {
+        cJSON_ArrayForEach(s, admit)
+        {
+            if (!route && cJSON_IsString(s) && !strcmp(s->valuestring, serial))
+                route = "serial";
+        }
     }
-    return false;
+    if (!route && known && cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(config, "admit_by_model")))
+        route = "model";
+    if (how && route) {
+        const char *name = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(known, "model"));
+        if (known)
+            (void)em_format(how, size, "%s, models[%d] (%s)", route, index, name ? name : "?");
+        else
+            (void)em_format(how, size, "%s", route);
+    }
+    return route;
 }
 
 /* the value of a row's string column, or NULL */
@@ -743,7 +794,8 @@ em_fleet_outcome em_fleet_identify(em_fleet *f, const cJSON *select_result, doub
     }
     EM_FORMAT_FIXED(out->serial, sizeof(out->serial), "%s", serial); /* valid: at most 64 */
     (void)em_copy(out->node, sizeof(out->node), row_text(row, "id") ? row_text(row, "id") : "None");
-    if (!admitted(f->config, serial)) {
+    if (!admitted(f->config, serial, row_text(row, "model"), row_text(row, "firmware_version"), out->admission,
+                  sizeof(out->admission))) {
         EM_FORMAT_FIXED(out->why, sizeof(out->why), "pod %s not admitted: left unchanged", serial);
         return EM_FLEET_REFUSED;
     }
@@ -800,7 +852,7 @@ size_t em_fleet_start_registered(em_fleet *f, void (*start)(void *ctx, const cha
     size_t failed = 0;
     for (size_t i = 0; i < f->registry.count; i++) {
         const em_fleet_entry *e = &f->registry.entries[i];
-        if (!admitted(f->config, e->pod_id))
+        if (!admitted(f->config, e->pod_id, e->model, e->firmware, NULL, 0))
             continue;
         char path[600];
         bool changed = false;

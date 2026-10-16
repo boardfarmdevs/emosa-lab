@@ -713,7 +713,7 @@ static void fleet_modules(const char *scratch)
                                " \"modules\": {\"hook\": {\"config\": {\"redirector\": \"auto\"}}},"
                                " \"pods\": {\"POD1\": {\"modules\": {\"hook\": {\"config\": {\"z\": \"1\", \"redirector\": \"auto\"},"
                                " \"update\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}, \"empty\": {}}}}}");
-    cJSON *own = em_module_settings(fleet, "POD1"), *other = em_module_settings(fleet, "POD2");
+    cJSON *own = em_module_settings(fleet, "POD1", NULL), *other = em_module_settings(fleet, "POD2", NULL);
     char *text = own ? cJSON_PrintUnformatted(own) : NULL;
     char wanted[400];
     snprintf(wanted, sizeof(wanted),
@@ -727,7 +727,7 @@ static void fleet_modules(const char *scratch)
     cJSON_Delete(own);
     cJSON_Delete(other);
     cJSON_DeleteItemFromObjectCaseSensitive(fleet, "modules");
-    other = em_module_settings(fleet, "POD2");
+    other = em_module_settings(fleet, "POD2", NULL);
     CHECK(!other, "none without modules");
     cJSON_Delete(fleet);
     /* the file server: only a file named by its content's SHA-256 */

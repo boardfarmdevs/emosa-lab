@@ -1008,6 +1008,325 @@
   },
   {
    "files": {
+    "archives": [],
+    "configs": {
+     "BCMPOD0000000001": "{\n  \"pod_id\": \"BCMPOD0000000001\",\n  \"serial\": \"BCMPOD0000000001\",\n  \"ovsdb\": \"ptcp:6651:127.0.0.1\",\n  \"interface\": \"em1\",\n  \"al_mac\": \"02:65:e7:7c:e0:e1\",\n  \"controller_al\": \"02:00:00:e0:00:01\",\n  \"message_set\": \"easymesh-6.1\",\n  \"multi_bss\": false,\n  \"m2_session\": \"distinct\",\n  \"profile\": \"bcm-pod-2.4.3-gre-v1\",\n  \"uplink\": {\n    \"mode\": \"off\"\n  },\n  \"telemetry\": {\n    \"mode\": \"off\"\n  },\n  \"phy_netdev_up\": false,\n  \"state_dir\": \"{root}/state/BCMPOD0000000001\",\n  \"run_id\": \"BCMPOD0000000001\"\n}\n",
+     "BCMPOD0000000002": "{\n  \"pod_id\": \"BCMPOD0000000002\",\n  \"serial\": \"BCMPOD0000000002\",\n  \"ovsdb\": \"ptcp:6652:127.0.0.1\",\n  \"interface\": \"em2\",\n  \"al_mac\": \"02:0b:a6:71:51:b8\",\n  \"controller_al\": \"02:00:00:e0:00:01\",\n  \"message_set\": \"easymesh-6.1\",\n  \"multi_bss\": false,\n  \"m2_session\": \"distinct\",\n  \"profile\": \"bcm-pod-2.4.3-gre-5g-v1\",\n  \"uplink\": {\n    \"mode\": \"off\"\n  },\n  \"telemetry\": {\n    \"mode\": \"off\"\n  },\n  \"state_dir\": \"{root}/state/BCMPOD0000000002\",\n  \"run_id\": \"BCMPOD0000000002\"\n}\n",
+     "HWSIMPOD00000003": "{\n  \"pod_id\": \"HWSIMPOD00000003\",\n  \"serial\": \"HWSIMPOD00000003\",\n  \"ovsdb\": \"ptcp:6653:127.0.0.1\",\n  \"interface\": \"em3\",\n  \"al_mac\": \"02:c6:28:b8:9c:3a\",\n  \"controller_al\": \"02:00:00:e0:00:01\",\n  \"message_set\": \"easymesh-6.1\",\n  \"multi_bss\": false,\n  \"m2_session\": \"distinct\",\n  \"profile\": \"opensync-lab-hwsim-6.6.1-v1\",\n  \"uplink\": {\n    \"mode\": \"off\"\n  },\n  \"telemetry\": {\n    \"mode\": \"off\"\n  },\n  \"state_dir\": \"{root}/state/HWSIMPOD00000003\",\n  \"run_id\": \"HWSIMPOD00000003\"\n}\n"
+    },
+    "registry": "{\n  \"BCMPOD0000000001\": {\n    \"al_mac\": \"02:65:e7:7c:e0:e1\",\n    \"firmware\": \"2.4.3-0-legacy\",\n    \"first_seen\": 1759500000.5,\n    \"handovers\": 1,\n    \"interface\": \"em1\",\n    \"last_seen\": 1759500000.5,\n    \"model\": \"BCM_LEGACY_POD\",\n    \"node_id\": \"BCMPOD0000000001\",\n    \"pod_id\": \"BCMPOD0000000001\",\n    \"port\": 6651\n  },\n  \"BCMPOD0000000002\": {\n    \"al_mac\": \"02:0b:a6:71:51:b8\",\n    \"firmware\": \"2.6.0\",\n    \"first_seen\": 1759500001.5,\n    \"handovers\": 1,\n    \"interface\": \"em2\",\n    \"last_seen\": 1759500001.5,\n    \"model\": \"BCM_LEGACY_POD\",\n    \"node_id\": \"BCMPOD0000000002\",\n    \"pod_id\": \"BCMPOD0000000002\",\n    \"port\": 6652\n  },\n  \"HWSIMPOD00000003\": {\n    \"al_mac\": \"02:c6:28:b8:9c:3a\",\n    \"firmware\": null,\n    \"first_seen\": 1759500001.75,\n    \"handovers\": 1,\n    \"interface\": \"em3\",\n    \"last_seen\": 1759500001.75,\n    \"model\": \"HWSIM_POD\",\n    \"node_id\": \"HWSIMPOD00000003\",\n    \"pod_id\": \"HWSIMPOD00000003\",\n    \"port\": 6653\n  }\n}\n"
+   },
+   "name": "pods-admitted-and-set-by-their-model",
+   "steps": [
+    {
+     "expected": {
+      "started": []
+     },
+     "fleet_config": {
+      "admit": [],
+      "advertise": "10.101.0.1",
+      "config_dir": "{root}/etc",
+      "controller_al": "02:00:00:e0:00:01",
+      "listen": "ptcp:6650:127.0.0.1",
+      "message_set": "easymesh-6.1",
+      "models": [
+       {
+        "firmware_prefix": "2.4.3",
+        "model": "BCM_LEGACY_POD",
+        "phy_netdev_up": true,
+        "profile": "bcm-pod-2.4.3-gre-v1"
+       }
+      ],
+      "ports": [
+       6651,
+       6653
+      ],
+      "state_root": "{root}/state"
+     }
+    },
+    {
+     "arrival": [
+      {
+       "rows": [
+        {
+         "firmware_version": "2.4.3-0-legacy",
+         "id": "BCMPOD0000000001",
+         "model": "BCM_LEGACY_POD",
+         "serial_number": "BCMPOD0000000001"
+        }
+       ]
+      }
+     ],
+     "expected": {
+      "outcome": "refused",
+      "start": null,
+      "update": null
+     },
+     "now": 1759500000.25
+    },
+    {
+     "expected": {
+      "started": []
+     },
+     "fleet_config": {
+      "admit": [],
+      "admit_by_model": true,
+      "advertise": "10.101.0.1",
+      "config_dir": "{root}/etc",
+      "controller_al": "02:00:00:e0:00:01",
+      "listen": "ptcp:6650:127.0.0.1",
+      "message_set": "easymesh-6.1",
+      "models": [
+       {
+        "firmware_prefix": "2.4.3",
+        "model": "BCM_LEGACY_POD",
+        "phy_netdev_up": true,
+        "profile": "bcm-pod-2.4.3-gre-v1"
+       }
+      ],
+      "ports": [
+       6651,
+       6653
+      ],
+      "state_root": "{root}/state"
+     }
+    },
+    {
+     "arrival": [
+      {
+       "rows": [
+        {
+         "firmware_version": "2.4.3-0-legacy",
+         "id": "BCMPOD0000000001",
+         "model": "BCM_LEGACY_POD",
+         "serial_number": "BCMPOD0000000001"
+        }
+       ]
+      }
+     ],
+     "expected": {
+      "outcome": "handover",
+      "start": [
+       "BCMPOD0000000001",
+       false
+      ],
+      "update": [
+       "Open_vSwitch",
+       {
+        "op": "update",
+        "row": {
+         "manager_addr": "tcp:10.101.0.1:6651"
+        },
+        "table": "AWLAN_Node",
+        "where": []
+       }
+      ]
+     },
+     "now": 1759500000.5
+    },
+    {
+     "arrival": [
+      {
+       "rows": [
+        {
+         "firmware_version": "2.6.0",
+         "id": "BCMPOD0000000002",
+         "model": "BCM_LEGACY_POD",
+         "serial_number": "BCMPOD0000000002"
+        }
+       ]
+      }
+     ],
+     "expected": {
+      "outcome": "refused",
+      "start": null,
+      "update": null
+     },
+     "now": 1759500000.75
+    },
+    {
+     "arrival": [
+      {
+       "rows": [
+        {
+         "id": "BCMPOD0000000002",
+         "model": "BCM_LEGACY_POD",
+         "serial_number": "BCMPOD0000000002"
+        }
+       ]
+      }
+     ],
+     "expected": {
+      "outcome": "refused",
+      "start": null,
+      "update": null
+     },
+     "now": 1759500001.0
+    },
+    {
+     "arrival": [
+      {
+       "rows": [
+        {
+         "id": "HWSIMPOD00000003",
+         "model": "HWSIM_POD",
+         "serial_number": "HWSIMPOD00000003"
+        }
+       ]
+      }
+     ],
+     "expected": {
+      "outcome": "refused",
+      "start": null,
+      "update": null
+     },
+     "now": 1759500001.25
+    },
+    {
+     "expected": {
+      "started": [
+       [
+        "BCMPOD0000000001",
+        true
+       ]
+      ]
+     },
+     "fleet_config": {
+      "admit": [
+       "HWSIMPOD00000003"
+      ],
+      "admit_by_model": true,
+      "advertise": "10.101.0.1",
+      "config_dir": "{root}/etc",
+      "controller_al": "02:00:00:e0:00:01",
+      "listen": "ptcp:6650:127.0.0.1",
+      "message_set": "easymesh-6.1",
+      "models": [
+       {
+        "firmware_prefix": "2.4.3",
+        "model": "BCM_LEGACY_POD",
+        "phy_netdev_up": true,
+        "profile": "bcm-pod-2.4.3-gre-v1"
+       },
+       {
+        "model": "BCM_LEGACY_POD",
+        "profile": "bcm-pod-2.4.3-gre-5g-v1"
+       }
+      ],
+      "pods": {
+       "BCMPOD0000000001": {
+        "phy_netdev_up": false
+       }
+      },
+      "ports": [
+       6651,
+       6653
+      ],
+      "state_root": "{root}/state"
+     }
+    },
+    {
+     "arrival": [
+      {
+       "rows": [
+        {
+         "firmware_version": "2.6.0",
+         "id": "BCMPOD0000000002",
+         "model": "BCM_LEGACY_POD",
+         "serial_number": "BCMPOD0000000002"
+        }
+       ]
+      }
+     ],
+     "expected": {
+      "outcome": "handover",
+      "start": [
+       "BCMPOD0000000002",
+       false
+      ],
+      "update": [
+       "Open_vSwitch",
+       {
+        "op": "update",
+        "row": {
+         "manager_addr": "tcp:10.101.0.1:6652"
+        },
+        "table": "AWLAN_Node",
+        "where": []
+       }
+      ]
+     },
+     "now": 1759500001.5
+    },
+    {
+     "arrival": [
+      {
+       "rows": [
+        {
+         "id": "HWSIMPOD00000003",
+         "model": "HWSIM_POD",
+         "serial_number": "HWSIMPOD00000003"
+        }
+       ]
+      }
+     ],
+     "expected": {
+      "outcome": "handover",
+      "start": [
+       "HWSIMPOD00000003",
+       false
+      ],
+      "update": [
+       "Open_vSwitch",
+       {
+        "op": "update",
+        "row": {
+         "manager_addr": "tcp:10.101.0.1:6653"
+        },
+        "table": "AWLAN_Node",
+        "where": []
+       }
+      ]
+     },
+     "now": 1759500001.75
+    },
+    {
+     "expected": {
+      "started": [
+       [
+        "HWSIMPOD00000003",
+        false
+       ]
+      ]
+     },
+     "fleet_config": {
+      "admit": [
+       "HWSIMPOD00000003"
+      ],
+      "advertise": "10.101.0.1",
+      "config_dir": "{root}/etc",
+      "controller_al": "02:00:00:e0:00:01",
+      "listen": "ptcp:6650:127.0.0.1",
+      "message_set": "easymesh-6.1",
+      "models": [
+       {
+        "firmware_prefix": "2.4.3",
+        "model": "BCM_LEGACY_POD",
+        "phy_netdev_up": true,
+        "profile": "bcm-pod-2.4.3-gre-v1"
+       }
+      ],
+      "ports": [
+       6651,
+       6653
+      ],
+      "state_root": "{root}/state"
+     }
+    }
+   ]
+  },
+  {
+   "files": {
     "archives": [
      "MVXPOD023F87E628DD.released-20261003T120000"
     ],

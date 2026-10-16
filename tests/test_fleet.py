@@ -8,7 +8,14 @@ import time
 
 import pytest
 
-from emosa.agent.fleet import Fleet, Registry, agent_config, derive_al, free_underlay
+from emosa.agent.fleet import (
+    Fleet,
+    Registry,
+    agent_config,
+    derive_al,
+    free_underlay,
+    recognised,
+)
 from emosa.opensync.session import OvsSession
 from emosa_lab.simulation.database import SimDatabase
 
@@ -211,6 +218,82 @@ def test_admission_list_and_capacity_leave_other_pods_unchanged(tmp_path):
     fleet.admit = None
     fleet._call = pod = Pod("POD3")
     assert fleet.handle(None, "peer") is None and not pod.updates
+
+
+LEGACY = {"model": "BCM_LEGACY_POD", "firmware_prefix": "2.4.3", "profile": "bcm-pod-2.4.3-gre-v1"}
+
+
+@pytest.mark.unit
+def test_the_first_model_entry_that_matches_the_pods_model_and_firmware_recognises_it():
+    later = {"model": "BCM_LEGACY_POD", "profile": "bcm-pod-2.4.3-gre-5g-v1"}
+    assert recognised([LEGACY, later], "BCM_LEGACY_POD", "2.4.3-0-legacy") == (0, LEGACY)
+    assert recognised([LEGACY, later], "BCM_LEGACY_POD", "2.6.0") == (1, later)
+    assert recognised([LEGACY, later], "BCM_LEGACY_POD", None) == (1, later)
+    assert recognised([LEGACY], "BCM_LEGACY_POD", None) == (None, None)
+    assert recognised([LEGACY], "bcm_legacy_pod", "2.4.3") == (None, None)  # equal, not alike
+    assert recognised([LEGACY, later], None, "2.4.3") == (None, None)
+    assert recognised(None, "BCM_LEGACY_POD", "2.4.3") == (None, None)
+
+
+@pytest.mark.unit
+def test_a_pods_model_gives_it_settings_under_its_own_and_over_the_fleets(tmp_path):
+    from emosa.config import validate
+
+    config = fleet_config(
+        tmp_path,
+        multi_bss=True,
+        models=[{**LEGACY, "phy_netdev_up": False, "multi_bss": False}],
+        pods={"POD2": {"multi_bss": True}},
+    )
+    validate("fleet-config", config)
+    entry = {"pod_id": "POD1", "port": 6651, "interface": "em1", "al_mac": derive_al("POD1")}
+    legacy = {**entry, "model": "BCM_LEGACY_POD", "firmware": "2.4.3-0-legacy"}
+    own = agent_config(legacy, config)
+    validate("agent-config", own)
+    assert (own["profile"], own["multi_bss"], own["phy_netdev_up"]) == (
+        LEGACY["profile"],
+        False,
+        False,
+    )
+    mine = agent_config({**legacy, "pod_id": "POD2"}, config)
+    assert (mine["profile"], mine["multi_bss"]) == (LEGACY["profile"], True)
+    other = agent_config({**entry, "model": "m", "firmware": "2.4.3"}, config)
+    assert other["multi_bss"] is True and other["profile"] == "opensync-lab-hwsim-6.6.1-v1"
+    assert "phy_netdev_up" not in other
+
+
+@pytest.mark.unit
+def test_the_admit_switch_admits_a_pod_of_a_known_model_and_no_other(tmp_path, caplog):
+    started = []
+    fleet = make_fleet(tmp_path, started, admit=["POD1"], models=[LEGACY])
+    legacy = Pod("POD2")
+    legacy.row.update(model="BCM_LEGACY_POD", firmware_version="2.4.3-0-legacy")
+    fleet._call = legacy
+    assert fleet.handle(None, "peer") is None and not legacy.updates  # the switch off
+    fleet = make_fleet(tmp_path, started, admit=["POD1"], models=[LEGACY], admit_by_model=True)
+    fleet._call = legacy
+    with caplog.at_level("INFO"):
+        assert fleet.handle(None, "peer")["pod_id"] == "POD2" and legacy.updates
+    assert "admitted by model, models[0] (BCM_LEGACY_POD)" in caplog.text
+    config = json.loads((tmp_path / "etc/POD2.json").read_text())
+    assert config["profile"] == LEGACY["profile"]
+    newer = Pod("POD3")
+    newer.row.update(model="BCM_LEGACY_POD", firmware_version="2.6.0")
+    fleet._call = newer
+    assert fleet.handle(None, "peer") is None and not newer.updates
+    fleet._call = Pod("POD1")
+    with caplog.at_level("INFO"):
+        fleet.handle(None, "peer")
+    assert "admitted by serial" in caplog.text.splitlines()[-1]
+    # at the fleet's start, by the model and firmware the registry keeps
+    del started[:]
+    make_fleet(
+        tmp_path, started, admit=["POD1"], models=[LEGACY], admit_by_model=True
+    ).start_registered()
+    assert [s[0] for s in started] == ["POD1", "POD2"]
+    del started[:]
+    make_fleet(tmp_path, started, admit=["POD1"], models=[LEGACY]).start_registered()
+    assert [s[0] for s in started] == ["POD1"]
 
 
 @pytest.mark.ovsdb
