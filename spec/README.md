@@ -629,6 +629,25 @@ is everything above. For a legacy pod, all of this specification applies, except
 
   Its status counts the writes (`bridge_mode_writes`). The cloud's taps and its
   OpenFlow rules (its analytics and portal features) are not written.
+- **The radios' own netdevs.** On a pod converted at boot, the netdev of a radio
+  itself (`wl0` under the 5 GHz home AP `wl0.2`) stays down: OpenSync 1.4's wm
+  raises a netdev only while applying a VIF on it, and the seed's stations are
+  deleted before wm starts. Later OpenSync raises it with every VIF, as a
+  Broadcom radio in DHD offload mode passes none of the host's frames otherwise:
+  the authenticator's M1 never reached the air (16 October). For each radio
+  carrying a home AP whose VIFs are all EMOSA's (the fronthaul, its slots, the
+  profile's stations), with no VIF or Inet row on its own netdev, the agent
+  writes one `Wifi_Inet_Config` row: `if_type` `tap`, enabled, `network` on,
+  `ip_assign_scheme` none, NAT off. nm runs it as a plain interface (the link set
+  up, no address, nothing created), and the connection manager, which takes `eth`
+  rows for uplinks, leaves it alone. A radio that also carries a VIF EMOSA did
+  not make (a cloud-made pod's, whose onboarding raised the netdev) gets none.
+  The row brings nm's accept rules for that netdev's own traffic, and one down
+  and up of the netdev when it is inserted. The fleet's `phy_netdev_up` (on by
+  default, settable per pod) false removes the `tap` rows on the pod's radios,
+  and nm sets the link down again. Its status gives the setting, the writes and
+  each home AP's radio's `port_state` as nm reports it in `Wifi_Master_State`
+  (`phy_netdev_up`).
 - **The authenticator's reload.** OpenSync 2.4.3's Broadcom wm restarts the
   pod's authenticator (nas and eapd) in full only for a new AP or a change of
   its `security` entries beyond the key (`encryption`, `mode`, `oftag`). An

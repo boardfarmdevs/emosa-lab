@@ -228,6 +228,13 @@ def agent_config(entry, fleet):
         "al_mac": entry["al_mac"],
         "controller_al": fleet["controller_al"],
         **{k: own.get(k, fleet.get(k, v)) for k, v in AGENT_DEFAULTS.items()},
+        # the radios' own netdevs (spec 3.10, phy_netdev_up, on by default), the pod's or the
+        # fleet's, only when set: the configurations of a fleet without it stay as they were
+        **(
+            {"phy_netdev_up": own.get("phy_netdev_up", fleet.get("phy_netdev_up"))}
+            if "phy_netdev_up" in own or "phy_netdev_up" in fleet
+            else {}
+        ),
         # a property of the controller, so the fleet's only, and only when set: the
         # configurations of a fleet without it stay as they were
         **(

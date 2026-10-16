@@ -798,6 +798,7 @@ async def serve(config, stop):
         profile=profile,
         multi_bss=config.get("multi_bss", False) is True,
         underlay=config.get("underlay"),
+        phy_netdev_up=config.get("phy_netdev_up", True) is not False,
     )
     engine = Engine(store, vault, {pod_id: backend})
     engine.recover()
@@ -1162,6 +1163,13 @@ async def serve(config, stop):
                     "auth_reloads": backend.auth_reloads,
                     "bridge_ports": backend.ports_added,
                     "bridge_mode_writes": backend.bridge_modes,
+                    # the home APs' radios' own netdevs: the setting, the writes, and each such
+                    # radio's port_state as nm reports it (None: no row)
+                    "phy_netdev_up": {
+                        "on": backend.phy_netdev_up,
+                        "writes": backend.phy_writes,
+                        "port_state": backend.phy_ports,
+                    },
                 }
                 if profile.legacy
                 else {}
@@ -1404,6 +1412,9 @@ async def serve(config, stop):
                         done = await timed("bridge mode", backend.bridge_mode())
                         if done:
                             log.info("bridge mode: %s (wm restarts nas, eapd)", "; ".join(done))
+                        done = await timed("phy netdev", backend.phy_netdev())
+                        if done:
+                            log.info("phy netdev: %s (nm sets the link)", "; ".join(done))
                         for name in await timed("auth reload", backend.auth_reload()):
                             log.info("auth reload: %s oftag restored (wm restarts nas, eapd)", name)
                     except (EmosaError, ConnectionError, TimeoutError) as exc:

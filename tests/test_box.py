@@ -721,6 +721,20 @@ def test_a_live_pods_bridge_mode_is_repaired_without_a_restart(agent, tmp_path):
     assert result["reloads"][-2:] == [["full", "home--1~reload"], ["full", "home--1"]]
 
 
+def test_a_converted_pods_5ghz_radio_gets_its_own_netdev_raised_and_lowered_when_off(
+    agent, tmp_path
+):
+    # spec 3.10 (16 October): a tap Inet row for wl0 by default, so nm sets it up; off, gone
+    result = box("legacy-phy-netdev", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+
+
+def test_a_radio_carrying_an_ap_emosa_did_not_make_gets_no_netdev_row(agent, tmp_path):
+    # spec 3.10 (16 October): a cloud-made pod's 5 GHz radio carries its cloud's AP: no write
+    result = box("legacy-phy-netdev-foreign", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+
+
 def test_an_agent_on_an_older_profile_still_sets_the_home_aps_rekey_and_ft(agent, tmp_path):
     # spec 3.10 (15 October): an agent binary bind-mounted on the router read the image's profile,
     # which had no group_rekey or ft_psk, and set neither on the home APs

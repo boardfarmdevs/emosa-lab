@@ -15,6 +15,7 @@
     "controller_al": {"$ref": "#/$defs/mac"},
     "message_set": {"enum": ["easymesh-6.1", "r1"], "default": "easymesh-6.1"},
     "multi_bss": {"type": "boolean", "default": false},
+    "phy_netdev_up": {"type": "boolean", "default": true, "description": "spec 3.10: on a legacy pod with radio_plan emosa, one Wifi_Inet_Config row (if_type tap, enabled, network, ip_assign_scheme none, NAT off) for each radio carrying a home AP whose VIFs are all EMOSA's, with no VIF or Inet row on its own netdev, so nm sets that netdev up; false, the tap rows on the pod's radios removed."},
     "m2_session": {"enum": ["distinct", "shared"], "default": "distinct"},
     "profile": {"type": "string", "minLength": 1, "default": "opensync-lab-hwsim-6.6.1-v1", "description": "Pod profile ID, or a path to a profile file."},
     "uplink": {

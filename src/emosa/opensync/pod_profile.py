@@ -86,6 +86,25 @@ HOME_UP = {"enabled": True, "network": True, "NAT": False}
 # the cloud's values, which the profile's fronthaul row may set otherwise; in code too, so an agent
 # on an older profile (the image's, a binary deployed alone) still sets them
 HOME_VIF = {"group_rekey": 86400, "ft_psk": 0}
+# spec 3.10: a radio's own netdev (wl0 under the 5 GHz home AP wl0.2) stays down on a pod converted
+# at boot. OpenSync 1.4's wm raises a netdev only while applying a VIF on it, and the seed's
+# stations are deleted before wm starts; later OpenSync raises the radio's netdev with every VIF,
+# as "dhd datapath doesn't work unless phy netdev is also up": a Broadcom radio in DHD offload
+# mode passed no frame of the host's (the authenticator's M1) while it was down (16 October). For
+# a radio carrying a home AP whose VIFs are all EMOSA's (a cloud-made pod's radio carries its
+# cloud's too, and its cloud's onboarding raised it), with no VIF or Inet row on its own netdev,
+# EMOSA writes this Inet row: nm runs a tap row as a plain interface (as eth and bridge rows: the
+# link set up, no address, nothing created), and the connection manager, which takes eth rows for
+# uplinks, leaves it alone. Side effects: nm's accept rules for that netdev's own traffic, and one
+# down and up of it when the row is inserted. The fleet's phy_netdev_up (on by default) false: the
+# tap rows on the pod's radios removed, and nm sets the link down again.
+PHY_UP = {
+    "if_type": "tap",
+    "enabled": True,
+    "network": True,
+    "ip_assign_scheme": "none",
+    "NAT": False,
+}
 # What shows whether such a port carries its stations, read only (spec 3.10): the bridge's fail
 # mode (a secure bridge forwards only what its OpenFlow rules allow) and OpenSync's rules for it,
 # and each port's Interface as Open vSwitch opened it (its ofport, or the error)
@@ -98,6 +117,9 @@ BRIDGE_MONITOR = {
     # bridge_mode's: the bridges' Inet rows and the home APs' columns it sets
     "Wifi_Inet_Config": ["if_name", "enabled", "network", "NAT"],
     "Wifi_VIF_Config": list(HOME_VIF),
+    # phy_netdev's: each interface as nm reports it, its link running (port_state active) or not
+    "Wifi_Inet_State": ["if_name", "if_type", "enabled", "network"],
+    "Wifi_Master_State": ["if_name", "if_type", "port_state", "network_state"],
 }
 # the role an M2's Multi-AP extension gives a BSS, as OpenSync's multi_ap (spec 3.4): the pod's
 # AP takes it as a Multi-AP agent's AP does (hostapd multi_ap 2 or 1)
@@ -139,8 +161,12 @@ class PodBackend(OpenSyncBackend):
         profile=None,
         multi_bss=False,
         underlay=None,
+        phy_netdev_up=True,
     ):
         self.profile = profile or load_profile()
+        # spec 3.10: the home APs' radios' own netdevs up through nm (phy_netdev); the fleet's
+        # phy_netdev_up false turns it off and removes the rows
+        self.phy_netdev_up = phy_netdev_up is not False
         # the pod's 169.254.N.0/24 as a GRE parent (spec 8.6), from the fleet registry
         self.underlay = underlay
         super().__init__(
@@ -167,6 +193,8 @@ class PodBackend(OpenSyncBackend):
         self.auth_reloads = 0  # spec 3.10: the oftags auth_reload restored
         self.ports_added = 0  # spec 3.10: the APs bridge_ports put into their bridge
         self.bridge_modes = 0  # spec 3.10: the writes bridge_mode made
+        self.phy_writes = 0  # spec 3.10: the writes phy_netdev made
+        self.phy_ports = {}  # the home APs' radios: their port_state as nm reports it, or None
 
     @property
     def mapping(self):
@@ -422,6 +450,87 @@ class PodBackend(OpenSyncBackend):
         self.write_count += 1
         check_results(await self.session.transact(ops), counts)
         self.bridge_modes += 1
+        return done
+
+    def _own_vifs(self):
+        """The VIF names EMOSA writes on the pod: the fronthaul, its slots (multi_bss) and the
+        profile's stations."""
+        names = {self.profile.fronthaul_if, *(s for s, _, _ in self.pod_slots)}
+        names |= {self.profile.uplink_station, *dict(self.profile.uplink_stations).values()}
+        return names - {None}
+
+    def _phy_radios(self, decoded):
+        """spec 3.10: the radios carrying a home AP (their names, sorted); of those, the ones to
+        raise (every VIF on the radio EMOSA's, no VIF or Inet row on its own netdev); and the tap
+        rows on the pod's radios (uuid -> name)."""
+        radios = decoded.get("Wifi_Radio_Config", {}).values()
+        vifs = decoded.get("Wifi_VIF_Config", {})
+        homes, own = set(self._home_aps(decoded)), self._own_vifs()
+        inets = {r.get("if_name") for r in decoded.get("Wifi_Inet_Config", {}).values()}
+        named = {r.get("if_name") for r in vifs.values()}
+        carrying, raise_ = [], []
+        for radio in sorted(radios, key=lambda r: r.get("if_name") or ""):
+            name, on = radio.get("if_name"), set(radio.get("vif_configs") or [])
+            if not name or not homes & on:
+                continue
+            carrying.append(name)
+            if (
+                all(vifs.get(u, {}).get("if_name") in own for u in on)
+                and name not in named
+                and name not in inets
+            ):
+                raise_.append(name)
+        names = {r.get("if_name") for r in radios}
+        taps = {
+            u: r.get("if_name")
+            for u, r in decoded.get("Wifi_Inet_Config", {}).items()
+            if r.get("if_type") == "tap" and r.get("if_name") in names
+        }
+        return carrying, raise_, taps
+
+    async def phy_netdev(self):
+        """spec 3.10: a PHY_UP row for each radio _phy_radios raises (phy_netdev_up, on by
+        default); with it false, the tap rows on the pod's radios removed. Records the home APs'
+        radios' port_state (phy_ports). What it did ("wl0 raised", "wl0 row removed")."""
+        if not self.profile.legacy or self.profile.radio_plan != "emosa":
+            return []
+        decoded = self._decoded(await self.session.snapshot())
+        carrying, raise_, taps = self._phy_radios(decoded)
+        masters = {r.get("if_name"): r for r in decoded.get("Wifi_Master_State", {}).values()}
+        self.phy_ports = {n: masters.get(n, {}).get("port_state") for n in carrying}
+        if self.phy_netdev_up:
+            if not raise_:
+                return []
+            ops = []
+            for name in raise_:  # each guarded: no Inet row of that name meanwhile
+                ops += [
+                    {
+                        "op": "wait",
+                        "table": "Wifi_Inet_Config",
+                        "where": [["if_name", "==", name]],
+                        "columns": ["if_name"],
+                        "until": "==",
+                        "rows": [],
+                        "timeout": 0,
+                    },
+                    {
+                        "op": "insert",
+                        "table": "Wifi_Inet_Config",
+                        "row": {"if_name": name, **PHY_UP},
+                    },
+                ]
+            counts, done = [None, None] * len(raise_), [f"{n} raised" for n in raise_]
+        else:
+            if not taps:
+                return []
+            ops = [
+                {"op": "delete", "table": "Wifi_Inet_Config", "where": where_uuid(u)}
+                for u in sorted(taps)
+            ]
+            counts, done = [1] * len(taps), [f"{taps[u]} row removed" for u in sorted(taps)]
+        self.write_count += 1
+        check_results(await self.session.transact(ops), counts)
+        self.phy_writes += 1
         return done
 
     async def auth_reload(self):

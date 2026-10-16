@@ -194,6 +194,8 @@ typedef struct {
     unsigned auth_reloads;   /* spec 3.10: the oftags auth_reload restored */
     unsigned bridge_ports;   /* spec 3.10: the APs bridge_port put into their bridge */
     unsigned bridge_modes;   /* spec 3.10: the writes bridge_mode made */
+    bool phy_netdev_up;      /* spec 3.10: the fleet's phy_netdev_up, on by default (em_phy_netdev_ops) */
+    unsigned phy_writes;     /* spec 3.10: the writes phy_netdev made */
     bool notify_due, check_drift;
     uint8_t channel_moves[1 + EXTRA_RADIOS][6];
     size_t nchannel_moves;
@@ -999,6 +1001,31 @@ static void bridge_mode(agent *a)
         LOG("bridge mode: %s (wm restarts nas, eapd)", done);
     } else {
         WARN("bridge mode: %s", em_reason_name(r));
+    }
+    cJSON_Delete(results);
+    cJSON_Delete(ops);
+}
+
+/* spec 3.10 (PodBackend.phy_netdev): a tap Inet row for each radio carrying a home AP whose VIFs are
+ * all EMOSA's, with no VIF or Inet row on its own netdev, so nm sets that netdev up; with the
+ * fleet's phy_netdev_up false, those rows removed */
+static void phy_netdev(agent *a)
+{
+    char done[160];
+    int counts[EM_PHY_NETDEV_COUNTS];
+    size_t ncounts = 0;
+    cJSON *ops = em_ovsdb_ready(a->ovs) ? em_phy_netdev_ops(&a->profile, a->multi_bss, em_ovsdb_tables(a->ovs),
+                                                            a->phy_netdev_up, done, sizeof(done), counts, &ncounts)
+                                        : NULL;
+    if (!ops)
+        return;
+    cJSON *results = transact(a, ops);
+    em_reason r = results ? em_check_results(results, counts, ncounts) : EM_OUTCOME_UNKNOWN;
+    if (r == EM_OK) {
+        a->phy_writes++;
+        LOG("phy netdev: %s (nm sets the link)", done);
+    } else {
+        WARN("phy netdev: %s", em_reason_name(r));
     }
     cJSON_Delete(results);
     cJSON_Delete(ops);
@@ -2448,6 +2475,14 @@ static cJSON *status(agent *a)
         cJSON_AddNumberToObject(o, "auth_reloads", a->auth_reloads);
         cJSON_AddNumberToObject(o, "bridge_ports", a->bridge_ports); /* the APs put into their bridge */
         cJSON_AddNumberToObject(o, "bridge_mode_writes", a->bridge_modes); /* the pod's bridge mode written */
+        /* the home APs' radios' own netdevs: the setting, the writes, and each such radio's port_state
+         * as nm reports it (null: no row) */
+        cJSON *phy = cJSON_AddObjectToObject(o, "phy_netdev_up");
+        cJSON_AddBoolToObject(phy, "on", a->phy_netdev_up);
+        cJSON_AddNumberToObject(phy, "writes", a->phy_writes);
+        cJSON *ports = cJSON_AddObjectToObject(phy, "port_state");
+        if (em_ovsdb_ready(a->ovs))
+            em_phy_netdev_ports(&a->profile, a->multi_bss, em_ovsdb_tables(a->ovs), ports);
     }
     cJSON_AddStringToObject(session, "state", SESSION_NAMES[a->at.state]);
     cJSON *issues = cJSON_AddArrayToObject(session, "admission_issues");
@@ -2623,6 +2658,7 @@ static bool configure(agent *a, const char *path, const char *profiles)
     const char *set = cfg_str(c, "message_set"), *m2 = cfg_str(c, "m2_session");
     a->r1 = set && !strcmp(set, "r1");
     a->multi_bss = cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(c, "multi_bss"));
+    a->phy_netdev_up = !cJSON_IsFalse(cJSON_GetObjectItemCaseSensitive(c, "phy_netdev_up")); /* on by default */
     a->shared_session = m2 && !strcmp(m2, "shared");
     const cJSON *window = cJSON_GetObjectItemCaseSensitive(c, "topology_query_window");
     a->topology_query_window = cJSON_IsNumber(window) ? window->valuedouble : 0;
@@ -2970,7 +3006,10 @@ int main(int argc, char **argv)
         "Wifi_Credential_Config", "Connection_Manager_Uplink", "Band_Steering_Config",
         "Band_Steering_Clients", "Wifi_VIF_Neighbors", "Wifi_Stats_Config",
         /* a GRE parent's children and tunnels (spec 8.6), their columns only */
-        "DHCP_leased_IP:hwaddr,inet_addr", "Wifi_Inet_State:if_name,inet_addr",
+        "DHCP_leased_IP:hwaddr,inet_addr",
+        /* (with each interface as nm reports it, its link running or not: spec 3.10, phy_netdev) */
+        "Wifi_Inet_State:if_name,inet_addr,if_type,enabled,network",
+        "Wifi_Master_State:if_name,if_type,port_state,network_state",
         /* and, read only, whether an AP's bridge port carries its stations (spec 3.10, BRIDGE_MONITOR):
          * the bridge's fail mode and OpenSync's OpenFlow rules, each Interface as Open vSwitch opened it */
         "Bridge:name,ports,fail_mode,controller,other_config,status", "Port:name,interfaces,tag,trunks,vlan_mode",
@@ -3213,6 +3252,7 @@ int main(int argc, char **argv)
         if (refreshed && source_current(&a) && a.profile.legacy && !writing(&a)) {
             bridge_port(&a); /* spec 3.10: an AP of EMOSA's into its bridge, its oftag marked */
             bridge_mode(&a); /* spec 3.10: the converted pod's bridge mode, its home APs' oftags marked */
+            phy_netdev(&a);  /* spec 3.10: the home APs' radios' own netdevs up through nm */
             auth_reload(&a); /* spec 3.10: an AP's write taken by wm, its oftag back (a full reload) */
         }
         /* the scopes step on the refresh cadence, also while the pod is away: a write

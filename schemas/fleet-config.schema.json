@@ -14,6 +14,7 @@
     "controller_al": {"type": "string", "pattern": "^[0-9a-f]{2}(:[0-9a-f]{2}){5}$"},
     "message_set": {"enum": ["easymesh-6.1", "r1"]},
     "multi_bss": {"type": "boolean"},
+    "phy_netdev_up": {"type": "boolean", "description": "spec 3.10, on by default: on a legacy pod with radio_plan emosa, one Wifi_Inet_Config row (if_type tap, enabled, network, ip_assign_scheme none, NAT off) for each radio carrying a home AP whose VIFs are all EMOSA's, with no VIF or Inet row on its own netdev, so nm sets that netdev up; false, the tap rows on the pod's radios removed."},
     "m2_session": {"enum": ["distinct", "shared"]},
     "profile": {"type": "string", "minLength": 1},
     "uplink": {
@@ -56,6 +57,7 @@
         "properties": {
           "message_set": {"enum": ["easymesh-6.1", "r1"]},
           "multi_bss": {"type": "boolean"},
+          "phy_netdev_up": {"type": "boolean"},
           "m2_session": {"enum": ["distinct", "shared"]},
           "profile": {"type": "string", "minLength": 1},
           "uplink": {"$ref": "#/properties/uplink"},

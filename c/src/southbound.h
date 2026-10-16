@@ -137,6 +137,19 @@ cJSON *em_auth_reload_ops(const em_profile *p, bool multi_bss, const cJSON *tabl
 #define EM_BRIDGE_MODE_COUNTS 48
 cJSON *em_bridge_mode_ops(const em_profile *p, bool multi_bss, const cJSON *tables, char *done, size_t size,
                           int *counts, size_t *ncounts);
+
+/* PodBackend.phy_netdev (spec 3.10, a legacy profile with radio_plan): with `on` (the fleet's
+ * phy_netdev_up, on by default), one Wifi_Inet_Config row (if_type tap, enabled, network,
+ * ip_assign_scheme none, NAT off) for each radio carrying a home AP whose VIFs are all EMOSA's (the
+ * fronthaul, its slots with multi_bss, the profile's stations) and with no VIF or Inet row on its
+ * own netdev, so nm sets that netdev up; off, the tap rows on the pod's radios removed. What it did
+ * in done, the results' expected counts in counts (room for EM_PHY_NETDEV_COUNTS), *ncounts
+ * theirs; NULL when there is nothing to do. em_phy_netdev_ports adds each radio carrying a home AP
+ * to `out` with its Wifi_Master_State port_state (null without a row). */
+#define EM_PHY_NETDEV_COUNTS 8
+cJSON *em_phy_netdev_ops(const em_profile *p, bool multi_bss, const cJSON *tables, bool on, char *done, size_t size,
+                         int *counts, size_t *ncounts);
+void em_phy_netdev_ports(const em_profile *p, bool multi_bss, const cJSON *tables, cJSON *out);
 cJSON *em_bridge_port_ops(const em_profile *p, bool multi_bss, const cJSON *tables, char (*names)[16], size_t max,
                           size_t *n, int *counts, size_t *ncounts);
 

@@ -1516,6 +1516,69 @@ static void bridge_mode_ops(const char *schemas)
     em_profile_free(&p);
 }
 
+/* spec 3.10 (PodBackend.phy_netdev): a radio carrying a home AP whose VIFs are all EMOSA's and with no
+ * VIF or Inet row on its own netdev gets a tap Inet row (wl0); one with a station's rows (wl1) or a
+ * VIF EMOSA did not make (a cloud-made pod's wl0.1) none; off, only the tap rows on radios go */
+static void phy_netdev_ops(const char *schemas)
+{
+    em_profile p;
+    if (!legacy_profile(schemas, &p)) {
+        CHECK(false, "the legacy 5 GHz profile loads");
+        return;
+    }
+    static const char *const text =
+        "{\"Wifi_Radio_Config\": {"
+        "\"r0\": {\"if_name\": \"wl0\", \"vif_configs\": [\"set\", [[\"uuid\", \"u2\"]]]},"
+        "\"r1\": {\"if_name\": \"wl1\", \"vif_configs\": [\"set\", [[\"uuid\", \"u1\"], [\"uuid\", \"u4\"]]]}},"
+        "\"Wifi_VIF_Config\": {"
+        "\"u1\": {\"if_name\": \"wl1.2\", \"mode\": \"ap\"}, \"u2\": {\"if_name\": \"wl0.2\", \"mode\": \"ap\"},"
+        "\"u4\": {\"if_name\": \"wl1\", \"mode\": \"sta\"}},"
+        "\"Wifi_Inet_Config\": {\"i4\": {\"if_name\": \"wl1\", \"if_type\": \"vif\"}},"
+        "\"Wifi_Master_State\": {\"m1\": {\"if_name\": \"wl1\", \"port_state\": \"active\"}}}";
+    cJSON *tables = cJSON_Parse(text);
+    char done[160];
+    int counts[EM_PHY_NETDEV_COUNTS];
+    size_t ncounts = 0;
+    cJSON *ops = em_phy_netdev_ops(&p, true, tables, true, done, sizeof(done), counts, &ncounts);
+    CHECK(ops && cJSON_GetArraySize(ops) == 2 && ncounts == 2 && !strcmp(done, "wl0 raised"), "wl0 alone: %s", done);
+    char *got = ops ? cJSON_PrintUnformatted(cJSON_GetObjectItemCaseSensitive(cJSON_GetArrayItem(ops, 1), "row")) : NULL;
+    CHECK(got && !strcmp(got, "{\"if_name\":\"wl0\",\"if_type\":\"tap\",\"enabled\":true,\"network\":true,"
+                              "\"ip_assign_scheme\":\"none\",\"NAT\":false}"),
+          "the tap row: %s", got ? got : "none");
+    free(got);
+    cJSON_Delete(ops);
+    cJSON *ports = cJSON_CreateObject();
+    em_phy_netdev_ports(&p, true, tables, ports);
+    got = cJSON_PrintUnformatted(ports);
+    CHECK(got && !strcmp(got, "{\"wl0\":null,\"wl1\":\"active\"}"), "the radios' port_state: %s", got ? got : "none");
+    free(got);
+    cJSON_Delete(ports);
+    /* a cloud-made pod: its cloud's wl0.1 on the radio, which its onboarding raised: none */
+    cJSON *vifs = cJSON_GetObjectItemCaseSensitive(tables, "Wifi_VIF_Config"), *cloud = cJSON_CreateObject();
+    cJSON_AddStringToObject(cloud, "if_name", "wl0.1");
+    cJSON_AddStringToObject(cloud, "mode", "ap");
+    cJSON_AddItemToObject(vifs, "u5", cloud);
+    cJSON *r0 = cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(tables, "Wifi_Radio_Config"), "r0");
+    cJSON_ReplaceItemInObjectCaseSensitive(r0, "vif_configs",
+                                           cJSON_Parse("[\"set\", [[\"uuid\", \"u2\"], [\"uuid\", \"u5\"]]]"));
+    CHECK(!em_phy_netdev_ops(&p, true, tables, true, done, sizeof(done), counts, &ncounts) && !ncounts,
+          "a VIF EMOSA did not make on the radio: none");
+    /* off: EMOSA's tap row on wl0 goes, a tap that is no radio's stays */
+    cJSON *inets = cJSON_GetObjectItemCaseSensitive(tables, "Wifi_Inet_Config");
+    cJSON_AddItemToObject(inets, "i5", cJSON_Parse("{\"if_name\": \"wl0\", \"if_type\": \"tap\"}"));
+    cJSON_AddItemToObject(inets, "i6", cJSON_Parse("{\"if_name\": \"br-home.dhcp\", \"if_type\": \"tap\"}"));
+    ops = em_phy_netdev_ops(&p, true, tables, false, done, sizeof(done), counts, &ncounts);
+    got = ops ? cJSON_PrintUnformatted(ops) : NULL;
+    CHECK(got && ncounts == 1 && counts[0] == 1 && !strcmp(done, "wl0 row removed") &&
+              !strcmp(got, "[{\"op\":\"delete\",\"table\":\"Wifi_Inet_Config\",\"where\":[[\"_uuid\",\"==\",[\"uuid\","
+                           "\"i5\"]]]}]"),
+          "off: the tap row on wl0 removed: %s", got ? got : "none");
+    free(got);
+    cJSON_Delete(ops);
+    cJSON_Delete(tables);
+    em_profile_free(&p);
+}
+
 /* spec 2.5 (reports.identity_difference): a fresh session's log names the first radio field or TLV
  * whose identity changed; a channel move alone is none */
 static void capability_difference(void)
@@ -1573,6 +1636,7 @@ int main(int argc, char **argv)
     auth_reload_ops(argv[1]);
     bridge_port_ops(argv[1]);
     bridge_mode_ops(argv[1]);
+    phy_netdev_ops(argv[1]);
     capability_difference();
     printf("%d checks, %d failures\n", checks, failures);
     return failures != 0;

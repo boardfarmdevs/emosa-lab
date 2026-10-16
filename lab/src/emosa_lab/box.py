@@ -528,6 +528,7 @@ class Box:
         seeded_fronthaul=False,
         vendor_bridges=False,
         old_profiles=False,
+        phy_netdev_up=None,
     ):
         self.agent, self.directory, self.binary = agent, directory, binary
         # seeded_fronthaul (legacy): the seed with wl1.2 on, as the operator's cloud left it (its
@@ -540,6 +541,9 @@ class Box:
         # old_profiles: the agents read the profiles as an image before 15 October has them (the
         # legacy ones' fronthaul rows without group_rekey and ft_psk), a binary deployed alone
         self.old_profiles = old_profiles
+        # phy_netdev_up: the fleet's setting for the radios' own netdevs (spec 3.10), when set; the
+        # agents' default (on) otherwise
+        self.phy_netdev_up = phy_netdev_up
         # seed_stations (legacy): the seed with onboarding stations on wl0 and wl1, as a converted
         # pod's own seed brings them back at a hooked boot (14 October)
         self.seed_stations = seed_stations
@@ -730,6 +734,8 @@ class Box:
             entry["underlay"] = self.underlay
         if self.wired:
             fleet["uplink"] = {"mode": "ethernet"}
+        if self.phy_netdev_up is not None:
+            fleet["phy_netdev_up"] = self.phy_netdev_up
         if self.topology_query_window:
             fleet["topology_query_window"] = self.topology_query_window
         if self.modules:  # the update's URL names the fleet's advertise address
@@ -5351,6 +5357,100 @@ async def legacy_bridge_mode_repair(box):
     )
 
 
+async def phy_taps(box):
+    """The tap Inet rows on the pod's radios: {if_name: row}."""
+    radios = {r.get("if_name") for r in (await box.rows("Wifi_Radio_Config")).values()}
+    return {
+        r.get("if_name"): r
+        for r in (await box.rows("Wifi_Inet_Config")).values()
+        if r.get("if_type") == "tap" and r.get("if_name") in radios
+    }
+
+
+async def legacy_phy_netdev(box):
+    """spec 3.10, the radios' own netdevs (16 October): by default the agent writes a tap Inet row
+    (enabled, network, ip_assign_scheme none, NAT off) for each radio carrying a home AP whose VIFs
+    are all EMOSA's and with no VIF or Inet row on its own netdev: wl0 here, the 5 GHz home AP
+    wl0.2's radio, whose own netdev a pod converted at boot leaves down; not wl1, whose own netdev
+    carries the pod's station. Its status gives each home AP's radio's port_state as nm reports it
+    (the box plays nm's Wifi_Master_State row). Restarted with the fleet's phy_netdev_up false, the
+    agent removes its row and only it (wl1.1's Inet row stays)."""
+    if not (await onboarded(box)).get("applied"):
+        return box.result(passed=False, failed="not onboarded")
+    wanted = {"if_type": "tap", "enabled": True, "network": True, "ip_assign_scheme": "none"}
+
+    async def written():
+        taps = await phy_taps(box)
+        return taps if "wl0" in taps else None
+
+    taps = await serve_radios(box, written) is not None and await phy_taps(box)
+    shape = set(taps or {}) == {"wl0"} and all(
+        {k: r.get(k) for k in wanted} == wanted and r.get("NAT") is not True for r in taps.values()
+    )
+    # the box as nm: wl0's interface reported, its link running
+    row = {"if_name": "wl0", "if_type": "tap", "port_state": "active", "network_state": "up"}
+    await db_transact(box.db, [{"op": "insert", "table": "Wifi_Master_State", "row": row}])
+
+    async def reported():
+        phy = (box.status() or {}).get("phy_netdev_up") or {}
+        return phy.get("port_state") == {"wl0": "active", "wl1": None} and phy
+
+    on = await serve_radios(box, reported) is not None and (box.status() or {}).get("phy_netdev_up")
+    box.process.kill()
+    box.process.wait(10)
+    config_path = box.directory / "agent.json"
+    config = json.loads(config_path.read_text())
+    config["phy_netdev_up"] = False
+    config_path.write_text(json.dumps(config, indent=2) + "\n")
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    box.restart_agent()
+
+    async def removed():  # the restarted agent's own status (the old one's file stays a moment)
+        phy = (box.status() or {}).get("phy_netdev_up") or {}
+        return phy.get("on") is False and phy.get("writes", 0) >= 1
+
+    await serve_radios(box, removed, searches=searches, m1s=m1s)
+    after = await phy_taps(box)
+    others = sorted(r.get("if_name") for r in (await box.rows("Wifi_Inet_Config")).values())
+    return box.result(
+        passed=shape
+        and (on or {}).get("on") is True
+        and (on or {}).get("writes", 0) >= 1
+        and not after
+        and "wl1.1" in others,
+        shape=shape,
+        taps=sorted(taps or {}),
+        phy_on=on,
+        phy_off=(box.status() or {}).get("phy_netdev_up"),
+        left=others,
+    )
+
+
+async def legacy_phy_netdev_foreign(box):
+    """spec 3.10, the radios' own netdevs: a radio that also carries an AP EMOSA did not make (the
+    operator's wl0.1 beside wl0.2, as a cloud-made pod's 5 GHz radio carries its cloud's, whose
+    onboarding raised the netdev) gets no row, and neither does wl1 (the pod's station on its own
+    netdev): the agent writes nothing, its status counting no write, while it reports both radios'
+    port_state."""
+    if not (await onboarded(box)).get("applied"):
+        return box.result(passed=False, failed="not onboarded")
+
+    async def reporting():  # both home APs' radios seen, the radio plan applied
+        phy = (box.status() or {}).get("phy_netdev_up") or {}
+        vifs = {r.get("if_name") for r in (await box.rows("Wifi_VIF_Config")).values()}
+        return set(phy.get("port_state") or {}) == {"wl0", "wl1"} and "wl0.1" in vifs and phy
+
+    phy = await serve_radios(box, reporting) is not None
+    await asyncio.sleep(5)  # a few more of the agent's steps
+    status = (box.status() or {}).get("phy_netdev_up") or {}
+    taps = await phy_taps(box)
+    return box.result(
+        passed=phy and status.get("on") is True and status.get("writes") == 0 and not taps,
+        phy=status,
+        taps=sorted(taps),
+    )
+
+
 async def legacy_parent(box):
     """spec 3.10, 8.6: on a legacy pod the M2 set's backhaul BSS is the GRE parent AP wl1.1, with
     no multi_ap (the pod has none), its WPA2-PSK in the security map, hidden, no bridge, no
@@ -7182,6 +7282,8 @@ SCENARIOS = {
     "legacy-bridge-mode": legacy_bridge_mode,
     "legacy-bridge-mode-repair": legacy_bridge_mode_repair,
     "legacy-bridge-mode-old-profile": legacy_bridge_mode_repair,
+    "legacy-phy-netdev": legacy_phy_netdev,
+    "legacy-phy-netdev-foreign": legacy_phy_netdev_foreign,
     "legacy-parent": legacy_parent,
     "legacy-parent-child": legacy_parent_child,
     "legacy-parent-child-gone": legacy_parent_child_gone,
@@ -7420,6 +7522,10 @@ OPTIONS["legacy-radio-plan"] = {
 # spec 3.10, a re-seed: the radio plan's pod, its seed restored with the same UUIDs
 OPTIONS["legacy-reseed-reclaim"] = OPTIONS["legacy-radio-plan"]
 OPTIONS["legacy-reseed-reclaim-5g"] = {**OPTIONS["legacy-radio-plan"], "profile": LEGACY_PROFILE_5G}
+# spec 3.10, the radios' own netdevs: the 5 GHz home AP on wl0 (on by default); and wl0 also
+# carrying the operator's wl0.1, which EMOSA did not make
+OPTIONS["legacy-phy-netdev"] = OPTIONS["legacy-5g-fronthaul"]
+OPTIONS["legacy-phy-netdev-foreign"] = OPTIONS["legacy-reseed-reclaim-5g"]
 OPTIONS["legacy-reseed-reclaim-late"] = OPTIONS["legacy-radio-plan"]
 OPTIONS["legacy-profile-5g"] = OPTIONS["legacy-radio-plan"]
 # the station's guard, its times shortened: removed after 8 s unassociated, written again 12 s later
