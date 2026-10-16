@@ -146,6 +146,18 @@ cJSON *em_bridge_mode_ops(const em_profile *p, bool multi_bss, const cJSON *tabl
 #define EM_BCM_CTRL_TOKEN "emosa_bcm_ctrl"
 cJSON *em_bcm_ctrl_ops(const em_profile *p, const cJSON *tables, bool on, char *done, size_t size, int *counts,
                        size_t *ncounts);
+
+/* PodBackend.phy_netdev (spec 3.10, an experiment, the fleet's phy_netdev_up, off by default): with
+ * `on`, one Wifi_Inet_Config row (if_type tap, enabled, network, ip_assign_scheme none, NAT off) for
+ * each radio carrying a home AP and with no Inet row of its own, so nm sets the radio's own netdev
+ * up; off, the tap rows on the pod's radios removed. What it did in done, the results' expected
+ * counts in counts (room for EM_PHY_NETDEV_COUNTS), *ncounts theirs; NULL when there is nothing to
+ * do. em_phy_netdev_ports adds each radio carrying a home AP to `out` with its Wifi_Master_State
+ * port_state (null without a row). */
+#define EM_PHY_NETDEV_COUNTS 8
+cJSON *em_phy_netdev_ops(const em_profile *p, bool multi_bss, const cJSON *tables, bool on, char *done, size_t size,
+                         int *counts, size_t *ncounts);
+void em_phy_netdev_ports(const em_profile *p, bool multi_bss, const cJSON *tables, cJSON *out);
 cJSON *em_bridge_port_ops(const em_profile *p, bool multi_bss, const cJSON *tables, char (*names)[16], size_t max,
                           size_t *n, int *counts, size_t *ncounts);
 

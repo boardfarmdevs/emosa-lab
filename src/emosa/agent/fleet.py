@@ -228,13 +228,14 @@ def agent_config(entry, fleet):
         "al_mac": entry["al_mac"],
         "controller_al": fleet["controller_al"],
         **{k: own.get(k, fleet.get(k, v)) for k, v in AGENT_DEFAULTS.items()},
-        # the experiment's switch (spec 3.10, bcm_ctrl_rule), the pod's or the fleet's, only when
-        # set: off otherwise, and the configurations of a fleet without it stay as they were
-        **(
-            {"bcm_ctrl_rule": own.get("bcm_ctrl_rule", fleet.get("bcm_ctrl_rule"))}
-            if "bcm_ctrl_rule" in own or "bcm_ctrl_rule" in fleet
-            else {}
-        ),
+        # the experiments' switches (spec 3.10, bcm_ctrl_rule, phy_netdev_up), the pod's or the
+        # fleet's, each only when set: off otherwise, and the configurations of a fleet without
+        # them stay as they were
+        **{
+            k: own.get(k, fleet.get(k))
+            for k in ("bcm_ctrl_rule", "phy_netdev_up")
+            if k in own or k in fleet
+        },
         # a property of the controller, so the fleet's only, and only when set: the
         # configurations of a fleet without it stay as they were
         **(

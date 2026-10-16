@@ -550,11 +550,15 @@ cJSON *em_agent_config(const em_fleet_entry *e, const cJSON *fleet)
     cJSON_AddItemToObject(c, "profile", setting(fleet, e->pod_id, "profile", cJSON_CreateString("opensync-lab-hwsim-6.6.1-v1")));
     cJSON_AddItemToObject(c, "uplink", setting(fleet, e->pod_id, "uplink", mode_off()));
     cJSON_AddItemToObject(c, "telemetry", setting(fleet, e->pod_id, "telemetry", mode_off()));
-    /* the experiment's switch (spec 3.10, em_bcm_ctrl_ops), the pod's or the fleet's, only when set:
-     * off otherwise, and the configurations of a fleet without it stay as they were */
-    cJSON *bcm = setting(fleet, e->pod_id, "bcm_ctrl_rule", NULL);
-    if (bcm)
-        cJSON_AddItemToObject(c, "bcm_ctrl_rule", bcm);
+    /* the experiments' switches (spec 3.10, em_bcm_ctrl_ops, em_phy_netdev_ops), the pod's or the
+     * fleet's, each only when set: off otherwise, and the configurations of a fleet without them stay
+     * as they were */
+    static const char *const switches[] = {"bcm_ctrl_rule", "phy_netdev_up"};
+    for (size_t k = 0; k < sizeof(switches) / sizeof(*switches); k++) {
+        cJSON *on = setting(fleet, e->pod_id, switches[k], NULL);
+        if (on)
+            cJSON_AddItemToObject(c, switches[k], on);
+    }
     /* a property of the controller, so the fleet's only, and only when set */
     const cJSON *window = cJSON_GetObjectItemCaseSensitive(fleet, "topology_query_window");
     if (window)

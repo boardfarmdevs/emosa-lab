@@ -727,6 +727,14 @@ def test_the_bcm_ctrl_experiment_writes_its_own_openflow_rule_and_removes_it(age
     assert result["passed"], result
 
 
+def test_the_phy_netdev_experiment_raises_the_home_aps_radios_and_lowers_them_again(
+    agent, tmp_path
+):
+    # spec 3.10 (16 October): phy_netdev_up on, a tap Inet row per home AP's radio; off, gone
+    result = box("legacy-phy-netdev", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+
+
 def test_an_agent_on_an_older_profile_still_sets_the_home_aps_rekey_and_ft(agent, tmp_path):
     # spec 3.10 (15 October): an agent binary bind-mounted on the router read the image's profile,
     # which had no group_rekey or ft_psk, and set neither on the home APs

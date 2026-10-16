@@ -11,7 +11,7 @@ import pytest
 
 from emosa.errors import EmosaError, Reason
 from emosa.model import Intent
-from emosa.opensync.pod_profile import LEGACY_VIF_GUARDS, PodBackend
+from emosa.opensync.pod_profile import LEGACY_VIF_GUARDS, PHY_UP, PodBackend
 from emosa.opensync.profiles import load as load_profile
 from emosa.opensync.radio_scope import psk, wpa2_psk
 from emosa.opensync.schema import (
@@ -1237,3 +1237,39 @@ def test_the_bcm_ctrl_experiment_skips_a_bridge_with_a_rule_for_its_ethertype(tm
     assert asyncio.run(pod.bcm_ctrl()) == [] and pod.session.sent == []
     pod.bcm_ctrl_rule = False  # off: only EMOSA's own goes, the cloud's stays
     assert asyncio.run(pod.bcm_ctrl()) == [] and pod.session.sent == []
+
+
+def test_the_phy_netdev_experiment_raises_a_home_aps_radio_with_no_inet_row(tmp_path):
+    # spec 3.10, the experiment: on, a tap Inet row for wl1 (wl1.2's radio), nm sets it up
+    pod, _ = backend(tmp_path)
+    pod.phy_netdev_up = True
+    assert asyncio.run(pod.phy_netdev()) == ["wl1 raised"]
+    (ops,) = pod.session.sent
+    assert ops[0]["op"] == "wait" and ops[0]["where"] == [["if_name", "==", "wl1"]]
+    assert ops[1]["row"] == {"if_name": "wl1", **PHY_UP} and PHY_UP["if_type"] == "tap"
+    assert pod.phy_ports == {"wl1": None} and pod.phy_writes == 1
+    # a radio with an Inet row of its own (a station's, another manager's) is left as it is
+    pod, _ = backend(tmp_path / "station")
+    pod.phy_netdev_up = True
+    station = {"if_name": "wl1", "if_type": "vif", "enabled": True, "network": True}
+    pod.session.tables["Wifi_Inet_Config"] = {"00000000-0000-4000-8000-000000000140": station}
+    assert asyncio.run(pod.phy_netdev()) == [] and pod.session.sent == []
+
+
+def test_the_phy_netdev_experiment_off_removes_only_the_tap_rows_on_radios(tmp_path):
+    # spec 3.10, the experiment: off, EMOSA's row on wl1 goes; a tap that is no radio's stays
+    pod, _ = backend(tmp_path)
+    ours, cloud = "00000000-0000-4000-8000-000000000141", "00000000-0000-4000-8000-000000000142"
+    pod.session.tables["Wifi_Inet_Config"] = {
+        ours: {"if_name": "wl1", "if_type": "tap", "enabled": True, "network": True},
+        cloud: {"if_name": "br-home.dhcp", "if_type": "tap", "enabled": True, "network": True},
+    }
+    pod.session.tables["Wifi_Master_State"] = {
+        "00000000-0000-4000-8000-000000000143": {"if_name": "wl1", "port_state": "active"}
+    }
+    assert asyncio.run(pod.phy_netdev()) == ["wl1 row removed"]
+    (ops,) = pod.session.sent
+    assert ops == [
+        {"op": "delete", "table": "Wifi_Inet_Config", "where": [["_uuid", "==", ["uuid", ours]]]}
+    ]
+    assert pod.phy_ports == {"wl1": "active"}

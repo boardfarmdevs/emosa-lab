@@ -15,6 +15,7 @@
     "message_set": {"enum": ["easymesh-6.1", "r1"]},
     "multi_bss": {"type": "boolean"},
     "bcm_ctrl_rule": {"type": "boolean", "description": "spec 3.10, an experiment (15 October), off by default: on a legacy pod with radio_plan emosa, one OpenFlow rule in the home bridge (table 0, priority 140, dl_type=0x886c, action local, token emosa_bcm_ctrl) where it has none for that ethertype; off, EMOSA's own removed."},
+    "phy_netdev_up": {"type": "boolean", "description": "spec 3.10, an experiment (16 October), off by default: on a legacy pod with radio_plan emosa, one Wifi_Inet_Config row (if_type tap, enabled, network, ip_assign_scheme none, NAT off) for each radio carrying a home AP and with no Inet row, so nm sets the radio's own netdev up; off, the tap rows on radios removed."},
     "m2_session": {"enum": ["distinct", "shared"]},
     "profile": {"type": "string", "minLength": 1},
     "uplink": {
@@ -58,6 +59,7 @@
           "message_set": {"enum": ["easymesh-6.1", "r1"]},
           "multi_bss": {"type": "boolean"},
           "bcm_ctrl_rule": {"type": "boolean"},
+          "phy_netdev_up": {"type": "boolean"},
           "m2_session": {"enum": ["distinct", "shared"]},
           "profile": {"type": "string", "minLength": 1},
           "uplink": {"$ref": "#/properties/uplink"},

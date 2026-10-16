@@ -529,6 +529,7 @@ class Box:
         vendor_bridges=False,
         old_profiles=False,
         bcm_ctrl_rule=False,
+        phy_netdev_up=False,
     ):
         self.agent, self.directory, self.binary = agent, directory, binary
         # seeded_fronthaul (legacy): the seed with wl1.2 on, as the operator's cloud left it (its
@@ -544,6 +545,9 @@ class Box:
         # bcm_ctrl_rule: the fleet's switch for the experiment (spec 3.10): EMOSA's own OpenFlow
         # rule for the Broadcom driver's events in br-home
         self.bcm_ctrl_rule = bcm_ctrl_rule
+        # phy_netdev_up: the fleet's switch for the experiment (spec 3.10): a tap Inet row for each
+        # radio carrying a home AP, so nm sets the radio's own netdev up
+        self.phy_netdev_up = phy_netdev_up
         # seed_stations (legacy): the seed with onboarding stations on wl0 and wl1, as a converted
         # pod's own seed brings them back at a hooked boot (14 October)
         self.seed_stations = seed_stations
@@ -738,6 +742,8 @@ class Box:
             fleet["topology_query_window"] = self.topology_query_window
         if self.bcm_ctrl_rule:
             fleet["bcm_ctrl_rule"] = True
+        if self.phy_netdev_up:
+            fleet["phy_netdev_up"] = True
         if self.modules:  # the update's URL names the fleet's advertise address
             fleet["modules"], fleet["advertise"] = self.modules, NODE_ADVERTISE
         if self.backhaul:  # option 1, its credentials from the agent's own configuration
@@ -5414,6 +5420,89 @@ async def legacy_bcm_ctrl(box):
     )
 
 
+async def phy_taps(box):
+    """The tap Inet rows on the pod's radios: {if_name: row}."""
+    radios = {r.get("if_name") for r in (await box.rows("Wifi_Radio_Config")).values()}
+    return {
+        r.get("if_name"): r
+        for r in (await box.rows("Wifi_Inet_Config")).values()
+        if r.get("if_type") == "tap" and r.get("if_name") in radios
+    }
+
+
+async def legacy_phy_netdev(box):
+    """spec 3.10, the experiment (the fleet's phy_netdev_up, off by default; 16 October): with the
+    switch on, the agent writes a tap Inet row (enabled, network, ip_assign_scheme none, NAT off)
+    for each radio carrying a home AP and with no Inet row of its own: here wl1 (wl1.2) and wl0
+    (the 5 GHz home AP wl0.2), whose own netdev a pod converted at boot leaves down. Its status
+    gives each such radio's port_state as nm reports it (the box plays nm's Wifi_Master_State
+    rows). Restarted with the switch off, the agent removes its rows and only them (wl1.1's Inet
+    row stays). Off from the start (every other legacy scenario): no tap row."""
+    if not (await onboarded(box)).get("applied"):
+        return box.result(passed=False, failed="not onboarded")
+    wanted = {"if_type": "tap", "enabled": True, "network": True, "ip_assign_scheme": "none"}
+
+    async def written():
+        taps = await phy_taps(box)
+        return taps if set(taps) == {"wl0", "wl1"} else None
+
+    taps = await serve_radios(box, written) is not None and await phy_taps(box)
+    shape = bool(taps) and all(
+        {k: r.get(k) for k in wanted} == wanted and r.get("NAT") is not True for r in taps.values()
+    )
+    # the box as nm: each tap row's interface reported, its link running
+    await db_transact(
+        box.db,
+        [
+            {
+                "op": "insert",
+                "table": "Wifi_Master_State",
+                "row": {
+                    "if_name": name,
+                    "if_type": "tap",
+                    "port_state": "active",
+                    "network_state": "up",
+                },
+            }
+            for name in sorted(taps or {})
+        ],
+    )
+
+    async def reported():
+        phy = (box.status() or {}).get("phy_netdev_up") or {}
+        return phy.get("port_state") == {"wl0": "active", "wl1": "active"} and phy
+
+    on = await serve_radios(box, reported) is not None and (box.status() or {}).get("phy_netdev_up")
+    box.process.kill()
+    box.process.wait(10)
+    config_path = box.directory / "agent.json"
+    config = json.loads(config_path.read_text())
+    config["phy_netdev_up"] = False
+    config_path.write_text(json.dumps(config, indent=2) + "\n")
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    box.restart_agent()
+
+    async def removed():  # the restarted agent's own status (the old one's file stays a moment)
+        phy = (box.status() or {}).get("phy_netdev_up") or {}
+        return phy.get("on") is False and phy.get("writes", 0) >= 1
+
+    await serve_radios(box, removed, searches=searches, m1s=m1s)
+    after = await phy_taps(box)
+    others = sorted(r.get("if_name") for r in (await box.rows("Wifi_Inet_Config")).values())
+    return box.result(
+        passed=shape
+        and (on or {}).get("on") is True
+        and (on or {}).get("writes", 0) >= 1
+        and not after
+        and "wl1.1" in others,
+        shape=shape,
+        taps=sorted(taps or {}),
+        phy_on=on,
+        phy_off=(box.status() or {}).get("phy_netdev_up"),
+        left=others,
+    )
+
+
 async def legacy_parent(box):
     """spec 3.10, 8.6: on a legacy pod the M2 set's backhaul BSS is the GRE parent AP wl1.1, with
     no multi_ap (the pod has none), its WPA2-PSK in the security map, hidden, no bridge, no
@@ -7246,6 +7335,7 @@ SCENARIOS = {
     "legacy-bridge-mode-repair": legacy_bridge_mode_repair,
     "legacy-bridge-mode-old-profile": legacy_bridge_mode_repair,
     "legacy-bcm-ctrl": legacy_bcm_ctrl,
+    "legacy-phy-netdev": legacy_phy_netdev,
     "legacy-parent": legacy_parent,
     "legacy-parent-child": legacy_parent_child,
     "legacy-parent-child-gone": legacy_parent_child_gone,
@@ -7456,6 +7546,8 @@ OPTIONS["legacy-5g-fronthaul"] = {
     "underlay": LEGACY_UNDERLAY,
     "profile": "bcm-pod-2.4.3-gre-5g-v1",
 }
+# the experiment's switch on (spec 3.10, phy_netdev_up), with the 5 GHz home AP on wl0
+OPTIONS["legacy-phy-netdev"] = {**OPTIONS["legacy-5g-fronthaul"], "phy_netdev_up": True}
 OPTIONS["legacy-ethernet-lost"] = {
     "legacy": True,
     "multi_bss": True,

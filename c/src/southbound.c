@@ -1045,6 +1045,102 @@ cJSON *em_bcm_ctrl_ops(const em_profile *p, const cJSON *tables, bool on, char *
     return ops;
 }
 
+/* a radio carrying one of EMOSA's home APs (PodBackend._phy_radios) */
+static bool carries_home_ap(const em_profile *p, bool multi_bss, const cJSON *tables, const cJSON *radio)
+{
+    const cJSON *v;
+    cJSON_ArrayForEach(v, em_table(tables, "Wifi_VIF_Config"))
+    {
+        if (home_ap(p, multi_bss, v) && contains(radio, "vif_configs", v->string))
+            return true;
+    }
+    return false;
+}
+
+/* a tap Inet row on one of the pod's radios: EMOSA's (no other manager writes one) */
+static bool phy_tap(const cJSON *tables, const cJSON *inet)
+{
+    const cJSON *r;
+    if (!same_text(ovs_str(inet, "if_type"), "tap"))
+        return false;
+    cJSON_ArrayForEach(r, em_table(tables, "Wifi_Radio_Config"))
+    {
+        if (same_text(ovs_str(r, "if_name"), ovs_str(inet, "if_name")))
+            return true;
+    }
+    return false;
+}
+
+cJSON *em_phy_netdev_ops(const em_profile *p, bool multi_bss, const cJSON *tables, bool on, char *done, size_t size,
+                         int *counts, size_t *ncounts)
+{
+    *ncounts = 0;
+    done[0] = '\0';
+    if (!p->legacy || !p->radio_plan)
+        return NULL;
+    cJSON *ops = cJSON_CreateArray();
+    char text[48];
+    const cJSON *r;
+    if (on) {
+        cJSON_ArrayForEach(r, em_table(tables, "Wifi_Radio_Config"))
+        {
+            const char *name = ovs_str(r, "if_name");
+            if (!name || *ncounts + 2 > EM_PHY_NETDEV_COUNTS || inet_named(tables, name) ||
+                !carries_home_ap(p, multi_bss, tables, r))
+                continue;
+            cJSON *insert = op("insert", "Wifi_Inet_Config", NULL), *row = cJSON_CreateObject();
+            cJSON_AddStringToObject(row, "if_name", name);
+            cJSON_AddStringToObject(row, "if_type", "tap");
+            cJSON_AddTrueToObject(row, "enabled");
+            cJSON_AddTrueToObject(row, "network");
+            cJSON_AddStringToObject(row, "ip_assign_scheme", "none");
+            cJSON_AddFalseToObject(row, "NAT");
+            cJSON_AddItemToObject(insert, "row", row);
+            /* guarded: no Inet row of that name meanwhile */
+            cJSON_AddItemToArray(ops, absent("Wifi_Inet_Config", where_eq("if_name", name), "if_name"));
+            cJSON_AddItemToArray(ops, insert);
+            counts[(*ncounts)++] = -1;
+            counts[(*ncounts)++] = -1;
+            EM_FORMAT_FIXED(text, sizeof(text), "%.15s raised", name);
+            add_done(done, size, text);
+        }
+    } else {
+        cJSON_ArrayForEach(r, em_table(tables, "Wifi_Inet_Config"))
+        {
+            if (*ncounts >= EM_PHY_NETDEV_COUNTS || !phy_tap(tables, r))
+                continue;
+            cJSON_AddItemToArray(ops, op("delete", "Wifi_Inet_Config", where_uuid(r->string)));
+            counts[(*ncounts)++] = 1;
+            EM_FORMAT_FIXED(text, sizeof(text), "%.15s row removed", ovs_str(r, "if_name"));
+            add_done(done, size, text);
+        }
+    }
+    if (!*ncounts) {
+        cJSON_Delete(ops);
+        return NULL;
+    }
+    return ops;
+}
+
+void em_phy_netdev_ports(const em_profile *p, bool multi_bss, const cJSON *tables, cJSON *out)
+{
+    const cJSON *r, *m;
+    if (!p->legacy || !p->radio_plan)
+        return;
+    cJSON_ArrayForEach(r, em_table(tables, "Wifi_Radio_Config"))
+    {
+        const char *name = ovs_str(r, "if_name"), *state = NULL;
+        if (!name || !carries_home_ap(p, multi_bss, tables, r) || cJSON_GetObjectItemCaseSensitive(out, name))
+            continue;
+        cJSON_ArrayForEach(m, em_table(tables, "Wifi_Master_State"))
+        {
+            if (same_text(ovs_str(m, "if_name"), name))
+                state = ovs_str(m, "port_state");
+        }
+        cJSON_AddItemToObject(out, name, state ? cJSON_CreateString(state) : cJSON_CreateNull());
+    }
+}
+
 cJSON *em_auth_reload_ops(const em_profile *p, bool multi_bss, const cJSON *tables, char (*names)[16], size_t max,
                           size_t *n)
 {

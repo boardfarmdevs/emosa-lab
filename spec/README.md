@@ -639,6 +639,20 @@ is everything above. For a legacy pod, all of this specification applies, except
   `Openflow_Config` row under its own token (`emosa_bcm_ctrl`), unless the bridge
   has a rule for that ethertype already. With the setting off, it removes its own.
   Its status gives the setting and the writes (`bcm_ctrl_rule`).
+- **The radios' own netdevs (an experiment).** On a pod converted at boot, the
+  netdev of the radio itself (`wl0` under the 5 GHz home AP `wl0.2`) stays down:
+  OpenSync 1.4's wm raises it only while applying a VIF on it, and the seed's
+  stations are deleted before wm starts. Later OpenSync raises it with every VIF,
+  as a Broadcom radio in DHD offload mode passes no data frames otherwise
+  (16 October). With the fleet's `phy_netdev_up` setting on (off by default,
+  settable per pod), the agent writes one `Wifi_Inet_Config` row for each radio
+  carrying a home AP and with no Inet row of its own: `if_type` `tap`, enabled,
+  `network` on, `ip_assign_scheme` none, NAT off. nm runs such a row as a plain
+  interface (the link set up, no address, nothing created), and the connection
+  manager, which takes `eth` rows for uplinks, leaves it alone. With the setting
+  off, the agent removes the `tap` rows on the pod's radios, and nm sets the link
+  down again. Its status gives the setting, the writes and each such radio's
+  `port_state` as nm reports it in `Wifi_Master_State` (`phy_netdev_up`).
 - **The authenticator's reload.** OpenSync 2.4.3's Broadcom wm restarts the
   pod's authenticator (nas and eapd) in full only for a new AP or a change of
   its `security` entries beyond the key (`encryption`, `mode`, `oftag`). An
