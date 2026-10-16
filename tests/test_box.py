@@ -299,6 +299,11 @@ def test_a_gre_child_left_up_after_its_kept_parent_failed_is_undone(agent, tmp_p
     assert result["passed"], result
 
 
+def test_an_agent_stopped_ends_cleanly(agent, tmp_path):
+    result = box("agent-stops-cleanly", agent, tmp_path / "box")
+    assert result["passed"], result
+
+
 def test_a_6_6_gre_child_moves_across_bands_onto_a_legacy_pods_parent(agent, tmp_path):
     result = box("mixed-gre-child-onto-legacy-parent", agent, tmp_path / "box", timeout=300)
     assert result["passed"], result

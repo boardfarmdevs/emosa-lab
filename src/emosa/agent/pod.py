@@ -1336,9 +1336,12 @@ async def serve(config, stop):
                 # spec 2.5: a kept reconnection whose pod no longer has the configuration (its rows
                 # missing or changed under the same start of its OpenSync): the session ends at
                 # once, and the fresh session's M2 writes it, rather than the unserved rule's 60 s
-                session = lifecycle.session
+                # (onboarding, not the OVSDB session: the one closed at the end is that)
+                onboarding = lifecycle.session
                 kept = (
-                    (session.counts.get("reconnection_kept", 0), id(session)) if session else None
+                    (onboarding.counts.get("reconnection_kept", 0), id(onboarding))
+                    if onboarding
+                    else None
                 )
                 if kept and kept != last_kept and kept[0] and refreshed and ready:
                     last_kept = kept

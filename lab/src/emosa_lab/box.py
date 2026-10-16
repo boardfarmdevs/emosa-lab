@@ -3015,6 +3015,27 @@ async def mixed_gre_child_onto_legacy_parent(box):
     )
 
 
+async def agent_stops_cleanly(box):
+    """The agent stopped as its service manager and the fleet stop it (SIGTERM), once onboarded:
+    it ends its work, closes its pod's OVSDB session and exits 0, with no traceback in its log
+    (the Python agent closed the onboarding session instead, a name the session's reconnection
+    check reused, and ended on a TypeError, 16 October)."""
+    if not (await onboarded(box)).get("applied"):
+        return box.result(passed=False, failed="not onboarded")
+    await asyncio.sleep(2)  # a few of the agent's ticks with its session in hand
+    box.process.terminate()
+    loop = asyncio.get_running_loop()
+    try:
+        code = await loop.run_in_executor(None, lambda: box.process.wait(15))
+    except subprocess.TimeoutExpired:
+        code = None
+    box.log.flush()
+    log = (box.directory / "agent.log").read_text(errors="replace")
+    return box.result(
+        passed=code == 0 and "Traceback" not in log, exit_code=code, traceback="Traceback" in log
+    )
+
+
 async def gre_child_kept_gone(box):
     """Spec 8.3 "Moved" for a GRE child (8.6), V54's fault row "pi1 reboots": the kept GRE
     parent is gone when the child's pod starts again. The agent re-applies the move; the station
@@ -7462,6 +7483,7 @@ SCENARIOS = {
     "gre-child-kept-gone": gre_child_kept_gone,
     "gre-child-kept-gone-up": gre_child_kept_gone_up,
     "mixed-gre-child-onto-legacy-parent": mixed_gre_child_onto_legacy_parent,
+    "agent-stops-cleanly": agent_stops_cleanly,
     "backhaul-steering-renewal": backhaul_steering_renewal,
     "backhaul-steering-refused": backhaul_steering_refused,
     "backhaul-steering-own-bss": backhaul_steering_own_bss,
