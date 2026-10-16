@@ -222,6 +222,8 @@ class FleetBox(Box):
             "EMOSA_BOX_UNITS": str(self.units),
             "EMOSA_BOX_CONFIG_DIR": str(self.config_dir),
             "EMOSA_BOX_AGENT": json.dumps(agent_command(self.agent, "{config}", self.binary)),
+            # the platform's state root, as /etc/default/emosa gives it on a gateway (spec 4)
+            "EMOSA_STATE_ROOT": self.fleet_config["state_root"],
         }
         self.process = AgentProcess(self.units / f"{self.serial}.pid")
         if self.supervised:
@@ -251,8 +253,11 @@ class FleetBox(Box):
         )
         self.process = AgentProcess(self.run_root / self.serial / "agent.pid")
 
-    async def start_fleet(self):
-        self.fleet_path.write_text(json.dumps(self.fleet_config, indent=2) + "\n")
+    async def start_fleet(self, text=None):
+        """The fleet started on its configuration (``text``: the file's own, whatever it is)."""
+        self.fleet_path.write_text(
+            json.dumps(self.fleet_config, indent=2) + "\n" if text is None else text
+        )
         self.fleet_log.write(f"--- the {self.implementation} fleet\n")
         self.fleet_log.flush()
         self.fleet_process = subprocess.Popen(
@@ -433,6 +438,39 @@ async def fleet_upgrade(box):
         handovers=[before.get("handovers"), after.get("handovers")],
         provisioning_again=again,
     )
+
+
+async def fleet_config_truncated(box):
+    """spec 4: the likeliest bad file in the field, a partial write: the fleet's configuration cut
+    in half, which names no state root. The fleet stopped with its agent gone, started again on it:
+    it rejects it ("not JSON"), logs it once and records it under the platform's state root
+    (EMOSA_STATE_ROOT, as /etc/default/emosa gives it), keeps running on the last valid
+    configuration kept there and starts the registry's agent on it, which provisions the pod
+    again."""
+    first = await onboarded(box)
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    box.stop_fleet()
+    box.process.terminate()
+    box.process.wait(15)
+    (box.units / f"{box.serial}.pid").unlink(missing_ok=True)
+    text = json.dumps(box.fleet_config, indent=2) + "\n"
+    await box.start_fleet(text[: len(text) // 2])
+    started = await box.until(lambda: box.process.pid(), seconds=15)
+    again = await provision(box, searches, m1s) if started else False
+    await asyncio.sleep(3)
+    root = Path(box.fleet_env["EMOSA_STATE_ROOT"])
+    record = root / "fleet-config.rejected.json"
+    rejected = json.loads(record.read_text()) if record.is_file() else {}
+    log = (box.directory / "fleet.log").read_text(errors="replace").split("--- the ")[-1]
+    checks = {
+        "onboarded": bool(first.get("applied")),
+        "fleet_running": box.fleet_process.poll() is None,
+        "agent_started": bool(started),
+        "provisioned_again": again,
+        "rejected_once": log.count("rejected") == 1,
+        "recorded_not_json": rejected.get("error") == "not JSON",
+    }
+    return box.result(passed=all(checks.values()), checks=checks, rejected=rejected)
 
 
 async def fleet_config_rejected(box):
@@ -942,6 +980,7 @@ SCENARIOS = {
     "fleet-supervised": fleet_supervised,
     "fleet-files": fleet_files,
     "fleet-config-rejected": fleet_config_rejected,
+    "fleet-config-truncated": fleet_config_truncated,
 }
 OPTIONS = {
     "fleet-refusals": {"fleet": {"admit": [OTHER_POD]}, "handover_seconds": 6},

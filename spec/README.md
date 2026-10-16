@@ -872,13 +872,16 @@ same entry.
 
 A serving fleet keeps each valid configuration it starts on as the last valid one
 (`fleet-config.valid.json` under its `state_root`). One that fails its checks (its
-schema, a module's update without `files`) is rejected. If it is JSON naming a
-`state_root` that keeps a valid one, the fleet logs the rejection once, records
-it (`fleet-config.rejected.json`: the file, its error, when) and serves the last
-valid configuration. So one bad key never takes the pods off EMOSA: the fleet
-does not end, and its service manager does not start it again and again (15
-October). With no valid one kept, it ends as before. A valid start removes the
-record. `list` and `forget` read the configuration as given.
+schema, a module's update without `files`, or not JSON at all, a partial write) is
+rejected. If the `state_root` it names keeps a valid one (the platform's,
+`EMOSA_STATE_ROOT` as `/etc/default/emosa` gives it, when it names none), the fleet logs
+the rejection once, records it (`fleet-config.rejected.json`: the file, its error, when)
+and serves the last valid configuration. So one bad key never takes the pods off EMOSA:
+the fleet does not end, and its service manager does not start it again and again (15
+October). With no valid one kept, it ends as before. A valid start removes the record.
+`list` and `forget` read the configuration as given. A tool that writes it writes a
+temporary file and renames it over the configuration (as the lab's deploy library and
+the router's apply script do), so the fleet never reads half a file.
 
 When it starts, the fleet MUST do step 4 for each admitted entry its
 registry has, in the registry's order, without waiting for the pod: an image

@@ -471,22 +471,33 @@ def write_private(path, text):
     os.replace(tmp, path)
 
 
+def platform_state_root():
+    """The platform's state root (EMOSA_STATE_ROOT, as /etc/default/emosa gives it), else the
+    packaging's default."""
+    return os.environ.get("EMOSA_STATE_ROOT") or "/var/lib/emosa"
+
+
 def served_config(config, path):
-    """The configuration a serving fleet runs on (spec 4): ``config`` when it passes
-    check_config, kept then as the last valid one (state_root/VALID_CONFIG, its rejection record
-    gone); else the last valid one, the rejection logged once and recorded (REJECTED_CONFIG: the
-    file, its error, when). Raises when there is none to fall back to (no state_root in it, or
-    none kept there)."""
+    """The configuration a serving fleet runs on (spec 4): ``config`` (None: the file is not
+    JSON) when it passes check_config, kept then as the last valid one (state_root/VALID_CONFIG,
+    its rejection record gone); else the one kept under the state root it names, or the
+    platform's when it names none, the rejection logged once and recorded (REJECTED_CONFIG: the
+    file, its error, when). Raises when there is none to fall back to."""
     try:
+        if config is None:
+            raise EmosaError(Reason.INVALID_INPUT, "not JSON")
         check_config(config)
     except EmosaError as exc:
-        root = config.get("state_root") if isinstance(config, dict) else None
-        kept = Path(root) / VALID_CONFIG if isinstance(root, str) and root else None
-        if kept is None or not kept.is_file():
+        # the state root it names, else the platform's (EMOSA_STATE_ROOT, as /etc/default/emosa
+        # gives it): a file that is not JSON (a partial write) names none
+        named = config.get("state_root") if isinstance(config, dict) else None
+        root = named if isinstance(named, str) and named else platform_state_root()
+        kept = Path(root) / VALID_CONFIG
+        if not kept.is_file():
             raise
         last = json.loads(kept.read_text())
         check_config(last)
-        error = schema_error(config) or str(exc)
+        error = (schema_error(config) if config is not None else None) or str(exc)
         log.error(
             "fleet configuration %s rejected (%s): serving the last valid one, %s",
             path,
@@ -795,9 +806,14 @@ def main():
     logging.basicConfig(
         level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s"
     )
-    config = json.loads(args.config.read_text())
     if args.command == "serve":  # a configuration that is not valid: the last valid one (spec 4)
+        try:
+            config = json.loads(args.config.read_text())
+        except ValueError:
+            config = None
         config = served_config(config, args.config)
+    else:
+        config = json.loads(args.config.read_text())
     if config.get("agents") == "supervised" and args.command != "list":
         # spec §4: the agents as the fleet's own children are the C fleet's
         parser.error('"agents": "supervised" is emosa-fleet-c\'s; this fleet runs systemd units')

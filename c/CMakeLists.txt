@@ -129,6 +129,8 @@ set(EMOSA_FLEET_CONFIG "/etc/emosa-fleet.json" CACHE FILEPATH "the fleet's confi
 set(EMOSA_AGENT_CONFIG_DIR "/etc/emosa" CACHE PATH "the agents' configurations (the fleet configuration's config_dir)")
 set(EMOSA_GTP_CONFIG "/etc/emosa-gtp.json" CACHE FILEPATH "the GTP's configuration")
 set(EMOSA_STATE_ROOT "/var/lib/emosa" CACHE PATH "the state root a fleet configuration names here")
+# the fleet's fallback for a configuration that names no state root (spec 4): this platform's
+target_compile_definitions(emosa-fleet-c PRIVATE EMOSA_STATE_ROOT_DIR="${EMOSA_STATE_ROOT}")
 set(EMOSA_RUN_ROOT "" CACHE PATH "the run root (a RAM disk) a fleet configuration names here, or none")
 set(EMOSA_NETNS "" CACHE STRING "the agents' network namespace on a gateway whose EasyMesh controller is local, or none")
 if(EMOSA_INSTALL_DATA)
