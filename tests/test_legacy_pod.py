@@ -3,6 +3,7 @@
 
 import asyncio
 import copy
+import dataclasses
 import hashlib
 import json
 
@@ -393,6 +394,83 @@ def test_bridge_ports_leaves_an_ap_it_need_not_or_may_not_bridge(tmp_path, case)
             next(iter(raw[table].values()))["if_name"] = "wl1.3"
     assert asyncio.run(pod.bridge_ports()) == []
     assert pod.session.sent == [] and pod.ports_added == 0
+
+
+WAN_BRIDGE, WAN_PORT, HOME_INET, WAN_INET = (
+    f"00000000-0000-4000-8000-0000000001{n}" for n in ("20", "21", "22", "23")
+)
+
+
+def hooked(raw):
+    """A hooked boot's bridges (15 October): the fronthaul in br-home's ports, br-home's Inet row
+    down, br-wan's NAT on, no patch pair."""
+    bridged(raw, members={"wl1.2": FH_PORT})
+    raw["Bridge"][WAN_BRIDGE] = {"name": "br-wan", "ports": ["uuid", WAN_PORT]}
+    raw["Port"][WAN_PORT] = {"name": "br-wan"}
+    raw["Wifi_Inet_Config"] = {
+        HOME_INET: {"if_name": "br-home", "if_type": "bridge", "enabled": True, "network": False},
+        WAN_INET: {"if_name": "br-wan", "if_type": "bridge", "enabled": True, "NAT": True},
+    }
+    return raw
+
+
+def test_a_hooked_boots_bridge_mode_is_written_in_one_guarded_transaction(tmp_path):
+    pod, _ = backend(tmp_path)
+    hooked(pod.session.tables)
+    assert asyncio.run(pod.bridge_mode()) == [
+        "br-home up",
+        "br-wan NAT off",
+        "patch pair",
+        "wl1.2 group_rekey, ft_psk",
+    ]
+    (ops,) = pod.session.sent
+    assert len(ops) == 15 and pod.bridge_modes == 1
+    assert ops[0]["op"] == "wait" and ops[0]["columns"] == ["if_name", "enabled", "network"]
+    assert ops[1] == {
+        "op": "update",
+        "table": "Wifi_Inet_Config",
+        "where": [["_uuid", "==", ["uuid", HOME_INET]]],
+        "row": {"enabled": True, "network": True, "NAT": False},
+    }
+    assert ops[3]["row"] == {"NAT": False}
+    assert [o["table"] for o in ops[4:12]] == ["Port"] * 2 + ["Interface"] * 2 + ["Port"] * 2 + [
+        "Bridge"
+    ] * 2
+    assert ops[6]["row"] == {
+        "name": "patch-w2h",
+        "type": "patch",
+        "options": ["map", [["peer", "patch-h2w"]]],
+    }
+    assert ops[13]["row"] == {"group_rekey": 86400, "ft_psk": 0}
+    assert ops[14]["mutations"][1] == ["security", "insert", ["map", [["oftag", "home--1~reload"]]]]
+
+
+def test_auth_reload_waits_for_the_bridge_mode(tmp_path):
+    pod, _ = backend(tmp_path)
+    raw = hooked(marked(pod.session.tables, "home--1~reload"))
+    assert asyncio.run(pod.auth_reload()) == []
+    raw["Wifi_Inet_Config"][HOME_INET] |= {"network": True, "NAT": False}
+    raw["Wifi_Inet_Config"][WAN_INET]["NAT"] = False
+    raw["Port"] |= {"p-w": {"name": "patch-w2h"}, "p-h": {"name": "patch-h2w"}}
+    raw["Wifi_VIF_Config"][VIF] |= {"group_rekey": 86400, "ft_psk": 0}
+    assert asyncio.run(pod.bridge_mode()) == [] and pod.session.sent == []
+    assert asyncio.run(pod.auth_reload()) == ["wl1.2"]
+
+
+@pytest.mark.parametrize("case", ["no wan row", "another's half pair", "the pod's plan"])
+def test_bridge_mode_leaves_what_it_does_not_own(tmp_path, case):
+    pod, _ = backend(tmp_path)
+    raw = hooked(pod.session.tables)
+    if case == "no wan row":
+        del raw["Wifi_Inet_Config"][WAN_INET]
+        assert asyncio.run(pod.bridge_mode()) == [] and pod.session.sent == []
+        return
+    if case == "another's half pair":
+        raw["Port"]["p-w"] = {"name": "patch-w2h"}
+        assert "patch pair" not in asyncio.run(pod.bridge_mode())
+        return
+    pod.profile = dataclasses.replace(pod.profile, radio_plan="pod")
+    assert asyncio.run(pod.bridge_mode()) == [] and pod.session.sent == []
 
 
 def test_bridge_ports_is_a_legacy_pods_only(tmp_path):

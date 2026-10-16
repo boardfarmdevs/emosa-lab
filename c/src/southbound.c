@@ -769,9 +769,244 @@ cJSON *em_bridge_port_ops(const em_profile *p, bool multi_bss, const cJSON *tabl
     return ops;
 }
 
+/* an AP of EMOSA's home ones (PodBackend._home_aps): the fronthaul, a fronthaul slot with multi_bss */
+static bool home_ap(const em_profile *p, bool multi_bss, const cJSON *config)
+{
+    const char *name = ovs_str(config, "if_name");
+    if (!same_text(ovs_str(config, "mode"), "ap") || !name)
+        return false;
+    bool home = same_text(name, p->fronthaul_if);
+    for (size_t i = 0; multi_bss && !home && i < p->nslots; i++)
+        home = same_text(name, p->slots[i].if_name) && same_text(p->slots[i].role, "fronthaul");
+    return home;
+}
+
+static const cJSON *inet_named(const cJSON *tables, const char *name)
+{
+    const cJSON *r;
+    cJSON_ArrayForEach(r, em_table(tables, "Wifi_Inet_Config"))
+    {
+        if (same_text(ovs_str(r, "if_name"), name))
+            return r;
+    }
+    return NULL;
+}
+
+static bool port_exists(const cJSON *tables, const char *port)
+{
+    const cJSON *r;
+    cJSON_ArrayForEach(r, em_table(tables, "Port"))
+    {
+        if (same_text(ovs_str(r, "name"), port))
+            return true;
+    }
+    return false;
+}
+
+#define PATCH_WAN "patch-w2h"
+#define PATCH_HOME "patch-h2w"
+
+/* the profile's value of a home AP's integer column (group_rekey, ft_psk); false when it has none */
+static bool profile_int(const em_profile *p, const char *column, int *value)
+{
+    const cJSON *v = cJSON_GetObjectItemCaseSensitive(p->fronthaul_vif, column);
+    if (!cJSON_IsNumber(v))
+        return false;
+    *value = v->valueint;
+    return true;
+}
+
+static const char *const home_vif_columns[] = {"group_rekey", "ft_psk"};
+
+/* a home AP whose group_rekey or ft_psk is not the profile's */
+static bool vif_lacking(const em_profile *p, const cJSON *config)
+{
+    for (size_t k = 0; k < 2; k++) {
+        int want;
+        const cJSON *v = cJSON_GetObjectItemCaseSensitive(config, home_vif_columns[k]);
+        if (profile_int(p, home_vif_columns[k], &want) && (!cJSON_IsNumber(v) || v->valueint != want))
+            return true;
+    }
+    return false;
+}
+
+/* PodBackend._bridge_mode: what a converted pod (a legacy profile with radio_plan emosa) lacks of
+ * the bridge mode its cloud runs; false when it has no Inet row for either bridge */
+typedef struct {
+    const cJSON *home, *wan; /* the Inet rows to set: the home bridge's not up, the WAN's NAT on */
+    bool pair;               /* neither patch Port exists */
+    size_t nvifs;            /* home APs whose group_rekey or ft_psk is not the profile's */
+} bridge_lack;
+
+static bool bridge_lacking(const em_profile *p, bool multi_bss, const cJSON *tables, bridge_lack *out)
+{
+    *out = (bridge_lack){0};
+    const char *home = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(p->fronthaul_vif, "bridge"));
+    const char *wan = p->wan_bridge ? p->wan_bridge : "br-wan";
+    const cJSON *h = home && *home ? inet_named(tables, home) : NULL, *w = inet_named(tables, wan), *r;
+    if (!p->legacy || !p->radio_plan || !h || !w)
+        return false;
+    if (!cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(h, "enabled")) ||
+        !cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(h, "network")) ||
+        !cJSON_IsFalse(cJSON_GetObjectItemCaseSensitive(h, "NAT")))
+        out->home = h;
+    if (cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(w, "NAT")))
+        out->wan = w;
+    out->pair = !port_exists(tables, PATCH_WAN) && !port_exists(tables, PATCH_HOME); /* else paired, or another's */
+    cJSON_ArrayForEach(r, em_table(tables, "Wifi_VIF_Config")) out->nvifs +=
+        home_ap(p, multi_bss, r) && vif_lacking(p, r);
+    return true;
+}
+
+static bool lacks_any(const bridge_lack *l) { return l->home || l->wan || l->pair || l->nvifs; }
+
+static void add_done(char *done, size_t size, const char *text)
+{
+    size_t used = strlen(done);
+    (void)em_format(done + used, size - used, "%s%s", used ? "; " : "", text);
+}
+
+static cJSON *inet_update(const cJSON *row, cJSON *values)
+{
+    cJSON *o = op("update", "Wifi_Inet_Config", where_uuid(row->string));
+    cJSON_AddItemToObject(o, "row", values);
+    return o;
+}
+
+/* the patch pair's operations (wired.pair_ops): no Port of either name, the two patch Interfaces
+ * (each the other's peer) and their Ports, each Port into its bridge */
+static void pair_ops(cJSON *ops, int *counts, size_t *nc, const char *wan, const char *home)
+{
+    const char *const names[2] = {PATCH_WAN, PATCH_HOME}, *const tags[2] = {"w", "h"};
+    const char *const bridges[2] = {wan, home};
+    for (size_t i = 0; i < 2; i++) {
+        cJSON_AddItemToArray(ops, absent("Port", where_eq("name", names[i]), "name"));
+        counts[(*nc)++] = -1;
+    }
+    for (size_t i = 0; i < 2; i++) {
+        char iface[24];
+        EM_FORMAT_FIXED(iface, sizeof(iface), "patch_%s_if", tags[i]);
+        cJSON *o = op("insert", "Interface", NULL), *row = cJSON_CreateObject(), *pairs = cJSON_CreateArray(),
+              *pair = cJSON_CreateArray();
+        cJSON_AddStringToObject(o, "uuid-name", iface);
+        cJSON_AddStringToObject(row, "name", names[i]);
+        cJSON_AddStringToObject(row, "type", "patch");
+        cJSON_AddItemToArray(pair, cJSON_CreateString("peer"));
+        cJSON_AddItemToArray(pair, cJSON_CreateString(names[1 - i]));
+        cJSON_AddItemToArray(pairs, pair);
+        cJSON_AddItemToObject(row, "options", tagged("map", pairs));
+        cJSON_AddItemToObject(o, "row", row);
+        cJSON_AddItemToArray(ops, o);
+        counts[(*nc)++] = -1;
+    }
+    for (size_t i = 0; i < 2; i++) {
+        char iface[24], port[24];
+        EM_FORMAT_FIXED(iface, sizeof(iface), "patch_%s_if", tags[i]);
+        EM_FORMAT_FIXED(port, sizeof(port), "patch_%s_port", tags[i]);
+        cJSON *o = op("insert", "Port", NULL), *row = cJSON_CreateObject(), *set = cJSON_CreateArray();
+        cJSON_AddItemToArray(set, named(iface));
+        cJSON_AddStringToObject(o, "uuid-name", port);
+        cJSON_AddStringToObject(row, "name", names[i]);
+        cJSON_AddItemToObject(row, "interfaces", tagged("set", set));
+        cJSON_AddItemToObject(o, "row", row);
+        cJSON_AddItemToArray(ops, o);
+        counts[(*nc)++] = -1;
+    }
+    for (size_t i = 0; i < 2; i++) {
+        char port[24];
+        EM_FORMAT_FIXED(port, sizeof(port), "patch_%s_port", tags[i]);
+        cJSON *o = op("mutate", "Bridge", where_eq("name", bridges[i])), *m = cJSON_CreateArray(),
+              *set = cJSON_CreateArray();
+        cJSON_AddItemToArray(set, named(port));
+        cJSON_AddItemToArray(m, mutation("ports", "insert", tagged("set", set)));
+        cJSON_AddItemToObject(o, "mutations", m);
+        cJSON_AddItemToArray(ops, o);
+        counts[(*nc)++] = 1;
+    }
+}
+
+cJSON *em_bridge_mode_ops(const em_profile *p, bool multi_bss, const cJSON *tables, char *done, size_t size,
+                          int *counts, size_t *ncounts)
+{
+    static const char *const home_cols[] = {"if_name", "enabled", "network", "NAT"};
+    static const char *const wan_cols[] = {"if_name", "NAT"};
+    static const char *const vif_cols[] = {"if_name", "enabled", "bridge", "security"};
+    bridge_lack lack;
+    *ncounts = 0;
+    done[0] = '\0';
+    if (!bridge_lacking(p, multi_bss, tables, &lack) || !lacks_any(&lack))
+        return NULL;
+    const char *home = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(p->fronthaul_vif, "bridge"));
+    const char *wan = p->wan_bridge ? p->wan_bridge : "br-wan";
+    const size_t suffix = strlen(EM_AUTH_RELOAD);
+    cJSON *ops = cJSON_CreateArray();
+    char text[64];
+    if (lack.home) {
+        cJSON *v = cJSON_CreateObject();
+        cJSON_AddTrueToObject(v, "enabled");
+        cJSON_AddTrueToObject(v, "network");
+        cJSON_AddFalseToObject(v, "NAT");
+        cJSON_AddItemToArray(ops, present_guard("Wifi_Inet_Config", lack.home->string, lack.home, home_cols, 4));
+        cJSON_AddItemToArray(ops, inet_update(lack.home, v));
+        counts[(*ncounts)++] = -1;
+        counts[(*ncounts)++] = 1;
+        EM_FORMAT_FIXED(text, sizeof(text), "%.32s up", home);
+        add_done(done, size, text);
+    }
+    if (lack.wan) {
+        cJSON *v = cJSON_CreateObject();
+        cJSON_AddFalseToObject(v, "NAT");
+        cJSON_AddItemToArray(ops, present_guard("Wifi_Inet_Config", lack.wan->string, lack.wan, wan_cols, 2));
+        cJSON_AddItemToArray(ops, inet_update(lack.wan, v));
+        counts[(*ncounts)++] = -1;
+        counts[(*ncounts)++] = 1;
+        EM_FORMAT_FIXED(text, sizeof(text), "%.32s NAT off", wan);
+        add_done(done, size, text);
+    }
+    if (lack.pair) {
+        pair_ops(ops, counts, ncounts, wan, home);
+        add_done(done, size, "patch pair");
+    }
+    const cJSON *r;
+    cJSON_ArrayForEach(r, em_table(tables, "Wifi_VIF_Config"))
+    {
+        if (!home_ap(p, multi_bss, r) || *ncounts + 3 > EM_BRIDGE_MODE_COUNTS)
+            continue;
+        const char *oftag = ovs_map_get(r, "security", "oftag");
+        size_t len = oftag ? strlen(oftag) : 0;
+        bool marked = len >= suffix && !strcmp(oftag + len - suffix, EM_AUTH_RELOAD), update = vif_lacking(p, r);
+        if (!update && marked)
+            continue;
+        cJSON_AddItemToArray(ops, present_guard("Wifi_VIF_Config", r->string, r, vif_cols, 4));
+        counts[(*ncounts)++] = -1;
+        if (update) {
+            cJSON *o = op("update", "Wifi_VIF_Config", where_uuid(r->string)), *row = cJSON_CreateObject();
+            for (size_t k = 0; k < 2; k++) {
+                int want;
+                if (profile_int(p, home_vif_columns[k], &want))
+                    cJSON_AddNumberToObject(row, home_vif_columns[k], want);
+            }
+            cJSON_AddItemToObject(o, "row", row);
+            cJSON_AddItemToArray(ops, o);
+            counts[(*ncounts)++] = 1;
+            EM_FORMAT_FIXED(text, sizeof(text), "%.15s group_rekey, ft_psk", ovs_str(r, "if_name"));
+            add_done(done, size, text);
+        }
+        if (!marked) {
+            char tag[80]; /* an oftag (a short tag) and the suffix */
+            EM_FORMAT_FIXED(tag, sizeof(tag), "%.60s%s", oftag ? oftag : "", EM_AUTH_RELOAD);
+            cJSON_AddItemToArray(ops, oftag_mutate(r->string, tag));
+            counts[(*ncounts)++] = 1;
+        }
+    }
+    return ops;
+}
+
 cJSON *em_auth_reload_ops(const em_profile *p, bool multi_bss, const cJSON *tables, char (*names)[16], size_t max,
                           size_t *n)
 {
+    bridge_lack lack;
+    bool waiting = bridge_lacking(p, multi_bss, tables, &lack) && lacks_any(&lack);
     static const char *const cols[] = {"if_name", "ssid", "security"};
     const size_t suffix = strlen(EM_AUTH_RELOAD);
     cJSON *ops = cJSON_CreateArray();
@@ -794,8 +1029,8 @@ cJSON *em_auth_reload_ops(const em_profile *p, bool multi_bss, const cJSON *tabl
         if (!state || !same_text(ovs_map_get(state, "security", "oftag"), oftag) ||
             !same_text(ovs_str(state, "ssid"), ovs_str(r, "ssid")) || !same_text(em_row_psk(state), em_row_psk(r)))
             continue; /* wm has not taken the write yet */
-        if (unbridged(p, multi_bss, tables, r))
-            continue; /* its port first (em_bridge_port_ops), then the restore's full reload */
+        if (waiting || unbridged(p, multi_bss, tables, r))
+            continue; /* its port and the bridge mode first, then the restore's full reload */
         cJSON_AddItemToArray(ops, guard("Wifi_VIF_Config", r->string, r, cols, 3));
         char restored[80];
         EM_FORMAT_FIXED(restored, sizeof(restored), "%.*s", (int)(len - suffix < 79 ? len - suffix : 79), oftag);

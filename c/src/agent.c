@@ -193,6 +193,7 @@ typedef struct {
     unsigned session_starts; /* spec 3.10: a legacy pod's starts, counted by its agent's sessions */
     unsigned auth_reloads;   /* spec 3.10: the oftags auth_reload restored */
     unsigned bridge_ports;   /* spec 3.10: the APs bridge_port put into their bridge */
+    unsigned bridge_modes;   /* spec 3.10: the writes bridge_mode made */
     bool notify_due, check_drift;
     uint8_t channel_moves[1 + EXTRA_RADIOS][6];
     size_t nchannel_moves;
@@ -974,6 +975,30 @@ static void bridge_port(agent *a)
             LOG("bridge port: %s into its bridge (wm restarts nas, eapd)", names[i]);
     } else {
         WARN("bridge port: %s", em_reason_name(r));
+    }
+    cJSON_Delete(results);
+    cJSON_Delete(ops);
+}
+
+/* spec 3.10 (PodBackend.bridge_mode): a converted pod's bridge mode as its cloud runs it, when it
+ * lacks any of it, in one guarded write (the home APs' oftags marked: a full reload after) */
+static void bridge_mode(agent *a)
+{
+    char done[256];
+    int counts[EM_BRIDGE_MODE_COUNTS];
+    size_t ncounts = 0;
+    cJSON *ops = em_ovsdb_ready(a->ovs) ? em_bridge_mode_ops(&a->profile, a->multi_bss, em_ovsdb_tables(a->ovs), done,
+                                                             sizeof(done), counts, &ncounts)
+                                        : NULL;
+    if (!ops)
+        return;
+    cJSON *results = transact(a, ops);
+    em_reason r = results ? em_check_results(results, counts, ncounts) : EM_OUTCOME_UNKNOWN;
+    if (r == EM_OK) {
+        a->bridge_modes++;
+        LOG("bridge mode: %s (wm restarts nas, eapd)", done);
+    } else {
+        WARN("bridge mode: %s", em_reason_name(r));
     }
     cJSON_Delete(results);
     cJSON_Delete(ops);
@@ -2422,6 +2447,7 @@ static cJSON *status(agent *a)
         /* and the oftags restored after an AP's write (each the second full reload of its authenticator) */
         cJSON_AddNumberToObject(o, "auth_reloads", a->auth_reloads);
         cJSON_AddNumberToObject(o, "bridge_ports", a->bridge_ports); /* the APs put into their bridge */
+        cJSON_AddNumberToObject(o, "bridge_mode_writes", a->bridge_modes); /* the pod's bridge mode written */
     }
     cJSON_AddStringToObject(session, "state", SESSION_NAMES[a->at.state]);
     cJSON *issues = cJSON_AddArrayToObject(session, "admission_issues");
@@ -3186,6 +3212,7 @@ int main(int argc, char **argv)
             reconcile(&a);
         if (refreshed && source_current(&a) && a.profile.legacy && !writing(&a)) {
             bridge_port(&a); /* spec 3.10: an AP of EMOSA's into its bridge, its oftag marked */
+            bridge_mode(&a); /* spec 3.10: the converted pod's bridge mode, its home APs' oftags marked */
             auth_reload(&a); /* spec 3.10: an AP's write taken by wm, its oftag back (a full reload) */
         }
         /* the scopes step on the refresh cadence, also while the pod is away: a write

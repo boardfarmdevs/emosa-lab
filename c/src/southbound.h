@@ -108,9 +108,10 @@ em_reason em_ap_submit(const em_profile *profile, const char *serial, bool multi
 #define EM_AUTH_RELOAD "~reload"
 
 /* PodBackend.auth_reload: the guarded operations giving each legacy AP whose oftag carries
- * EM_AUTH_RELOAD its oftag back once its State shows that write (its ssid, key and oftag) and it
- * needs no bridge port (em_bridge_port_ops), the APs' names in names (at most max), *n their
- * count; NULL when there is none. */
+ * EM_AUTH_RELOAD its oftag back once its State shows that write (its ssid, key and oftag), it
+ * needs no bridge port (em_bridge_port_ops) and the pod lacks none of its bridge mode
+ * (em_bridge_mode_ops), the APs' names in names (at most max), *n their count; NULL when there is
+ * none. */
 cJSON *em_auth_reload_ops(const em_profile *p, bool multi_bss, const cJSON *tables, char (*names)[16], size_t max,
                           size_t *n);
 
@@ -124,6 +125,18 @@ cJSON *em_auth_reload_ops(const em_profile *p, bool multi_bss, const cJSON *tabl
  * counts in counts (-1 unchecked; room for EM_BRIDGE_PORTS_MAX * 7), *ncounts theirs; NULL when
  * there is none. */
 #define EM_BRIDGE_PORTS_MAX 8
+
+/* PodBackend.bridge_mode (spec 3.10): the bridge mode a converted pod's cloud runs (a legacy
+ * profile with radio_plan emosa), when the pod lacks any of it: the home bridge's Inet row up
+ * (enabled, network, NAT off; where wm and the authenticator listen), the WAN bridge's NAT off,
+ * OpenSync's patch pair when neither of its Ports exists, the home APs' group_rekey and ft_psk as
+ * the profile has them, and their oftags marked (EM_AUTH_RELOAD) unless they are, so the
+ * authenticator restarts with all of it in place. What it sets in done ("; "-joined), the results'
+ * expected counts in counts (-1 unchecked; room for EM_BRIDGE_MODE_COUNTS), *ncounts theirs; NULL
+ * when there is nothing to set or the pod has no Inet row for either bridge. */
+#define EM_BRIDGE_MODE_COUNTS 48
+cJSON *em_bridge_mode_ops(const em_profile *p, bool multi_bss, const cJSON *tables, char *done, size_t size,
+                          int *counts, size_t *ncounts);
 cJSON *em_bridge_port_ops(const em_profile *p, bool multi_bss, const cJSON *tables, char (*names)[16], size_t max,
                           size_t *n, int *counts, size_t *ncounts);
 

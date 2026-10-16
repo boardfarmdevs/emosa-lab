@@ -1155,12 +1155,13 @@ async def serve(config, stop):
             "reconnections": report.reconnections,
             # spec 3.10: a legacy pod's starts, counted by its agent's sessions, the oftags
             # restored after an AP's write (each the second full reload of its authenticator),
-            # and the APs EMOSA put into their bridge
+            # the APs EMOSA put into their bridge, and its writes of the pod's bridge mode
             **(
                 {
                     "session_starts": report.session_starts,
                     "auth_reloads": backend.auth_reloads,
                     "bridge_ports": backend.ports_added,
+                    "bridge_mode_writes": backend.bridge_modes,
                 }
                 if profile.legacy
                 else {}
@@ -1400,6 +1401,9 @@ async def serve(config, stop):
                             log.info(
                                 "bridge port: %s into its bridge (wm restarts nas, eapd)", name
                             )
+                        done = await timed("bridge mode", backend.bridge_mode())
+                        if done:
+                            log.info("bridge mode: %s (wm restarts nas, eapd)", "; ".join(done))
                         for name in await timed("auth reload", backend.auth_reload()):
                             log.info("auth reload: %s oftag restored (wm restarts nas, eapd)", name)
                     except (EmosaError, ConnectionError, TimeoutError) as exc:

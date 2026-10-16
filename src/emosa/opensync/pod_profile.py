@@ -47,6 +47,7 @@ from emosa.opensync.mapping import OpenSyncBackend, check_results, guard, where_
 from emosa.opensync.profiles import load as load_profile
 from emosa.opensync.radio_scope import psk, wpa2_psk
 from emosa.opensync.uplink import start_instance
+from emosa.opensync.wired import pair_ops, paired
 from emosa.wire.operation_bridge import ScopeContext
 
 MODE = "opensync-6.6-hwsim"
@@ -77,6 +78,12 @@ AUTH_RELOAD = "~reload"
 # Port), and Wifi_VIF_State.bridge shows the bridge regardless (from the pod's NVRAM). An AP of
 # EMOSA's with a bridge and no Port gets one, its oftag marked so the authenticator restarts after.
 PORT_GUARDS = ("if_name", "enabled", "bridge", "security")
+# spec 3.10: the bridge mode a converted pod's cloud runs (a cloud-made pod read on 15 October):
+# the home bridge's Inet row up (network: its interface, where wm and the authenticator listen),
+# the WAN bridge's NAT off, and OpenSync's patch pair joining the two; a hooked boot's seed has
+# the home bridge down and NAT on, and no pair. The home APs' VIF columns the cloud writes too.
+HOME_UP = {"enabled": True, "network": True, "NAT": False}
+HOME_VIF_COLUMNS = ("group_rekey", "ft_psk")
 # What shows whether such a port carries its stations, read only (spec 3.10): the bridge's fail
 # mode (a secure bridge forwards only what its OpenFlow rules allow) and OpenSync's rules for it,
 # and each port's Interface as Open vSwitch opened it (its ofport, or the error)
@@ -86,6 +93,9 @@ BRIDGE_MONITOR = {
     "Interface": ["name", "type", "ofport", "error", "link_state", "admin_state"],
     "Openflow_Config": ["bridge", "table", "priority", "rule", "action", "token"],
     "Openflow_State": ["bridge", "openflow_config", "success", "token"],
+    # bridge_mode's: the bridges' Inet rows and the home APs' columns it sets
+    "Wifi_Inet_Config": ["if_name", "enabled", "network", "NAT"],
+    "Wifi_VIF_Config": list(HOME_VIF_COLUMNS),
 }
 # the role an M2's Multi-AP extension gives a BSS, as OpenSync's multi_ap (spec 3.4): the pod's
 # AP takes it as a Multi-AP agent's AP does (hostapd multi_ap 2 or 1)
@@ -154,6 +164,7 @@ class PodBackend(OpenSyncBackend):
         self.identity = None  # radio MAC, BSSID (None before the VIF exists), channel, radio
         self.auth_reloads = 0  # spec 3.10: the oftags auth_reload restored
         self.ports_added = 0  # spec 3.10: the APs bridge_ports put into their bridge
+        self.bridge_modes = 0  # spec 3.10: the writes bridge_mode made
 
     @property
     def mapping(self):
@@ -287,11 +298,139 @@ class PodBackend(OpenSyncBackend):
         self.ports_added += len(names)
         return names
 
+    def _home_aps(self, decoded):
+        """EMOSA's home APs on the pod (the fronthaul, the fronthaul slots with multi_bss): uuid ->
+        decoded Config row."""
+        names = {self.profile.fronthaul_if}
+        names |= {s for s, role, _ in self.pod_slots if role == "fronthaul"}
+        return {
+            u: r
+            for u, r in decoded.get("Wifi_VIF_Config", {}).items()
+            if r.get("mode") == "ap" and r.get("if_name") in names
+        }
+
+    def _bridge_mode(self, decoded):
+        """spec 3.10: what a converted pod (a legacy profile with radio_plan emosa) lacks of the
+        bridge mode its cloud runs: {"home": the home bridge's Inet uuid, when not up; "wan": the
+        WAN bridge's, when its NAT is on; "pair": True, when neither patch Port exists; "vifs":
+        the home APs' uuids whose group_rekey or ft_psk is not the profile's}, only the keys it
+        needs; None when the pod has no Inet row for either bridge (nothing of its seed to set)."""
+        if not self.profile.legacy or self.profile.radio_plan != "emosa":
+            return None
+        home, wan = self.profile.fronthaul_vif.get("bridge"), self.profile.wan_bridge
+        inets = {r.get("if_name"): u for u, r in decoded.get("Wifi_Inet_Config", {}).items()}
+        if not home or home not in inets or wan not in inets:
+            return None
+        rows = decoded["Wifi_Inet_Config"]
+        needs = {}
+        if any(rows[inets[home]].get(k) is not v for k, v in HOME_UP.items()):
+            needs["home"] = inets[home]
+        if rows[inets[wan]].get("NAT") is True:
+            needs["wan"] = inets[wan]
+        if paired(decoded, wan, home) == "none":  # "other": another manager's, left alone
+            needs["pair"] = True
+        wanted = {
+            k: self.profile.fronthaul_vif[k]
+            for k in HOME_VIF_COLUMNS
+            if k in self.profile.fronthaul_vif
+        }
+        vifs = [
+            u
+            for u, r in sorted(self._home_aps(decoded).items())
+            if any(r.get(k) != v for k, v in wanted.items())
+        ]
+        if vifs:
+            needs["vifs"] = vifs
+        return needs
+
+    async def bridge_mode(self):
+        """spec 3.10: a converted pod's bridge mode, as its cloud runs it, in one guarded write
+        when it lacks any of it (a hooked boot's seed, or a pod EMOSA took before this): the home
+        bridge's Inet row up, the WAN bridge's NAT off, the patch pair, the home APs' group_rekey
+        and ft_psk, and their oftags marked (AUTH_RELOAD) unless they are, so the authenticator
+        restarts in full with all of it in place (auth_reload restores them after). What it set."""
+        raw = await self.session.snapshot()
+        tables, decoded = raw["tables"], self._decoded(raw)
+        needs = self._bridge_mode(decoded)
+        if not needs:
+            return []
+        home, wan = self.profile.fronthaul_vif.get("bridge"), self.profile.wan_bridge
+        ops, counts, done = [], [], []
+
+        def inet(uuid, columns, row):
+            raw_row = tables["Wifi_Inet_Config"][uuid]
+            return [
+                guard("Wifi_Inet_Config", uuid, raw_row, [c for c in columns if c in raw_row]),
+                {
+                    "op": "update",
+                    "table": "Wifi_Inet_Config",
+                    "where": where_uuid(uuid),
+                    "row": row,
+                },
+            ]
+
+        if "home" in needs:
+            ops += inet(needs["home"], ("if_name", "enabled", "network", "NAT"), HOME_UP)
+            counts += [None, 1]
+            done.append(f"{home} up")
+        if "wan" in needs:
+            ops += inet(needs["wan"], ("if_name", "NAT"), {"NAT": False})
+            counts += [None, 1]
+            done.append(f"{wan} NAT off")
+        if "pair" in needs:
+            pair, pair_counts = pair_ops(wan, home)
+            ops += pair
+            counts += pair_counts
+            done.append("patch pair")
+        wanted = {
+            k: self.profile.fronthaul_vif[k]
+            for k in HOME_VIF_COLUMNS
+            if k in self.profile.fronthaul_vif
+        }
+        for uuid, config in sorted(self._home_aps(decoded).items()):
+            raw_row = tables["Wifi_VIF_Config"][uuid]
+            oftag = (config.get("security") or {}).get("oftag", "")
+            update = uuid in needs.get("vifs", ())
+            if not update and oftag.endswith(AUTH_RELOAD):
+                continue
+            ops.append(
+                guard("Wifi_VIF_Config", uuid, raw_row, [c for c in PORT_GUARDS if c in raw_row])
+            )
+            counts.append(None)
+            if update:
+                ops.append(
+                    {
+                        "op": "update",
+                        "table": "Wifi_VIF_Config",
+                        "where": where_uuid(uuid),
+                        "row": wanted,
+                    }
+                )
+                counts.append(1)
+                done.append(f"{config.get('if_name')} {', '.join(wanted)}")
+            if not oftag.endswith(AUTH_RELOAD):
+                ops.append(
+                    {
+                        "op": "mutate",
+                        "table": "Wifi_VIF_Config",
+                        "where": where_uuid(uuid),
+                        "mutations": [
+                            ["security", "delete", ["set", ["oftag"]]],
+                            ["security", "insert", ["map", [["oftag", oftag + AUTH_RELOAD]]]],
+                        ],
+                    }
+                )
+                counts.append(1)
+        self.write_count += 1
+        check_results(await self.session.transact(ops), counts)
+        self.bridge_modes += 1
+        return done
+
     async def auth_reload(self):
         """spec 3.10: each legacy AP whose oftag carries AUTH_RELOAD gets its oftag back, guarded,
-        once the pod's State shows that write (its ssid, key and oftag) and the AP is in its bridge
-        (bridge_ports): the second full reload of the pod's authenticator, after wm has taken the
-        first. The names restored."""
+        once the pod's State shows that write (its ssid, key and oftag), the AP is in its bridge
+        (bridge_ports) and the pod has its bridge mode (bridge_mode): the second full reload of
+        the pod's authenticator, after wm has taken the first. The names restored."""
         if not self.profile.legacy:
             return []
         raw = await self.session.snapshot()
@@ -310,8 +449,8 @@ class PodBackend(OpenSyncBackend):
                 or psk(state) != psk(config)
             ):
                 continue  # wm has not taken the write yet
-            if self._unbridged(decoded, config) is not None:
-                continue  # its port first (bridge_ports), then the restore's full reload
+            if self._unbridged(decoded, config) is not None or self._bridge_mode(decoded):
+                continue  # its port and the bridge mode first, then the restore's full reload
             mutations = [["security", "delete", ["set", ["oftag"]]]]
             if oftag != AUTH_RELOAD:
                 mutations.append(

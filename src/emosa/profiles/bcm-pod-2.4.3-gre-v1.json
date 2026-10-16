@@ -30,6 +30,8 @@
       "uapsd_enable": true,
       "min_hw_mode": "11b",
       "vif_radio_idx": 2,
+      "group_rekey": 86400,
+      "ft_psk": 0,
       "security": [
         "map",
         [

@@ -695,6 +695,20 @@ def test_a_live_legacy_ap_without_its_port_is_repaired_without_a_restart(agent, 
     assert result["reloads"][-2:] == [["full", "home--1~reload"], ["full", "home--1"]]
 
 
+def test_a_hooked_boots_pod_gets_the_bridge_mode_its_cloud_runs(agent, tmp_path):
+    # spec 3.10 (15 October): after a hooked boot br-home's interface was down (its Inet row
+    # network false), so the authenticator heard no client, and the pod was not a bridge
+    result = box("legacy-bridge-mode", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+    assert result["bridge_mode"]["dhcp"] is True and result["served"] is True
+
+
+def test_a_live_pods_bridge_mode_is_repaired_without_a_restart(agent, tmp_path):
+    result = box("legacy-bridge-mode-repair", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+    assert result["reloads"][-2:] == [["full", "home--1~reload"], ["full", "home--1"]]
+
+
 def test_a_legacy_pods_backhaul_bss_is_its_gre_parent_ap_on_its_underlay(agent, tmp_path):
     # spec 3.10, 8.6: the former manager's 169.254.2.1 on wl1.1 replaced by the pod's underlay
     result = box("legacy-parent", agent, tmp_path / "box", timeout=240)

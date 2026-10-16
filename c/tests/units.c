@@ -1426,6 +1426,96 @@ static void bridge_port_ops(const char *schemas)
     em_profile_free(&p);
 }
 
+/* spec 3.10 (PodBackend.bridge_mode): a hooked boot's seed lacks the bridge mode the cloud runs
+ * (the home bridge down, the WAN bridge's NAT on, no patch pair, the home APs without the cloud's
+ * group_rekey and ft_psk): one write sets all of it and marks the home APs' oftags; the restore
+ * waits for it; nothing once it is all there, or with no Inet row for a bridge */
+static void bridge_mode_ops(const char *schemas)
+{
+    em_profile p;
+    if (!legacy_profile(schemas, &p)) {
+        CHECK(false, "the legacy 5 GHz profile loads");
+        return;
+    }
+    static const char *const text =
+        "{\"Wifi_VIF_Config\": {"
+        "\"u1\": {\"if_name\": \"wl1.2\", \"mode\": \"ap\", \"enabled\": true, \"bridge\": \"br-home\", \"ssid\": \"s\", "
+        "\"group_rekey\": [\"set\", []], \"ft_psk\": [\"set\", []], "
+        "\"security\": [\"map\", [[\"encryption\", \"WPA-PSK\"], [\"key\", \"k\"], [\"oftag\", \"home--1\"]]]},"
+        "\"u2\": {\"if_name\": \"wl0.2\", \"mode\": \"ap\", \"enabled\": true, \"bridge\": \"br-home\", \"ssid\": \"s\", "
+        "\"group_rekey\": 86400, \"ft_psk\": 0, "
+        "\"security\": [\"map\", [[\"encryption\", \"WPA-PSK\"], [\"key\", \"k\"], [\"oftag\", \"home--1~reload\"]]]},"
+        "\"u3\": {\"if_name\": \"wl1.1\", \"mode\": \"ap\", \"enabled\": true, \"bridge\": \"\", \"ssid\": \"b\", "
+        "\"security\": [\"map\", [[\"encryption\", \"WPA-PSK\"], [\"key\", \"k\"]]]}},"
+        "\"Wifi_VIF_State\": {"
+        "\"s2\": {\"if_name\": \"wl0.2\", \"ssid\": \"s\", \"security\": [\"map\", "
+        "[[\"encryption\", \"WPA-PSK\"], [\"key\", \"k\"], [\"oftag\", \"home--1~reload\"]]]}},"
+        "\"Wifi_Inet_Config\": {"
+        "\"i1\": {\"if_name\": \"br-home\", \"if_type\": \"bridge\", \"enabled\": true, \"network\": false, "
+        "\"NAT\": [\"set\", []]},"
+        "\"i2\": {\"if_name\": \"br-wan\", \"if_type\": \"bridge\", \"enabled\": true, \"network\": true, \"NAT\": true}},"
+        "\"Bridge\": {\"b1\": {\"name\": \"br-home\", \"ports\": [\"uuid\", \"p1\"]}, "
+        "\"b2\": {\"name\": \"br-wan\", \"ports\": [\"uuid\", \"p2\"]}},"
+        "\"Port\": {\"p1\": {\"name\": \"br-home\"}, \"p2\": {\"name\": \"br-wan\"}}}";
+    cJSON *tables = cJSON_Parse(text);
+    char done[256];
+    int counts[EM_BRIDGE_MODE_COUNTS];
+    size_t ncounts = 0;
+    cJSON *ops = em_bridge_mode_ops(&p, true, tables, done, sizeof(done), counts, &ncounts);
+    CHECK(ops && !strcmp(done, "br-home up; br-wan NAT off; patch pair; wl1.2 group_rekey, ft_psk"), "all of it: %s",
+          done);
+    static const int want[] = {-1, 1, -1, 1, -1, -1, -1, -1, -1, -1, 1, 1, -1, 1, 1};
+    bool same = ops && cJSON_GetArraySize(ops) == 15 && ncounts == 15;
+    for (size_t i = 0; same && i < 15; i++)
+        same = counts[i] == want[i];
+    CHECK(same, "two Inet updates, the pair, wl1.2's update and its marker (wl0.2 marked and set: none)");
+    char *got = ops ? cJSON_PrintUnformatted(cJSON_GetObjectItemCaseSensitive(cJSON_GetArrayItem(ops, 1), "row")) : NULL;
+    CHECK(got && !strcmp(got, "{\"enabled\":true,\"network\":true,\"NAT\":false}"), "br-home up: %s", got ? got : "none");
+    free(got);
+    got = ops ? cJSON_PrintUnformatted(cJSON_GetObjectItemCaseSensitive(cJSON_GetArrayItem(ops, 13), "row")) : NULL;
+    CHECK(got && !strcmp(got, "{\"group_rekey\":86400,\"ft_psk\":0}"), "the cloud's VIF columns: %s", got ? got : "none");
+    free(got);
+    cJSON_Delete(ops);
+    char restored[8][16];
+    size_t r = 0;
+    cJSON *reload = em_auth_reload_ops(&p, true, tables, restored, 8, &r);
+    CHECK(!reload && r == 0, "no restore while the bridge mode is lacking");
+    cJSON_Delete(reload);
+    /* all of it there: nothing to write, and wl0.2's restore goes ahead */
+    cJSON *home = cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(tables, "Wifi_Inet_Config"), "i1");
+    cJSON_ReplaceItemInObjectCaseSensitive(home, "network", cJSON_CreateTrue());
+    cJSON_ReplaceItemInObjectCaseSensitive(home, "NAT", cJSON_CreateFalse());
+    cJSON *wan = cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(tables, "Wifi_Inet_Config"), "i2");
+    cJSON_ReplaceItemInObjectCaseSensitive(wan, "NAT", cJSON_CreateFalse());
+    cJSON *ports = cJSON_GetObjectItemCaseSensitive(tables, "Port"), *pw = cJSON_CreateObject(), *ph = cJSON_CreateObject();
+    cJSON_AddStringToObject(pw, "name", "patch-w2h");
+    cJSON_AddStringToObject(ph, "name", "patch-h2w");
+    cJSON_AddItemToObject(ports, "p3", pw);
+    cJSON_AddItemToObject(ports, "p4", ph);
+    for (size_t i = 0; i < 2; i++) { /* the home APs' own ports (em_bridge_port_ops) */
+        cJSON *ap = cJSON_CreateObject();
+        cJSON_AddStringToObject(ap, "name", i ? "wl0.2" : "wl1.2");
+        cJSON_AddItemToObject(ports, i ? "p6" : "p5", ap);
+    }
+    cJSON *u1 = cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(tables, "Wifi_VIF_Config"), "u1");
+    cJSON_ReplaceItemInObjectCaseSensitive(u1, "group_rekey", cJSON_CreateNumber(86400));
+    cJSON_ReplaceItemInObjectCaseSensitive(u1, "ft_psk", cJSON_CreateNumber(0));
+    ops = em_bridge_mode_ops(&p, true, tables, done, sizeof(done), counts, &ncounts);
+    CHECK(!ops && ncounts == 0, "nothing once it is all there");
+    cJSON_Delete(ops);
+    reload = em_auth_reload_ops(&p, true, tables, restored, 8, &r);
+    CHECK(reload && r == 1 && !strcmp(restored[0], "wl0.2"), "the restore once it is");
+    cJSON_Delete(reload);
+    /* no Inet row for the WAN bridge (nothing of its seed to set), or the pod's own plan: nothing */
+    cJSON_DeleteItemFromObjectCaseSensitive(cJSON_GetObjectItemCaseSensitive(tables, "Wifi_Inet_Config"), "i2");
+    cJSON_ReplaceItemInObjectCaseSensitive(home, "network", cJSON_CreateFalse());
+    CHECK(!em_bridge_mode_ops(&p, true, tables, done, sizeof(done), counts, &ncounts), "no WAN bridge row: nothing");
+    p.radio_plan = false;
+    CHECK(!em_bridge_mode_ops(&p, true, tables, done, sizeof(done), counts, &ncounts), "the pod's plan: nothing");
+    cJSON_Delete(tables);
+    em_profile_free(&p);
+}
+
 /* spec 2.5 (reports.identity_difference): a fresh session's log names the first radio field or TLV
  * whose identity changed; a channel move alone is none */
 static void capability_difference(void)
@@ -1482,6 +1572,7 @@ int main(int argc, char **argv)
     second_radio_profile(argv[1], argv[2]);
     auth_reload_ops(argv[1]);
     bridge_port_ops(argv[1]);
+    bridge_mode_ops(argv[1]);
     capability_difference();
     printf("%d checks, %d failures\n", checks, failures);
     return failures != 0;

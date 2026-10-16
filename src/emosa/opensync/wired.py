@@ -98,6 +98,62 @@ def port_names(decoded):
     return {r.get("name") for r in decoded.get("Port", {}).values()}
 
 
+def paired(decoded, wan, home):
+    """OpenSync's patch pair between the bridges `wan` and `home`: "paired" (both ends in their
+    bridges), "none" (neither Port exists) or "other" (half a pair, or ends elsewhere)."""
+    w, h = bridge_ports(decoded, wan), bridge_ports(decoded, home)
+    if w and h and PATCH_WAN in w[1] and PATCH_HOME in h[1]:
+        return "paired"
+    names = port_names(decoded)
+    return "none" if PATCH_WAN not in names and PATCH_HOME not in names else "other"
+
+
+def pair_ops(wan, home):
+    """The patch pair's operations and their result counts (spec 8.4): no Port of either name,
+    the two patch Interfaces (each the other's peer) and their Ports, each Port into its bridge
+    (`wan`'s patch-w2h, `home`'s patch-h2w)."""
+    ops = [
+        {
+            "op": "wait",
+            "table": "Port",
+            "where": [["name", "==", name]],
+            "columns": ["name"],
+            "until": "==",
+            "rows": [],
+            "timeout": 0,
+        }
+        for name in (PATCH_WAN, PATCH_HOME)
+    ]
+    for name, peer, tag in ((PATCH_WAN, PATCH_HOME, "w"), (PATCH_HOME, PATCH_WAN, "h")):
+        ops.append(
+            {
+                "op": "insert",
+                "table": "Interface",
+                "uuid-name": f"patch_{tag}_if",
+                "row": {"name": name, "type": "patch", "options": ["map", [["peer", peer]]]},
+            }
+        )
+    for name, tag in ((PATCH_WAN, "w"), (PATCH_HOME, "h")):
+        ops.append(
+            {
+                "op": "insert",
+                "table": "Port",
+                "uuid-name": f"patch_{tag}_port",
+                "row": {"name": name, "interfaces": ["set", [["named-uuid", f"patch_{tag}_if"]]]},
+            }
+        )
+    for bridge_name, tag in ((wan, "w"), (home, "h")):
+        ops.append(
+            {
+                "op": "mutate",
+                "table": "Bridge",
+                "where": [["name", "==", bridge_name]],
+                "mutations": [["ports", "insert", ["set", [["named-uuid", f"patch_{tag}_port"]]]]],
+            }
+        )
+    return ops, [None] * 6 + [1, 1]
+
+
 class WiredBackend:
     """The wired uplink scope of one pod, bound by serial. legacy (spec 3.10): the pod's bridge
     mode is OpenSync's patch pair between `wan_bridge` and the intent's bridge."""
@@ -118,13 +174,7 @@ class WiredBackend:
     def _paired(self, decoded, home):
         """The legacy pod's pair: "paired" (both ends in their bridges), "none" (neither Port
         exists) or "other" (anything else: half a pair, or ends in other bridges)."""
-        wan, inner = bridge_ports(decoded, self.wan_bridge), bridge_ports(decoded, home)
-        names = port_names(decoded)
-        if wan and inner and PATCH_WAN in wan[1] and PATCH_HOME in inner[1]:
-            return "paired"
-        if PATCH_WAN not in names and PATCH_HOME not in names:
-            return "none"
-        return "other"
+        return paired(decoded, self.wan_bridge, home)
 
     def _decode(self, raw):
         schema = raw["schema"]
@@ -260,51 +310,8 @@ class WiredBackend:
                 "timeout": 0,
             },
         ]
-        for name in (PATCH_WAN, PATCH_HOME):
-            transaction.append(
-                {
-                    "op": "wait",
-                    "table": "Port",
-                    "where": [["name", "==", name]],
-                    "columns": ["name"],
-                    "until": "==",
-                    "rows": [],
-                    "timeout": 0,
-                }
-            )
-        for name, peer, tag in ((PATCH_WAN, PATCH_HOME, "w"), (PATCH_HOME, PATCH_WAN, "h")):
-            transaction.append(
-                {
-                    "op": "insert",
-                    "table": "Interface",
-                    "uuid-name": f"patch_{tag}_if",
-                    "row": {"name": name, "type": "patch", "options": ["map", [["peer", peer]]]},
-                }
-            )
-        for name, tag in ((PATCH_WAN, "w"), (PATCH_HOME, "h")):
-            transaction.append(
-                {
-                    "op": "insert",
-                    "table": "Port",
-                    "uuid-name": f"patch_{tag}_port",
-                    "row": {
-                        "name": name,
-                        "interfaces": ["set", [["named-uuid", f"patch_{tag}_if"]]],
-                    },
-                }
-            )
-        for bridge_name, tag in ((self.wan_bridge, "w"), (bridge, "h")):
-            transaction.append(
-                {
-                    "op": "mutate",
-                    "table": "Bridge",
-                    "where": [["name", "==", bridge_name]],
-                    "mutations": [
-                        ["ports", "insert", ["set", [["named-uuid", f"patch_{tag}_port"]]]]
-                    ],
-                }
-            )
-        return transaction, [None] * 8 + [1, 1]
+        ops, counts = pair_ops(self.wan_bridge, bridge)
+        return transaction + ops, [None, None, *counts]
 
     async def submit(self, intent, attempt):
         await self.plan(intent)
