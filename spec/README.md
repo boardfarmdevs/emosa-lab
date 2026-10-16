@@ -1554,7 +1554,13 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
   station, whatever its uplink's kind (Multi-AP, or a 3-address station under a GRE tunnel or the
   bootstrap/GTP path), as an 802.11 backhaul neighbour with its MAC, band and parent BSSID, never
   claimed as a Multi-AP (4-address) bSTA (§8.5's reporting, now for a GRE child too); the controller
-  then models the device's backhaul link as Wireless LAN. (2) *The bSTA model.* EMOSA reports the
+  then models the device's backhaul link as Wireless LAN. Under a GRE tunnel the station reported is
+  the one whose own gretap cm uses (cm names it `g-<station>`): a GRE move disables no other station,
+  so the station it moved from may still be associated to its old parent, and reporting that one
+  would give the controller the old parent and make it name the old station in its next steer, which
+  EMOSA refuses (box `mixed-gre-child-onto-legacy-parent`, 16 October). Only when no station's own
+  gretap is in use is the first station under a GRE tunnel reported, as before. Both agents.
+  (2) *The bSTA model.* EMOSA reports the
   station as a **non-AP (STA-role) interface in its Device Information**, on its parent's BSSID, plus
   the standard R2 Backhaul STA Radio Capabilities TLV; the controller's `handle_topology_response`
   builds the station-mode backhaul BSS from that interface (unified-wifi-mesh patch

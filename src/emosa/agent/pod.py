@@ -533,14 +533,22 @@ class PodReportSource:
                     self.capabilities = capabilities
                     self.inventory = inventory(device, radio, self.backend.profile.chipset.encode())
             uplink = None
-            for station in self.stations:
-                # a wireless backhaul station: a Multi-AP (4-address) uplink, or a 3-address
-                # station under a GRE tunnel (a GRE child, or the bootstrap/GTP path). The medium
-                # is 802.11 either way, so the pod reports it as its Wi-Fi backhaul (spec 8.6).
-                if uplink_state(rows, station)["kind"] in (MULTI_AP, GRE):
-                    uplink = backhaul(device, station)
-                    if uplink is not None:
-                        break
+            # a wireless backhaul station: a Multi-AP (4-address) uplink, or a 3-address station
+            # under a GRE tunnel (a GRE child, or the bootstrap/GTP path). The medium is 802.11
+            # either way, so the pod reports it as its Wi-Fi backhaul (spec 8.6). Under a GRE
+            # tunnel the station whose own gretap cm uses (cm's g-<station>) comes first: after a
+            # GRE move the previous station may still be associated (a GRE move disables none),
+            # and it is not the pod's backhaul.
+            for strict in (True, False):
+                for station in self.stations:
+                    state = uplink_state(rows, station)
+                    own = state["in_use"] == f"g-{station}"
+                    if state["kind"] == MULTI_AP or (state["kind"] == GRE and (own or not strict)):
+                        uplink = backhaul(device, station)
+                        if uplink is not None:
+                            break
+                if uplink is not None:
+                    break
             radios_with_station = backhaul_radios(
                 rows, self.stations, uplink.station.if_name if uplink else None
             )

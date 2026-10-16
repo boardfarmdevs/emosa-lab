@@ -853,16 +853,22 @@ static bool refresh(agent *a)
     const char *names[EM_UPLINK_BANDS + 1], *in_use = NULL;
     size_t nnames = station_names(a, names);
     a->has_backhaul = false;
-    for (size_t i = 0; i < nnames && !a->has_backhaul; i++) {
-        em_uplink_state state;
-        em_uplink_state_of(tables, names[i], &state);
-        /* a wireless backhaul station: a Multi-AP (4-address) uplink, or a 3-address station under
-         * a GRE tunnel (a GRE child, or the bootstrap/GTP path). The medium is 802.11 either way,
-         * so the pod reports it as its Wi-Fi backhaul (spec 8.6). */
-        if ((!strcmp(state.kind, "multi-ap") || !strcmp(state.kind, "gre")) &&
-            em_view_backhaul(view, names[i], &a->backhaul)) {
-            a->has_backhaul = true;
-            in_use = names[i];
+    /* a wireless backhaul station: a Multi-AP (4-address) uplink, or a 3-address station under a
+     * GRE tunnel (a GRE child, or the bootstrap/GTP path). The medium is 802.11 either way, so the
+     * pod reports it as its Wi-Fi backhaul (spec 8.6). Under a GRE tunnel the station whose own
+     * gretap cm uses (cm's g-<station>) comes first: after a GRE move the previous station may
+     * still be associated (a GRE move disables none), and it is not the pod's backhaul. */
+    for (int strict = 1; strict >= 0 && !a->has_backhaul; strict--) {
+        for (size_t i = 0; i < nnames && !a->has_backhaul; i++) {
+            em_uplink_state state;
+            em_uplink_state_of(tables, names[i], &state);
+            char gretap[40];
+            bool own = em_format(gretap, sizeof(gretap), "g-%s", names[i]) && !strcmp(state.in_use, gretap);
+            if ((!strcmp(state.kind, "multi-ap") || (!strcmp(state.kind, "gre") && (own || !strict))) &&
+                em_view_backhaul(view, names[i], &a->backhaul)) {
+                a->has_backhaul = true;
+                in_use = names[i];
+            }
         }
     }
     a->nradios = em_backhaul_radios(tables, names, nnames, in_use, a->radios, EM_UPLINK_BANDS + 1);

@@ -2799,6 +2799,222 @@ async def gre_child_kept(box):
     )
 
 
+# Mixed meshes (the owner's mix and match, 14 October): a 6.6 pod (a Pi's) and a converted
+# legacy pod in one fleet, each a GRE parent the other's station can be steered onto. The other
+# pod's agent is in the box as its status gives it: a fleet parent advertising its parent AP.
+PI_PARENT_5G = "72:00:00:00:0b:05"  # a 6.6 pod's GRE parent AP b-ap-50, on 5 GHz (channel 36)
+LEGACY_PARENT_AP = "72:00:00:00:0c:01"  # a converted legacy pod's GRE parent AP wl1.1 (2.4 GHz)
+PI_PARENT_AL, LEGACY_PARENT_AL = "02:72:00:00:00:0c", "02:72:00:00:00:0d"
+
+
+async def gre_pinned_on(box, station, target):
+    """``station`` enabled with a gre credential pinned to ``target`` (a 3-address join), its
+    security WPA-PSK (what a legacy parent's AP offers, WPA2-PSK)."""
+    _, row = await box.vif("Wifi_VIF_Config", station)
+    creds = await box.rows("Wifi_Credential_Config")
+    return (row or {}).get("enabled") is True and any(
+        str(creds[u].get("bssid") or "").lower() == target
+        and creds[u].get("onboard_type") == "gre"
+        and ovsdb_map(creds[u].get("security")).get("encryption") == "WPA-PSK"
+        for u in (row or {}).get("credential_configs") or []
+        if u in creds
+    )
+
+
+async def gre_associate(box, station, parent, channel, previous):
+    """cm and owm: ``station`` in a 3-address GRE join onto ``parent`` (not Multi-AP) with the
+    credential pinned there, its radio on ``channel``, cm using the gretap it built for it and no
+    longer ``previous``'s, which is left as it was (a GRE move disables no station, spec 8.3)."""
+    creds = await box.rows("Wifi_Credential_Config")
+    _, config = await box.vif("Wifi_VIF_Config", station)
+    ssid = next(
+        (
+            creds[u].get("ssid")
+            for u in config.get("credential_configs") or []
+            if u in creds and str(creds[u].get("bssid") or "").lower() == parent
+        ),
+        "",
+    )
+    state, _ = await box.vif("Wifi_VIF_State", station)
+    radio = next(
+        u
+        for u, r in (await box.rows("Wifi_Radio_State")).items()
+        if state in uuids(r.get("vif_states"))
+    )
+    gretap = f"g-{station}"
+    uplinks = await box.rows("Connection_Manager_Uplink")
+    ops = [
+        {
+            "op": "update",
+            "table": "Wifi_VIF_State",
+            "where": [["_uuid", "==", ["uuid", state]]],
+            "row": {
+                "enabled": True,
+                "ssid": ssid,
+                "multi_ap": "none",
+                "wds": False,
+                "parent": parent,
+            },
+        },
+        {
+            "op": "update",
+            "table": "Wifi_Radio_State",
+            "where": [["_uuid", "==", ["uuid", radio]]],
+            "row": {"channel": channel},
+        },
+        {
+            "op": "update",
+            "table": "Connection_Manager_Uplink",
+            "where": [["if_name", "==", f"g-{previous}"]],
+            "row": {"is_used": False},
+        },
+    ]
+    if not any(r.get("if_name") == gretap for r in uplinks.values()):
+        ops.append(
+            {
+                "op": "insert",
+                "table": "Connection_Manager_Uplink",
+                "row": {"if_name": gretap, "if_type": "gre", "has_L2": True, "has_L3": True},
+            }
+        )
+    ops.append(
+        {
+            "op": "update",
+            "table": "Connection_Manager_Uplink",
+            "where": [["if_name", "==", gretap]],
+            "row": {"is_used": True},
+        }
+    )
+    await box.transact(ops)
+
+
+def reported_backhaul(box):
+    """The backhaul STA the agent reports (its status's pod), as the controller learns it."""
+    return (((box.status() or {}).get("pod") or {}).get("backhaul") or {}).get("mac")
+
+
+async def gre_cross_band(box, station_mac, target, operating_class, channel, onto, previous):
+    """A Backhaul Steering Request naming the backhaul STA the controller knows, onto a fleet GRE
+    parent on the other band: the agent pins ``onto`` there with a gre credential and leaves
+    ``previous`` enabled as it was (a GRE move disables no station, spec 8.3); cm and owm complete
+    the join. (written, answer, the stations' rows as the agent left them)."""
+    before = (await station_config(box, previous))[0]
+    answered = len(box.sent(0x801A))
+    request = backhaul_steering_request(station_mac, target, operating_class, channel)
+    mid = box.controller.send(0x8019, (request,))
+    acked = await box.until(lambda: box.controller.reply(ACK, mid), seconds=5)
+    pinned = bool(acked) and bool(
+        await until_async(lambda: gre_pinned_on(box, onto, target), seconds=30)
+    )
+    done = pinned and (await station_config(box, previous))[0] == before
+    seen = await station_snapshot(box, (onto, previous))  # what the agent wrote, for the result
+    if done:
+        await gre_associate(box, onto, target, channel, previous)
+    response = await next_message(box, 0x801A, answered, seconds=60)
+    seen["errors"] = steering_errors(response)
+    seen["uplink"] = {
+        k: uplink_status(box).get(k)
+        for k in ("station", "parent", "mode", "operation", "held", "move")
+    }
+    return done, steering_answer(response), seen
+
+
+async def station_snapshot(box, stations):
+    """Each station's Config as the agent left it: enabled, parent, and its credentials' ssid,
+    bssid, onboard_type and security keys (no key's value)."""
+    creds = await box.rows("Wifi_Credential_Config")
+    out = {}
+    for station in stations:
+        _, row = await box.vif("Wifi_VIF_Config", station)
+        row = row or {}
+        out[station] = {
+            "enabled": row.get("enabled"),
+            "parent": row.get("parent"),
+            "credentials": [
+                {
+                    "ssid": creds[u].get("ssid"),
+                    "bssid": creds[u].get("bssid"),
+                    "onboard_type": creds[u].get("onboard_type"),
+                    "security": sorted(ovsdb_map(creds[u].get("security"))),
+                    "encryption": ovsdb_map(creds[u].get("security")).get("encryption"),
+                }
+                for u in row.get("credential_configs") or []
+                if u in creds
+            ],
+        }
+    return out
+
+
+async def mixed_gre_child_onto_legacy_parent(box):
+    """spec 8.3, 8.6, a mixed mesh (14 October's bench plan, pi2 under pod 2's wl1.1): a 6.6 pod as
+    a GRE child, steered off its GTP bootstrap onto a 6.6 pod's GRE parent on 5 GHz (its 5 GHz
+    station bhaul-sta-50 pinned there), then onto a converted legacy pod's GRE parent wl1.1 on
+    2.4 GHz, channel 6 (the channel of the radio that carries the pod's home AP), by a request
+    naming the backhaul STA the controller knows (bhaul-sta-50): the agent maps the band itself,
+    back to bhaul-sta-24 as a 3-address GRE join with a WPA-PSK credential pinned to wl1.1 (what
+    the legacy AP offers), answered naming bhaul-sta-24, and the move kept for the pod's later
+    starts. Neither move disables the other station (a GRE move disables none: cm bridges only the
+    gretap in use). A further target on another 2.4 GHz channel is refused at once, Error Code
+    0x04, the station staying where it is."""
+    if not (await onboarded(box)).get("applied"):
+        return box.result(passed=False, failed="not onboarded")
+    peer_status(box, "RPIPOD0MIXEDPARENT", al=PI_PARENT_AL, gre_parent_ap=PI_PARENT_5G)
+    peer_status(box, "BCMPOD0MIXEDPARENT", al=LEGACY_PARENT_AL, gre_parent_ap=LEGACY_PARENT_AP)
+    await box.until(lambda: uplink_status(box).get("bootstrap"), seconds=30)
+    await asyncio.sleep(2.5)  # the agent's peer directory (1 s cache) picks up both parents
+    onto_pi, first, seen = await gre_cross_band(
+        box, BACKHAUL_STATION, PI_PARENT_5G, 115, 36, OTHER_STATION_IF, "bhaul-sta-24"
+    )
+    if not onto_pi:
+        return box.result(
+            passed=False, failed="the move onto the 6.6 parent", first_answer=first, written=seen
+        )
+    # the controller names the backhaul STA the agent reports: bhaul-sta-50 once it does
+    await box.until(lambda: reported_backhaul(box) == OTHER_STATION, seconds=30)
+    onto_legacy, second, seen = await gre_cross_band(
+        box, OTHER_STATION, LEGACY_PARENT_AP, 81, 6, "bhaul-sta-24", OTHER_STATION_IF
+    )
+    if not onto_legacy:
+        return box.result(
+            passed=False,
+            failed="the move onto the legacy parent",
+            second_answer=second,
+            written=seen,
+        )
+    await box.until(lambda: reported_backhaul(box) == BACKHAUL_STATION, seconds=30)
+    target = kept_target(box) or {}
+    answered = len(box.sent(0x801A))
+    mid = box.controller.send(
+        0x8019, (backhaul_steering_request(BACKHAUL_STATION, "72:00:00:00:0c:0b", 81, 11),)
+    )
+    refusal = await next_message(box, 0x801A, answered, seconds=10)
+    await asyncio.sleep(2)
+    stays = await gre_pinned_on(box, "bhaul-sta-24", LEGACY_PARENT_AP)
+    refused = (
+        refusal is not None
+        and refusal.mid == mid
+        and (steering_answer(refusal) or (None, None, None))[2] == 1
+        and steering_errors(refusal) == [(4, BACKHAUL_STATION)]
+    )
+    return box.result(
+        passed=onto_pi
+        and first == (OTHER_STATION, PI_PARENT_5G, 0)
+        and onto_legacy
+        and second == (BACKHAUL_STATION, LEGACY_PARENT_AP, 0)
+        and str(target.get("target") or "").lower() == LEGACY_PARENT_AP
+        and target.get("mode") == "gre"
+        and refused
+        and stays,
+        onto_the_6_6_parent=onto_pi,
+        first_answer=first,
+        onto_the_legacy_parent=onto_legacy,
+        second_answer=second,
+        kept_target=target,
+        refused_on_another_channel=refused,
+        stays_on_the_legacy_parent=stays,
+    )
+
+
 async def gre_child_kept_gone(box):
     """Spec 8.3 "Moved" for a GRE child (8.6), V54's fault row "pi1 reboots": the kept GRE
     parent is gone when the child's pod starts again. The agent re-applies the move; the station
@@ -7245,6 +7461,7 @@ SCENARIOS = {
     "gre-child-kept": gre_child_kept,
     "gre-child-kept-gone": gre_child_kept_gone,
     "gre-child-kept-gone-up": gre_child_kept_gone_up,
+    "mixed-gre-child-onto-legacy-parent": mixed_gre_child_onto_legacy_parent,
     "backhaul-steering-renewal": backhaul_steering_renewal,
     "backhaul-steering-refused": backhaul_steering_refused,
     "backhaul-steering-own-bss": backhaul_steering_own_bss,
@@ -7373,7 +7590,12 @@ OPTIONS = {  # the box each scenario needs beyond the default
                 "secret_ref": "backhaul",
             },
         }
-        for name in ("gre-child-kept", "gre-child-kept-gone", "gre-child-kept-gone-up")
+        for name in (
+            "gre-child-kept",
+            "gre-child-kept-gone",
+            "gre-child-kept-gone-up",
+            "mixed-gre-child-onto-legacy-parent",
+        )
     },
     "backhaul-steering-renewal": {"backhaul": True},
     "backhaul-steering-own-bss": {"backhaul": True},
