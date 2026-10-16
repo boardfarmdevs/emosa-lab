@@ -6619,9 +6619,23 @@ async def node_config(box):
 
 async def station_rows(box):
     """The pod's station rows: {if_name: its SSID} (its linked credentials' when it has none)."""
-    credentials = await box.rows("Wifi_Credential_Config")
+    return stations_of(await box.rows("Wifi_VIF_Config"), await box.rows("Wifi_Credential_Config"))
+
+
+def seed_station_rows(seed):
+    """station_rows of the seed as the box keeps it (raw rows, kept before the agent started): the
+    C agent can delete a seed's stations before a read of the pod's database (CI, 15 October)."""
+    return stations_of(
+        {r["_uuid"][1]: r for r in seed.get("Wifi_VIF_Config", [])},
+        {r["_uuid"][1]: r for r in seed.get("Wifi_Credential_Config", [])},
+    )
+
+
+def stations_of(vifs, credentials):
+    """{if_name: SSID} of the station rows among `vifs` (uuid -> row), each its linked
+    `credentials`' SSIDs when it has none."""
     found = {}
-    for row in (await box.rows("Wifi_VIF_Config")).values():
+    for row in vifs.values():
         if row.get("mode") == "sta":
             linked = sorted(
                 credentials[u].get("ssid") or ""
@@ -6641,7 +6655,7 @@ async def legacy_seed_stations(box):
     wl1 free, the GTP station is written there and associates: after admission the only station is
     EMOSA's, and the pod passes the healthcheck. The pod's OpenSync starts again on its seed (the
     stations back): the same on the new start."""
-    seeded = await station_rows(box)
+    seeded = seed_station_rows(box.seed)  # the pod's own read may come after the agent's deletion
     ap, failure = await gre_parent_up(box, LEGACY_PARENT)
     if failure:
         return failure
