@@ -997,6 +997,54 @@ cJSON *em_bridge_mode_ops(const em_profile *p, bool multi_bss, const cJSON *tabl
     return ops;
 }
 
+cJSON *em_bcm_ctrl_ops(const em_profile *p, const cJSON *tables, bool on, char *done, size_t size, int *counts,
+                       size_t *ncounts)
+{
+    *ncounts = 0;
+    done[0] = '\0';
+    const char *home = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(p->fronthaul_vif, "bridge"));
+    if (!p->legacy || !p->radio_plan || !home || !*home)
+        return NULL;
+    const cJSON *r;
+    bool ours = false, another = false;
+    cJSON *ops = cJSON_CreateArray();
+    cJSON_ArrayForEach(r, em_table(tables, "Openflow_Config"))
+    {
+        if (same_text(ovs_str(r, "token"), EM_BCM_CTRL_TOKEN)) {
+            ours = true;
+            if (!on && *ncounts < 8) {
+                cJSON_AddItemToArray(ops, op("delete", "Openflow_Config", where_uuid(r->string)));
+                counts[(*ncounts)++] = 1;
+            }
+            continue;
+        }
+        const char *rule = ovs_str(r, "rule");
+        another = another || (same_text(ovs_str(r, "bridge"), home) && rule && strstr(rule, "0x886c"));
+    }
+    if (on && !ours && !another) {
+        cJSON *insert = op("insert", "Openflow_Config", NULL), *row = cJSON_CreateObject();
+        cJSON_AddStringToObject(row, "bridge", home);
+        cJSON_AddNumberToObject(row, "table", 0);
+        cJSON_AddNumberToObject(row, "priority", 140);
+        cJSON_AddStringToObject(row, "rule", "dl_type=0x886c");
+        cJSON_AddStringToObject(row, "action", "local");
+        cJSON_AddStringToObject(row, "token", EM_BCM_CTRL_TOKEN);
+        cJSON_AddItemToObject(insert, "row", row);
+        cJSON_AddItemToArray(ops, absent("Openflow_Config", where_eq("token", EM_BCM_CTRL_TOKEN), "token"));
+        cJSON_AddItemToArray(ops, insert);
+        counts[(*ncounts)++] = -1;
+        counts[(*ncounts)++] = -1;
+        (void)em_copy(done, size, "bcm_ctrl rule written");
+    } else if (!on && *ncounts) {
+        (void)em_copy(done, size, "bcm_ctrl rule removed");
+    }
+    if (!*ncounts) {
+        cJSON_Delete(ops);
+        return NULL;
+    }
+    return ops;
+}
+
 cJSON *em_auth_reload_ops(const em_profile *p, bool multi_bss, const cJSON *tables, char (*names)[16], size_t max,
                           size_t *n)
 {

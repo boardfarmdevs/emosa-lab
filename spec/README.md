@@ -629,6 +629,16 @@ is everything above. For a legacy pod, all of this specification applies, except
 
   Its status counts the writes (`bridge_mode_writes`). The cloud's taps and its
   OpenFlow rules (its analytics and portal features) are not written.
+- **The Broadcom events' rule (an experiment).** On a converted pod's 5 GHz radio
+  (`wl0`, a Broadcom radio in DHD offload mode) no EAPOL M1 reached the air
+  (15 October). The cloud-made pod, which served its clients, carries its cloud's
+  OpenFlow rule `sys_t_bcm_ctrl` in `br-home`: table 0, priority 140,
+  `dl_type=0x886c` (the driver's events) to the bridge's own port, where the
+  authenticator listens. With the fleet's `bcm_ctrl_rule` setting on (off by
+  default, settable per pod), the agent writes exactly that rule as an
+  `Openflow_Config` row under its own token (`emosa_bcm_ctrl`), unless the bridge
+  has a rule for that ethertype already. With the setting off, it removes its own.
+  Its status gives the setting and the writes (`bcm_ctrl_rule`).
 - **The authenticator's reload.** OpenSync 2.4.3's Broadcom wm restarts the
   pod's authenticator (nas and eapd) in full only for a new AP or a change of
   its `security` entries beyond the key (`encryption`, `mode`, `oftag`). An

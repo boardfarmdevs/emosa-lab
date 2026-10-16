@@ -86,6 +86,15 @@ HOME_UP = {"enabled": True, "network": True, "NAT": False}
 # the cloud's values, which the profile's fronthaul row may set otherwise; in code too, so an agent
 # on an older profile (the image's, a binary deployed alone) still sets them
 HOME_VIF = {"group_rekey": 86400, "ft_psk": 0}
+# spec 3.10, an experiment (the fleet's bcm_ctrl_rule, off by default; 15 October): a converted
+# pod's 5 GHz home AP (a Broadcom radio in DHD offload mode) sent no EAPOL M1; only the cloud-made
+# pod, whose cloud writes this OpenFlow rule into its home bridge (its token sys_t_bcm_ctrl),
+# served its clients. The driver's events (association, EAPOL) reach the host as frames of this
+# ethertype on the AP's port, and the authenticator hears them on the bridge's own port (LOCAL).
+# With the switch on, EMOSA writes exactly that rule under its own token; off, removes its own. A
+# pod with any rule for that ethertype in the bridge already (another manager's) gets none.
+BCM_CTRL = {"table": 0, "priority": 140, "rule": "dl_type=0x886c", "action": "local"}
+BCM_CTRL_TOKEN = "emosa_bcm_ctrl"
 # What shows whether such a port carries its stations, read only (spec 3.10): the bridge's fail
 # mode (a secure bridge forwards only what its OpenFlow rules allow) and OpenSync's rules for it,
 # and each port's Interface as Open vSwitch opened it (its ofport, or the error)
@@ -139,8 +148,12 @@ class PodBackend(OpenSyncBackend):
         profile=None,
         multi_bss=False,
         underlay=None,
+        bcm_ctrl_rule=False,
     ):
         self.profile = profile or load_profile()
+        # spec 3.10, an experiment (the fleet's bcm_ctrl_rule, off by default): one OpenFlow rule
+        # sending the Broadcom driver's events to the home bridge's own port (bcm_ctrl)
+        self.bcm_ctrl_rule = bcm_ctrl_rule is True
         # the pod's 169.254.N.0/24 as a GRE parent (spec 8.6), from the fleet registry
         self.underlay = underlay
         super().__init__(
@@ -167,6 +180,7 @@ class PodBackend(OpenSyncBackend):
         self.auth_reloads = 0  # spec 3.10: the oftags auth_reload restored
         self.ports_added = 0  # spec 3.10: the APs bridge_ports put into their bridge
         self.bridge_modes = 0  # spec 3.10: the writes bridge_mode made
+        self.bcm_writes = 0  # spec 3.10: the writes bcm_ctrl made (the experiment)
 
     @property
     def mapping(self):
@@ -422,6 +436,54 @@ class PodBackend(OpenSyncBackend):
         self.write_count += 1
         check_results(await self.session.transact(ops), counts)
         self.bridge_modes += 1
+        return done
+
+    async def bcm_ctrl(self):
+        """spec 3.10, the experiment (bcm_ctrl_rule): with the switch on, EMOSA's own BCM_CTRL rule
+        in the home bridge where it has none for that ethertype; off, EMOSA's own removed. What it
+        did ("bcm_ctrl rule written", "... removed")."""
+        if not self.profile.legacy or self.profile.radio_plan != "emosa":
+            return []
+        home = self.profile.fronthaul_vif.get("bridge")
+        if not home:
+            return []
+        raw = await self.session.snapshot()
+        rules = self._decoded(raw).get("Openflow_Config", {})
+        ours = sorted(u for u, r in rules.items() if r.get("token") == BCM_CTRL_TOKEN)
+        if self.bcm_ctrl_rule:
+            if ours or any(
+                r.get("bridge") == home and "0x886c" in str(r.get("rule") or "").lower()
+                for r in rules.values()
+            ):
+                return []  # EMOSA's already, or another manager's rule for it
+            ops = [
+                {
+                    "op": "wait",
+                    "table": "Openflow_Config",
+                    "where": [["token", "==", BCM_CTRL_TOKEN]],
+                    "columns": ["token"],
+                    "until": "==",
+                    "rows": [],
+                    "timeout": 0,
+                },
+                {
+                    "op": "insert",
+                    "table": "Openflow_Config",
+                    "row": {"bridge": home, **BCM_CTRL, "token": BCM_CTRL_TOKEN},
+                },
+            ]
+            counts, done = [None, None], ["bcm_ctrl rule written"]
+        else:
+            if not ours:
+                return []
+            ops = [
+                {"op": "delete", "table": "Openflow_Config", "where": where_uuid(uuid)}
+                for uuid in ours
+            ]
+            counts, done = [1] * len(ours), ["bcm_ctrl rule removed"]
+        self.write_count += 1
+        check_results(await self.session.transact(ops), counts)
+        self.bcm_writes += 1
         return done
 
     async def auth_reload(self):

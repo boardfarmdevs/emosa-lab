@@ -170,6 +170,7 @@ typedef struct {
     const char *status_dir; /* run_dir when configured (a RAM disk), else state_dir */
     uint8_t al[6], controller[6];
     bool r1, multi_bss, shared_session, steering_on;
+    bool bcm_ctrl_rule;      /* spec 3.10, an experiment: the fleet's bcm_ctrl_rule (em_bcm_ctrl_ops) */
     bool watch_on; /* the probe watch (§3.9): with telemetry, never on a legacy pod (spec 3.10) */
     double topology_query_window; /* 0: the renewal rule is off */
     const char *underlay;          /* the pod's underlay as a GRE parent (spec 8.6); NULL: none */
@@ -194,6 +195,7 @@ typedef struct {
     unsigned auth_reloads;   /* spec 3.10: the oftags auth_reload restored */
     unsigned bridge_ports;   /* spec 3.10: the APs bridge_port put into their bridge */
     unsigned bridge_modes;   /* spec 3.10: the writes bridge_mode made */
+    unsigned bcm_writes;     /* spec 3.10: the writes bcm_ctrl made (the experiment) */
     bool notify_due, check_drift;
     uint8_t channel_moves[1 + EXTRA_RADIOS][6];
     size_t nchannel_moves;
@@ -999,6 +1001,30 @@ static void bridge_mode(agent *a)
         LOG("bridge mode: %s (wm restarts nas, eapd)", done);
     } else {
         WARN("bridge mode: %s", em_reason_name(r));
+    }
+    cJSON_Delete(results);
+    cJSON_Delete(ops);
+}
+
+/* spec 3.10, the experiment (PodBackend.bcm_ctrl): with the fleet's bcm_ctrl_rule, EMOSA's own
+ * OpenFlow rule for the Broadcom driver's events into the home bridge's own port; off, removed */
+static void bcm_ctrl(agent *a)
+{
+    char done[48];
+    int counts[8];
+    size_t ncounts = 0;
+    cJSON *ops = em_ovsdb_ready(a->ovs) ? em_bcm_ctrl_ops(&a->profile, em_ovsdb_tables(a->ovs), a->bcm_ctrl_rule, done,
+                                                          sizeof(done), counts, &ncounts)
+                                        : NULL;
+    if (!ops)
+        return;
+    cJSON *results = transact(a, ops);
+    em_reason r = results ? em_check_results(results, counts, ncounts) : EM_OUTCOME_UNKNOWN;
+    if (r == EM_OK) {
+        a->bcm_writes++;
+        LOG("bcm ctrl: %s", done);
+    } else {
+        WARN("bcm ctrl: %s", em_reason_name(r));
     }
     cJSON_Delete(results);
     cJSON_Delete(ops);
@@ -2448,6 +2474,9 @@ static cJSON *status(agent *a)
         cJSON_AddNumberToObject(o, "auth_reloads", a->auth_reloads);
         cJSON_AddNumberToObject(o, "bridge_ports", a->bridge_ports); /* the APs put into their bridge */
         cJSON_AddNumberToObject(o, "bridge_mode_writes", a->bridge_modes); /* the pod's bridge mode written */
+        cJSON *bcm = cJSON_AddObjectToObject(o, "bcm_ctrl_rule"); /* the experiment: its switch, its writes */
+        cJSON_AddBoolToObject(bcm, "on", a->bcm_ctrl_rule);
+        cJSON_AddNumberToObject(bcm, "writes", a->bcm_writes);
     }
     cJSON_AddStringToObject(session, "state", SESSION_NAMES[a->at.state]);
     cJSON *issues = cJSON_AddArrayToObject(session, "admission_issues");
@@ -2623,6 +2652,7 @@ static bool configure(agent *a, const char *path, const char *profiles)
     const char *set = cfg_str(c, "message_set"), *m2 = cfg_str(c, "m2_session");
     a->r1 = set && !strcmp(set, "r1");
     a->multi_bss = cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(c, "multi_bss"));
+    a->bcm_ctrl_rule = cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(c, "bcm_ctrl_rule"));
     a->shared_session = m2 && !strcmp(m2, "shared");
     const cJSON *window = cJSON_GetObjectItemCaseSensitive(c, "topology_query_window");
     a->topology_query_window = cJSON_IsNumber(window) ? window->valuedouble : 0;
@@ -3213,6 +3243,7 @@ int main(int argc, char **argv)
         if (refreshed && source_current(&a) && a.profile.legacy && !writing(&a)) {
             bridge_port(&a); /* spec 3.10: an AP of EMOSA's into its bridge, its oftag marked */
             bridge_mode(&a); /* spec 3.10: the converted pod's bridge mode, its home APs' oftags marked */
+            bcm_ctrl(&a);    /* spec 3.10, the experiment: the Broadcom events' rule (bcm_ctrl_rule) */
             auth_reload(&a); /* spec 3.10: an AP's write taken by wm, its oftag back (a full reload) */
         }
         /* the scopes step on the refresh cadence, also while the pod is away: a write

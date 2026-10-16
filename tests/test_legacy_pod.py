@@ -1206,3 +1206,34 @@ def test_a_6_6_profile_may_not_take_the_radio_plan(tmp_path):
     with pytest.raises(EmosaError) as refused:
         load_profile(str(path))
     assert refused.value.code == Reason.INVALID_INPUT
+
+
+def test_the_bcm_ctrl_experiment_skips_a_bridge_with_a_rule_for_its_ethertype(tmp_path):
+    # spec 3.10, the experiment: on, EMOSA's own rule; a cloud-made pod's own (sys_t_bcm_ctrl) left
+    pod, _ = backend(tmp_path)
+    pod.bcm_ctrl_rule = True
+    assert asyncio.run(pod.bcm_ctrl()) == ["bcm_ctrl rule written"]
+    (ops,) = pod.session.sent
+    assert ops[1]["row"] == {
+        "bridge": "br-home",
+        "table": 0,
+        "priority": 140,
+        "rule": "dl_type=0x886c",
+        "action": "local",
+        "token": "emosa_bcm_ctrl",
+    }
+    pod, _ = backend(tmp_path / "cloud")
+    pod.bcm_ctrl_rule = True
+    pod.session.tables["Openflow_Config"] = {
+        "00000000-0000-4000-8000-000000000130": {
+            "bridge": "br-home",
+            "table": 0,
+            "priority": 140,
+            "rule": "dl_type=0x886c",
+            "action": "local",
+            "token": "sys_t_bcm_ctrl",
+        }
+    }
+    assert asyncio.run(pod.bcm_ctrl()) == [] and pod.session.sent == []
+    pod.bcm_ctrl_rule = False  # off: only EMOSA's own goes, the cloud's stays
+    assert asyncio.run(pod.bcm_ctrl()) == [] and pod.session.sent == []

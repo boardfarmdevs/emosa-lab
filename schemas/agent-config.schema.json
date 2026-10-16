@@ -15,6 +15,7 @@
     "controller_al": {"$ref": "#/$defs/mac"},
     "message_set": {"enum": ["easymesh-6.1", "r1"], "default": "easymesh-6.1"},
     "multi_bss": {"type": "boolean", "default": false},
+    "bcm_ctrl_rule": {"type": "boolean", "default": false, "description": "spec 3.10, an experiment (15 October), off by default: on a legacy pod with radio_plan emosa, one OpenFlow rule in the home bridge (table 0, priority 140, dl_type=0x886c, action local, token emosa_bcm_ctrl) where it has none for that ethertype; off, EMOSA's own removed."},
     "m2_session": {"enum": ["distinct", "shared"], "default": "distinct"},
     "profile": {"type": "string", "minLength": 1, "default": "opensync-lab-hwsim-6.6.1-v1", "description": "Pod profile ID, or a path to a profile file."},
     "uplink": {

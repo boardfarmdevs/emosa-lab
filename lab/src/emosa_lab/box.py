@@ -528,6 +528,7 @@ class Box:
         seeded_fronthaul=False,
         vendor_bridges=False,
         old_profiles=False,
+        bcm_ctrl_rule=False,
     ):
         self.agent, self.directory, self.binary = agent, directory, binary
         # seeded_fronthaul (legacy): the seed with wl1.2 on, as the operator's cloud left it (its
@@ -540,6 +541,9 @@ class Box:
         # old_profiles: the agents read the profiles as an image before 15 October has them (the
         # legacy ones' fronthaul rows without group_rekey and ft_psk), a binary deployed alone
         self.old_profiles = old_profiles
+        # bcm_ctrl_rule: the fleet's switch for the experiment (spec 3.10): EMOSA's own OpenFlow
+        # rule for the Broadcom driver's events in br-home
+        self.bcm_ctrl_rule = bcm_ctrl_rule
         # seed_stations (legacy): the seed with onboarding stations on wl0 and wl1, as a converted
         # pod's own seed brings them back at a hooked boot (14 October)
         self.seed_stations = seed_stations
@@ -732,6 +736,8 @@ class Box:
             fleet["uplink"] = {"mode": "ethernet"}
         if self.topology_query_window:
             fleet["topology_query_window"] = self.topology_query_window
+        if self.bcm_ctrl_rule:
+            fleet["bcm_ctrl_rule"] = True
         if self.modules:  # the update's URL names the fleet's advertise address
             fleet["modules"], fleet["advertise"] = self.modules, NODE_ADVERTISE
         if self.backhaul:  # option 1, its credentials from the agent's own configuration
@@ -5351,6 +5357,63 @@ async def legacy_bridge_mode_repair(box):
     )
 
 
+async def bcm_rule(box):
+    """EMOSA's bcm_ctrl rule: the row, or None."""
+    rules = await box.rows("Openflow_Config")
+    return next((r for r in rules.values() if r.get("token") == "emosa_bcm_ctrl"), None)
+
+
+async def legacy_bcm_ctrl(box):
+    """spec 3.10, the experiment (the fleet's bcm_ctrl_rule, off by default; 15 October): with the
+    switch on, the agent writes one OpenFlow rule into br-home, the cloud's sys_t_bcm_ctrl under
+    its own token (table 0, priority 140, dl_type=0x886c, action local); restarted with the switch
+    off, it removes it. Off from the start (every other legacy scenario) no Openflow_Config row."""
+    if not (await onboarded(box)).get("applied"):
+        return box.result(passed=False, failed="not onboarded")
+
+    async def written():
+        return await bcm_rule(box)
+
+    rule = await until_async(written, seconds=60) or {}
+    wanted = {
+        "bridge": "br-home",
+        "table": 0,
+        "priority": 140,
+        "rule": "dl_type=0x886c",
+        "action": "local",
+        "token": "emosa_bcm_ctrl",
+    }
+    shape = {k: rule.get(k) for k in wanted} == wanted
+    on = (box.status() or {}).get("bcm_ctrl_rule")
+    box.process.kill()
+    box.process.wait(10)
+    config_path = box.directory / "agent.json"
+    config = json.loads(config_path.read_text())
+    config["bcm_ctrl_rule"] = False
+    config_path.write_text(json.dumps(config, indent=2) + "\n")
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    box.restart_agent()
+
+    async def removed():  # the restarted agent's own status (the old one's file stays a moment)
+        bcm = (box.status() or {}).get("bcm_ctrl_rule") or {}
+        return bcm.get("on") is False and bcm.get("writes", 0) >= 1
+
+    await serve_radios(box, removed, searches=searches, m1s=m1s)
+    after = await bcm_rule(box)
+    rules = await box.rows("Openflow_Config")
+    return box.result(
+        passed=shape
+        and (on or {}).get("on") is True
+        and (on or {}).get("writes", 0) >= 1
+        and after is None
+        and not rules,
+        shape=shape,
+        bcm_on=on,
+        bcm_off=(box.status() or {}).get("bcm_ctrl_rule"),
+        removed=after is None,
+    )
+
+
 async def legacy_parent(box):
     """spec 3.10, 8.6: on a legacy pod the M2 set's backhaul BSS is the GRE parent AP wl1.1, with
     no multi_ap (the pod has none), its WPA2-PSK in the security map, hidden, no bridge, no
@@ -7182,6 +7245,7 @@ SCENARIOS = {
     "legacy-bridge-mode": legacy_bridge_mode,
     "legacy-bridge-mode-repair": legacy_bridge_mode_repair,
     "legacy-bridge-mode-old-profile": legacy_bridge_mode_repair,
+    "legacy-bcm-ctrl": legacy_bcm_ctrl,
     "legacy-parent": legacy_parent,
     "legacy-parent-child": legacy_parent_child,
     "legacy-parent-child-gone": legacy_parent_child_gone,
@@ -7377,6 +7441,8 @@ OPTIONS["legacy-bridge-mode-old-profile"] = {
     **OPTIONS["legacy-bridge-mode-repair"],
     "old_profiles": True,
 }
+# the experiment's switch on (spec 3.10, bcm_ctrl_rule)
+OPTIONS["legacy-bcm-ctrl"] = {"legacy": True, "bcm_ctrl_rule": True}
 OPTIONS["legacy-parent"] = {"legacy": True, "multi_bss": True, "underlay": LEGACY_UNDERLAY}
 OPTIONS["legacy-parent-child"] = OPTIONS["legacy-parent"]
 OPTIONS["legacy-parent-child-gone"] = OPTIONS["legacy-parent"]

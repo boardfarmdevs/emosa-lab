@@ -137,6 +137,15 @@ cJSON *em_auth_reload_ops(const em_profile *p, bool multi_bss, const cJSON *tabl
 #define EM_BRIDGE_MODE_COUNTS 48
 cJSON *em_bridge_mode_ops(const em_profile *p, bool multi_bss, const cJSON *tables, char *done, size_t size,
                           int *counts, size_t *ncounts);
+
+/* PodBackend.bcm_ctrl (spec 3.10, an experiment, the fleet's bcm_ctrl_rule, off by default): with
+ * `on`, one Openflow_Config row in the home bridge, the cloud's sys_t_bcm_ctrl (table 0, priority
+ * 140, rule dl_type=0x886c, action local) under EM_BCM_CTRL_TOKEN, where the bridge has no rule for
+ * that ethertype; off, EMOSA's own rows removed. What it did in done, the results' expected counts in
+ * counts (room for 8), *ncounts theirs; NULL when there is nothing to do. */
+#define EM_BCM_CTRL_TOKEN "emosa_bcm_ctrl"
+cJSON *em_bcm_ctrl_ops(const em_profile *p, const cJSON *tables, bool on, char *done, size_t size, int *counts,
+                       size_t *ncounts);
 cJSON *em_bridge_port_ops(const em_profile *p, bool multi_bss, const cJSON *tables, char (*names)[16], size_t max,
                           size_t *n, int *counts, size_t *ncounts);
 

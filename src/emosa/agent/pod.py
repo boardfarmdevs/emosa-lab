@@ -798,6 +798,7 @@ async def serve(config, stop):
         profile=profile,
         multi_bss=config.get("multi_bss", False) is True,
         underlay=config.get("underlay"),
+        bcm_ctrl_rule=config.get("bcm_ctrl_rule", False) is True,
     )
     engine = Engine(store, vault, {pod_id: backend})
     engine.recover()
@@ -1162,6 +1163,8 @@ async def serve(config, stop):
                     "auth_reloads": backend.auth_reloads,
                     "bridge_ports": backend.ports_added,
                     "bridge_mode_writes": backend.bridge_modes,
+                    # the experiment (bcm_ctrl_rule): its switch, and the writes it made
+                    "bcm_ctrl_rule": {"on": backend.bcm_ctrl_rule, "writes": backend.bcm_writes},
                 }
                 if profile.legacy
                 else {}
@@ -1404,6 +1407,9 @@ async def serve(config, stop):
                         done = await timed("bridge mode", backend.bridge_mode())
                         if done:
                             log.info("bridge mode: %s (wm restarts nas, eapd)", "; ".join(done))
+                        done = await timed("bcm ctrl", backend.bcm_ctrl())
+                        if done:
+                            log.info("bcm ctrl: %s", "; ".join(done))
                         for name in await timed("auth reload", backend.auth_reload()):
                             log.info("auth reload: %s oftag restored (wm restarts nas, eapd)", name)
                     except (EmosaError, ConnectionError, TimeoutError) as exc:
