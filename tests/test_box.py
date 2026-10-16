@@ -246,6 +246,12 @@ def test_an_invalid_fleet_configuration_is_rejected_and_the_last_valid_one_serve
     assert result["passed"], result
 
 
+def test_a_truncated_fleet_configuration_is_rejected_and_the_last_valid_one_served(agent, tmp_path):
+    # spec 4: a partial write names no state root; the platform's (EMOSA_STATE_ROOT) keeps the last
+    result = box("fleet-config-truncated", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+
+
 def test_a_pods_module_gets_its_settings_and_its_report_is_read(agent, tmp_path):
     # spec 4, the pods' modules: Node_Config written once per start, Node_State in the status
     result = box("node-config", agent, tmp_path / "box", timeout=240)

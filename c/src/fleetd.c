@@ -820,9 +820,10 @@ static cJSON *load_config(const char *path)
 
 /* spec 4 (15 October: one pod's unknown key kept every pod off EMOSA while the fleet restarted again
  * and again): the configuration serve runs on (fleet.served_config). The file when it is valid, kept
- * then as the last valid one (state_root/fleet-config.valid.json, the rejection record gone); else,
- * when it is JSON naming a state root that keeps a valid one, that one, the rejection logged once and
- * recorded (fleet-config.rejected.json: the file, its error, when); NULL when there is none. */
+ * then as the last valid one (state_root/fleet-config.valid.json, the rejection record gone); else
+ * the one kept under the state root it names, or the platform's when it names none (not JSON, a
+ * partial write), the rejection logged once and recorded (fleet-config.rejected.json: the file, its
+ * error, when); NULL when there is none. */
 #define VALID_CONFIG "fleet-config.valid.json"
 #define REJECTED_CONFIG "fleet-config.rejected.json"
 
@@ -836,30 +837,44 @@ static bool config_valid(const cJSON *config, char *where, size_t size)
     return valid;
 }
 
+#ifndef EMOSA_STATE_ROOT_DIR
+#define EMOSA_STATE_ROOT_DIR "/var/lib/emosa"
+#endif
+
+/* the platform's state root (EMOSA_STATE_ROOT, as /etc/default/emosa gives it, else the build's):
+ * where a file that names none (not JSON, a partial write) finds the last valid configuration */
+static const char *platform_state_root(void)
+{
+    const char *env = getenv("EMOSA_STATE_ROOT");
+    return env && *env ? env : EMOSA_STATE_ROOT_DIR;
+}
+
 static cJSON *served_config(const char *path)
 {
     char *text = em_read_file(path, CONFIG_MAX, NULL);
     cJSON *config = text ? cJSON_Parse(text) : NULL;
     free(text);
-    if (!config) {
-        FAIL("%s: not a JSON fleet configuration", path);
-        return NULL;
-    }
     char where[256] = "", kept[1100], record[1100];
-    const char *root = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(config, "state_root"));
-    bool named = root && *root && em_format(kept, sizeof(kept), "%s/%s", root, VALID_CONFIG) &&
-                 em_format(record, sizeof(record), "%s/%s", root, REJECTED_CONFIG);
-    if (config_valid(config, where, sizeof(where))) {
+    if (config && config_valid(config, where, sizeof(where))) {
+        const char *root = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(config, "state_root"));
         char *copy = em_json_dumps(config, EM_JSON_INDENT2, true);
-        if (!named || !em_mkdirs(root, 0700) || !copy || !em_write_file(kept, copy, true))
+        if (!root || !em_format(kept, sizeof(kept), "%s/%s", root, VALID_CONFIG) ||
+            !em_format(record, sizeof(record), "%s/%s", root, REJECTED_CONFIG) || !em_mkdirs(root, 0700) ||
+            !copy || !em_write_file(kept, copy, true))
             WARN("%s: the last valid configuration not kept", path);
         else
             (void)unlink(record);
         free(copy);
         return config;
     }
+    if (!config)
+        (void)em_copy(where, sizeof(where), "not JSON");
+    /* the state root it names, else the platform's */
+    const char *named = config ? cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(config, "state_root")) : NULL;
+    const char *root = named && *named ? named : platform_state_root();
     cJSON *last = NULL;
-    if (named) {
+    if (em_format(kept, sizeof(kept), "%s/%s", root, VALID_CONFIG) &&
+        em_format(record, sizeof(record), "%s/%s", root, REJECTED_CONFIG)) {
         char *saved = em_read_file(kept, CONFIG_MAX, NULL), other[256] = "";
         last = saved ? cJSON_Parse(saved) : NULL;
         free(saved);
@@ -868,9 +883,9 @@ static cJSON *served_config(const char *path)
             last = NULL;
         }
     }
+    cJSON_Delete(config);
     if (!last) {
         FAIL("%s: invalid fleet configuration (%s), and no last valid one to serve", path, where);
-        cJSON_Delete(config);
         return NULL;
     }
     FAIL("%s: invalid fleet configuration (%s): rejected, serving the last valid one (%s)", path, where, kept);
@@ -883,7 +898,6 @@ static cJSON *served_config(const char *path)
         WARN("%s: the rejection not recorded", record);
     free(out);
     cJSON_Delete(r);
-    cJSON_Delete(config);
     return last;
 }
 
