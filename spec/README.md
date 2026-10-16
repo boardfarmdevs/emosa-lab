@@ -868,13 +868,26 @@ For each connection on the front port, the fleet:
 5. writes `manager_addr` and ends the session.
 
 The whole exchange MUST complete within 5 s. A pod returning later gets the
-same entry. When it starts, the fleet MUST do step 4 for each admitted entry its
+same entry.
+
+A serving fleet keeps each valid configuration it starts on as the last valid one
+(`fleet-config.valid.json` under its `state_root`). One that fails its checks (its
+schema, a module's update without `files`) is rejected. If it is JSON naming a
+`state_root` that keeps a valid one, the fleet logs the rejection once, records
+it (`fleet-config.rejected.json`: the file, its error, when) and serves the last
+valid configuration. So one bad key never takes the pods off EMOSA: the fleet
+does not end, and its service manager does not start it again and again (15
+October). With no valid one kept, it ends as before. A valid start removes the
+record. `list` and `forget` read the configuration as given.
+
+When it starts, the fleet MUST do step 4 for each admitted entry its
 registry has, in the registry's order, without waiting for the pod: an image
 upgrade keeps the registry and the configurations on persistent storage but not
 the agents' enabled units. The registry file is the fleet's state: a serving fleet MUST read it
 again for each pod, so a `forget` run as another process takes effect at once. With `run_root` each agent's configuration has `run_dir` `<run_root>/<pod_id>`. The agent configuration takes the fleet's settings (`message_set`,
 `multi_bss`, `m2_session`, `profile`, `uplink`), overridden per pod by
-`pods.<serial>`, and the fleet's `topology_query_window` (§2.5), a property of the
+`pods.<serial>`, the experiment's `anchor_ap` (§3.10) only when set, and the fleet's
+`topology_query_window` (§2.5), a property of the
 controller, when it has one: a different pod model needs its own profile, and the uplink
 switch (§8.3) is enabled per pod. `forget SERIAL` stops the agent, deletes the entry and the
 configuration, and archives the agent's state directory as

@@ -49,7 +49,7 @@ import ovs.jsonrpc
 import ovs.poller
 import ovs.stream
 
-from emosa.config import validate
+from emosa.config import validate, validator
 from emosa.errors import EmosaError, Reason
 from emosa.opensync.profiles import DEFAULT as DEFAULT_PROFILE
 from emosa.secrets import REFERENCE, FileSecrets
@@ -432,14 +432,80 @@ class FileServer:
         self.httpd.server_close()
 
 
+# spec 4 (15 October: one pod's unknown key kept every pod off EMOSA while the fleet restarted
+# again and again): the fleet's configuration is kept once valid, under its state root; one that is
+# not is rejected, its error recorded, and the fleet serves the last valid one
+VALID_CONFIG, REJECTED_CONFIG = "fleet-config.valid.json", "fleet-config.rejected.json"
+
+
+def check_config(config):
+    """A fleet configuration's checks (spec 4): its schema, and a module's update needs the
+    fleet's files. EmosaError when it fails one."""
+    validate("fleet-config", config)
+    modules = [config.get("modules") or {}] + [
+        own.get("modules") or {} for own in (config.get("pods") or {}).values()
+    ]
+    if not config.get("files") and any(m.get("update") for ms in modules for m in ms.values()):
+        raise EmosaError(Reason.INVALID_INPUT, "a module's update needs the fleet's files")
+
+
+def schema_error(config):
+    """Where a fleet configuration fails its schema, as the C fleet names it ("/pods/X/key:
+    additionalProperties": a key it does not know, by name, never a value), or None."""
+    errors = sorted(validator("fleet-config").iter_errors(config), key=lambda e: str(list(e.path)))
+    if not errors:
+        return None
+    first = errors[0]
+    path = [str(p) for p in first.absolute_path]
+    if first.validator == "additionalProperties" and isinstance(first.instance, dict):
+        known = set(first.schema.get("properties") or {})
+        path += sorted(k for k in first.instance if k not in known)[:1]
+    return f"/{'/'.join(path)}: {first.validator}"
+
+
+def write_private(path, text):
+    """text to path through path.tmp and a rename, owner-only."""
+    tmp = path.with_suffix(".tmp")
+    with os.fdopen(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as f:
+        f.write(text)
+    os.replace(tmp, path)
+
+
+def served_config(config, path):
+    """The configuration a serving fleet runs on (spec 4): ``config`` when it passes
+    check_config, kept then as the last valid one (state_root/VALID_CONFIG, its rejection record
+    gone); else the last valid one, the rejection logged once and recorded (REJECTED_CONFIG: the
+    file, its error, when). Raises when there is none to fall back to (no state_root in it, or
+    none kept there)."""
+    try:
+        check_config(config)
+    except EmosaError as exc:
+        root = config.get("state_root") if isinstance(config, dict) else None
+        kept = Path(root) / VALID_CONFIG if isinstance(root, str) and root else None
+        if kept is None or not kept.is_file():
+            raise
+        last = json.loads(kept.read_text())
+        check_config(last)
+        error = schema_error(config) or str(exc)
+        log.error(
+            "fleet configuration %s rejected (%s): serving the last valid one, %s",
+            path,
+            error,
+            kept,
+        )
+        record = {"config": str(path), "error": error, "at": int(time.time())}
+        write_private(Path(root) / REJECTED_CONFIG, json.dumps(record, indent=2) + "\n")
+        return last
+    root = Path(config["state_root"])
+    root.mkdir(mode=0o700, parents=True, exist_ok=True)
+    write_private(root / VALID_CONFIG, json.dumps(config, indent=2) + "\n")
+    (root / REJECTED_CONFIG).unlink(missing_ok=True)
+    return config
+
+
 class Fleet:
     def __init__(self, config, *, starter=systemd_starter, stopper=systemd_stopper):
-        validate("fleet-config", config)
-        modules = [config.get("modules") or {}] + [
-            own.get("modules") or {} for own in (config.get("pods") or {}).values()
-        ]
-        if not config.get("files") and any(m.get("update") for ms in modules for m in ms.values()):
-            raise EmosaError(Reason.INVALID_INPUT, "a module's update needs the fleet's files")
+        check_config(config)
         self.config = config
         low, high = config["ports"]
         self.registry = Registry(
@@ -730,6 +796,8 @@ def main():
         level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s"
     )
     config = json.loads(args.config.read_text())
+    if args.command == "serve":  # a configuration that is not valid: the last valid one (spec 4)
+        config = served_config(config, args.config)
     if config.get("agents") == "supervised" and args.command != "list":
         # spec §4: the agents as the fleet's own children are the C fleet's
         parser.error('"agents": "supervised" is emosa-fleet-c\'s; this fleet runs systemd units')
