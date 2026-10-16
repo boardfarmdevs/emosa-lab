@@ -874,8 +874,7 @@ upgrade keeps the registry and the configurations on persistent storage but not
 the agents' enabled units. The registry file is the fleet's state: a serving fleet MUST read it
 again for each pod, so a `forget` run as another process takes effect at once. With `run_root` each agent's configuration has `run_dir` `<run_root>/<pod_id>`. The agent configuration takes the fleet's settings (`message_set`,
 `multi_bss`, `m2_session`, `profile`, `uplink`), overridden per pod by
-`pods.<serial>`, the experiment's `anchor_ap` (§3.10) only when set, and the fleet's
-`topology_query_window` (§2.5), a property of the
+`pods.<serial>`, and the fleet's `topology_query_window` (§2.5), a property of the
 controller, when it has one: a different pod model needs its own profile, and the uplink
 switch (§8.3) is enabled per pod. `forget SERIAL` stops the agent, deletes the entry and the
 configuration, and archives the agent's state directory as
