@@ -435,6 +435,40 @@ async def fleet_upgrade(box):
     )
 
 
+async def fleet_config_rejected(box):
+    """spec 4 (15 October): one pod's key its schema does not know kept every pod off EMOSA, the
+    fleet ending at once and started again and again. The fleet stopped with its agent gone (as
+    the router's supervised agents go with it), its configuration given that key: the fleet
+    started again rejects it, logs it once, records the key (fleet-config.rejected.json), keeps
+    running on the last valid configuration and starts the registry's agent on it, which
+    provisions the pod again."""
+    first = await onboarded(box)
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    box.stop_fleet()
+    box.process.terminate()
+    box.process.wait(15)
+    (box.units / f"{box.serial}.pid").unlink(missing_ok=True)
+    box.fleet_config.setdefault("pods", {})[box.serial] = {"not_a_setting": True}
+    await box.restart_fleet()
+    started = await box.until(lambda: box.process.pid(), seconds=15)
+    again = await provision(box, searches, m1s) if started else False
+    await asyncio.sleep(3)
+    root = Path(box.fleet_config["state_root"])
+    record = root / "fleet-config.rejected.json"
+    rejected = json.loads(record.read_text()) if record.is_file() else {}
+    log = (box.directory / "fleet.log").read_text(errors="replace").split("--- the ")[-1]
+    checks = {
+        "onboarded": bool(first.get("applied")),
+        "fleet_running": box.fleet_process.poll() is None,
+        "agent_started": bool(started),
+        "provisioned_again": again,
+        "rejected_once": log.count("rejected") == 1,
+        "the_key_recorded": "not_a_setting" in rejected.get("error", ""),
+        "last_valid_kept": (root / "fleet-config.valid.json").is_file(),
+    }
+    return box.result(passed=all(checks.values()), checks=checks, rejected=rejected)
+
+
 OTHER_POD = "MVXPOD0000000000AA"
 
 
@@ -907,6 +941,7 @@ SCENARIOS = {
     "fleet-forget": fleet_forget,
     "fleet-supervised": fleet_supervised,
     "fleet-files": fleet_files,
+    "fleet-config-rejected": fleet_config_rejected,
 }
 OPTIONS = {
     "fleet-refusals": {"fleet": {"admit": [OTHER_POD]}, "handover_seconds": 6},
