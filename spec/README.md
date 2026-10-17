@@ -1299,6 +1299,41 @@ The agent makes the switch itself when its configuration has
   `cm` then uses, and made once per failed switch. A pod whose fallback station keeps its
   uplink working never restarts to drop the credential, and the station would stay pinned to a
   parent it cannot join (the Pis, 13 October). Both agents.
+- **A GRE move onto another station: make-before-break.** A GRE move's switch (§8.6) writes only
+  its own station; `cm` keeps a working uplink in use and moves among equal ones only at its
+  periodic pass (two minutes on the Pis' `cm2`, 17 October), so with the old station still up the
+  move would wait for that pass. Once the move's station is on the target (its State's `parent`)
+  and its own gretap (`g-<station>`) has L2 and L3, the agent takes the station `cm` uses and any
+  other station EMOSA's switch wrote (its `ssid` "", the move's marker) off in one guarded
+  transaction: disabled, and, one EMOSA wrote, its snapshot put back and EMOSA's credential
+  deleted, as the revert does. The pod's own other stations (a fallback station, §8.6) stay as the
+  pod set them. `cm` then loses its uplink and takes the new gretap at once, within the switch's
+  90 s; also when `cm` took it by itself, the old station is taken off, once per switch the agent
+  wrote. The move is applied only once `cm` uses the move station's own gretap. Losing the parent
+  then means the pod's own fallback, or its restart to its bootstrap (GTP) path. A legacy pod
+  (§3.10) has one backhaul station (`wl1`), and its vendor healthcheck reboots it for a disabled
+  station row: nothing is taken off there.
+- **A failed GRE move onto another station** is answered with a failure and returns to the
+  previous upstream with its station (re-pinned without a write when it still carries its pin).
+  The switch back does not disable the move's station, which would otherwise join its target
+  later and take `cm` (the V54 bench, 17 October): the agent undoes its own write there first,
+  the station's snapshot back (its `enabled` with it: a station the pod kept off is off again),
+  EMOSA's credential deleted. The snapshot is each station's own, taken when EMOSA's switch first
+  wrote it from the pod's configuration.
+- **The uplink record follows `cm`.** The station the uplink is on is the one `cm` uses (the
+  station itself, or its own gretap); only with none of the bound stations in use does the one in
+  credential-list mode, then the bootstrap one, stand in. A GRE child whose `cm` uses another bound
+  station's own gretap than the record's (the pod's own fallback, or `cm`'s pass) has its record
+  follow it, with no write: onto EMOSA's pin when that station carries one, else, on the same
+  start, onto its bootstrap (no EMOSA upstream, the kept target dropped). The reported backhaul
+  (§8.6, "How the controller reaches a pod") already names that station, so the controller learns
+  it from the pod's next topology. A GRE switch whose station already carries the same pin and
+  credential, enabled, writes nothing: a steer to where `cm` already is moves nothing on the air. A
+  finished move's record is the last start's, cleared from the status on the pod's next start.
+- **Refusals in the log.** Each refused Backhaul Steering Request is logged with its code, reason,
+  station, target, class and channel, not only counted in the status. Both agents; box
+  `pi-gre-move-at-cms-pass`, `pi-gre-move-fails-undone`, `pi-gre-record-follows-cm` (a GRE child of
+  the Pis' shape: its bootstrap on its 5 GHz station, the 2.4 GHz one off) and `legacy-gre-move`.
 
 ### 8.4 Ethernet uplink, for a wired pod
 
@@ -1555,8 +1590,8 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
   bootstrap/GTP path), as an 802.11 backhaul neighbour with its MAC, band and parent BSSID, never
   claimed as a Multi-AP (4-address) bSTA (§8.5's reporting, now for a GRE child too); the controller
   then models the device's backhaul link as Wireless LAN. Under a GRE tunnel the station reported is
-  the one whose own gretap cm uses (cm names it `g-<station>`): a GRE move disables no other station,
-  so the station it moved from may still be associated to its old parent, and reporting that one
+  the one whose own gretap cm uses (cm names it `g-<station>`): until a GRE move's make-before-break
+  takes it off (§8.3), the station it moved from may still be associated to its old parent, and reporting that one
   would give the controller the old parent and make it name the old station in its next steer, which
   EMOSA refuses (box `mixed-gre-child-onto-legacy-parent`, 16 October). Only when no station's own
   gretap is in use is the first station under a GRE tunnel reported, as before. Both agents.

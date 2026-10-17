@@ -2,6 +2,8 @@
 /* Backhaul Steering (emosa.wire.backhaul_steering). */
 #include "bhsteer.h"
 
+#include "log.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -179,6 +181,13 @@ const char *em_bh_handle(em_bh_coordinator *c, const em_message *m, double now, 
     if (reason) {
         bool channel = !strcmp(reason, "no_station_on_band") || !strcmp(reason, "channel_not_operable");
         respond(c, m->mid, request, channel ? CHANNEL_NOT_OPERABLE : ASSOCIATION_FAILED, NULL, now, out);
+        /* a refusal is in the log too, not only the status (V54 bench, 17 October) */
+        const uint8_t *r = request;
+        em_log(EM_LOG_INFO, "emosa.wire.backhaul_steering",
+               "backhaul steering refused (code 0x%02x): %s; station %02x:%02x:%02x:%02x:%02x:%02x, target "
+               "%02x:%02x:%02x:%02x:%02x:%02x, class %d, channel %d",
+               channel ? CHANNEL_NOT_OPERABLE : ASSOCIATION_FAILED, reason, r[0], r[1], r[2], r[3], r[4], r[5], r[6],
+               r[7], r[8], r[9], r[10], r[11], r[12], r[13]);
         EM_FORMAT_FIXED(label, sizeof(label), "backhaul_steering_refused_%s", reason);
         return record(c, label);
     }

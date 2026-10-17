@@ -214,11 +214,18 @@ def uplink_state(decoded, station):
 
     ``kind`` is ``multi-ap`` only when ``station`` is a connected Multi-AP
     backhaul STA (4-address) and ``cm`` uses it, and nothing else, as its uplink;
-    otherwise the ``if_type`` of the uplink ``cm`` uses (``gre``, ``eth``), or None.
+    otherwise the ``if_type`` of the uplink ``cm`` uses (``gre``, ``eth``), or None,
+    and None when that uplink is another station's own gretap (cm names it
+    ``g-<station>``): with two stations up, one's GRE uplink is not the other's.
     """
     used = [
         r for r in decoded.get("Connection_Manager_Uplink", {}).values() if r.get("is_used") is True
     ]
+    stations = {
+        r.get("if_name")
+        for r in decoded.get("Wifi_VIF_State", {}).values()
+        if r.get("mode") == "sta" and r.get("if_name")
+    }
     states = [
         r
         for r in decoded.get("Wifi_VIF_State", {}).values()
@@ -230,13 +237,17 @@ def uplink_state(decoded, station):
         and state.get("multi_ap") == "backhaul_sta"
         and state.get("wds") is True
     )
-    if wds_sta and len(used) == 1 and used[0].get("if_name") == station:
+    in_use = used[0].get("if_name") if len(used) == 1 else None
+    others = {f"g-{name}" for name in stations if name != station}
+    if wds_sta and in_use == station:
         kind = MULTI_AP
+    elif in_use in others:
+        kind = None  # cm uses another station's own gretap
     else:
         kind = used[0].get("if_type") if len(used) == 1 else None
     return {
         "kind": kind,
-        "in_use": used[0].get("if_name") if len(used) == 1 else None,
+        "in_use": in_use,
         "station": station,
         "ssid": state.get("ssid") or None,
         "parent": lower_mac(state.get("parent")),
@@ -287,6 +298,7 @@ class UplinkBackend:
         self.loop = loop
         self.instance = None  # which start of the pod's OpenSync (its radio rows)
         self.facts = None  # uplink_state of the last read, without the raw State row
+        self.configs, self.stations_state = {}, {}  # each bound station's, at the last read
         self.last = None
         self.write_count = 0
 
@@ -344,17 +356,22 @@ class UplinkBackend:
         return None
 
     def _active(self, decoded, rows):
-        """The station the uplink is on: the one in Multi-AP credential-list mode, else the
-        one ``cm`` uses, else the one the pod bootstraps on."""
-        written = [n for n, (_, r) in rows.items() if self._configured(decoded, r, n)[1]]
-        if len(written) == 1:
-            return written[0]
+        """The station the uplink is on: the one ``cm`` uses (the station itself, or its own
+        gretap ``g-<station>``), else the one in credential-list mode, else the one the pod
+        bootstraps on. cm's first: with two stations in credential-list mode (a GRE move onto
+        another station, spec 8.6) the bootstrap one was taken, and a move onto the other was
+        never seen applied (V54 bench, 17 October)."""
         used = [
             r.get("if_name")
             for r in decoded.get("Connection_Manager_Uplink", {}).values()
-            if r.get("is_used") is True and r.get("if_name") in rows
+            if r.get("is_used") is True
         ]
-        return used[0] if len(used) == 1 else self.station
+        if len(used) == 1:
+            on = [n for n in rows if used[0] in (n, f"g-{n}")]
+            if len(on) == 1:
+                return on[0]
+        written = [n for n, (_, r) in rows.items() if self._configured(decoded, r, n)[1]]
+        return written[0] if len(written) == 1 else self.station
 
     def _configured(self, decoded, vif, station):
         """The station's configured uplink: credential-list mode (Multi-AP or GRE), or not.
@@ -380,6 +397,29 @@ class UplinkBackend:
             "bssid": lower_mac(pin) if kind else None,
         }, (sole if kind else None)
 
+    def _read_stations(self, decoded, rows):
+        """Each bound station the pod has a row for, at this read: its configured uplink
+        (``configs``, as ``_configured``) and ``stations_state``: whether its Config is enabled,
+        whether EMOSA's switch wrote it (its ssid "", the move's marker), its State's parent, and
+        its own gretap's Connection_Manager_Uplink row (``g-<station>``: has_L2, has_L3, is_used),
+        None when cm has none."""
+        uplinks = {
+            r.get("if_name"): r for r in decoded.get("Connection_Manager_Uplink", {}).values()
+        }
+        self.configs, self.stations_state = {}, {}
+        for name, (_, row) in rows.items():
+            self.configs[name] = self._configured(decoded, row, name)[0]
+            state = uplink_state(decoded, name)
+            gretap = uplinks.get(f"g-{name}")
+            self.stations_state[name] = {
+                "enabled": row.get("enabled") is True,
+                "emosa": row.get("ssid") == "",  # EMOSA's switch wrote it (the move's marker)
+                "parent": state["parent"],
+                "gretap": None
+                if gretap is None
+                else {k: gretap.get(k) is True for k in ("has_L2", "has_L3", "is_used")},
+            }
+
     async def snapshot(self):
         try:
             raw = await self.session.snapshot()
@@ -389,6 +429,7 @@ class UplinkBackend:
             configured, credential = self._configured(decoded, vif, self.active)
             state = uplink_state(decoded, self.active)
             self.facts = {k: v for k, v in state.items() if k != "state"}
+            self._read_stations(decoded, rows)
             # The key a station connected with is not in its State: the observed
             # credential is the configured one whose SSID the station is on.
             observed = {
@@ -456,6 +497,22 @@ class UplinkBackend:
         """The pod's other backhaul stations that are enabled: the switch disables them."""
         return sorted(n for n, (_, r) in rows.items() if n != station and r.get("enabled") is True)
 
+    def _configured_already(self, decoded, rows, intent, key):
+        """True when a GRE switch's station already is what it would write: enabled, in
+        credential-list mode with one gre credential of the intent's SSID, key and pin. (A
+        Multi-AP switch is written again: a held one's retry rewrites the station.)"""
+        if intent.mode != GRE:
+            return False
+        vif = rows[intent.station][1]
+        configured, _ = self._configured(decoded, vif, intent.station)
+        return (
+            vif.get("enabled") is True
+            and configured["uplink"] == GRE
+            and configured["ssid"] == intent.ssid
+            and configured["credential_fingerprint"] == self.vault.fingerprint(key)
+            and configured["bssid"] == intent.bssid
+        )
+
     async def plan(self, intent):
         self._check(intent)
         raw = await self.session.snapshot()
@@ -489,7 +546,7 @@ class UplinkBackend:
     async def submit(self, intent, attempt):
         await self.plan(intent)
         raw = await self.session.snapshot()
-        _, rows = self._binding(raw)
+        decoded, rows = self._binding(raw)
         if raw["generation"] != attempt["session_generation"] or intent.station not in rows:
             return SubmitResult("rejected", {}, Reason.NOT_READY)
         node_uuid = next(iter(raw["tables"]["AWLAN_Node"]))
@@ -498,6 +555,22 @@ class UplinkBackend:
         if intent.mode == BOOTSTRAP:
             return await self._submit_revert(intent, attempt, raw, node_uuid, vif_uuid, vif)
         key = self.vault.resolve(intent.secret_ref)
+        if self._configured_already(decoded, rows, intent, key):
+            # the station already carries this pin and credential, enabled: no write, so nothing
+            # moves on the air (a steer to where cm already is, a record that followed cm)
+            return SubmitResult(
+                "committed",
+                {
+                    "attribution": "reply",
+                    "transaction_validated": True,
+                    "transaction_id": attempt["transaction_id"],
+                    "session_generation": raw["generation"],
+                    "action": "already-configured",
+                    "instance": self.instance,
+                    "results": [],
+                    "restore": None,
+                },
+            )
         # Credential-list mode: the station's own SSID and security empty, one linked credential.
         # ssid "" is the marker that the station is under an EMOSA move (spec 8.6 ownership). On
         # onboard_type=multi_ap owm sets multi_ap, 4-address and br-home itself; on onboard_type=gre
@@ -526,10 +599,11 @@ class UplinkBackend:
         # Snapshot the pod columns this move overwrites, for the revert to put back (vconf mode),
         # but only when moving FROM the bootstrap (the pre-move station is in vconf mode, ssid set):
         # a move from one parent to another leaves the earlier snapshot in place, so the revert
-        # always restores the bootstrap, never an EMOSA move state.
+        # always restores the bootstrap, never an EMOSA move state. Its enabled too: a station the
+        # pod kept off (a Pi's 2.4 GHz fallback) is off again when the move onto it is undone.
         restore = None
         if vif.get("ssid"):
-            restore = {k: vif.get(k) for k in vif_row if k != "enabled" and k in vif}
+            restore = {k: vif.get(k) for k in vif_row if k in vif}
         transaction = [
             {
                 "op": "wait",
@@ -555,10 +629,10 @@ class UplinkBackend:
             },
         ]
         counts = [None, None, None, 1]
-        # Only a Multi-AP move disables the pod's other backhaul stations: two 4-address uplinks
-        # bridge br-home into the network twice, with no STP (spec 8.3). A GRE move disables none
-        # (cm bridges only the in-use uplink's gretap), so the pod's fallback station stays the
-        # pod's (spec 8.6 ownership).
+        # A Multi-AP move disables the pod's other backhaul stations here: two 4-address uplinks
+        # bridge br-home into the network twice, with no STP (spec 8.3). A GRE move takes them off
+        # only once its station is on the target with its gretap up (take_off, make-before-break):
+        # cm keeps a working uplink in use, so the old station must go for cm to take the new one.
         others = self._others_on(rows, intent.station) if intent.mode == MULTI_AP else []
         for name in others:
             other_uuid = rows[name][0]
@@ -663,6 +737,67 @@ class UplinkBackend:
                 "results": json.loads(json.dumps(results, default=str)),
             },
         )
+
+    async def take_off(self, names, restores):
+        """Make-before-break (spec 8.3, 8.6): the pod's other backhaul stations ``names`` off, once
+        a GRE move's station is on its target with its gretap up. cm keeps a working uplink in use
+        and re-selects among equal ones only at its periodic pass (2 minutes on the Pis, 17
+        October), so the old station goes and cm takes the new one at once. One guarded
+        transaction: each station enabled now is disabled and, when EMOSA's switch wrote it (its
+        ssid "", the move's marker) and ``restores`` has its snapshot, its vconf columns are put
+        back and EMOSA's credential deleted, as the revert does. A legacy pod (spec 3.10) has one
+        backhaul station, and its vendor healthcheck reboots it for a disabled station row: none is
+        taken off there. Returns the stations taken off."""
+        if self.legacy:
+            return []
+        raw = await self.session.snapshot()
+        _, rows = self._binding(raw)
+        node_uuid = next(iter(raw["tables"]["AWLAN_Node"]))
+        transaction = [
+            {
+                "op": "wait",
+                "table": "AWLAN_Node",
+                "where": [],
+                "columns": ["_uuid", "serial_number"],
+                "until": "==",
+                "rows": [{"_uuid": ["uuid", node_uuid], "serial_number": self.expected_serial}],
+                "timeout": 0,
+            }
+        ]
+        counts, off = [None], []
+        for name in sorted(names):
+            if name not in rows or rows[name][1].get("enabled") is not True:
+                continue
+            uuid = rows[name][0]
+            vif = raw["tables"]["Wifi_VIF_Config"][uuid]
+            row, drop = {"enabled": False}, []
+            restore = restores.get(name)
+            # EMOSA's switch wrote it: its ssid "", the move's marker
+            if restore and restore.get("ssid") and rows[name][1].get("ssid") == "":
+                row = {**restore, "enabled": False}
+                keep = set(credential_uuids(restore.get("credential_configs")))
+                drop = [u for u in credential_uuids(vif.get("credential_configs")) if u not in keep]
+            transaction += [
+                guard("Wifi_VIF_Config", uuid, vif, [c for c in STATION_GUARDS if c in vif]),
+                {"op": "update", "table": "Wifi_VIF_Config", "where": where_uuid(uuid), "row": row},
+            ]
+            counts += [None, 1]
+            for credential in drop:
+                transaction.append(
+                    {
+                        "op": "delete",
+                        "table": "Wifi_Credential_Config",
+                        "where": where_uuid(credential),
+                    }
+                )
+                counts.append(1)
+            off.append(name)
+        if not off:
+            return []
+        self.write_count += 1
+        results = await self.session.transact(transaction, None, raw["generation"])
+        check_results(results, counts)
+        return off
 
     async def close(self):
         pass

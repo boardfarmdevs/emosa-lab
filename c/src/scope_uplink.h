@@ -2,9 +2,11 @@
 /* The uplink scope, as emosa.opensync.uplink.UplinkBackend and emosa.agent.uplink.
  * UplinkSwitch: the pod's backhaul station joins the EasyMesh backhaul BSS (data plane
  * option 1), pinned to one upstream BSSID, once per OpenSync start, and its other backhaul
- * stations are disabled; a failed switch holds the pod on option 2; the controller's Backhaul
- * Steering moves it (steer, outcome), to another band with that band's station, the target
- * kept in <state_dir>/uplink/target.json. Its own journal. */
+ * stations are disabled (a GRE move's once its station joined: make-before-break); a failed
+ * switch holds the pod on option 2; the controller's Backhaul Steering moves it (steer,
+ * outcome), to another band with that band's station, the target kept in
+ * <state_dir>/uplink/target.json; a GRE child's record follows the station cm uses. Its own
+ * journal. */
 #ifndef EMOSA_SCOPE_UPLINK_H
 #define EMOSA_SCOPE_UPLINK_H
 
@@ -90,6 +92,12 @@ typedef struct {
     cJSON *fallback_after;
     char fallback_instance[17];
     bool undo_logged; /* the undo of that switch announced once */
+    /* the pod's start at the last read (a finished move's record is the last start's) */
+    char seen_instance[17];
+    bool has_seen_instance;
+    /* the GRE switch whose other stations were taken off (make-before-break), and the switch this
+     * process wrote last: their operation_ids */
+    char taken_off[64], written[64];
 } em_uplink_scope;
 
 em_reason em_uplink_open(em_uplink_scope *u, const char *state_dir, const em_journal_schemas *schemas,

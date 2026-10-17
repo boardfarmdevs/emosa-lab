@@ -205,8 +205,9 @@ def test_a_recorded_bootstrap_is_loaded_on_restart(tmp_path):
 
 def test_a_gre_move_is_three_address_and_disables_no_other_station(tmp_path):
     """Spec 8.6 ownership: a GRE move leaves the station's multi_ap/wds (3-address) and disables
-    no other station; it snapshots the pod's vconf columns (ssid, security, credential_configs)
-    for the revert to restore."""
+    no other station in its write (make-before-break takes them off once it joined); it snapshots
+    the pod's vconf columns (ssid, security, credential_configs, enabled) for the revert to
+    restore."""
     switch, pod, _, _ = rig(tmp_path, bssid=None, parents=lambda: {PARENT})
     asyncio.run(
         switch.tick()
@@ -223,6 +224,7 @@ def test_a_gre_move_is_three_address_and_disables_no_other_station(tmp_path):
     credential = next(op for op in sent if op["op"] == "insert")["row"]
     assert credential["onboard_type"] == "gre" and credential["bssid"] == PARENT
     assert switch.latest().commit_evidence["restore"] == {
+        "enabled": True,
         "ssid": "opensync-lab-bhaul",
         "security": ["map", [["encryption", "WPA-PSK"], ["key", "bootstrap-psk"]]],
         "credential_configs": ["set", [["uuid", BOOT_CRED]]],
@@ -650,6 +652,41 @@ def test_a_gre_child_is_steered_onto_a_parent_as_a_3_address_gre_station(tmp_pat
     asyncio.run(switch.tick())
     assert switch.latest().state == State.OBSERVED_APPLIED
     assert switch.steering_outcome(GRE_PARENT) is True and switch.status()["uplink"] == "gre"
+
+
+def test_a_gre_switch_its_station_already_carries_writes_nothing(tmp_path):
+    """Spec 8.3: a GRE switch whose station already carries the same pin and credential, enabled,
+    is committed with no write: a steer to where cm already is moves nothing on the air."""
+    switch, pod, _, _ = rig(tmp_path, bssid=None, parents=lambda: frozenset({GRE_PARENT}))
+    asyncio.run(switch.tick())
+    assert switch.steer(GRE_PARENT) is None
+    asyncio.run(switch.tick())
+    pod.adopt_gre(parent=GRE_PARENT)
+    asyncio.run(switch.tick())
+    assert switch.latest().state == State.OBSERVED_APPLIED
+    sent = len(pod.sent)
+    intent = UplinkIntent(**switch.latest().intent)
+    attempt = {"transaction_id": "again", "session_generation": pod.generation}
+    result = asyncio.run(switch.backend.submit(intent, attempt))
+    assert result.status == "committed" and result.evidence["action"] == "already-configured"
+    assert len(pod.sent) == sent  # nothing written
+
+
+def test_another_stations_gretap_is_not_this_stations_gre_uplink():
+    """With two stations up, cm on one's own gretap (g-<station>) is not the other's GRE uplink
+    (V54 bench, 17 October): only the station whose gretap cm uses is on the GRE uplink."""
+    decoded = {
+        "Wifi_VIF_State": {
+            "a": {"if_name": "bhaul-sta-50", "mode": "sta", "enabled": True, "parent": PARENT},
+            "b": {"if_name": "bhaul-sta-24", "mode": "sta", "enabled": True, "parent": GRE_PARENT},
+        },
+        "Connection_Manager_Uplink": {
+            "c": {"if_name": "g-bhaul-sta-24", "if_type": "gre", "is_used": True},
+            "d": {"if_name": "g-bhaul-sta-50", "if_type": "gre", "is_used": False},
+        },
+    }
+    assert uplink_state(decoded, "bhaul-sta-24")["kind"] == "gre"
+    assert uplink_state(decoded, "bhaul-sta-50")["kind"] is None
 
 
 def test_a_steer_to_a_non_parent_is_a_multi_ap_join_never_gre(tmp_path):

@@ -1934,13 +1934,15 @@ em_reason em_uplink_submit(const char *serial, em_ovs_session *s, const em_uplin
     }
     em_uplink_state state;
     em_uplink_state_of(s->tables, in->station, &state);
-    if (!*state.kind) {
+    /* cm uses an uplink: this station's, or (a GRE move onto another station) the other's */
+    if (!*state.kind && !*state.in_use) {
         *refusal = "no working uplink to switch from";
         return EM_NOT_READY;
     }
     /* A GRE move leaves the station's multi_ap/wds as the pod set them (a 3-address station) and
-     * disables no other station (cm bridges only the in-use gretap); only a Multi-AP move clears
-     * them so owm can set backhaul_sta/4-address, and disables the others (spec 8.6). */
+     * disables no other station in this write (make-before-break takes the old one off once this one
+     * joined: em_uplink_take_off); only a Multi-AP move clears them so owm can set
+     * backhaul_sta/4-address, and disables the others here (spec 8.3, 8.6). */
     bool is_gre = in->onboard && !strcmp(in->onboard, "gre");
     /* Moving from the bootstrap (the pre-move station in vconf mode, its own SSID set): snapshot the
      * pod columns this move overwrites, for the revert to put back. A move from one parent to another
@@ -1949,6 +1951,11 @@ em_reason em_uplink_submit(const char *serial, em_ovs_session *s, const em_uplin
         const char *vssid = ovs_str(vif, "ssid");
         if (vssid && *vssid) {
             cJSON *snap = cJSON_CreateObject();
+            /* its enabled too: a station the pod kept off (a Pi's 2.4 GHz fallback) is off again
+             * when the move onto it is undone */
+            const cJSON *enabled = cJSON_GetObjectItemCaseSensitive(vif, "enabled");
+            if (enabled)
+                cJSON_AddItemToObject(snap, "enabled", cJSON_Duplicate(enabled, 1));
             cJSON_AddStringToObject(snap, "ssid", vssid);
             static const char *const cols[4] = {"security", "credential_configs", "multi_ap", "wds"};
             for (size_t i = 0; i < (is_gre ? 2u : 4u); i++) {
@@ -2035,7 +2042,7 @@ em_reason em_uplink_submit(const char *serial, em_ovs_session *s, const em_uplin
         }
         others[at] = row;
     }
-    for (size_t k = 0; !is_gre && k < nothers; k++) {  /* a GRE move disables no other station */
+    for (size_t k = 0; !is_gre && k < nothers; k++) {  /* a GRE move's: once it joined (take_off) */
         const char *ocols[7];
         size_t onc = 0;
         for (size_t i = 0; i < 6; i++)
@@ -2115,6 +2122,85 @@ em_reason em_uplink_revert(const char *serial, em_ovs_session *s, const char *st
             kept = !strcmp(now[i], keep[j]);
         if (!kept)
             PUSH(op("delete", "Wifi_Credential_Config", where_uuid(now[i])), 1);
+    }
+    commit(s, ops, counts, out, NULL);
+    cJSON_Delete(ops);
+    return EM_OK;
+}
+
+/* UplinkBackend.take_off (spec 8.3, 8.6, make-before-break): the pod's other backhaul stations
+ * `names` off in one guarded transaction, once a GRE move's station is on its target with its
+ * gretap up: each one enabled now is disabled and, when EMOSA's switch wrote it (its ssid "", the
+ * move's marker) and `restores[i]` is its snapshot, its vconf columns are put back and EMOSA's
+ * credentials (linked now, not kept by the snapshot) deleted, as the revert does. *off: how many
+ * were taken off (0: nothing sent). */
+em_reason em_uplink_take_off(const char *serial, em_ovs_session *s, const char *const *names,
+                             const cJSON *const *restores, size_t n, em_submit_result *out, size_t *off)
+{
+    memset(out, 0, sizeof(*out));
+    *off = 0;
+    const char *node = node_uuid(s, serial);
+    if (!node)
+        return EM_NOT_READY;
+    cJSON *ops = cJSON_CreateArray();
+    int counts[1 + EM_UPLINK_STATIONS * (2 + 16)];
+    size_t nops = 0;
+    {
+        cJSON *o = op("wait", "AWLAN_Node", cJSON_CreateArray()), *rows = cJSON_CreateArray(),
+              *v = cJSON_CreateObject();
+        const char *cols[2] = {"_uuid", "serial_number"};
+        cJSON_AddItemToObject(v, "_uuid", uuid_ref(node));
+        cJSON_AddStringToObject(v, "serial_number", serial);
+        cJSON_AddItemToArray(rows, v);
+        cJSON_AddItemToObject(o, "columns", strings(cols, 2));
+        cJSON_AddStringToObject(o, "until", "==");
+        cJSON_AddItemToObject(o, "rows", rows);
+        cJSON_AddNumberToObject(o, "timeout", 0);
+        PUSH(o, -1);
+    }
+    static const char *const guards[] = {"if_name", "mode", "enabled", "ssid", "credential_configs", "multi_ap"};
+    for (size_t k = 0; k < n && k < EM_UPLINK_STATIONS; k++) {
+        const cJSON *row, *vif = NULL;
+        cJSON_ArrayForEach(row, table(s, "Wifi_VIF_Config"))
+        {
+            const char *name = ovs_str(row, "if_name");
+            if (name && names[k] && !strcmp(name, names[k]))
+                vif = row;
+        }
+        if (!vif || !ovs_true(vif, "enabled"))
+            continue;
+        const char *gcols[6];
+        size_t ngc = 0;
+        for (size_t i = 0; i < 6; i++)
+            if (cJSON_GetObjectItemCaseSensitive(vif, guards[i]))
+                gcols[ngc++] = guards[i];
+        PUSH(guard("Wifi_VIF_Config", vif->string, vif, gcols, ngc), -1);
+        const char *vssid = ovs_str(vif, "ssid");
+        const cJSON *restore = restores ? restores[k] : NULL;
+        bool emosas = restore && vssid && !*vssid && cJSON_GetObjectItemCaseSensitive(restore, "ssid");
+        cJSON *r = emosas ? cJSON_Duplicate(restore, 1) : cJSON_CreateObject();
+        cJSON_DeleteItemFromObjectCaseSensitive(r, "enabled");
+        cJSON_AddFalseToObject(r, "enabled");
+        cJSON *upd = op("update", "Wifi_VIF_Config", where_uuid(vif->string));
+        cJSON_AddItemToObject(upd, "row", r);
+        PUSH(upd, 1);
+        if (emosas) {
+            const char *now[16], *keep[16];
+            size_t nnow = ovs_uuids(vif, "credential_configs", now, 16);
+            size_t nkeep = ovs_uuids(restore, "credential_configs", keep, 16);
+            for (size_t i = 0; i < nnow; i++) {
+                bool kept = false;
+                for (size_t j = 0; j < nkeep && !kept; j++)
+                    kept = !strcmp(now[i], keep[j]);
+                if (!kept)
+                    PUSH(op("delete", "Wifi_Credential_Config", where_uuid(now[i])), 1);
+            }
+        }
+        (*off)++;
+    }
+    if (!*off) {
+        cJSON_Delete(ops);
+        return EM_OK;
     }
     commit(s, ops, counts, out, NULL);
     cJSON_Delete(ops);

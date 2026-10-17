@@ -1615,6 +1615,27 @@ static void capability_difference(void)
     em_tlv_list_free(&d);
 }
 
+/* uplink.uplink_state: cm on one station's own gretap (g-<station>) is not the other's GRE uplink
+ * (V54 bench, 17 October) */
+static void another_stations_gretap(void)
+{
+    cJSON *tables = cJSON_Parse(
+        "{\"Wifi_VIF_State\": {\"a\": {\"if_name\": \"bhaul-sta-50\", \"mode\": \"sta\", \"enabled\": true},"
+        " \"b\": {\"if_name\": \"bhaul-sta-24\", \"mode\": \"sta\", \"enabled\": true}},"
+        " \"Connection_Manager_Uplink\": {"
+        "\"c\": {\"if_name\": \"g-bhaul-sta-24\", \"if_type\": \"gre\", \"is_used\": true},"
+        " \"d\": {\"if_name\": \"g-bhaul-sta-50\", \"if_type\": \"gre\", \"is_used\": false}}}");
+    CHECK(tables != NULL, "the tables parse");
+    if (!tables)
+        return;
+    em_uplink_state s;
+    em_uplink_state_of(tables, "bhaul-sta-24", &s);
+    CHECK(!strcmp(s.kind, "gre"), "the station whose gretap cm uses: gre (%s)", s.kind);
+    em_uplink_state_of(tables, "bhaul-sta-50", &s);
+    CHECK(!s.kind[0], "the other station: none (%s)", s.kind);
+    cJSON_Delete(tables);
+}
+
 int main(int argc, char **argv)
 {
     em_init();
@@ -1648,6 +1669,7 @@ int main(int argc, char **argv)
     bridge_mode_ops(argv[1]);
     phy_netdev_ops(argv[1]);
     capability_difference();
+    another_stations_gretap();
     printf("%d checks, %d failures\n", checks, failures);
     return failures != 0;
 }

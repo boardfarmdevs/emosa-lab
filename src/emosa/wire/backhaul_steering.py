@@ -27,12 +27,15 @@ move under way and the answers already given are the agent's (``shared``), so
 the next session's coordinator answers it.
 """
 
+import logging
 import time
 from dataclasses import dataclass
 
 from emosa.errors import EmosaError, Reason
 from emosa.wire.cmdu import Tlv, fragment_message, invalid
 from emosa.wire.reports import PreparedReport
+
+log = logging.getLogger("emosa.wire.backhaul_steering")
 
 REQUEST = 0x8019
 RESPONSE = 0x801A
@@ -219,6 +222,17 @@ class BackhaulSteeringCoordinator:
         if reason is not None:
             code = CHANNEL_NOT_OPERABLE if reason in CHANNEL_REFUSALS else ASSOCIATION_FAILED
             self._respond(message.mid, request, code, snapshot)
+            # a refusal is in the log too, not only the status (V54 bench, 17 October)
+            log.info(
+                "backhaul steering refused (code 0x%02x): %s; station %s, target %s, class %d,"
+                " channel %d",
+                code,
+                reason,
+                request.station.hex(":"),
+                request.target.hex(":"),
+                request.operating_class,
+                request.channel,
+            )
             return self._record(f"backhaul_steering_refused_{reason}")
         self.pending = {"mid": message.mid, "request": request, "deadline": now + DEADLINE}
         return self._record("backhaul_steering_started")

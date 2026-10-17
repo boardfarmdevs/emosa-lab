@@ -309,6 +309,21 @@ def test_a_6_6_gre_child_moves_across_bands_onto_a_legacy_pods_parent(agent, tmp
     assert result["passed"], result
 
 
+def test_a_pis_gre_move_onto_another_station_is_applied_before_cms_pass(agent, tmp_path):
+    result = box("pi-gre-move-at-cms-pass", agent, tmp_path / "box", timeout=400)
+    assert result["passed"], result
+
+
+def test_a_pis_failed_gre_move_onto_another_station_is_undone(agent, tmp_path):
+    result = box("pi-gre-move-fails-undone", agent, tmp_path / "box", timeout=400)
+    assert result["passed"], result
+
+
+def test_a_gre_childs_uplink_record_follows_the_station_cm_uses(agent, tmp_path):
+    result = box("pi-gre-record-follows-cm", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+
+
 def test_a_radio_power_above_its_advertised_maximum_is_taken_once(agent, tmp_path):
     result = box("power-rises", agent, tmp_path / "box", timeout=300)
     assert result["passed"], result

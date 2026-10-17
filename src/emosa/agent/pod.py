@@ -537,7 +537,7 @@ class PodReportSource:
             # under a GRE tunnel (a GRE child, or the bootstrap/GTP path). The medium is 802.11
             # either way, so the pod reports it as its Wi-Fi backhaul (spec 8.6). Under a GRE
             # tunnel the station whose own gretap cm uses (cm's g-<station>) comes first: after a
-            # GRE move the previous station may still be associated (a GRE move disables none),
+            # GRE move the previous station may still be associated (until make-before-break),
             # and it is not the pod's backhaul.
             for strict in (True, False):
                 for station in self.stations:

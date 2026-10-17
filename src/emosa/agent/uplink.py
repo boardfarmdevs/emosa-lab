@@ -43,6 +43,10 @@ different scope from the fronthaul BSS, with its own lifecycle rules.
   target, or a failed move from its bootstrap, it undoes its own write as the revert does,
   while the station still carries the failed switch's credential on that start (a pod whose
   fallback station keeps its uplink working never restarts to drop it).
+- **Make-before-break:** a GRE move onto another station takes the station cm used, and any
+  other EMOSA wrote, off once its own station joined the target with its gretap up: cm moves
+  among working uplinks only at its periodic pass. A failed one undoes its write on that station
+  first. A GRE child's record follows the station cm uses (spec 8.3).
 """
 
 import json
@@ -122,6 +126,9 @@ class UplinkSwitch:
         self.hold_path = store.directory / "hold.json"
         # after a kept target failed: that switch's start and intent, until the pod is off it
         self.fallback_after = None
+        self._instance = None  # the pod's start at the last read (_new_start)
+        self._taken_off = set()  # the GRE switches whose other stations were taken off
+        self._written = None  # the switch this process wrote last (its operation_id)
         try:
             kept = json.loads(self.target_path.read_text())
             if kept.get("configured") == bssid and kept.get("target"):
@@ -189,12 +196,13 @@ class UplinkSwitch:
     def _save(self, op, payload=None):
         self.engine._save(op, payload)
 
-    def _move_snapshot(self):
+    def _move_snapshot(self, station=None):
         """The vconf snapshot taken at the move from the bootstrap (the most recent operation that
-        captured one), for the revert to restore; None if there is none to undo."""
+        captured one, for ``station`` when given: each station has its own), for the revert to
+        restore; None if there is none to undo."""
         for past in reversed(self.store.operations()):
             restore = (past.commit_evidence or {}).get("restore")
-            if restore:
+            if restore and (station is None or past.intent.get("station") == station):
                 return restore
         return None
 
@@ -217,6 +225,11 @@ class UplinkSwitch:
             and self.move.get("mode") == BOOTSTRAP
             and self.move.get("result") is None
         )
+        # the undo of a failed move onto another station than the uplink's (spec 8.3): that
+        # station's own configuration tells, and the uplink stays on its own station and record
+        undone = op.intent.get("station")
+        other = not asked and undone != self.station
+        config = self.backend.configs.get(undone, snap.config) if snap is not None else {}
         back = (
             same_start
             and snap.observed.fresh
@@ -224,9 +237,16 @@ class UplinkSwitch:
             and (
                 not asked or (facts.get("kind") and facts.get("parent") == self.bootstrap["bssid"])
             )
-            and snap.config.get("uplink") == "other"  # the move's credential-list is gone (vconf)
+            and config.get("uplink") == "other"  # the move's credential-list is gone (vconf)
         )
-        if back:
+        if back and other:
+            evidence = self.engine._evidence(snap, instance=self.backend.instance)
+            transition(op, State.OBSERVED_APPLIED, evidence=evidence)
+            op.application_evidence, op.reason = evidence, None
+            self._save(op, {"observation": self.backend.facts})
+            self.fallback_after = None
+            log.info("the failed move's credential is off %s, back as the pod had it", undone)
+        elif back:
             evidence = self.engine._evidence(snap, instance=self.backend.instance)
             transition(op, State.OBSERVED_APPLIED, evidence=evidence)
             op.application_evidence, op.reason = evidence, None
@@ -246,6 +266,13 @@ class UplinkSwitch:
             else:
                 self.fallback_after = None
                 log.info("the failed switch's credential is off %s", op.intent.get("station"))
+        elif self.engine._expired(op) and other:
+            op.original_outcome, op.deadline_elapsed = op.state, True
+            transition(op, State.TIMED_OUT)
+            op.reason = Reason.APPLY_TIMEOUT
+            self._save(op, {"observation": self.backend.facts})
+            self.fallback_after = None  # once per failed move: not again on this start
+            log.warning("undoing the failed move on %s not confirmed within the deadline", undone)
         elif self.engine._expired(op):
             op.original_outcome, op.deadline_elapsed = op.state, True
             transition(op, State.TIMED_OUT)
@@ -301,7 +328,10 @@ class UplinkSwitch:
         elif op.state == State.OBSERVED_APPLIED and snap and snap.ready and snap.observed.fresh:
             target = UplinkIntent(**op.intent).target(self.engine.vault)
             same_start = self.backend.instance == op.plan.get("instance")
-            if same_start and not self.engine._matches(snap.config, target):
+            # another station's configuration is not this switch's to judge: cm on another
+            # station is followed (_follow_cm), not held
+            mine = self.backend.active == op.intent.get("station")
+            if same_start and mine and not self.engine._matches(snap.config, target):
                 op.reason = Reason.OWNERSHIP_CONFLICT
                 self._save(op, {"observation": self.backend.facts})
                 self.hold(op, OWNERSHIP_HOLD)
@@ -360,9 +390,13 @@ class UplinkSwitch:
         self.mode = move.get("previous_mode", MULTI_AP)
         self.moves += 1
         self._keep_target()
-        if self.bssid is None:
-            # a GRE child's move from its bootstrap: no upstream to go back to, so the agent
-            # undoes its own write (_undo) while the station still carries it on this start
+        other = op.intent.get("mode") == GRE and op.intent.get("station") != self.station
+        if self.bssid is None or other:
+            # a GRE child's move from its bootstrap: no upstream to go back to; or a GRE move onto
+            # another station than the one the uplink goes back to, which the switch back leaves
+            # enabled to join its target late and take cm (V54 bench, 17 October; a Multi-AP
+            # switch back disables it): the agent undoes its own write (_undo) while the station
+            # still carries it on this start
             self.fallback_after = {"instance": (op.plan or {}).get("instance"), "intent": op.intent}
         return True
 
@@ -506,12 +540,13 @@ class UplinkSwitch:
         if failed is None:
             return None
         intent = UplinkIntent(**failed["intent"])
+        config = self.backend.configs.get(intent.station, snap.config)
         if failed["instance"] != self.backend.instance or not self.engine._matches(
-            snap.config, intent.target(self.engine.vault)
+            config, intent.target(self.engine.vault)
         ):
             self.fallback_after = None
             return None
-        restore = self._move_snapshot()
+        restore = self._move_snapshot(intent.station)
         if restore is None or self.bootstrap is None:
             return None
         if not failed.get("undo"):
@@ -537,8 +572,9 @@ class UplinkSwitch:
             return None
         if self.mode == BOOTSTRAP:
             # a revert in flight: write back the move's snapshot and drop EMOSA's credential, until
-            # the station is back on the bootstrap (then _settle resets the mode and this stops)
-            restore = self._move_snapshot()
+            # the station is back on the bootstrap (then _settle resets the mode and this stops);
+            # the station the uplink is on stays enabled, whatever its snapshot says
+            restore = self._move_snapshot(self.station)
             if restore is None or self.bootstrap is None:
                 self.waiting = "revert without a snapshot"
                 return None
@@ -549,21 +585,26 @@ class UplinkSwitch:
                 "",
                 mode=BOOTSTRAP,
                 bssid=self.bootstrap["bssid"],
-                restore=restore,
+                restore={**restore, "enabled": True} if "enabled" in restore else restore,
             )
         else:
             credentials = self.credentials()
             if credentials is None:
                 self.waiting = "no EasyMesh backhaul credentials"
                 return None
-            if self.bssid is None:
-                # a GRE child with no configured upstream: EMOSA writes nothing until the
-                # controller steers it onto a parent; its bootstrap uplink (the GTP) stands,
-                # once a failed switch's credential is off the station (_undo)
-                intent = self._undo(snap)
-                if intent is None:
-                    self.waiting = "no upstream (awaiting a Backhaul Steering Request)"
-                    return None
+            failed = (self.fallback_after or {}).get("intent") or {}
+            undo = None
+            if self.bssid is None or failed.get("station") not in (None, self.station):
+                # a failed switch's credential off its station first (_undo): a GRE child with
+                # no configured upstream then writes nothing until the controller steers it onto
+                # a parent, its bootstrap uplink (the GTP) standing; after a failed GRE move onto
+                # another station, the uplink's own station is pinned again after the undo
+                undo = self._undo(snap)
+            if undo is not None:
+                intent = undo
+            elif self.bssid is None:
+                self.waiting = "no upstream (awaiting a Backhaul Steering Request)"
+                return None
             else:
                 intent = UplinkIntent(
                     self.pod_id, self.station, *credentials, mode=self.mode, bssid=self.bssid
@@ -591,8 +632,9 @@ class UplinkSwitch:
             # (rdk-1004, 5 Oct 2026): first the station off the failed credential, or a new
             # start. Bounded: OpenSync restarts a pod left without a working uplink.
             failed = self.fallback_after
+            config = self.backend.configs.get(failed["intent"].get("station"), snap.config)
             if failed["instance"] == self.backend.instance and self.engine._matches(
-                snap.config, UplinkIntent(**failed["intent"]).target(self.engine.vault)
+                config, UplinkIntent(**failed["intent"]).target(self.engine.vault)
             ):
                 self.waiting = "the pod returning to its bootstrap uplink"
                 return None
@@ -602,6 +644,117 @@ class UplinkSwitch:
             return None
         self.waiting = None
         return intent
+
+    def _new_start(self):
+        """A new start of the pod's OpenSync: a finished move's record is the last start's (only
+        the kept target carries over), so the status no longer shows it."""
+        instance = self.backend.instance
+        if instance == self._instance:
+            return
+        if self._instance is not None and self.move is not None and self.move["result"] is not None:
+            self.move = None
+        self._instance = instance
+
+    async def _make_before_break(self, op):
+        """Spec 8.3, 8.6: a GRE move's station on its target with its gretap up takes the station
+        cm uses and any other EMOSA wrote off (``take_off``), once per switch. cm keeps a working
+        uplink in use and re-selects among equal ones only at its periodic pass (2 minutes on the
+        Pis, 17 October): only with the old station gone does it take the new one at once."""
+        # the switch this process wrote (_written), under way or applied already (cm may have
+        # taken the new gretap by itself): not an older one, after the agent started again
+        active = (State.CONFIG_COMMITTED, State.INDETERMINATE, State.OBSERVED_APPLIED)
+        if op is None or op.state not in active or op.operation_id != self._written:
+            return
+        if op.intent.get("mode") != GRE or op.operation_id in self._taken_off:
+            return
+        if (op.plan or {}).get("instance") != self.backend.instance:
+            return
+        station, target = op.intent.get("station"), op.intent.get("bssid")
+        states = self.backend.stations_state
+        own = states.get(station) or {}
+        gretap = own.get("gretap") or {}
+        if own.get("parent") != target or not (gretap.get("has_L2") and gretap.get("has_L3")):
+            return
+        self._taken_off.add(op.operation_id)
+        # the station cm uses (the uplink's until now) and any EMOSA wrote: not the pod's own other
+        # stations (a fallback station is the pod's, spec 8.6)
+        active = self.backend.active
+        others = sorted(
+            n
+            for n, s in states.items()
+            if n != station and s.get("enabled") and (n == active or s.get("emosa"))
+        )
+        if not others:
+            return
+        restores = {n: self._move_snapshot(n) for n in others}
+        try:
+            off = await self.backend.take_off(others, restores)
+        except (EmosaError, ConnectionError, TimeoutError) as exc:
+            self._taken_off.discard(op.operation_id)  # again on the next tick, until the deadline
+            log.warning("make-before-break: taking %s off failed: %s", ", ".join(others), exc)
+            return
+        if off:
+            log.info(
+                "%s on %s with its gretap up: %s taken off (make-before-break)",
+                station,
+                target,
+                ", ".join(off),
+            )
+
+    async def _undo_without_snapshot(self):
+        """A failed GRE move onto another station with no snapshot of it to put back (or no
+        bootstrap recorded): that station taken off instead (``take_off``), once."""
+        failed = self.fallback_after
+        if failed is None or failed["instance"] != self.backend.instance:
+            return
+        station = failed["intent"].get("station")
+        if station == self.station or (
+            self._move_snapshot(station) is not None and self.bootstrap is not None
+        ):
+            return
+        self.fallback_after = None
+        try:
+            off = await self.backend.take_off([station], {})
+        except (EmosaError, ConnectionError, TimeoutError) as exc:
+            log.warning("the failed move's station %s not taken off: %s", station, exc)
+            return
+        if off:
+            log.info("the failed move's station %s taken off (no snapshot to restore)", station)
+
+    def _follow_cm(self, op):
+        """Spec 8.3: a GRE child's uplink record follows the station cm uses. cm on another bound
+        station's own gretap (the pod's own fallback, or cm's periodic pass) puts the uplink on
+        that station: on EMOSA's pin there when it carries one, else, on the same start, on its
+        bootstrap (no EMOSA upstream; on a new start the kept target is switched to instead).
+        Nothing is written for it; the reported backhaul already names that station, so the
+        controller learns it from the pod's next topology."""
+        if op is not None and op.state in ACTIVE:
+            return
+        if self.mode == BOOTSTRAP or self.fallback_after is not None:
+            return
+        if self.move is not None and self.move["result"] is None:
+            return  # the controller's move under way: the record is its target until it settles
+        if self.configured is not None and self.mode != GRE:
+            return
+        active, facts = self.backend.active, self.backend.facts or {}
+        if active == self.station or facts.get("in_use") != f"g-{active}":
+            return
+        config = self.backend.configs.get(active) or {}
+        if config.get("uplink") == GRE and config.get("bssid"):
+            bssid, mode = config["bssid"], GRE
+        elif op is not None and (op.plan or {}).get("instance") == self.backend.instance:
+            bssid, mode = self.configured, MULTI_AP
+        else:
+            return
+        log.warning(
+            "cm uses %s (parent %s), not %s: the uplink record follows it",
+            active,
+            facts.get("parent"),
+            self.station,
+        )
+        self.station, self.bssid, self.mode = active, bssid, mode
+        self.moves += 1
+        self._keep_target()
 
     async def tick(self):
         """One step, on the agent's refresh cadence."""
@@ -616,7 +769,11 @@ class UplinkSwitch:
             self._settle(op, snap)
         if snap is None:
             return
+        self._new_start()
         self._record_bootstrap()
+        await self._make_before_break(self.latest())
+        await self._undo_without_snapshot()
+        self._follow_cm(self.latest())
         intent = self._wanted(self.latest(), snap)
         if intent is None:
             return
@@ -633,6 +790,7 @@ class UplinkSwitch:
         if op.state != State.REQUESTED:
             return
         log.info("switching %s to the EasyMesh backhaul %r", intent.station, intent.ssid)
+        self._written = op.operation_id
         op = await self.engine.execute(op.operation_id)
         log.info("uplink switch %s: %s %s", op.operation_id, op.state, op.reason or "")
 

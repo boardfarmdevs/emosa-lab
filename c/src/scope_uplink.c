@@ -197,10 +197,34 @@ static const cJSON *listed_credential(em_uplink_scope *u, const cJSON *vif, cons
     return sole;
 }
 
-/* UplinkBackend._active: the station in Multi-AP credential-list mode, else the one cm uses,
- * else the one the pod bootstraps on */
+/* UplinkBackend._active: the station cm uses (the station itself, or its own gretap g-<station>),
+ * else the one in credential-list mode, else the one the pod bootstraps on. cm's first: with two
+ * stations in credential-list mode (a GRE move onto another station, spec 8.6) the bootstrap one
+ * was taken, and a move onto the other was never seen applied (V54 bench, 17 October). */
 static const char *active_of(em_uplink_scope *u, const station_row *rows, size_t n)
 {
+    const cJSON *row;
+    const char *used = NULL;
+    size_t nused = 0;
+    cJSON_ArrayForEach(row, em_table(em_ovsdb_tables(u->ovs), "Connection_Manager_Uplink"))
+    {
+        if (ovs_true(row, "is_used")) {
+            nused++;
+            used = ovs_str(row, "if_name");
+        }
+    }
+    if (nused == 1 && used) {
+        const char *on = NULL;
+        size_t non = 0;
+        for (size_t i = 0; i < n; i++)
+            if (rows[i].name && (!strcmp(used, rows[i].name) ||
+                                 (!strncmp(used, "g-", 2) && !strcmp(used + 2, rows[i].name)))) {
+                non++;
+                on = rows[i].name;
+            }
+        if (non == 1)
+            return on;
+    }
     const char *found = NULL, *key;
     size_t written = 0;
     for (size_t i = 0; i < n; i++)
@@ -208,20 +232,7 @@ static const char *active_of(em_uplink_scope *u, const station_row *rows, size_t
             written++;
             found = rows[i].name;
         }
-    if (written == 1)
-        return found;
-    const cJSON *row;
-    const char *used = NULL;
-    size_t nused = 0;
-    cJSON_ArrayForEach(row, em_table(em_ovsdb_tables(u->ovs), "Connection_Manager_Uplink"))
-    {
-        const char *name = ovs_str(row, "if_name");
-        if (ovs_true(row, "is_used") && row_of(rows, n, name)) {
-            nused++;
-            used = name;
-        }
-    }
-    return nused == 1 ? used : u->station;
+    return written == 1 ? found : u->station;
 }
 
 /* UplinkBackend._configured: the station in Multi-AP credential-list mode, or not */
@@ -437,6 +448,9 @@ static const char *resolve(void *ctx, const char *ref)
     return r->key;
 }
 
+static bool configured_already(em_uplink_scope *u, const cJSON *intent);
+static cJSON *station_config(em_uplink_scope *u, const char *name);
+
 static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_submit_out *out)
 {
     em_uplink_scope *u = ctx;
@@ -459,6 +473,21 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
     em_ovs_session session = {em_ovsdb_tables(u->ovs), generation, u->transact, u->transact_ctx};
     const char *mode = str(intent, "mode");
     bool revert = mode && !strcmp(mode, "bootstrap");
+    if (mode && !strcmp(mode, "gre") && configured_already(u, intent)) {
+        /* the station already carries this pin and credential, enabled: no write, so nothing
+         * moves on the air (a steer to where cm already is, a record that followed cm) */
+        strcpy(out->status, "committed");
+        out->reason = EM_OK;
+        out->evidence = cJSON_CreateObject();
+        cJSON_AddStringToObject(out->evidence, "attribution", "reply");
+        cJSON_AddTrueToObject(out->evidence, "transaction_validated");
+        cJSON_AddStringToObject(out->evidence, "transaction_id", str(attempt, "transaction_id"));
+        cJSON_AddNumberToObject(out->evidence, "session_generation", generation);
+        cJSON_AddStringToObject(out->evidence, "action", "already-configured");
+        cJSON_AddStringToObject(out->evidence, "instance", u->instance);
+        cJSON_AddNullToObject(out->evidence, "restore");
+        return;
+    }
     em_submit_result result;
     const char *refusal;
     cJSON *restore_out = NULL; /* the pin's vconf snapshot, for the revert (NULL unless from bootstrap) */
@@ -779,9 +808,15 @@ static bool move_failed(em_uplink_scope *u, const cJSON *op, const char *reason)
     EM_FORMAT_FIXED(u->mode, sizeof(u->mode), "%s", u->move.previous_mode[0] ? u->move.previous_mode : "multi-ap");
     u->moves++;
     keep_target(u);
-    if (!u->bssid[0]) {
-        /* a GRE child's move from its bootstrap: no upstream to go back to, so the agent undoes its
-         * own write (undo_intent) while the station still carries it on this start */
+    const cJSON *intent = cJSON_GetObjectItemCaseSensitive(op, "intent");
+    const char *imode = str(intent, "mode"), *on = str(intent, "station");
+    bool other = imode && !strcmp(imode, "gre") && on && strcmp(on, u->wanted);
+    if (!u->bssid[0] || other) {
+        /* a GRE child's move from its bootstrap: no upstream to go back to; or a GRE move onto
+         * another station than the one the uplink goes back to, which the switch back leaves
+         * enabled to join its target late and take cm (V54 bench, 17 October; a Multi-AP switch
+         * back disables it): the agent undoes its own write (undo_intent) while the station still
+         * carries it on this start */
         cJSON_Delete(u->fallback_after);
         u->fallback_after = cJSON_Duplicate(cJSON_GetObjectItemCaseSensitive(op, "intent"), true);
         const char *planned = str(cJSON_GetObjectItemCaseSensitive(op, "plan"), "instance");
@@ -839,12 +874,42 @@ static void settle_revert(em_uplink_scope *u, cJSON *op, const em_snapshot *snap
      * failed switch (undo_intent) once EMOSA's credential is off the station, whichever uplink cm
      * then uses (the pod's fallback station may keep it) */
     bool asked = u->has_move && !u->move.done && !strcmp(u->move.mode, "bootstrap");
+    /* the undo of a failed move onto another station than the uplink's (spec 8.3): that station's
+     * own configuration tells, and the uplink stays on its own station and record */
+    const char *undone = str(cJSON_GetObjectItemCaseSensitive(op, "intent"), "station");
+    bool other = !asked && undone && strcmp(undone, u->wanted);
+    cJSON *own = other ? station_config(u, undone) : NULL;
+    if (own)
+        cfg = str(own, "uplink");
     bool on_bootstrap = u->has_facts && u->facts.kind[0] && !strcmp(fp, u->bootstrap_bssid);
     bool back = same_start && em_snapshot_fresh(snap) && u->has_bootstrap && (!asked || on_bootstrap) && cfg &&
                 !strcmp(cfg, "other");
+    cJSON_Delete(own); /* cfg is not used past this */
     bool expired = em_engine_expired(&u->engine, op);
     if (!back && !expired)
         return;
+    if (other) {
+        if (back) {
+            cJSON *evidence = em_engine_evidence(snap, false, u->instance);
+            em_transition(op, "OBSERVED_APPLIED", evidence);
+            cJSON_ReplaceItemInObjectCaseSensitive(op, "application_evidence", evidence);
+            em_set_reason(op, NULL);
+            save_with_facts(u, op);
+            em_log(EM_LOG_INFO, "emosa.agent.uplink", "the failed move's credential is off %s, back as the pod had it",
+                   undone);
+        } else {
+            cJSON_ReplaceItemInObjectCaseSensitive(op, "original_outcome", cJSON_CreateString(state));
+            cJSON_ReplaceItemInObjectCaseSensitive(op, "deadline_elapsed", cJSON_CreateTrue());
+            em_transition(op, "TIMED_OUT", NULL);
+            em_set_reason(op, "APPLY_TIMEOUT");
+            save_with_facts(u, op);
+            em_log(EM_LOG_WARNING, "emosa.agent.uplink", "undoing the failed move on %s not confirmed within the deadline",
+                   undone);
+        }
+        cJSON_Delete(u->fallback_after); /* once per failed move: not again on this start */
+        u->fallback_after = NULL;
+        return;
+    }
     if (back) {
         cJSON *evidence = em_engine_evidence(snap, false, u->instance);
         em_transition(op, "OBSERVED_APPLIED", evidence);
@@ -934,7 +999,11 @@ static void settle(em_uplink_scope *u, cJSON *op, const em_snapshot *snap, bool 
         cJSON_Delete(t);
     } else if (!strcmp(state, "OBSERVED_APPLIED") && have && snap->ready && em_snapshot_fresh(snap)) {
         cJSON *t = target(u, cJSON_GetObjectItemCaseSensitive(op, "intent"), &why);
-        if (t && planned && u->has_instance && !strcmp(planned, u->instance) && !em_matches(snap->config, t)) {
+        /* another station's configuration is not this switch's to judge: cm on another station is
+         * followed (follow_cm), not held */
+        const char *on = str(cJSON_GetObjectItemCaseSensitive(op, "intent"), "station");
+        bool mine = on && !strcmp(on, u->active);
+        if (t && mine && planned && u->has_instance && !strcmp(planned, u->instance) && !em_matches(snap->config, t)) {
             em_set_reason(op, "OWNERSHIP_CONFLICT");
             save_with_facts(u, op);
             hold(u, op, OWNERSHIP_HOLD);
@@ -1011,20 +1080,74 @@ static cJSON *intent_of(em_uplink_scope *u, const char *ssid, const char *ref)
     return i;
 }
 
-/* UplinkSwitch._wanted: the intent to request now, or NULL (waiting says why) */
 /* The vconf snapshot taken at the move from the bootstrap (the most recent operation that captured
- * one in its commit evidence), for the revert to restore; NULL if there is none to undo. */
-static cJSON *move_snapshot(em_uplink_scope *u)
+ * one in its commit evidence, for `station` when given: each station has its own), for the revert
+ * to restore; NULL if there is none to undo. */
+static cJSON *move_snapshot(em_uplink_scope *u, const char *station)
 {
     const cJSON *ops = em_journal_operations_view(u->journal), *op, *found = NULL;
     cJSON_ArrayForEach(op, ops)
     {
         const cJSON *restore = cJSON_GetObjectItemCaseSensitive(
             cJSON_GetObjectItemCaseSensitive(op, "commit_evidence"), "restore");
-        if (restore && !cJSON_IsNull(restore))
+        const char *on = str(cJSON_GetObjectItemCaseSensitive(op, "intent"), "station");
+        if (restore && !cJSON_IsNull(restore) && (!station || (on && !strcmp(on, station))))
             found = restore;
     }
     return found ? cJSON_Duplicate(found, 1) : NULL;
+}
+
+/* A bound station at this read (UplinkBackend.configs and stations_state): its configured uplink
+ * (as configured(): uplink, ssid, credential_fingerprint, bssid; the caller frees it), whether its
+ * Config is enabled, its State's parent, and its own gretap's Connection_Manager_Uplink row
+ * (g-<station>). False when the pod has no row for it. */
+typedef struct {
+    bool enabled, emosa, gretap, l2, l3; /* emosa: EMOSA's switch wrote it (its ssid "", the marker) */
+    char parent[18];
+} station_view;
+
+static bool station_view_of(em_uplink_scope *u, const char *name, cJSON **config, station_view *out)
+{
+    memset(out, 0, sizeof(*out));
+    if (config)
+        *config = NULL;
+    station_row rows[MAX_ROWS];
+    size_t nrows;
+    const char *node;
+    em_reason why;
+    const cJSON *vif = bind(u, rows, &nrows, &node, &why) ? row_of(rows, nrows, name) : NULL;
+    if (!vif)
+        return false;
+    const cJSON *credential;
+    if (config)
+        *config = configured(u, vif, name, &credential);
+    out->enabled = ovs_true(vif, "enabled");
+    const char *vssid = ovs_str(vif, "ssid");
+    out->emosa = vssid && !*vssid;
+    em_uplink_state state;
+    em_uplink_state_of(em_ovsdb_tables(u->ovs), name, &state);
+    EM_FORMAT_FIXED(out->parent, sizeof(out->parent), "%s", state.parent);
+    char gretap[40];
+    EM_FORMAT_FIXED(gretap, sizeof(gretap), "g-%s", name); /* an if_name */
+    const cJSON *row;
+    cJSON_ArrayForEach(row, em_table(em_ovsdb_tables(u->ovs), "Connection_Manager_Uplink"))
+    {
+        const char *n = ovs_str(row, "if_name");
+        if (n && !strcmp(n, gretap)) {
+            out->gretap = true;
+            out->l2 = ovs_true(row, "has_L2");
+            out->l3 = ovs_true(row, "has_L3");
+        }
+    }
+    return true;
+}
+
+/* the configured uplink of `name` (configured()), NULL when the pod has no row for it */
+static cJSON *station_config(em_uplink_scope *u, const char *name)
+{
+    cJSON *config;
+    station_view v;
+    return name && station_view_of(u, name, &config, &v) ? config : NULL;
 }
 
 /* UplinkSwitch._undo: a GRE child's failed switch (spec 8.3 "Moved", 8.6). With no configured
@@ -1036,17 +1159,18 @@ static cJSON *undo_intent(em_uplink_scope *u, const em_snapshot *snap)
     if (!u->fallback_after)
         return NULL;
     em_reason why;
-    cJSON *failed = target(u, u->fallback_after, &why);
+    const char *station = str(u->fallback_after, "station");
+    cJSON *failed = target(u, u->fallback_after, &why), *config = station_config(u, station);
     bool still = failed && u->has_instance && !strcmp(u->fallback_instance, u->instance) &&
-                 em_matches(snap->config, failed);
+                 em_matches(config ? config : snap->config, failed);
     cJSON_Delete(failed);
+    cJSON_Delete(config);
     if (!still) {
         cJSON_Delete(u->fallback_after);
         u->fallback_after = NULL;
         return NULL;
     }
-    const char *station = str(u->fallback_after, "station");
-    cJSON *restore = move_snapshot(u);
+    cJSON *restore = move_snapshot(u, station);
     if (!restore || !u->has_bootstrap || !station) {
         cJSON_Delete(restore);
         return NULL;
@@ -1079,13 +1203,16 @@ static cJSON *wanted(em_uplink_scope *u, const cJSON *op, const em_snapshot *sna
     cJSON *intent;
     if (!strcmp(u->mode, "bootstrap")) {
         /* a revert in flight: write back the move's snapshot and drop EMOSA's credential, until
-         * the station is back on the bootstrap (then settle resets the mode and this stops) */
-        cJSON *restore = move_snapshot(u);
+         * the station is back on the bootstrap (then settle resets the mode and this stops); the
+         * station the uplink is on stays enabled, whatever its snapshot says */
+        cJSON *restore = move_snapshot(u, u->wanted);
         if (!restore || !u->has_bootstrap) {
             wait_for(u, "revert without a snapshot");
             cJSON_Delete(restore);
             return NULL;
         }
+        if (cJSON_GetObjectItemCaseSensitive(restore, "enabled"))
+            cJSON_ReplaceItemInObjectCaseSensitive(restore, "enabled", cJSON_CreateTrue());
         intent = cJSON_CreateObject();
         cJSON_AddStringToObject(intent, "pod_id", u->pod_id);
         cJSON_AddStringToObject(intent, "station", u->wanted);
@@ -1103,15 +1230,20 @@ static cJSON *wanted(em_uplink_scope *u, const cJSON *op, const em_snapshot *sna
             wait_for(u, "no EasyMesh backhaul credentials");
             return NULL;
         }
-        if (!u->bssid[0]) {
-            /* a GRE child with no configured upstream (spec 8.6): EMOSA writes nothing until the
-             * controller steers it onto a parent; its bootstrap uplink (the GTP) stands, once a
-             * failed switch's credential is off the station (undo_intent) */
-            intent = undo_intent(u, snap);
-            if (!intent) {
-                wait_for(u, "no upstream (awaiting a Backhaul Steering Request)");
-                return NULL;
-            }
+        const char *failed_on = u->fallback_after ? str(u->fallback_after, "station") : NULL;
+        cJSON *undo = NULL;
+        if (!u->bssid[0] || (failed_on && strcmp(failed_on, u->wanted))) {
+            /* a failed switch's credential off its station first (undo_intent): a GRE child with
+             * no configured upstream (spec 8.6) then writes nothing until the controller steers it
+             * onto a parent, its bootstrap uplink (the GTP) standing; after a failed GRE move onto
+             * another station, the uplink's own station is pinned again after the undo */
+            undo = undo_intent(u, snap);
+        }
+        if (undo) {
+            intent = undo;
+        } else if (!u->bssid[0]) {
+            wait_for(u, "no upstream (awaiting a Backhaul Steering Request)");
+            return NULL;
         } else {
             intent = intent_of(u, ssid, ref);
         }
@@ -1161,8 +1293,10 @@ static cJSON *wanted(em_uplink_scope *u, const cJSON *op, const em_snapshot *sna
          * OpenSync restarts a pod left without a working uplink. */
         if (u->has_instance && !strcmp(u->fallback_instance, u->instance)) {
             cJSON *failed = target(u, u->fallback_after, &why);
-            bool still = failed && em_matches(snap->config, failed);
+            cJSON *config = station_config(u, str(u->fallback_after, "station"));
+            bool still = failed && em_matches(config ? config : snap->config, failed);
             cJSON_Delete(failed);
+            cJSON_Delete(config);
             if (still) {
                 wait_for(u, "the pod returning to its bootstrap uplink");
                 cJSON_Delete(intent);
@@ -1181,6 +1315,185 @@ static cJSON *wanted(em_uplink_scope *u, const cJSON *op, const em_snapshot *sna
     return intent;
 }
 
+/* UplinkBackend._configured_already: a GRE switch's station already is what it would write:
+ * enabled, in credential-list mode with one gre credential of the intent's SSID, key and pin */
+static bool configured_already(em_uplink_scope *u, const cJSON *intent)
+{
+    em_reason why;
+    const char *station = str(intent, "station");
+    cJSON *t = target(u, intent, &why), *config = NULL;
+    station_view v;
+    bool same = t && station && station_view_of(u, station, &config, &v) && v.enabled && config;
+    static const char *const keys[] = {"uplink", "ssid", "credential_fingerprint", "bssid"};
+    for (int i = 0; i < 4 && same; i++) {
+        const char *a = str(config, keys[i]), *b = str(t, keys[i]);
+        same = a && b && !strcmp(a, b);
+    }
+    cJSON_Delete(t);
+    cJSON_Delete(config);
+    return same;
+}
+
+/* UplinkSwitch._new_start: a new start of the pod's OpenSync; a finished move's record is the
+ * last start's (only the kept target carries over), so the status no longer shows it */
+static void new_start(em_uplink_scope *u)
+{
+    if (!u->has_instance || (u->has_seen_instance && !strcmp(u->seen_instance, u->instance)))
+        return;
+    if (u->has_seen_instance && u->has_move && u->move.done)
+        u->has_move = false;
+    EM_FORMAT_FIXED(u->seen_instance, sizeof(u->seen_instance), "%s", u->instance);
+    u->has_seen_instance = true;
+}
+
+static em_reason take_off(em_uplink_scope *u, const char *const *names, size_t n, bool restore, size_t *off)
+{
+    cJSON *restores[EM_UPLINK_STATIONS] = {0};
+    if (n > EM_UPLINK_STATIONS)
+        n = EM_UPLINK_STATIONS;
+    for (size_t i = 0; restore && i < n; i++)
+        restores[i] = move_snapshot(u, names[i]);
+    em_ovs_session session = {em_ovsdb_tables(u->ovs), em_ovsdb_generation(u->ovs), u->transact, u->transact_ctx};
+    em_submit_result result;
+    *off = 0;
+    em_reason e = u->legacy ? EM_OK
+                            : em_uplink_take_off(u->serial, &session, names, (const cJSON *const *)restores, n,
+                                                 &result, off);
+    for (size_t i = 0; i < n; i++)
+        cJSON_Delete(restores[i]);
+    if (e == EM_OK && *off && strcmp(result.status, "committed"))
+        e = EM_OUTCOME_UNKNOWN;
+    return e;
+}
+
+/* UplinkSwitch._make_before_break (spec 8.3, 8.6): a GRE move's station on its target with its
+ * gretap up takes the station cm uses and any other EMOSA wrote off (em_uplink_take_off), once
+ * per switch.
+ * cm keeps a working uplink in use and re-selects among equal ones only at its periodic pass (2
+ * minutes on the Pis, 17 October): only with the old station gone does it take the new one at
+ * once. A legacy pod (spec 3.10) has one station, and its vendor healthcheck reboots it for a
+ * disabled station row: none is taken off there. */
+static void make_before_break(em_uplink_scope *u)
+{
+    cJSON *op = em_journal_latest(u->journal);
+    const char *state = op ? em_state_of(op) : "";
+    const cJSON *intent = op ? cJSON_GetObjectItemCaseSensitive(op, "intent") : NULL;
+    const char *mode = str(intent, "mode"), *station = str(intent, "station"), *bssid = str(intent, "bssid");
+    const char *id = op ? str(op, "operation_id") : NULL;
+    const char *planned = op ? str(cJSON_GetObjectItemCaseSensitive(op, "plan"), "instance") : NULL;
+    station_view own;
+    /* the switch this process wrote (written), under way or applied already (cm may have taken the
+     * new gretap by itself): not an older one, after the agent started again */
+    bool live = !strcmp(state, "CONFIG_COMMITTED") || !strcmp(state, "INDETERMINATE") ||
+                !strcmp(state, "OBSERVED_APPLIED");
+    bool ready = live && id && !strcmp(id, u->written) && mode && !strcmp(mode, "gre") && station && bssid &&
+                 strcmp(id, u->taken_off) && planned &&
+                 u->has_instance && !strcmp(planned, u->instance) && station_view_of(u, station, NULL, &own) &&
+                 !strcmp(own.parent, bssid) && own.gretap && own.l2 && own.l3;
+    if (!ready) {
+        cJSON_Delete(op);
+        return;
+    }
+    EM_FORMAT_FIXED(u->taken_off, sizeof(u->taken_off), "%s", id);
+    /* the station cm uses (the uplink's until now) and any EMOSA wrote: not the pod's own other
+     * stations (a fallback station is the pod's, spec 8.6) */
+    const char *names[EM_UPLINK_BANDS + 1], *others[EM_UPLINK_BANDS + 1];
+    size_t n = bound_names(u, names), nothers = 0;
+    for (size_t i = 0; i < n; i++) {
+        station_view v;
+        if (strcmp(names[i], station) && station_view_of(u, names[i], NULL, &v) && v.enabled &&
+            (!strcmp(names[i], u->active) || v.emosa))
+            others[nothers++] = names[i];
+    }
+    char list[160] = "";
+    for (size_t i = 0; i < nothers; i++)
+        EM_FORMAT_FIXED(list + strlen(list), sizeof(list) - strlen(list), "%s%s", i ? ", " : "", others[i]);
+    size_t off = 0;
+    em_reason e = nothers ? take_off(u, others, nothers, true, &off) : EM_OK;
+    if (e != EM_OK) {
+        u->taken_off[0] = 0; /* again on the next tick, until the deadline */
+        em_log(EM_LOG_WARNING, "emosa.agent.uplink", "make-before-break: taking %s off failed: %s", list,
+               em_reason_name(e));
+    } else if (off) {
+        em_log(EM_LOG_INFO, "emosa.agent.uplink", "%s on %s with its gretap up: %s taken off (make-before-break)",
+               station, bssid, list);
+    }
+    cJSON_Delete(op);
+}
+
+/* UplinkSwitch._undo_without_snapshot: a failed GRE move onto another station with no snapshot of
+ * it to put back (or no bootstrap recorded): that station taken off instead, once */
+static void undo_without_snapshot(em_uplink_scope *u)
+{
+    if (!u->fallback_after || !u->has_instance || strcmp(u->fallback_instance, u->instance))
+        return;
+    char station[33];
+    if (!em_copy(station, sizeof(station), str(u->fallback_after, "station") ? str(u->fallback_after, "station") : "") ||
+        !station[0] || !strcmp(station, u->wanted))
+        return;
+    cJSON *restore = move_snapshot(u, station);
+    bool can = restore && u->has_bootstrap;
+    cJSON_Delete(restore);
+    if (can)
+        return;
+    cJSON_Delete(u->fallback_after);
+    u->fallback_after = NULL;
+    const char *names[1] = {station};
+    size_t off = 0;
+    em_reason e = take_off(u, names, 1, false, &off);
+    if (e != EM_OK)
+        em_log(EM_LOG_WARNING, "emosa.agent.uplink", "the failed move's station %s not taken off: %s", station,
+               em_reason_name(e));
+    else if (off)
+        em_log(EM_LOG_INFO, "emosa.agent.uplink", "the failed move's station %s taken off (no snapshot to restore)",
+               station);
+}
+
+/* UplinkSwitch._follow_cm (spec 8.3): a GRE child's uplink record follows the station cm uses.
+ * cm on another bound station's own gretap (the pod's own fallback, or cm's periodic pass) puts the
+ * uplink on that station: on EMOSA's pin there when it carries one, else, on the same start, on
+ * its bootstrap (no EMOSA upstream; on a new start the kept target is switched to instead). Nothing
+ * is written for it; the reported backhaul already names that station. */
+static void follow_cm(em_uplink_scope *u)
+{
+    cJSON *op = em_journal_latest(u->journal);
+    bool active = op && em_state_active(em_state_of(op));
+    const char *planned = op ? str(cJSON_GetObjectItemCaseSensitive(op, "plan"), "instance") : NULL;
+    bool same_start = planned && u->has_instance && !strcmp(planned, u->instance);
+    cJSON_Delete(op);
+    if (active || !strcmp(u->mode, "bootstrap") || u->fallback_after)
+        return;
+    if (u->has_move && !u->move.done)
+        return; /* the controller's move under way: the record is its target until it settles */
+    if (u->configured[0] && strcmp(u->mode, "gre"))
+        return;
+    char gretap[40];
+    EM_FORMAT_FIXED(gretap, sizeof(gretap), "g-%s", u->active); /* an if_name */
+    if (!u->has_facts || !strcmp(u->active, u->wanted) || strcmp(u->facts.in_use, gretap))
+        return;
+    cJSON *config = station_config(u, u->active);
+    const char *kind = str(config, "uplink"), *pin = str(config, "bssid");
+    char bssid[18], mode[10];
+    if (kind && !strcmp(kind, "gre") && pin && *pin) {
+        EM_FORMAT_FIXED(bssid, sizeof(bssid), "%s", pin);
+        EM_FORMAT_FIXED(mode, sizeof(mode), "gre");
+    } else if (same_start) {
+        EM_FORMAT_FIXED(bssid, sizeof(bssid), "%s", u->configured);
+        EM_FORMAT_FIXED(mode, sizeof(mode), "multi-ap");
+    } else {
+        cJSON_Delete(config);
+        return;
+    }
+    cJSON_Delete(config);
+    em_log(EM_LOG_WARNING, "emosa.agent.uplink", "cm uses %s (parent %s), not %s: the uplink record follows it",
+           u->active, u->facts.parent, u->wanted);
+    EM_FORMAT_FIXED(u->wanted, sizeof(u->wanted), "%s", u->active);
+    EM_FORMAT_FIXED(u->bssid, sizeof(u->bssid), "%s", bssid);
+    EM_FORMAT_FIXED(u->mode, sizeof(u->mode), "%s", mode);
+    u->moves++;
+    keep_target(u);
+}
+
 void em_uplink_tick(em_uplink_scope *u)
 {
     em_snapshot snap = {0};
@@ -1193,7 +1506,11 @@ void em_uplink_tick(em_uplink_scope *u)
         em_snapshot_clear(&snap);
         return;
     }
+    new_start(u);
     record_bootstrap(u);
+    make_before_break(u);
+    undo_without_snapshot(u);
+    follow_cm(u);
     op = em_journal_latest(u->journal);
     cJSON *intent = wanted(u, op, &snap);
     cJSON_Delete(op);
@@ -1218,8 +1535,9 @@ void em_uplink_tick(em_uplink_scope *u)
     }
     cJSON *req = em_engine_request(&u->engine, intent, SOURCE, key, u->run_id, DEADLINE, "semantic", NULL, &why);
     if (req && !strcmp(em_state_of(req), "REQUESTED")) {
-        em_log(EM_LOG_INFO, "emosa.agent.uplink", "switching %s to the EasyMesh backhaul '%s'", u->wanted,
-                str(intent, "ssid"));
+        em_log(EM_LOG_INFO, "emosa.agent.uplink", "switching %s to the EasyMesh backhaul '%s'",
+                str(intent, "station"), str(intent, "ssid"));
+        (void)em_copy(u->written, sizeof(u->written), str(req, "operation_id") ? str(req, "operation_id") : "");
         cJSON *done = em_engine_execute(&u->engine, str(req, "operation_id"));
         const char *reason = str(done, "reason");
         em_log(EM_LOG_INFO, "emosa.agent.uplink", "uplink switch %s: %s %s", str(done, "operation_id"),

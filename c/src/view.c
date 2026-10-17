@@ -690,9 +690,18 @@ void em_uplink_state_of(const cJSON *tables, const char *station, em_uplink_stat
     bool wds_sta = state && ovs_true(state, "enabled") && multi_ap &&
                    !strcmp(multi_ap, "backhaul_sta") && ovs_true(state, "wds");
     const char *in_use = nused == 1 ? ovs_str(used, "if_name") : NULL;
+    /* cm on another station's own gretap (g-<station>): with two stations up, one's GRE uplink is
+     * not the other's (uplink.uplink_state) */
+    bool others = false;
+    if (in_use && !strncmp(in_use, "g-", 2) && strcmp(in_use + 2, station))
+        cJSON_ArrayForEach(row, cJSON_GetObjectItemCaseSensitive(tables, "Wifi_VIF_State"))
+        {
+            const char *name = ovs_str(row, "if_name"), *mode = ovs_str(row, "mode");
+            others = others || (name && mode && !strcmp(mode, "sta") && !strcmp(name, in_use + 2));
+        }
     if (wds_sta && in_use && !strcmp(in_use, station))
         strcpy(out->kind, "multi-ap");
-    else if (nused == 1 && ovs_str(used, "if_type"))
+    else if (!others && nused == 1 && ovs_str(used, "if_type"))
         copy_str(out->kind, sizeof(out->kind), ovs_str(used, "if_type"));
     copy_str(out->in_use, sizeof(out->in_use), in_use);
     copy_str(out->station, sizeof(out->station), station);

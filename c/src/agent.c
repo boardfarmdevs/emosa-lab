@@ -857,7 +857,7 @@ static bool refresh(agent *a)
      * GRE tunnel (a GRE child, or the bootstrap/GTP path). The medium is 802.11 either way, so the
      * pod reports it as its Wi-Fi backhaul (spec 8.6). Under a GRE tunnel the station whose own
      * gretap cm uses (cm's g-<station>) comes first: after a GRE move the previous station may
-     * still be associated (a GRE move disables none), and it is not the pod's backhaul. */
+     * still be associated (until make-before-break), and it is not the pod's backhaul. */
     for (int strict = 1; strict >= 0 && !a->has_backhaul; strict--) {
         for (size_t i = 0; i < nnames && !a->has_backhaul; i++) {
             em_uplink_state state;
@@ -2111,6 +2111,8 @@ static void handle_message(agent *a, const em_message *m)
         reply(a, 0x8000, m->mid, NULL, 0);
         reply(a, 0x801A, m->mid, t, 2);
         count(&a->counts, "backhaul_steering_refused");
+        em_log(EM_LOG_INFO, "emosa.wire.backhaul_steering",
+               "backhaul steering refused (code 0x06): no session to move the backhaul in");
     } else if (m->message_type == 0x0005) {
         if (backhaul_link_metrics(a, m))
             count(&a->counts, "backhaul_link_metric_response_sent");
