@@ -129,6 +129,9 @@ class UplinkSwitch:
         self._instance = None  # the pod's start at the last read (_new_start)
         self._taken_off = set()  # the GRE switches whose other stations were taken off
         self._written = None  # the switch this process wrote last (its operation_id)
+        # the stations the last switch's make-before-break took off, and those a failed switch
+        # enables again: {"operation_id"|"instance", "stations"}
+        self._took = self._reenable = None
         try:
             kept = json.loads(self.target_path.read_text())
             if kept.get("configured") == bssid and kept.get("target"):
@@ -386,6 +389,7 @@ class UplinkSwitch:
             "backhaul move to %s failed (%s): back to %s", move["target"], reason, move["previous"]
         )
         move["result"] = reason
+        self._enable_taken_off(op)
         self.bssid, self.station = move["previous"], move["previous_station"]
         self.mode = move.get("previous_mode", MULTI_AP)
         self.moves += 1
@@ -419,6 +423,7 @@ class UplinkSwitch:
         self.moves += 1  # a switch of its own
         self._keep_target()
         self.fallback_after = {"instance": op.plan.get("instance"), "intent": op.intent}
+        self._enable_taken_off(op)
         return True
 
     def steer(self, bssid, band=None, channel=None):
@@ -694,11 +699,51 @@ class UplinkSwitch:
             log.warning("make-before-break: taking %s off failed: %s", ", ".join(others), exc)
             return
         if off:
+            # all of them for a failed switch to enable again: the pod's own as the pod had them,
+            # EMOSA's with their snapshot back (on the pod's own network until the re-pin, which
+            # waits for a working uplink)
+            self._took = {"operation_id": op.operation_id, "stations": sorted(off)}
             log.info(
                 "%s on %s with its gretap up: %s taken off (make-before-break)",
                 station,
                 target,
-                ", ".join(off),
+                ", ".join(sorted(off)),
+            )
+
+    def _enable_taken_off(self, op):
+        """A failed switch whose make-before-break took stations off: those are enabled again
+        (once, on this start), so the pod is not left without a backhaul station, whether or not
+        there is an upstream to go back to (its re-pin, if any, waits for a working uplink)."""
+        took = self._took
+        if took is None or took["operation_id"] != op.operation_id:
+            return
+        self._took = None
+        if took["stations"]:
+            self._reenable = {
+                "instance": (op.plan or {}).get("instance"),
+                "stations": took["stations"],
+            }
+
+    async def _enable_own(self):
+        """The stations a failed switch's make-before-break took off, enabled again."""
+        again = self._reenable
+        if again is None:
+            return
+        if again["instance"] != self.backend.instance:
+            self._reenable = None  # a new start: the pod's template has them as it wants
+            return
+        try:
+            on = await self.backend.enable(again["stations"])
+        except (ConnectionError, TimeoutError) as exc:
+            log.warning("the stations taken off not enabled again yet: %s", exc)
+            return  # again on the next tick
+        except EmosaError as exc:
+            log.warning("the stations taken off not enabled again: %s", exc)
+            on = []
+        self._reenable = None
+        if on:
+            log.info(
+                "the failed switch's make-before-break undone: %s enabled again", ", ".join(on)
             )
 
     async def _undo_without_snapshot(self):
@@ -772,6 +817,7 @@ class UplinkSwitch:
         self._new_start()
         self._record_bootstrap()
         await self._make_before_break(self.latest())
+        await self._enable_own()
         await self._undo_without_snapshot()
         self._follow_cm(self.latest())
         intent = self._wanted(self.latest(), snap)

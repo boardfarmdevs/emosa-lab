@@ -324,6 +324,14 @@ def test_a_gre_childs_uplink_record_follows_the_station_cm_uses(agent, tmp_path)
     assert result["passed"], result
 
 
+@pytest.mark.parametrize("start", ["", "-parent"])
+def test_a_failed_gre_move_after_make_before_break_enables_its_stations_again(
+    agent, tmp_path, start
+):
+    result = box(f"pi-gre-move-fails-after-take-off{start}", agent, tmp_path / "box", timeout=400)
+    assert result["passed"], result
+
+
 def test_a_radio_power_above_its_advertised_maximum_is_taken_once(agent, tmp_path):
     result = box("power-rises", agent, tmp_path / "box", timeout=300)
     assert result["passed"], result

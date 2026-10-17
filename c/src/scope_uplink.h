@@ -98,6 +98,10 @@ typedef struct {
     /* the GRE switch whose other stations were taken off (make-before-break), and the switch this
      * process wrote last: their operation_ids */
     char taken_off[64], written[64];
+    /* the stations the last switch's make-before-break took off (took_op its switch), and those a
+     * failed switch enables again on its start (reenable_instance) */
+    char took_op[64], took[EM_UPLINK_BANDS + 1][33], reenable_instance[17], reenable[EM_UPLINK_BANDS + 1][33];
+    size_t ntook, nreenable;
 } em_uplink_scope;
 
 em_reason em_uplink_open(em_uplink_scope *u, const char *state_dir, const em_journal_schemas *schemas,

@@ -215,9 +215,16 @@ em_reason em_uplink_revert(const char *serial, em_ovs_session *session, const ch
 /* Make-before-break (spec 8.3, 8.6): the pod's other backhaul stations `names` (at most
  * EM_UPLINK_STATIONS) off in one guarded transaction once a GRE move's station joined its target:
  * each enabled one disabled, and one EMOSA's switch wrote (ssid "") with its snapshot in
- * `restores[i]` (NULL: none) put back as the revert does. *off: how many were taken off. */
+ * `restores[i]` (NULL: none) put back as the revert does. *off: how many were taken off; taken[i]
+ * and emosa[i] (optional): names[i] was, and was EMOSA's (else the pod's own). */
 em_reason em_uplink_take_off(const char *serial, em_ovs_session *session, const char *const *names,
-                             const cJSON *const *restores, size_t n, em_submit_result *out, size_t *off);
+                             const cJSON *const *restores, size_t n, em_submit_result *out, size_t *off,
+                             bool *taken, bool *emosa);
+
+/* The stations `names` a failed switch's make-before-break took off, enabled again in one guarded
+ * transaction (spec 8.3). *on: how many. */
+em_reason em_uplink_enable(const char *serial, em_ovs_session *session, const char *const *names, size_t n,
+                           em_submit_result *out, size_t *on);
 
 /* Transaction pieces (emosa.opensync.mapping): where clauses, one operation, a string
  * array, a wait for a row's current values (guard), a wait for no matching row. */

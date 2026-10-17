@@ -2133,12 +2133,20 @@ em_reason em_uplink_revert(const char *serial, em_ovs_session *s, const char *st
  * gretap up: each one enabled now is disabled and, when EMOSA's switch wrote it (its ssid "", the
  * move's marker) and `restores[i]` is its snapshot, its vconf columns are put back and EMOSA's
  * credentials (linked now, not kept by the snapshot) deleted, as the revert does. *off: how many
- * were taken off (0: nothing sent). */
+ * were taken off (0: nothing sent); taken[i] (optional): names[i] was, emosa[i] (optional): it was
+ * EMOSA's (else the pod's own). */
 em_reason em_uplink_take_off(const char *serial, em_ovs_session *s, const char *const *names,
-                             const cJSON *const *restores, size_t n, em_submit_result *out, size_t *off)
+                             const cJSON *const *restores, size_t n, em_submit_result *out, size_t *off,
+                             bool *taken, bool *emosa)
 {
     memset(out, 0, sizeof(*out));
     *off = 0;
+    for (size_t k = 0; k < n; k++) {
+        if (taken)
+            taken[k] = false;
+        if (emosa)
+            emosa[k] = false;
+    }
     const char *node = node_uuid(s, serial);
     if (!node)
         return EM_NOT_READY;
@@ -2177,7 +2185,12 @@ em_reason em_uplink_take_off(const char *serial, em_ovs_session *s, const char *
         PUSH(guard("Wifi_VIF_Config", vif->string, vif, gcols, ngc), -1);
         const char *vssid = ovs_str(vif, "ssid");
         const cJSON *restore = restores ? restores[k] : NULL;
-        bool emosas = restore && vssid && !*vssid && cJSON_GetObjectItemCaseSensitive(restore, "ssid");
+        bool marked = vssid && !*vssid; /* EMOSA's switch wrote it */
+        bool emosas = restore && marked && cJSON_GetObjectItemCaseSensitive(restore, "ssid");
+        if (taken)
+            taken[k] = true;
+        if (emosa)
+            emosa[k] = marked;
         cJSON *r = emosas ? cJSON_Duplicate(restore, 1) : cJSON_CreateObject();
         cJSON_DeleteItemFromObjectCaseSensitive(r, "enabled");
         cJSON_AddFalseToObject(r, "enabled");
@@ -2199,6 +2212,64 @@ em_reason em_uplink_take_off(const char *serial, em_ovs_session *s, const char *
         (*off)++;
     }
     if (!*off) {
+        cJSON_Delete(ops);
+        return EM_OK;
+    }
+    commit(s, ops, counts, out, NULL);
+    cJSON_Delete(ops);
+    return EM_OK;
+}
+
+/* UplinkBackend.enable (spec 8.3): the stations `names` a failed switch's make-before-break took
+ * off, enabled again in one guarded transaction. *on: how many (0: nothing sent). */
+em_reason em_uplink_enable(const char *serial, em_ovs_session *s, const char *const *names, size_t n,
+                           em_submit_result *out, size_t *on)
+{
+    memset(out, 0, sizeof(*out));
+    *on = 0;
+    const char *node = node_uuid(s, serial);
+    if (!node)
+        return EM_NOT_READY;
+    cJSON *ops = cJSON_CreateArray();
+    int counts[1 + EM_UPLINK_STATIONS * 2];
+    size_t nops = 0;
+    {
+        cJSON *o = op("wait", "AWLAN_Node", cJSON_CreateArray()), *rows = cJSON_CreateArray(),
+              *v = cJSON_CreateObject();
+        const char *cols[2] = {"_uuid", "serial_number"};
+        cJSON_AddItemToObject(v, "_uuid", uuid_ref(node));
+        cJSON_AddStringToObject(v, "serial_number", serial);
+        cJSON_AddItemToArray(rows, v);
+        cJSON_AddItemToObject(o, "columns", strings(cols, 2));
+        cJSON_AddStringToObject(o, "until", "==");
+        cJSON_AddItemToObject(o, "rows", rows);
+        cJSON_AddNumberToObject(o, "timeout", 0);
+        PUSH(o, -1);
+    }
+    static const char *const guards[] = {"if_name", "mode", "enabled", "ssid", "credential_configs", "multi_ap"};
+    for (size_t k = 0; k < n && k < EM_UPLINK_STATIONS; k++) {
+        const cJSON *row, *vif = NULL;
+        cJSON_ArrayForEach(row, table(s, "Wifi_VIF_Config"))
+        {
+            const char *name = ovs_str(row, "if_name");
+            if (name && names[k] && !strcmp(name, names[k]))
+                vif = row;
+        }
+        if (!vif || ovs_true(vif, "enabled"))
+            continue;
+        const char *gcols[6];
+        size_t ngc = 0;
+        for (size_t i = 0; i < 6; i++)
+            if (cJSON_GetObjectItemCaseSensitive(vif, guards[i]))
+                gcols[ngc++] = guards[i];
+        PUSH(guard("Wifi_VIF_Config", vif->string, vif, gcols, ngc), -1);
+        cJSON *upd = op("update", "Wifi_VIF_Config", where_uuid(vif->string)), *r = cJSON_CreateObject();
+        cJSON_AddTrueToObject(r, "enabled");
+        cJSON_AddItemToObject(upd, "row", r);
+        PUSH(upd, 1);
+        (*on)++;
+    }
+    if (!*on) {
         cJSON_Delete(ops);
         return EM_OK;
     }

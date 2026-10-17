@@ -1319,7 +1319,13 @@ The agent makes the switch itself when its configuration has
   later and take `cm` (the V54 bench, 17 October): the agent undoes its own write there first,
   the station's snapshot back (its `enabled` with it: a station the pod kept off is off again),
   EMOSA's credential deleted. The snapshot is each station's own, taken when EMOSA's switch first
-  wrote it from the pod's configuration.
+  wrote it from the pod's configuration. A failed switch whose make-before-break took stations off
+  enables them again (one guarded write, on that start): the pod's own as the pod had them, EMOSA's
+  with their snapshot back, on the pod's own network until the re-pin (which waits for a working
+  uplink). So a GRE child moved off its bootstrap station is not left without one when there is
+  no upstream to go back to; box `pi-gre-move-fails-after-take-off` (from the GTP and from a 6.6
+  pod's parent). A pod left without any uplink is unreachable for the agent too: its OpenSync's
+  own restart to the bootstrap stays the fallback.
 - **The uplink record follows `cm`.** The station the uplink is on is the one `cm` uses (the
   station itself, or its own gretap); only with none of the bound stations in use does the one in
   credential-list mode, then the bootstrap one, stand in. A GRE child whose `cm` uses another bound

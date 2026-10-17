@@ -2998,10 +2998,11 @@ async def gre_join_unused(box, station, parent, channel):
     await box.transact(ops)
 
 
-async def cm_on_link_loss(box, seconds):
+async def cm_on_link_loss(box, seconds, reselect=True):
     """cm for ``seconds``: once the station whose gretap it uses is off (its Config disabled), its
     link is lost and cm re-selects at once, onto the other gretap with L2 and L3 up (the old
-    station's State off its parent, its gretap gone). True when it re-selected."""
+    station's State off its parent, its gretap gone); with ``reselect`` False it takes no other
+    (its router checks failing over the new parent). True when the link was lost."""
     deadline = time.monotonic() + seconds
     while time.monotonic() < deadline:
         uplinks = await box.rows("Connection_Manager_Uplink")
@@ -3032,7 +3033,7 @@ async def cm_on_link_loss(box, seconds):
                         "where": [["if_name", "==", used[0]]],
                     },
                 ]
-                if other is not None:
+                if other is not None and reselect:
                     ops.append(
                         {
                             "op": "update",
@@ -3045,6 +3046,145 @@ async def cm_on_link_loss(box, seconds):
                 return True
         await asyncio.sleep(0.3)
     return False
+
+
+async def gre_back_on_gtp(box, station):
+    """owm and cm: ``station``, enabled again on the pod's own network, back on the GTP's 5 GHz BSS,
+    cm using its gretap (L2 and L3 up)."""
+    state, _ = await box.vif("Wifi_VIF_State", station)
+    gretap = f"g-{station}"
+    ops = [
+        {
+            "op": "update",
+            "table": "Wifi_VIF_State",
+            "where": [["_uuid", "==", ["uuid", state]]],
+            "row": {"enabled": True, "ssid": "opensync-lab-bhaul", "parent": GTP_5G},
+        },
+        {
+            "op": "update",
+            "table": "Connection_Manager_Uplink",
+            "where": [["if_name", "!=", gretap]],
+            "row": {"is_used": False},
+        },
+    ]
+    if any(
+        r.get("if_name") == gretap for r in (await box.rows("Connection_Manager_Uplink")).values()
+    ):
+        ops.append(
+            {
+                "op": "update",
+                "table": "Connection_Manager_Uplink",
+                "where": [["if_name", "==", gretap]],
+                "row": {"is_used": True, "has_L2": True, "has_L3": True},
+            }
+        )
+    else:
+        ops.append(
+            {
+                "op": "insert",
+                "table": "Connection_Manager_Uplink",
+                "row": {
+                    "if_name": gretap,
+                    "if_type": "gre",
+                    "is_used": True,
+                    "has_L2": True,
+                    "has_L3": True,
+                },
+            }
+        )
+    await box.transact(ops)
+
+
+async def pi_gre_move_fails_after_take_off(box, from_parent=False):
+    """spec 8.3, a failed GRE move after make-before-break (the V54 change's review, 17 October):
+    a Pi-shaped GRE child steered onto the legacy pod's parent over bhaul-sta-24, which joins there
+    with its gretap up, so make-before-break takes bhaul-sta-50 off (cm's); cm loses that link but
+    never takes the new gretap (its router checks failing over the new parent). The move is
+    answered with a failure (0x06), the stations taken off are enabled again (the pod is not left
+    without a backhaul station) and the move's station is undone (off again, on the pod's own
+    network). From the GTP bootstrap (no upstream to go back to) bhaul-sta-50 is back on it; from
+    a 6.6 pod's parent (``from_parent``) it is pinned there again."""
+    if from_parent:
+        if await pi_onto_pi_parent(box) is None:
+            return box.result(passed=False, failed="the move onto the 6.6 parent")
+    else:
+        if not (await onboarded(box)).get("applied"):
+            return box.result(passed=False, failed="not onboarded")
+        peer_status(box, "RPIPOD0MIXEDPARENT", al=PI_PARENT_AL, gre_parent_ap=PI_PARENT_5G)
+        peer_status(box, "BCMPOD0MIXEDPARENT", al=LEGACY_PARENT_AL, gre_parent_ap=LEGACY_PARENT_AP)
+        await box.until(lambda: uplink_status(box).get("bootstrap"), seconds=30)
+        if not await box.until(lambda: reported_backhaul(box) == OTHER_STATION, seconds=30):
+            return box.result(passed=False, failed="bhaul-sta-50 not reported on the GTP")
+        await asyncio.sleep(2.5)  # the agent's peer directory (1 s cache) picks up both parents
+    answered = len(box.sent(0x801A))
+    request = backhaul_steering_request(OTHER_STATION, LEGACY_PARENT_AP, 81, 6)
+    mid = box.controller.send(0x8019, (request,))
+    await box.until(lambda: box.controller.reply(ACK, mid), seconds=5)
+    pinned = await until_async(
+        lambda: gre_pinned_on(box, "bhaul-sta-24", LEGACY_PARENT_AP), seconds=30
+    )
+    if not pinned:
+        return box.result(passed=False, failed="bhaul-sta-24 not pinned", uplink=uplink_status(box))
+    await gre_join_unused(box, "bhaul-sta-24", LEGACY_PARENT_AP, 6)
+    lost = await cm_on_link_loss(box, 60, reselect=False)
+    response = await next_message(box, 0x801A, answered, seconds=SWITCH_DEADLINE + 60)
+    answer, errors = steering_answer(response), steering_errors(response)
+
+    async def back_on():
+        _, row = await box.vif("Wifi_VIF_Config", OTHER_STATION_IF)
+        return (row or {}).get("enabled") is True
+
+    enabled = await until_async(back_on, seconds=30)
+    repinned = None
+    if enabled:
+        await gre_back_on_gtp(box, OTHER_STATION_IF)  # cm: back on the GTP over bhaul-sta-50
+        if from_parent:  # the agent pins it to the 6.6 parent again; cm takes it there at once
+            repinned = await until_async(
+                lambda: gre_pinned_on(box, OTHER_STATION_IF, PI_PARENT_5G), seconds=60
+            )
+            if repinned:
+                await gre_associate(box, OTHER_STATION_IF, PI_PARENT_5G, 36, OTHER_STATION_IF)
+
+    async def undone():
+        return not await gre_pinned_on(box, "bhaul-sta-24", LEGACY_PARENT_AP)
+
+    unpinned = await until_async(undone, seconds=60)
+    await asyncio.sleep(5)  # settled
+    stations = await station_snapshot(box, ("bhaul-sta-24", "bhaul-sta-50"))
+    status = uplink_status(box)
+    where = (
+        bool(repinned) and str(status.get("parent") or "").lower() == PI_PARENT_5G
+        if from_parent
+        else not status.get("bssid") and str(status.get("parent") or "").lower() == GTP_5G
+    )
+    return box.result(
+        passed=bool(lost)
+        and answer == (OTHER_STATION, LEGACY_PARENT_AP, 1)
+        and errors == [(6, OTHER_STATION)]
+        and bool(enabled)
+        and bool(unpinned)
+        and stations["bhaul-sta-24"]["enabled"] is False
+        and stations["bhaul-sta-50"]["enabled"] is True
+        and status.get("station") == "bhaul-sta-50"
+        and where
+        and not status.get("held")
+        and reported_backhaul(box) == OTHER_STATION,
+        cm_lost_its_link=bool(lost),
+        answer=answer,
+        errors=errors,
+        enabled_again=bool(enabled),
+        pinned_again=repinned,
+        undone=bool(unpinned),
+        stations=stations,
+        uplink={
+            k: status.get(k) for k in ("station", "bssid", "parent", "in_use", "held", "waiting")
+        },
+        reported=reported_backhaul(box),
+    )
+
+
+async def pi_gre_move_fails_after_take_off_parent(box):
+    return await pi_gre_move_fails_after_take_off(box, from_parent=True)
 
 
 async def cm_pass(box, onto):
@@ -7898,6 +8038,8 @@ SCENARIOS = {
     "pi-gre-move-at-cms-pass": pi_gre_move_at_cms_pass,
     "pi-gre-move-fails-undone": pi_gre_move_fails_undone,
     "pi-gre-record-follows-cm": pi_gre_record_follows_cm,
+    "pi-gre-move-fails-after-take-off": pi_gre_move_fails_after_take_off,
+    "pi-gre-move-fails-after-take-off-parent": pi_gre_move_fails_after_take_off_parent,
     "agent-stops-cleanly": agent_stops_cleanly,
     "backhaul-steering-renewal": backhaul_steering_renewal,
     "backhaul-steering-refused": backhaul_steering_refused,
@@ -8052,6 +8194,8 @@ OPTIONS = {  # the box each scenario needs beyond the default
             "pi-gre-move-at-cms-pass",
             "pi-gre-move-fails-undone",
             "pi-gre-record-follows-cm",
+            "pi-gre-move-fails-after-take-off",
+            "pi-gre-move-fails-after-take-off-parent",
         )
     },
     "backhaul-steering-renewal": {"backhaul": True},

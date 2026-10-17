@@ -792,6 +792,8 @@ static void save_with_facts(em_uplink_scope *u, cJSON *op)
     cJSON_Delete(payload);
 }
 
+static void enable_taken_off(em_uplink_scope *u, const cJSON *op);
+
 /* a move's switch failed: back to the previous upstream, no hold */
 static bool move_failed(em_uplink_scope *u, const cJSON *op, const char *reason)
 {
@@ -803,6 +805,7 @@ static bool move_failed(em_uplink_scope *u, const cJSON *op, const char *reason)
     u->move.done = true;
     u->move.applied = false;
     (void)em_copy(u->move.result, sizeof(u->move.result), reason); /* a reason for the status */
+    enable_taken_off(u, op);
     EM_FORMAT_FIXED(u->bssid, sizeof(u->bssid), "%s", u->move.previous);
     EM_FORMAT_FIXED(u->wanted, sizeof(u->wanted), "%s", u->move.previous_station);
     EM_FORMAT_FIXED(u->mode, sizeof(u->mode), "%s", u->move.previous_mode[0] ? u->move.previous_mode : "multi-ap");
@@ -846,6 +849,7 @@ static bool kept_failed(em_uplink_scope *u, const cJSON *op, const char *reason)
     const char *planned = str(cJSON_GetObjectItemCaseSensitive(op, "plan"), "instance");
     (void)em_copy(u->fallback_instance, sizeof(u->fallback_instance), planned ? planned : "");
     u->undo_logged = false;
+    enable_taken_off(u, op);
     return true;
 }
 
@@ -1346,19 +1350,22 @@ static void new_start(em_uplink_scope *u)
     u->has_seen_instance = true;
 }
 
-static em_reason take_off(em_uplink_scope *u, const char *const *names, size_t n, bool restore, size_t *off)
+static em_reason take_off(em_uplink_scope *u, const char *const *names, size_t n, bool restore, size_t *off,
+                          bool *taken, bool *emosa)
 {
     cJSON *restores[EM_UPLINK_STATIONS] = {0};
     if (n > EM_UPLINK_STATIONS)
         n = EM_UPLINK_STATIONS;
-    for (size_t i = 0; restore && i < n; i++)
-        restores[i] = move_snapshot(u, names[i]);
+    for (size_t i = 0; i < n; i++) {
+        restores[i] = restore ? move_snapshot(u, names[i]) : NULL;
+        taken[i] = emosa[i] = false;
+    }
     em_ovs_session session = {em_ovsdb_tables(u->ovs), em_ovsdb_generation(u->ovs), u->transact, u->transact_ctx};
     em_submit_result result;
     *off = 0;
     em_reason e = u->legacy ? EM_OK
                             : em_uplink_take_off(u->serial, &session, names, (const cJSON *const *)restores, n,
-                                                 &result, off);
+                                                 &result, off, taken, emosa);
     for (size_t i = 0; i < n; i++)
         cJSON_Delete(restores[i]);
     if (e == EM_OK && *off && strcmp(result.status, "committed"))
@@ -1409,16 +1416,77 @@ static void make_before_break(em_uplink_scope *u)
     for (size_t i = 0; i < nothers; i++)
         EM_FORMAT_FIXED(list + strlen(list), sizeof(list) - strlen(list), "%s%s", i ? ", " : "", others[i]);
     size_t off = 0;
-    em_reason e = nothers ? take_off(u, others, nothers, true, &off) : EM_OK;
+    bool taken[EM_UPLINK_STATIONS] = {0}, emosa[EM_UPLINK_STATIONS] = {0};
+    em_reason e = nothers ? take_off(u, others, nothers, true, &off, taken, emosa) : EM_OK;
     if (e != EM_OK) {
         u->taken_off[0] = 0; /* again on the next tick, until the deadline */
         em_log(EM_LOG_WARNING, "emosa.agent.uplink", "make-before-break: taking %s off failed: %s", list,
                em_reason_name(e));
     } else if (off) {
+        /* all of them for a failed switch to enable again (enable_taken_off): the pod's own as the
+         * pod had them, EMOSA's with their snapshot back (on the pod's own network until the
+         * re-pin, which waits for a working uplink) */
+        EM_FORMAT_FIXED(u->took_op, sizeof(u->took_op), "%s", id);
+        u->ntook = 0;
+        for (size_t i = 0; i < nothers && i < EM_UPLINK_STATIONS; i++)
+            if (taken[i])
+                EM_FORMAT_FIXED(u->took[u->ntook++], sizeof(u->took[0]), "%s", others[i]);
         em_log(EM_LOG_INFO, "emosa.agent.uplink", "%s on %s with its gretap up: %s taken off (make-before-break)",
                station, bssid, list);
     }
     cJSON_Delete(op);
+}
+
+/* UplinkSwitch._enable_taken_off: a failed switch whose make-before-break took stations off:
+ * those are enabled again (once, on this start), so the pod is not left without a backhaul
+ * station, whether or not there is an upstream to go back to (its re-pin waits for an uplink) */
+static void enable_taken_off(em_uplink_scope *u, const cJSON *op)
+{
+    const char *id = str(op, "operation_id");
+    if (!id || strcmp(id, u->took_op))
+        return;
+    u->took_op[0] = 0;
+    const char *planned = str(cJSON_GetObjectItemCaseSensitive(op, "plan"), "instance");
+    u->nreenable = 0;
+    for (size_t i = 0; i < u->ntook; i++)
+        EM_FORMAT_FIXED(u->reenable[u->nreenable++], sizeof(u->reenable[0]), "%s", u->took[i]);
+    u->ntook = 0;
+    (void)em_copy(u->reenable_instance, sizeof(u->reenable_instance), planned ? planned : "");
+}
+
+/* UplinkSwitch._enable_own: the stations a failed switch's make-before-break took off, enabled
+ * again */
+static void enable_own(em_uplink_scope *u)
+{
+    if (!u->nreenable)
+        return;
+    if (!u->has_instance || strcmp(u->reenable_instance, u->instance)) {
+        u->nreenable = 0; /* a new start: the pod's template has them as it wants */
+        return;
+    }
+    const char *names[EM_UPLINK_BANDS + 1];
+    char list[160] = "";
+    for (size_t i = 0; i < u->nreenable; i++) {
+        names[i] = u->reenable[i];
+        EM_FORMAT_FIXED(list + strlen(list), sizeof(list) - strlen(list), "%s%s", i ? ", " : "", names[i]);
+    }
+    em_ovs_session session = {em_ovsdb_tables(u->ovs), em_ovsdb_generation(u->ovs), u->transact, u->transact_ctx};
+    em_submit_result result;
+    size_t on = 0;
+    em_reason e = em_uplink_enable(u->serial, &session, names, u->nreenable, &result, &on);
+    if (e == EM_OK && on && strcmp(result.status, "committed")) {
+        if (!strcmp(result.status, "unknown")) {
+            em_log(EM_LOG_WARNING, "emosa.agent.uplink", "the stations taken off not enabled again yet: %s", list);
+            return; /* again on the next tick */
+        }
+        e = EM_OUTCOME_UNKNOWN;
+    }
+    u->nreenable = 0;
+    if (e != EM_OK)
+        em_log(EM_LOG_WARNING, "emosa.agent.uplink", "the stations taken off not enabled again: %s", list);
+    else if (on)
+        em_log(EM_LOG_INFO, "emosa.agent.uplink", "the failed switch's make-before-break undone: %s enabled again",
+               list);
 }
 
 /* UplinkSwitch._undo_without_snapshot: a failed GRE move onto another station with no snapshot of
@@ -1440,7 +1508,8 @@ static void undo_without_snapshot(em_uplink_scope *u)
     u->fallback_after = NULL;
     const char *names[1] = {station};
     size_t off = 0;
-    em_reason e = take_off(u, names, 1, false, &off);
+    bool taken[1], emosa[1];
+    em_reason e = take_off(u, names, 1, false, &off, taken, emosa);
     if (e != EM_OK)
         em_log(EM_LOG_WARNING, "emosa.agent.uplink", "the failed move's station %s not taken off: %s", station,
                em_reason_name(e));
@@ -1509,6 +1578,7 @@ void em_uplink_tick(em_uplink_scope *u)
     new_start(u);
     record_bootstrap(u);
     make_before_break(u);
+    enable_own(u);
     undo_without_snapshot(u);
     follow_cm(u);
     op = em_journal_latest(u->journal);

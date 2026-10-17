@@ -747,9 +747,10 @@ class UplinkBackend:
         ssid "", the move's marker) and ``restores`` has its snapshot, its vconf columns are put
         back and EMOSA's credential deleted, as the revert does. A legacy pod (spec 3.10) has one
         backhaul station, and its vendor healthcheck reboots it for a disabled station row: none is
-        taken off there. Returns the stations taken off."""
+        taken off there. Returns the stations taken off, each "emosa" (EMOSA's switch wrote it) or
+        "pod" (the pod's own); a failed move enables them again (``enable``)."""
         if self.legacy:
-            return []
+            return {}
         raw = await self.session.snapshot()
         _, rows = self._binding(raw)
         node_uuid = next(iter(raw["tables"]["AWLAN_Node"]))
@@ -764,7 +765,7 @@ class UplinkBackend:
                 "timeout": 0,
             }
         ]
-        counts, off = [None], []
+        counts, off = [None], {}
         for name in sorted(names):
             if name not in rows or rows[name][1].get("enabled") is not True:
                 continue
@@ -773,7 +774,8 @@ class UplinkBackend:
             row, drop = {"enabled": False}, []
             restore = restores.get(name)
             # EMOSA's switch wrote it: its ssid "", the move's marker
-            if restore and restore.get("ssid") and rows[name][1].get("ssid") == "":
+            emosas = rows[name][1].get("ssid") == ""
+            if restore and restore.get("ssid") and emosas:
                 row = {**restore, "enabled": False}
                 keep = set(credential_uuids(restore.get("credential_configs")))
                 drop = [u for u in credential_uuids(vif.get("credential_configs")) if u not in keep]
@@ -791,13 +793,55 @@ class UplinkBackend:
                     }
                 )
                 counts.append(1)
-            off.append(name)
+            off[name] = "emosa" if emosas else "pod"
         if not off:
-            return []
+            return {}
         self.write_count += 1
         results = await self.session.transact(transaction, None, raw["generation"])
         check_results(results, counts)
         return off
+
+    async def enable(self, names):
+        """The stations ``names`` a failed move's make-before-break took off, enabled again in one
+        guarded transaction (spec 8.3: a failed move returns to the previous upstream with its
+        station; with none to go back to, its bootstrap station). Returns those enabled."""
+        raw = await self.session.snapshot()
+        _, rows = self._binding(raw)
+        node_uuid = next(iter(raw["tables"]["AWLAN_Node"]))
+        transaction = [
+            {
+                "op": "wait",
+                "table": "AWLAN_Node",
+                "where": [],
+                "columns": ["_uuid", "serial_number"],
+                "until": "==",
+                "rows": [{"_uuid": ["uuid", node_uuid], "serial_number": self.expected_serial}],
+                "timeout": 0,
+            }
+        ]
+        counts, on = [None], []
+        for name in sorted(names):
+            if name not in rows or rows[name][1].get("enabled") is True:
+                continue
+            uuid = rows[name][0]
+            vif = raw["tables"]["Wifi_VIF_Config"][uuid]
+            transaction += [
+                guard("Wifi_VIF_Config", uuid, vif, [c for c in STATION_GUARDS if c in vif]),
+                {
+                    "op": "update",
+                    "table": "Wifi_VIF_Config",
+                    "where": where_uuid(uuid),
+                    "row": {"enabled": True},
+                },
+            ]
+            counts += [None, 1]
+            on.append(name)
+        if not on:
+            return []
+        self.write_count += 1
+        results = await self.session.transact(transaction, None, raw["generation"])
+        check_results(results, counts)
+        return on
 
     async def close(self):
         pass
