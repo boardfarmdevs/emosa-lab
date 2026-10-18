@@ -1460,7 +1460,16 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
   converted pod's underlay lease on another's parent AP). The Pis' MT7921 answered a child's directed probe with the
   hidden beacon's empty SSID, below hostapd (13 October), and the child never joined, so the
   gre-5g profiles broadcast it, as a gateway broadcasts its own backhaul BSSes; hiding protects
-  nothing, as every association request carries the SSID. The parent AP is named `b-ap-<band>` (`b-ap-24` on the 2.4 GHz radio,
+  nothing, as every association request carries the SSID. The legacy GRE profiles (§3.10) broadcast
+  their parent AP `wl1.1` too: a station finds a hidden parent only by probing for it, and a Pi's
+  moves onto a converted pod's hidden `wl1.1` spent 31 and 48 s of the 90 s deadline scanning (two
+  and four scans finding nothing, 17 October), its move back to a broadcasting parent 12 s in
+  all. Only the parent AP changes: a legacy pod's fronthaul broadcasts as before, its unclaimed APs
+  stay hidden, and an AP beacons either way, so the vendor healthcheck (§3.10) sees no change.
+  When the parent AP is made from the seed's row, the flag rides on that write; on a pod
+  whose parent AP is already written hidden, the one write that unhides it may rebuild the VIF
+  (a few seconds without beacons, at most one failing healthcheck round, as for a key change).
+  The parent AP is named `b-ap-<band>` (`b-ap-24` on the 2.4 GHz radio,
   `b-ap-50` on 5 GHz), as the OpenSync cloud and `local-noc` name it, so the pod's own
   fallback can find it. The slot is the parent AP only as a parent renders it: a Multi-AP
   backhaul BSS left in it (a pod promoted to GRE parent while onboarded, its profile changed and

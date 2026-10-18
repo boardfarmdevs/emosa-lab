@@ -1257,6 +1257,24 @@ static void second_radio_profile(const char *schemas, const char *scratch)
               cJSON_IsString(broadcast) && !strcmp(broadcast->valuestring, "enabled"),
           "the gre-5g parent APs broadcast their SSID");
     em_profile_free(&rpi);
+    /* spec 3.10, 8.6: so do both legacy GRE profiles' wl1.1 (a child scanned 31 and 48 s for the
+     * hidden one), their backhaul row staying hidden */
+    const char *const legacy[2] = {"bcm-pod-2.4.3-gre-v1", "bcm-pod-2.4.3-gre-5g-v1"};
+    for (int i = 0; i < 2; i++) {
+        char lp[1024];
+        snprintf(lp, sizeof(lp), "%s/../src/emosa/profiles/%s.json", schemas, legacy[i]);
+        em_profile bcm;
+        if (em_profile_load(lp, &bcm) != EM_OK) {
+            CHECK(false, "%s loads", legacy[i]);
+            continue;
+        }
+        const cJSON *on = cJSON_GetObjectItemCaseSensitive(bcm.gre_parent_vif, "ssid_broadcast"),
+                    *off = cJSON_GetObjectItemCaseSensitive(bcm.backhaul_vif, "ssid_broadcast");
+        CHECK(bcm.legacy && em_profile_parent_slot(&bcm, "wl1.1") && cJSON_IsString(on) &&
+                  !strcmp(on->valuestring, "enabled") && cJSON_IsString(off) && !strcmp(off->valuestring, "disabled"),
+              "%s: the parent AP wl1.1 broadcasts its SSID, the backhaul row hidden", legacy[i]);
+        em_profile_free(&bcm);
+    }
     /* a slot on a radio the profile does not bind, or a further radio on the fronthaul's band */
     for (int mutation = 0; mutation < 2; mutation++) {
         char *text = em_read_file(path, 1 << 20, NULL);

@@ -1,6 +1,6 @@
 {
   "id": "bcm-pod-2.4.3-gre-5g-v1",
-  "description": "bcm-pod-2.4.3-gre-v1 with the pod's 5 GHz radio as a fronthaul only: wl0 (bcm4366, 11ac) serves the 5 GHz radio's M2 set on its home AP wl0.2, its other BSSes left out (no 5 GHz backhaul slot). The profile places wl0 (spec 9): a fronthaul with no station, it gets channel 36 at 80 MHz when its slot is created, a non-DFS channel in both the US and EU sets, whatever channel the pod had; EMOSA does not move it after (a channel selection that forbids it is declined, spec 3.4). The backhaul stays on wl1 (2.4 GHz): its station and the GRE parent AP wl1.1. wl0.2 is the 5 GHz home AP as the pod's own cloud writes it (oftag home--1). The backhaul row clears a MAC list on the parent AP (mac_list_type none): a pod converted live keeps its former manager's whitelist there, which would refuse the fleet's other pods as its children.",
+  "description": "bcm-pod-2.4.3-gre-v1 with the pod's 5 GHz radio as a fronthaul only: wl0 (bcm4366, 11ac) serves the 5 GHz radio's M2 set on its home AP wl0.2, its other BSSes left out (no 5 GHz backhaul slot). The profile places wl0 (spec 9): a fronthaul with no station, it gets channel 36 at 80 MHz when its slot is created, a non-DFS channel in both the US and EU sets, whatever channel the pod had; EMOSA does not move it after (a channel selection that forbids it is declined, spec 3.4). The backhaul stays on wl1 (2.4 GHz): its station and the GRE parent AP wl1.1, broadcasting its SSID as bcm-pod-2.4.3-gre-v1's does. wl0.2 is the 5 GHz home AP as the pod's own cloud writes it (oftag home--1). The backhaul row clears a MAC list on the parent AP (mac_list_type none): a pod converted live keeps its former manager's whitelist there, which would refuse the fleet's other pods as its children.",
   "opensync_version": "2.4.3",
   "schema": "opensync-2.0",
   "radio_plan": "emosa",
@@ -64,7 +64,9 @@
   },
   "backhaul_mode": "gre-parent",
   "gre_parent": {
-    "vif": {},
+    "vif": {
+      "ssid_broadcast": "enabled"
+    },
     "inet": {}
   },
   "extra_slots": [

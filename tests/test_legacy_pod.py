@@ -187,6 +187,23 @@ WANTED = ["map", [["encryption", "WPA-PSK"], ["key", "EmosaMesh2026!"], ["oftag"
 MARKED = ["map", [*WANTED[1][:2], ["oftag", "home--1~reload"]]]
 
 
+def test_the_legacy_parent_profiles_broadcast_their_parent_ap(tmp_path):
+    """Spec 3.10, 8.6: both legacy GRE profiles' parent AP wl1.1 broadcasts its SSID, as the Pis'
+    b-ap-50 does. A child's station finds a hidden parent only by probing for it, and pi2's moves
+    onto a converted pod's hidden wl1.1 spent 31 and 48 s of the 90 s deadline scanning (four
+    empty scans), its move back to a broadcasting parent none. Only the parent AP changes: the
+    fronthaul broadcasts as before and the profile's backhaul row stays hidden."""
+    vault = SecretStore(tmp_path / "secrets")
+    for name in (PROFILE, "bcm-pod-2.4.3-gre-5g-v1"):
+        profile = load_profile(name)
+        pod = PodBackend("pod-1", Session(tables()), vault, serial=SERIAL, profile=profile)
+        ap = pod._parent_vif()
+        assert (ap["ssid_broadcast"], ap["bridge"], ap["ap_bridge"]) == ("enabled", "", False), name
+        assert "multi_ap" not in ap, name
+        assert profile.fronthaul_vif["ssid_broadcast"] == "enabled", name
+        assert profile.backhaul_row["ssid_broadcast"] == "disabled", name
+
+
 def test_a_legacy_pods_fronthaul_is_read_from_its_security_map(tmp_path):
     pod, vault = backend(tmp_path)
     snap = asyncio.run(pod.snapshot())

@@ -6242,9 +6242,10 @@ async def legacy_phy_netdev_foreign(box):
 
 async def legacy_parent(box):
     """spec 3.10, 8.6: on a legacy pod the M2 set's backhaul BSS is the GRE parent AP wl1.1, with
-    no multi_ap (the pod has none), its WPA2-PSK in the security map, hidden, no bridge, no
-    bridging between its stations; its Inet row moves to the pod's underlay (.1, DHCP .10 to
-    .250), replacing the address the pod's former manager had left there (169.254.2.1)."""
+    no multi_ap (the pod has none), its WPA2-PSK in the security map, broadcasting its SSID (the
+    legacy profiles' gre_parent.vif, as the Pis' b-ap-50), no bridge, no bridging between its
+    stations; its Inet row moves to the pod's underlay (.1, DHCP .10 to .250), replacing the
+    address the pod's former manager had left there (169.254.2.1)."""
     ap, failure = await gre_parent_up(box, LEGACY_PARENT)
     if failure:
         return failure
@@ -6255,7 +6256,7 @@ async def legacy_parent(box):
         legacy_row_ok(ap, {"encryption": "WPA-PSK", "key": REGISTRAR_BACKHAUL_KEY})
         and ap.get("bridge") == ""
         and ap.get("ap_bridge") is False
-        and ap.get("ssid_broadcast") == "disabled"
+        and ap.get("ssid_broadcast") == "enabled"
     )
     inet_ok = (
         inet is not None
