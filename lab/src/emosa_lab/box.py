@@ -7699,6 +7699,122 @@ async def legacy_reseed_reclaim_late(box):
     return await legacy_reseed(box, away=RECONNECT_WINDOW + 5)
 
 
+async def start_markers(box):
+    """The pod's start markers (spec 3.10): EMOSA's Node_Config rows, emosa/start."""
+    rows = await box.rows("Node_Config")
+    return [r for r in rows.values() if r.get("module") == "emosa" and r.get("key") == "start"]
+
+
+def last_operation(box):
+    operations = (box.status() or {}).get("operations") or []
+    return operations[-1] if operations and isinstance(operations[-1], dict) else {}
+
+
+def evidence_instance(operation):
+    return ((operation or {}).get("application_evidence") or {}).get("instance")
+
+
+async def restarted_agent(box, state):
+    """The agent killed and started again on its journal (an EMOSA restart; the pod's OpenSync
+    unchanged), every Search and M1 answered until its fresh session's M2 has an operation in
+    ``state``. That operation, or None at the deadline."""
+    box.process.kill()
+    box.process.wait(10)
+    before = len((box.status() or {}).get("operations") or [])
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    box.restart_agent()
+    return await new_operation(box, before, state, searches, m1s)
+
+
+async def new_operation(box, before, state, searches, m1s):
+    """Every Search and M1 answered until an operation after the first ``before`` is in
+    ``state``: that operation, or None at the deadline."""
+
+    async def done():
+        operations = (box.status() or {}).get("operations") or []
+        return len(operations) > before and operations[-1].get("state") == state
+
+    found = await serve_radios(box, done, searches=searches, m1s=m1s)
+    return last_operation(box) if found is not None else None
+
+
+async def legacy_start_marker(box):
+    """spec 3.10, §5 (18 October): a legacy pod's start marker. Onboarded, the pod's database has
+    EMOSA's marker, a Node_Config row emosa/start with a token, not persist. EMOSA restarted on its
+    journal (the pod's OpenSync unchanged): the marker read back, the same instance, the fresh
+    session's M2 found applied (observed_noop). Another manager changes the agent's AP under that
+    start: recorded as an ownership conflict, which another EMOSA restart keeps (the fresh
+    session's M2 refused, OWNERSHIP_CONFLICT; the other SSID left). The pod's OpenSync started
+    again (a re-seed): a new marker, a new instance, the conflict released, the M2 written and
+    applied. Before the marker every EMOSA session was a new start of a legacy pod."""
+    state = await onboarded(box)
+    if not state.get("applied"):
+        return box.result(passed=False, failed=state.get("failed", "not applied"))
+    await box.until(lambda: evidence_instance(last_operation(box)), seconds=20)
+    first, onboard = await start_markers(box), last_operation(box)
+    noop = await restarted_agent(box, "OBSERVED_APPLIED")
+    after_restart = await start_markers(box)
+    same_start = (
+        noop is not None
+        and evidence_instance(noop) is not None
+        and evidence_instance(noop) == evidence_instance(onboard)
+        and bool((noop.get("application_evidence") or {}).get("observed_noop"))
+    )
+    uuid, _ = await box.vif("Wifi_VIF_Config", LEGACY_FRONTHAUL)
+    await box.transact(
+        [
+            {
+                "op": "update",
+                "table": "Wifi_VIF_Config",
+                "where": [["_uuid", "==", ["uuid", uuid]]],
+                "row": {"ssid": "changed-by-another"},
+            }
+        ]
+    )
+    await apply_configuration(box.db)  # the pod runs it
+    await asyncio.sleep(5)  # the agent's reconcile records the conflict
+    refused = await restarted_agent(box, "REJECTED")
+    _, config = await box.vif("Wifi_VIF_Config", LEGACY_FRONTHAUL)
+    kept = (
+        refused is not None
+        and refused.get("reason") == "OWNERSHIP_CONFLICT"
+        and (config or {}).get("ssid") == "changed-by-another"
+    )
+    before = len((box.status() or {}).get("operations") or [])
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    await box.new_pod_database()
+    written = await new_operation(box, before, "OBSERVED_APPLIED", searches, m1s)
+    reseeded = await start_markers(box)
+    _, config = await box.vif("Wifi_VIF_Config", LEGACY_FRONTHAUL)
+    released = (
+        written is not None
+        and not ((written.get("application_evidence") or {}).get("observed_noop"))
+        and evidence_instance(written) not in (None, evidence_instance(onboard))
+        and (config or {}).get("ssid") == REGISTRAR_SSID
+    )
+    token = [r.get("value") for r in first]
+    marked = (
+        len(first) == 1
+        and bool(token[0])
+        and first[0].get("persist") in (None, False, ["set", []])
+        and [r.get("value") for r in after_restart] == token
+        and len(reseeded) == 1
+        and reseeded[0].get("value") not in (None, token[0])
+    )
+    return box.result(
+        passed=marked and same_start and kept and released,
+        marked=marked,
+        markers=len(first),
+        restart_same_start=same_start,
+        conflict_kept_across_restart=kept,
+        refused_reason=(refused or {}).get("reason"),
+        reseed_released=released,
+        reseed_new_marker=bool(reseeded) and bool(first) and reseeded[0].get("value") != token[0],
+        session_starts=(box.status() or {}).get("session_starts"),
+        start_marker=(box.status() or {}).get("start_marker"),
+    )
+
+
 def node_config_status(box):
     return (box.status() or {}).get("node_config") or {}
 
@@ -8221,6 +8337,7 @@ SCENARIOS = {
     "legacy-reseed-reclaim": legacy_reseed_reclaim,
     "legacy-reseed-reclaim-5g": legacy_reseed_reclaim,
     "legacy-reseed-reclaim-late": legacy_reseed_reclaim_late,
+    "legacy-start-marker": legacy_start_marker,
     "legacy-profile-5g": legacy_profile_5g,
     "legacy-gtp-station-unassociated": legacy_gtp_station_unassociated,
     "legacy-cloud-cleared": legacy_cloud_cleared,
@@ -8476,6 +8593,7 @@ OPTIONS["legacy-reseed-reclaim-5g"] = {**OPTIONS["legacy-radio-plan"], "profile"
 OPTIONS["legacy-phy-netdev"] = OPTIONS["legacy-5g-fronthaul"]
 OPTIONS["legacy-phy-netdev-foreign"] = OPTIONS["legacy-reseed-reclaim-5g"]
 OPTIONS["legacy-reseed-reclaim-late"] = OPTIONS["legacy-radio-plan"]
+OPTIONS["legacy-start-marker"] = {"legacy": True}
 OPTIONS["legacy-profile-5g"] = OPTIONS["legacy-radio-plan"]
 # the station's guard, its times shortened: removed after 8 s unassociated, written again 12 s later
 OPTIONS["legacy-gtp-station-unassociated"] = {

@@ -8,9 +8,11 @@ The agent configuration's ``modules`` (from the fleet entry) names each module a
 the module names are the site's, never EMOSA's. EMOSA writes them once per start of the pod's
 OpenSync in one guarded transaction: a row per setting (``persist`` true), a changed value
 updated, a key of the module EMOSA no longer sets (or a second row of one key) removed. Another
-module's rows are never touched. Applied when, on the same start, each configured module's
-``Node_Config`` rows are its settings and nothing else. What the module did with them is its
-``Node_State``: read, never written, and reported beside it (``emosa.agent.node_config``).
+module's rows are never touched, and the module ``emosa`` is EMOSA's own (a legacy pod's start
+marker, ``emosa.opensync.uplink``), never a configured one. Applied when, on the same start, each
+configured module's ``Node_Config`` rows are its settings and nothing else. What the module did
+with them is its ``Node_State``: read, never written, and reported beside it
+(``emosa.agent.node_config``).
 """
 
 import json
@@ -22,7 +24,7 @@ from emosa.clock import utc_now
 from emosa.errors import EmosaError, Reason
 from emosa.model import Observation
 from emosa.opensync.mapping import check_results, where_uuid
-from emosa.opensync.uplink import start_instance
+from emosa.opensync.uplink import START_MODULE, start_instance
 
 MODE = "opensync-node-config"
 PROVENANCE = "opensync:Node_Config+Node_State"
@@ -58,6 +60,8 @@ class NodeConfigIntent:
         for module, settings in self.modules.items():
             if not isinstance(module, str) or not MODULE.fullmatch(module):
                 raise EmosaError(Reason.INVALID_INPUT, "a module name is [a-z0-9_-], 1 to 32")
+            if module == START_MODULE:
+                raise EmosaError(Reason.INVALID_INPUT, f"the module {module} is EMOSA's own")
             if not isinstance(settings, dict) or not 1 <= len(settings) <= KEYS_MAX:
                 raise EmosaError(Reason.INVALID_INPUT, f"one to {KEYS_MAX} settings per module")
             for key, value in settings.items():

@@ -29,6 +29,7 @@
 #include "journal.h"
 #include "jsonrpc.h"
 #include "jschema.h"
+#include "scope.h"
 #include "scope_telemetry.h"
 #include "southbound.h"
 #include "mqtt.h"
@@ -1230,6 +1231,12 @@ static void second_radio_profile(const char *schemas, const char *scratch)
     snprintf(path, sizeof(path), "%s/../src/emosa/profiles/opensync-lab-hwsim-6.6.1-gre-5g-v1.json", schemas);
     em_profile p;
     CHECK(em_profile_load(path, &p) == EM_OK, "the 5 GHz parent profile loads");
+    /* spec §5: its mapping, its ID and its file's content (profiles.PodProfile.mapping) */
+    size_t idlen = strlen(p.id);
+    bool hex12 = strlen(p.mapping) == idlen + 13 && !strncmp(p.mapping, p.id, idlen) && p.mapping[idlen] == '@';
+    for (size_t i = idlen + 1; hex12 && p.mapping[i]; i++)
+        hex12 = strchr("0123456789abcdef", p.mapping[i]) != NULL;
+    CHECK(hex12, "its mapping <id>@<12 hex>: %s", p.mapping);
     CHECK(p.nradios == 1 && !strcmp(p.radio_bands[0], "5G") && em_profile_has_radio(&p, "5G") &&
               !em_profile_has_radio(&p, "2.4G"),
           "one further radio, on 5 GHz");
@@ -1654,6 +1661,36 @@ static void another_stations_gretap(void)
     cJSON_Delete(tables);
 }
 
+/* spec 3.10, §5 (18 October): a legacy pod's start marker (test_start_marker.py, the same
+ * instance as Python's) */
+static void start_marker(void)
+{
+    em_use_start_marker(true);
+    cJSON *tables = cJSON_Parse("{\"Wifi_Radio_Config\": {\"b-radio\": {}, \"a-radio\": {}}, \"Node_Config\": "
+                                "{\"m\": {\"module\": \"emosa\", \"key\": \"start\", \"value\": \"0123456789abcdef\"}}}");
+    char instance[17] = "";
+    CHECK(em_start_instance(tables, instance) && !strcmp(instance, "78dcb2874d82c619"), "marked: %s", instance);
+    CHECK(!em_start_pending(tables) && !strcmp(em_start_marker(tables), "0123456789abcdef"), "marker read");
+    cJSON *rows = cJSON_GetObjectItemCaseSensitive(tables, "Node_Config");
+    cJSON_ReplaceItemInObjectCaseSensitive(cJSON_GetObjectItemCaseSensitive(rows, "m"), "module",
+                                           cJSON_CreateString("other-module"));
+    CHECK(em_start_pending(tables) && !em_start_instance(tables, instance), "no marker: not ready");
+    em_use_start_marker(false);
+    CHECK(em_start_instance(tables, instance) && !em_start_pending(tables), "no marker in use: the radio rows");
+    cJSON_Delete(tables);
+    cJSON *ops = em_start_marker_ops("0123456789abcdef");
+    const cJSON *wait = cJSON_GetArrayItem(ops, 0), *insert = cJSON_GetArrayItem(ops, 1);
+    const cJSON *row = cJSON_GetObjectItemCaseSensitive(insert, "row");
+    CHECK(cJSON_GetArraySize(ops) == 2 && !strcmp(cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(wait, "op")), "wait") &&
+              cJSON_GetArraySize(cJSON_GetObjectItemCaseSensitive(wait, "rows")) == 0 &&
+              !strcmp(cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(insert, "op")), "insert"),
+          "the marker's guarded insert");
+    CHECK(!strcmp(cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(row, "module")), "emosa") &&
+              !cJSON_GetObjectItemCaseSensitive(row, "persist"),
+          "its row: EMOSA's module, never persist");
+    cJSON_Delete(ops);
+}
+
 int main(int argc, char **argv)
 {
     em_init();
@@ -1688,6 +1725,7 @@ int main(int argc, char **argv)
     phy_netdev_ops(argv[1]);
     capability_difference();
     another_stations_gretap();
+    start_marker();
     printf("%d checks, %d failures\n", checks, failures);
     return failures != 0;
 }

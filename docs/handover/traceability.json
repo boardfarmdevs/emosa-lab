@@ -91,9 +91,9 @@
       "python": ["test_unassociated.py", "test_probe_watch.py"]
     },
     "README 3.10 Legacy pods: the OpenSync 2.0 schema": {
-      "box": ["legacy-onboard", "legacy-auth-reload", "no-auth-reload-6-6", "legacy-bridge-port", "legacy-bridge-port-repair", "legacy-bridge-mode", "legacy-bridge-mode-repair", "legacy-bridge-mode-old-profile", "legacy-parent-unhide", "legacy-phy-netdev", "legacy-phy-netdev-foreign", "legacy-parent", "legacy-parent-child", "legacy-parent-child-gone", "legacy-pod-6-6-profile", "pod-6-6-legacy-profile", "legacy-wired", "legacy-wired-half-pair", "legacy-gre-move", "legacy-5g-fronthaul", "legacy-ethernet-lost", "legacy-ethernet-lost-gre", "legacy-gtp-station", "legacy-gtp-station-present", "legacy-radio-plan", "legacy-reseed-reclaim", "legacy-reseed-reclaim-5g", "legacy-reseed-reclaim-late", "legacy-profile-5g", "legacy-gtp-station-unassociated", "legacy-cloud-cleared", "legacy-seed-stations", "legacy-seed-station-unwired", "legacy-dark-radio"],
-      "python": ["test_legacy_pod.py"],
-      "units": ["auth_reload_ops", "bridge_port_ops", "bridge_mode_ops", "phy_netdev_ops"]
+      "box": ["legacy-onboard", "legacy-auth-reload", "no-auth-reload-6-6", "legacy-bridge-port", "legacy-bridge-port-repair", "legacy-bridge-mode", "legacy-bridge-mode-repair", "legacy-bridge-mode-old-profile", "legacy-parent-unhide", "legacy-phy-netdev", "legacy-phy-netdev-foreign", "legacy-parent", "legacy-parent-child", "legacy-parent-child-gone", "legacy-pod-6-6-profile", "pod-6-6-legacy-profile", "legacy-wired", "legacy-wired-half-pair", "legacy-gre-move", "legacy-5g-fronthaul", "legacy-ethernet-lost", "legacy-ethernet-lost-gre", "legacy-gtp-station", "legacy-gtp-station-present", "legacy-radio-plan", "legacy-reseed-reclaim", "legacy-reseed-reclaim-5g", "legacy-reseed-reclaim-late", "legacy-start-marker", "legacy-profile-5g", "legacy-gtp-station-unassociated", "legacy-cloud-cleared", "legacy-seed-stations", "legacy-seed-station-unwired", "legacy-dark-radio"],
+      "python": ["test_legacy_pod.py", "test_start_marker.py"],
+      "units": ["auth_reload_ops", "bridge_port_ops", "bridge_mode_ops", "phy_netdev_ops", "start_marker"]
     },
     "README 4. The fleet": {
       "vectors": ["fleet.json", "fleet-sessions.json"],
@@ -105,9 +105,9 @@
     },
     "README 5. Operations": {
       "vectors": ["engine.json", "operation-transitions.json"],
-      "box": ["adapter-restart", "steering-restart", "write-lost-unapplied", "restart-during-write"],
-      "units": ["engine"],
-      "python": ["test_conformance.py"]
+      "box": ["adapter-restart", "steering-restart", "write-lost-unapplied", "restart-during-write", "legacy-start-marker"],
+      "units": ["engine", "start_marker"],
+      "python": ["test_conformance.py", "test_start_marker.py"]
     },
     "README 6. Management and state": {
       "vectors": ["journal-retention.json"],

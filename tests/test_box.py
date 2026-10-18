@@ -905,6 +905,14 @@ def test_a_legacy_pod_reseeded_past_the_window_is_claimed_again(agent, tmp_path)
     assert result["passed"], result
 
 
+def test_a_legacy_pods_start_marker_outlives_an_emosa_restart_not_a_reseed(agent, tmp_path):
+    # spec 3.10, 5 (18 October): the marker read back after an EMOSA restart (the same start, an
+    # ownership conflict kept); a re-seed loses it (a new start, the conflict released)
+    result = box("legacy-start-marker", agent, tmp_path / "box", timeout=420)
+    assert result["passed"], result
+    assert result["restart_same_start"] and result["conflict_kept_across_restart"]
+
+
 def test_a_legacy_pod_switched_to_the_5ghz_profile_takes_wl0_without_a_conflict(agent, tmp_path):
     # plan A: its entry switched to bcm-pod-2.4.3-gre-5g-v1, its agent restarted on its journal
     result = box("legacy-profile-5g", agent, tmp_path / "box", timeout=300)

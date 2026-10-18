@@ -827,7 +827,7 @@ is everything above. For a legacy pod, all of this specification applies, except
   `legacy-seed-stations` (the seed's stations deleted, only the GTP station left, on the start
   and after a re-seed) and `legacy-dark-radio` (`wl0` shown with no channel turned on at 36, on
   the start and after a re-seed).
-- **Its starts, counted by its agent's sessions.** A legacy pod's database is its vendor's seed
+- **Its starts, marked in its database.** A legacy pod's database is its vendor's seed
   again at every start of its OpenSync (a reboot, or its connection manager restarting the
   managers after more than 120 s without its uplink), every row with the UUID it had in the
   seed, its radio rows too: seen on a converted pod on 14 October, one start instance (§8.3)
@@ -840,21 +840,36 @@ is everything above. For a legacy pod, all of this specification applies, except
   rely on them. The radio rows' UUIDs are the seed's, the same on every unit of that firmware
   (a second converted pod showed exactly the first one's), so their start instance is the same
   for every such pod: neither it nor those UUIDs may serve as a device's or a session's
-  identity across pods. Nothing does: a journal is one agent's, for one pod, and a legacy
-  pod's start is one of its agent's sessions. On a legacy
-  profile the agent counts the pod's starts itself: a start is one of its sessions with the
-  pod, a token of the agent's renewed for the first, for every fresh session (another pod
-  source, §2.5, whatever the reason) and for a kept reconnection that found its configuration
-  lost (`config_lost`), and taken into the start instance beside the radio rows. Each is a new
-  start for every scope: a new ownership period (§5, a conflict recorded on an earlier one
-  released), the controller's M2 written again where the pod lacks it, and the GTP station and
-  the radio plan written once more where they differ: the pod claimed again, as at its first
-  admission, with no hands on it. A kept reconnection stays on its start. Once the pod's
-  `manager_addr` is EMOSA's, no other manager writes its rows, so nothing is taken from one.
-  The status's `session_starts` counts them (a legacy profile's only), and the agent's log says
-  each ("its configuration claimed again"). A 6.6 pod's start is its radio rows alone, as
-  before. Both agents. Box `legacy-reseed-reclaim`, `legacy-reseed-reclaim-5g` (wl0 back on 36
-  at HT80 with its home AP) and `legacy-reseed-reclaim-late` (past the reconnection window).
+  identity across pods. Nothing does: a journal is one agent's, for one pod. So on a legacy
+  profile the agent marks each start of the pod's OpenSync in its database: the **start
+  marker**, a `Node_Config` row of EMOSA's own module (`emosa`, key `start`) with a random
+  16-hex token, never `persist`. No seed has it, and none of the pod's managers reads it
+  (OpenSync 1.4's core reads `Node_Config` in its demo manager only, 2.4.3's readers each their
+  own module, and the hook module's rows have been on the converted pods since 15 October with
+  no reaction). A re-seed or a reboot loses it; an EMOSA restart reads it back. The start
+  instance (§8.3) is the radio rows with the marker's token, and a legacy pod without a marker is
+  not ready for any scope: the agent writes one at its next refresh of the pod (a guarded
+  insert, only where the pod has none; again at most every 5 s in one database generation until
+  it shows), and no operation, reconcile or scope reads the pod meanwhile. A new token (a
+  re-seed's, a reboot's) is a new start for every scope: a new ownership period (§5, a conflict
+  recorded on an earlier one released), the controller's M2 written again where the pod lacks
+  it, and the GTP station and the radio plan written once more where they differ: the pod
+  claimed again, as at its first admission, with no hands on it. An EMOSA restart, a fresh
+  session (§2.5) and a kept reconnection that found its configuration lost (`config_lost`) stay
+  on the start: a configuration changed under it is another manager's (§5), and that conflict
+  outlives EMOSA's restarts. Before 18 October the start was one of the agent's own sessions, so
+  each EMOSA restart released such a conflict and wrote over it, and each fresh session wrote
+  the once-per-start configuration again. The module name `emosa` is refused for a configured
+  module (§4, the pods' modules). The status's `session_starts` counts the starts the agent saw
+  (a legacy profile's only, its own first), `start_marker` says whether the marker is in use and
+  how many the agent wrote, and the agent's log says each ("its configuration claimed again",
+  "the pod's start marked"). A legacy schema without `Node_Config` falls back to the agent's own
+  token, renewed for its first session, every fresh session and a `config_lost` reconnection.
+  A 6.6 pod's start is its radio rows alone, as before. Both agents. Box `legacy-reseed-reclaim`,
+  `legacy-reseed-reclaim-5g` (wl0 back on 36 at HT80 with its home AP),
+  `legacy-reseed-reclaim-late` (past the reconnection window) and `legacy-start-marker` (the
+  marker read back after an EMOSA restart: the same instance, the M2 found applied, an ownership
+  conflict kept across the restart; a re-seed's new marker releasing it, the M2 written again).
 - **Not served** on a legacy pod, refused at the agent's start
   (`INVALID_INPUT`) or turned off and said so in the status:
   the uplink switch onto a Multi-AP backhaul (§8.3: no Multi-AP station on such a
@@ -938,13 +953,14 @@ a new one, needs no secret placed by hand. Both fleets.
 **The pods' modules.** A pod may run software of its own that EMOSA manages through OpenSync's
 `Node_Config` and `Node_State` (a start-up hook kept on a converted pod's flash, say: its
 redirector, its own updates). The fleet's `modules`, replaced per pod by `pods.<serial>.modules`,
-names each module (the site's name, `[a-z0-9_-]`, at most 32) with its settings (`config`: key
+names each module (the site's name, `[a-z0-9_-]`, at most 32, never `emosa`: EMOSA's own,
+a legacy pod's start marker, §3.10) with its settings (`config`: key
 to value, `[a-z0-9_]` keys, values of 1 to 1024 characters) and, optionally, a file to install
 (`update`: its SHA-256). The agent's configuration gets each module's settings as a map
 (`modules`), with `update_url` (`http://<advertise>:<files.port>/<sha256>`) and `update_sha256`
 for an update; the fleet refuses an update without `files`.
-- **The agent** writes each module's settings once per start of the pod's OpenSync (each session
-  start on a legacy pod, §3.10), in one guarded transaction, with its own journal
+- **The agent** writes each module's settings once per start of the pod's OpenSync (its start
+  marker's on a legacy pod, §3.10), in one guarded transaction, with its own journal
   (`node-config`): a `Node_Config` row per setting (`persist` true), a changed value updated, a
   key it no longer sets or a second row of one key removed, each `wait`ed on as it is, and a new
   key's insert guarded by its absence. Another module's rows are never touched. Applied when the
@@ -954,7 +970,9 @@ for an update; the fleet refuses an update without `files`.
   the module echoes with the value written (`settings_echoed`, a `Node_State` row with the
   setting's key), `state` (`ok` or `error:<reason>`), `boot_id`, `version` (the SHA-256 of the
   module's installed file), `running` (the one its running process started from), `slot`, and
-  `update` (`ok` or `failed:<reason>`) with `update_sha256` (the request it answers). The `flags`
+  `update` (`ok` or `failed:<reason>`) with `update_sha256` (the request it answers), and
+  `events_prev` (the module's events before the pod's last boot, as the module's own log on flash
+  has them, when it reports them: a converted pod's hook since its r4, 18 October). The `flags`
   say what they mean: `state_error`; `not_started_at_boot` (`slot` `none`); `update_pending` (no
   answer to this update yet); `update_failed`; `restart_not_taken` (the update installed, `ok`,
   and still not running 60 s later). Its `events` (`<seq> <word>[:<detail>]` entries joined by
@@ -1031,13 +1049,15 @@ Rules:
 - A configuration the pod already runs is observed as applied without writing:
   repeated M2s never cause repeated writes.
 - A written configuration belongs to the start of the pod's OpenSync it was
-  written on (the start's radio rows, as for the uplink switch, §8.3; a legacy pod's
-  start is one of its agent's sessions, whose radio rows do not change, §3.10). When the
+  written on (the start's radio rows, as for the uplink switch, §8.3; a legacy pod's,
+  whose radio rows do not change, with its start marker, §3.10). When the
   pod's OpenSync starts again, its database comes back from the template without
   it: that is not another manager's change, so it is no ownership conflict, and a
   conflict seen on an earlier start no longer blocks the pod (a new ownership
   period). The agent configures the pod again from the controller's next M2
-  (§2.5). The operation's evidence names the start (`instance`).
+  (§2.5). The operation's evidence names the start (`instance`). EMOSA's own restart
+  is not a start of the pod's OpenSync: a conflict recorded before it still blocks the
+  pod after it, on a legacy pod too (its start marker, §3.10).
 - So an active operation whose write belongs to an earlier start than the one the
   pod runs now can never be observed applied: it ends `FAILED` (`NOT_READY`, as a
   write whose database generation changed) as soon as the agent sees the new
@@ -1046,8 +1066,11 @@ Rules:
   pod unconfigured until a Renew (the box, 12 October). Both agents (vectors
   `engine.json` `restarted-before-observed`, box `restart-during-write`).
 - A written configuration also belongs to the mapping it was planned under (its
-  plan's `mapping`: the pod's profile). When the pod's profile changes (a pod
-  promoted to GRE parent while onboarded, §8.6), what an earlier operation wrote is
+  plan's `mapping`: the pod's profile, by its ID and its file's content,
+  `<id>@<the first 12 hex of the file's SHA-256>`). When the pod's profile changes (a pod
+  promoted to GRE parent while onboarded, §8.6, or an image whose profile changed, the
+  same pod's OpenSync running on: §3.10's start marker keeps its start across EMOSA's
+  restart, 18 October), what an earlier operation wrote is
   read under the new mapping, where it may no longer hold: that is not another
   manager's change either, so no ownership conflict, and the next operation begins
   a new ownership period. An earlier operation's deadline still runs.

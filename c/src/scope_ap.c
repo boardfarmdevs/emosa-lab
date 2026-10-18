@@ -444,6 +444,8 @@ static bool snapshot(void *ctx, em_snapshot *out)
         fresh = b.state != NULL;
         out->ready = fresh || (s->identity && !b.vif_uuid);
     }
+    if (em_start_pending(tables)) /* spec 3.10: a legacy pod's start not marked yet */
+        fresh = out->ready = false;
     out->generation = em_ovsdb_generation(s->ovs);
     EM_FORMAT_FIXED(out->schema_fingerprint, sizeof(out->schema_fingerprint), "%s", em_ovsdb_schema_fingerprint(s->ovs));
     out->config = configured;
@@ -516,7 +518,7 @@ static cJSON *radio_plan(em_ap_scope *s, const cJSON *intent, em_reason *why)
     }
     cJSON *p = cJSON_CreateObject();
     const char *fields[] = {"Wifi_VIF_Config", "Wifi_Radio_Config.vif_configs", "Inet"};
-    cJSON_AddStringToObject(p, "mapping", s->profile->id);
+    cJSON_AddStringToObject(p, "mapping", s->profile->mapping);
     cJSON_AddStringToObject(p, "radio_id", radio_id);
     cJSON_AddStringToObject(p, "bss_id", radio_id);
     cJSON_AddStringToObject(p, "action", "slots");
@@ -564,7 +566,7 @@ static cJSON *plan(void *ctx, const cJSON *intent, em_reason *why)
         return NULL;
     }
     cJSON *p = cJSON_CreateObject();
-    cJSON_AddStringToObject(p, "mapping", s->profile->id);
+    cJSON_AddStringToObject(p, "mapping", s->profile->mapping);
     cJSON_AddStringToObject(p, "radio_id", "radio-1");
     cJSON_AddStringToObject(p, "bss_id", "bss-1");
     cJSON_AddStringToObject(p, "ssid", str(intent, "ssid"));

@@ -27,7 +27,17 @@ log = logging.getLogger("emosa.agent.node_config")
 DEADLINE = 30  # the settings are in the database once the write is
 SOURCE = "node-config-policy"
 RESTART_GRACE = 60  # seconds an installed update may take to run before it is flagged
-REPORTED = ("state", "boot_id", "version", "running", "slot", "update", "update_sha256")
+# (events_prev: the module's events before the pod's last boot, as its own log on flash has them)
+REPORTED = (
+    "state",
+    "boot_id",
+    "version",
+    "running",
+    "slot",
+    "update",
+    "update_sha256",
+    "events_prev",
+)
 
 
 def events(text):

@@ -46,7 +46,7 @@ from emosa.model import Observation
 from emosa.opensync.mapping import OpenSyncBackend, check_results, guard, where_uuid
 from emosa.opensync.profiles import load as load_profile
 from emosa.opensync.radio_scope import psk, wpa2_psk
-from emosa.opensync.uplink import start_instance
+from emosa.opensync.uplink import start_instance, start_pending
 from emosa.opensync.wired import pair_ops, paired
 from emosa.wire.operation_bridge import ScopeContext
 
@@ -200,8 +200,9 @@ class PodBackend(OpenSyncBackend):
 
     @property
     def mapping(self):
-        """The mapping this scope plans under (its plan's "mapping"): the pod's profile."""
-        return self.profile.id
+        """The mapping this scope plans under (its plan's "mapping"): the pod's profile, by its ID
+        and its file's content (spec §5, PodProfile.mapping)."""
+        return self.profile.mapping
 
     @property
     def parent_aps(self):
@@ -690,6 +691,8 @@ class PodBackend(OpenSyncBackend):
                 )
             fresh = raw["ready"] and bool(state)
             ready = fresh or bool(raw["ready"] and self.identity and vif_uuid is None)
+            if start_pending(decoded):  # spec 3.10: a legacy pod's start not marked yet
+                fresh = ready = False
             self.last = Snapshot(
                 configured,
                 Observation(
@@ -875,7 +878,7 @@ class PodBackend(OpenSyncBackend):
         if self.slots:
             self._extras(decoded, radio_uuid)
         common = {
-            "mapping": self.profile.id,
+            "mapping": self.mapping,
             "radio_id": self.radio_id,
             "bss_id": self.bss_id,
             "ssid": intent.ssid,
@@ -1362,7 +1365,8 @@ class RadioBackend(PodBackend):
             raw = await self.session.snapshot()
             _, radio_uuid, _, _, decoded = self._binding(raw)
             extras = self._extras(decoded, radio_uuid)
-            ready = bool(raw["ready"] and self.identity)
+            # (spec 3.10: a legacy pod's start not marked yet, not ready)
+            ready = bool(raw["ready"] and self.identity) and not start_pending(decoded)
             self.last = Snapshot(
                 {"additional": self._additional(e["config"] for e in extras.values())},
                 Observation(
@@ -1408,7 +1412,7 @@ class RadioBackend(PodBackend):
             raise EmosaError(Reason.NOT_READY, "complete current references/state required")
         self._extras(decoded, radio_uuid)
         return {
-            "mapping": self.profile.id,
+            "mapping": self.mapping,
             "radio_id": self.radio_id,
             "bss_id": self.bss_id,
             "action": "slots",

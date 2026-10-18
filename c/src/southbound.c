@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "canon.h"
 #include "ovs.h"
 #include "scope.h"
 #include "view.h"
@@ -18,9 +19,11 @@
 em_reason em_profile_load(const char *path, em_profile *out)
 {
     memset(out, 0, sizeof(*out));
-    char *text = em_read_file(path, 1 << 20, NULL);
+    size_t len = 0;
+    char *text = em_read_file(path, 1 << 20, &len), hex[65];
     if (!text)
         return EM_NOT_READY;
+    em_sha256_hex(text, len, hex); /* the file as read, its bytes (as Python's load) */
     out->doc = cJSON_Parse(text);
     free(text);
     const cJSON *d = out->doc, *radio = cJSON_GetObjectItemCaseSensitive(d, "radio"),
@@ -28,6 +31,8 @@ em_reason em_profile_load(const char *path, em_profile *out)
     if (!d || !radio || !front)
         goto invalid;
     out->id = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(d, "id"));
+    if (out->id)
+        EM_FORMAT_FIXED(out->mapping, sizeof(out->mapping), "%.64s@%.12s", out->id, hex);
     out->band = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(radio, "band"));
     out->ht_mode = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(radio, "ht_mode"));
     out->channel = cJSON_GetObjectItemCaseSensitive(radio, "channel")->valueint;

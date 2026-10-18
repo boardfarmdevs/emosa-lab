@@ -22,9 +22,11 @@
 #define RESTART_GRACE 60 /* seconds an installed update may take to run before it is flagged */
 #define LOGGER "emosa.agent.node_config"
 
-/* the keys of a module's Node_State the status reports (node_config.REPORTED) */
-static const char *const REPORTED[] = {"state", "boot_id", "version", "running", "slot", "update", "update_sha256"};
-#define NREPORTED 7
+/* the keys of a module's Node_State the status reports (node_config.REPORTED; events_prev: the
+ * module's events before the pod's last boot, as its own log on flash has them) */
+static const char *const REPORTED[] = {"state",  "boot_id", "version",       "running",
+                                       "slot",   "update",  "update_sha256", "events_prev"};
+#define NREPORTED 8
 
 static const char *str(const cJSON *o, const char *k)
 {
@@ -61,6 +63,8 @@ static bool valid_modules(const cJSON *modules)
     {
         int k = cJSON_GetArraySize(m);
         if (!name_ok(m->string, 32, "_-") || !cJSON_IsObject(m) || k < 1 || k > EM_NODE_SETTINGS)
+            return false;
+        if (!strcmp(m->string, EM_START_MODULE)) /* EMOSA's own: a legacy pod's start marker */
             return false;
         cJSON_ArrayForEach(v, m)
         {

@@ -9,6 +9,7 @@ the backhaul station data plane option 1 moves onto the EasyMesh backhaul.
 A new pod model needs a new profile, not new code.
 """
 
+import hashlib
 import json
 import os
 from dataclasses import dataclass
@@ -61,6 +62,15 @@ class PodProfile:
     # channel and width the plan turns it on at when it carries an enabled AP but cannot beacon
     # ({"band", "channel", "ht_mode"}, ...)
     idle_radios: tuple = ()
+    # the first 12 hex of the profile file's SHA-256, its bytes as read ("" for one built in code)
+    fingerprint: str = ""
+
+    @property
+    def mapping(self):
+        """The mapping the AP and radio scopes plan under (spec §5): the profile, by its ID and
+        its file's content, so an image whose profile changed is another mapping (no ownership
+        conflict over what an earlier one wrote, a new ownership period)."""
+        return f"{self.id}@{self.fingerprint}" if self.fingerprint else self.id
 
     @property
     def backhaul_row(self):
@@ -75,12 +85,12 @@ def load(ref=DEFAULT):
     """A profile by ID, from the directory EMOSA_PROFILES names when set (as the C agent reads
     them) else the bundled ones, or a profile file by path."""
     if ref.endswith(".json") or "/" in ref:
-        text = Path(ref).read_text()
+        raw = Path(ref).read_bytes()
     elif os.environ.get("EMOSA_PROFILES"):
-        text = (Path(os.environ["EMOSA_PROFILES"]) / f"{ref}.json").read_text()
+        raw = (Path(os.environ["EMOSA_PROFILES"]) / f"{ref}.json").read_bytes()
     else:
-        text = files("emosa").joinpath(f"profiles/{ref}.json").read_text()
-    data = json.loads(text)
+        raw = files("emosa").joinpath(f"profiles/{ref}.json").read_bytes()
+    data = json.loads(raw.decode())
     validate("pod-profile", data)
     # a slot is on the fronthaul's radio or on one of the profile's further radios (spec 9),
     # whose scope writes it; a slot on a radio the profile does not bind would never be served
@@ -155,4 +165,5 @@ def load(ref=DEFAULT):
         data.get("wan_bridge", "br-wan"),
         data.get("radio_plan", "pod"),
         tuple(dict(r) for r in data.get("idle_radios", ())),
+        hashlib.sha256(raw).hexdigest()[:12],
     )

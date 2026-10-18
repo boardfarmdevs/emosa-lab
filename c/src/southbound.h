@@ -12,6 +12,9 @@
 typedef struct {
     cJSON *doc; /* owns the values below */
     const char *id, *band, *ht_mode, *fronthaul_if, *uplink_station;
+    /* the mapping its AP and radio scopes plan under (spec §5, profiles.PodProfile.mapping):
+     * "<id>@<the first 12 hex of the file's SHA-256>", another one when an image's profile changes */
+    char mapping[96];
     int channel;
     const cJSON *fronthaul_vif, *backhaul_vif, *inet;
     size_t nslots;

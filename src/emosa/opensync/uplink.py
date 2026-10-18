@@ -172,20 +172,72 @@ def own_bssids(decoded):
     }
 
 
-# spec 3.10: a legacy pod's database is its vendor's seed again at every start, its radio rows
-# with the same UUIDs (a converted pod, 14 October: one instance across a re-seed), so they
-# cannot tell its starts apart. Its agent counts its starts by its own sessions instead: a token
-# renewed for every fresh session (new_session_start), with the radio rows in the instance.
-# None on a 6.6 pod, whose instance is its radio rows alone. One agent process serves one pod.
+# spec 3.10, §5: a legacy pod's database is its vendor's seed again at every start, its radio
+# rows with the same UUIDs (a converted pod, 14 October: one instance across a re-seed), so they
+# cannot tell its starts apart. Its agent marks each start in it: the start marker, a Node_Config
+# row of EMOSA's own module (START_MODULE, START_KEY) with a random token, never persist, which
+# no seed has and none of the pod's managers reads. A re-seed or a reboot loses it, an EMOSA
+# restart reads it back: the instance is the radio rows with the marker's token, and the pod is
+# not ready for any scope until it has one (the agent writes it at once, use_start_marker). A
+# legacy schema without Node_Config: the agent's own token instead, renewed for every fresh
+# session (new_session_start), as before 18 October. None on a 6.6 pod, whose instance is its
+# radio rows alone. One agent process serves one pod.
+START_MODULE, START_KEY = "emosa", "start"
 _session_start = None
+_start_marker = False
 
 
 def new_session_start():
-    """A legacy pod's agent (spec 3.10): from now on, a new start of the pod's OpenSync for every
-    scope (the ownership period, the writes made once per start). The token."""
+    """A legacy pod's agent without the start marker (spec 3.10): from now on, a new start of the
+    pod's OpenSync for every scope (the ownership period, the writes made once per start)."""
     global _session_start
     _session_start = secrets.token_hex(8)
     return _session_start
+
+
+def use_start_marker(on=True):
+    """A legacy pod's agent (spec 3.10): the pod's starts are its start marker's."""
+    global _start_marker
+    _start_marker = on
+
+
+def start_marker_used():
+    return _start_marker
+
+
+def start_marker(decoded):
+    """The token of the pod's start marker, or None (spec 3.10): EMOSA's Node_Config row."""
+    for row in decoded.get("Node_Config", {}).values():
+        if row.get("module") == START_MODULE and row.get("key") == START_KEY:
+            value = row.get("value")
+            return value if isinstance(value, str) and value else None
+    return None
+
+
+def start_pending(decoded):
+    """A legacy pod whose start is not marked yet (spec 3.10): not ready for any scope."""
+    return _start_marker and start_marker(decoded) is None
+
+
+def start_marker_ops(token):
+    """The marker's write: inserted only where the pod has none (a guarded insert)."""
+    where = [["module", "==", START_MODULE], ["key", "==", START_KEY]]
+    return [
+        {
+            "op": "wait",
+            "table": "Node_Config",
+            "where": where,
+            "columns": ["module"],
+            "until": "==",
+            "rows": [],
+            "timeout": 0,
+        },
+        {
+            "op": "insert",
+            "table": "Node_Config",
+            "row": {"module": START_MODULE, "key": START_KEY, "value": token},
+        },
+    ]
 
 
 def start_instance(decoded):
@@ -194,12 +246,18 @@ def start_instance(decoded):
     Its start scripts create the radio rows anew (new UUIDs), which then live as
     long as that start does. AWLAN_Node comes from the database template and
     keeps its UUID (seen live), so it cannot tell two starts apart. A legacy
-    pod's agent adds its session's start token (new_session_start).
+    pod's agent adds its start marker's token (spec 3.10; without it the pod is
+    not ready), or without the marker its session's token (new_session_start).
     """
     radios = sorted(decoded.get("Wifi_Radio_Config", {}))
     if not radios:
         raise EmosaError(Reason.NOT_READY, "the pod's radios are not configured yet")
-    if _session_start is not None:
+    if _start_marker:
+        token = start_marker(decoded)
+        if token is None:
+            raise EmosaError(Reason.NOT_READY, "the pod's start marker is not written yet")
+        radios.append(token)
+    elif _session_start is not None:
         radios.append(_session_start)
     return hashlib.sha256(json.dumps(radios).encode()).hexdigest()[:16]
 

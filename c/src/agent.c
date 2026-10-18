@@ -190,7 +190,12 @@ typedef struct {
     bool has_source;
     unsigned reconnections_continued, reconnections_config_lost;
     counters reconnections_fresh;
-    unsigned session_starts; /* spec 3.10: a legacy pod's starts, counted by its agent's sessions */
+    unsigned session_starts; /* spec 3.10: a legacy pod's starts as its agent saw them (its start
+                              * markers, else its sessions) */
+    char start_token[17];    /* the start marker's token as last read ("" before one) */
+    unsigned start_writes;   /* the markers it wrote */
+    int start_tried_generation; /* the database generation and time of its last write */
+    double start_tried_at;
     unsigned auth_reloads;   /* spec 3.10: the oftags auth_reload restored */
     unsigned bridge_ports;   /* spec 3.10: the APs bridge_port put into their bridge */
     unsigned bridge_modes;   /* spec 3.10: the writes bridge_mode made */
@@ -549,19 +554,68 @@ static size_t station_names(const agent *a, const char *out[EM_UPLINK_BANDS + 1]
     return n;
 }
 
-/* spec 3.10: a legacy pod's new start, counted by its agent's sessions (its radio rows come back
- * from its vendor's seed with the same UUIDs): a new ownership period, and the writes made once
- * per start written again where the pod lacks them, a re-claim (pod.PodReportSource.new_start) */
+/* spec 3.10: a legacy pod's new start (its radio rows come back from its vendor's seed with the same
+ * UUIDs; its start marker tells the starts apart, else the agent's sessions do): a new ownership
+ * period, and the writes made once per start written again where the pod lacks them, a re-claim
+ * (pod.PodReportSource.new_start) */
 static void new_start(agent *a, const char *why)
 {
     if (!a->profile.legacy)
         return;
-    if (!em_new_session_start()) {
+    if (!em_start_marker_used() && !em_new_session_start()) {
         WARN("a legacy pod's new start (%s): no randomness, the start kept", why);
         return;
     }
     a->session_starts++;
     LOG("a legacy pod's new start (%s): its configuration claimed again", why);
+}
+
+/* spec 3.10 (PodReportSource.mark_start): a legacy pod's start marker read, or written where the pod
+ * has none (a re-seed's or a reboot's database, or the first EMOSA with it): once per START_RETRY s
+ * in one database generation. A token other than the last one read is a new start; the first one
+ * read is this agent's own start (an EMOSA restart reads the pod's back). */
+#define START_RETRY 5.0
+static void mark_start(agent *a, const cJSON *tables)
+{
+    if (!em_start_marker_used())
+        return;
+    if (em_ovsdb_node_config_schema(a->ovs) == 0) {
+        em_use_start_marker(false); /* the agent's own token from now on (em_new_session_start) */
+        WARN("the pod's schema has no Node_Config: its starts counted by sessions");
+        return;
+    }
+    const char *token = em_start_marker(tables);
+    if (token) {
+        if (a->start_token[0] && strcmp(token, a->start_token))
+            new_start(a, "a new start marker");
+        EM_FORMAT_FIXED(a->start_token, sizeof(a->start_token), "%.16s", token);
+        return;
+    }
+    int generation = em_ovsdb_generation(a->ovs);
+    double t = now();
+    if (a->start_tried_at > 0 && a->start_tried_generation == generation && t - a->start_tried_at < START_RETRY)
+        return;
+    a->start_tried_generation = generation;
+    a->start_tried_at = t;
+    uint8_t raw[8];
+    if (RAND_bytes(raw, sizeof(raw)) != 1) {
+        WARN("the pod's start marker not written: no randomness");
+        return;
+    }
+    char *hex = em_hex(raw, sizeof(raw));
+    cJSON *ops = em_start_marker_ops(hex);
+    free(hex);
+    const int counts[2] = {-1, -1};
+    cJSON *results = transact(a, ops);
+    em_reason r = results ? em_check_results(results, counts, 2) : EM_OUTCOME_UNKNOWN;
+    cJSON_Delete(results);
+    cJSON_Delete(ops);
+    if (r != EM_OK) {
+        WARN("the pod's start marker not written: %s", em_reason_name(r));
+        return;
+    }
+    a->start_writes++;
+    LOG("the pod's start marked (spec 3.10): its database had no start marker");
 }
 
 /* spec 2.5: a fresh session's log line, with what differs when the capabilities changed (the
@@ -610,6 +664,8 @@ static bool refresh(agent *a)
     a->pod_refused = refused;
     if (refused)
         return false;
+    if (a->profile.legacy)
+        mark_start(a, tables); /* spec 3.10: before the scopes read the pod */
     /* the bound radio: the profile's band in Config, its State with a MAC */
     const char *radio_uuid = NULL;
     cJSON_ArrayForEach(row, cJSON_GetObjectItemCaseSensitive(tables, "Wifi_Radio_Config"))
@@ -736,7 +792,8 @@ static bool refresh(agent *a)
         } else { /* another source: its own maxima, a fresh session */
             count(&a->reconnections_fresh, why);
             fresh_log(a, why, &caps);
-            new_start(a, "a fresh session");
+            if (!em_start_marker_used()) /* (with the marker: the same start, its own) */
+                new_start(a, "a fresh session");
             em_tlv_list_free(&caps);
             for (size_t k = 0; k < nreported; k++) {
                 const em_radio_view *r = reported[k].radio;
@@ -814,7 +871,8 @@ static bool refresh(agent *a)
         const char *why = same_identity(&a->caps, &caps) ? "fronthaul_moved" : "capabilities_changed";
         count(&a->reconnections_fresh, why);
         fresh_log(a, why, &caps);
-        new_start(a, "a fresh session");
+        if (!em_start_marker_used())
+            new_start(a, "a fresh session");
         em_tlv_list_free(&a->caps);
         a->caps = caps;
         a->max_eirp = max_eirp;
@@ -1051,7 +1109,10 @@ static void reconcile(agent *a)
             drifted = em_journal_count(a->radio_scopes[k].journal) && em_engine_drifted(&a->radio_scopes[k].engine);
         if (drifted) {
             a->reconnections_config_lost++;
-            new_start(a, "its configuration lost"); /* spec 3.10: a re-seed within the window */
+            /* spec 3.10: a re-seed within the window (with the start marker, its own new start;
+             * the configuration lost under the same one is not) */
+            if (!em_start_marker_used())
+                new_start(a, "its configuration lost");
             renew(a, "the pod's configuration is gone after its reconnection");
         }
     }
@@ -2477,8 +2538,12 @@ static cJSON *status(agent *a)
     if (a->reconnections_config_lost)
         cJSON_AddNumberToObject(reconnections, "config_lost", a->reconnections_config_lost);
     cJSON_AddItemToObject(reconnections, "fresh", counters_json(&a->reconnections_fresh, ""));
-    if (a->profile.legacy) { /* spec 3.10: a legacy pod's starts, counted by its agent's sessions, */
+    if (a->profile.legacy) { /* spec 3.10: a legacy pod's starts as its agent saw them (its start
+                              * markers, else its sessions) and the markers it wrote, */
         cJSON_AddNumberToObject(o, "session_starts", a->session_starts);
+        cJSON *marker = cJSON_AddObjectToObject(o, "start_marker");
+        cJSON_AddBoolToObject(marker, "on", em_start_marker_used());
+        cJSON_AddNumberToObject(marker, "writes", a->start_writes);
         /* and the oftags restored after an AP's write (each the second full reload of its authenticator) */
         cJSON_AddNumberToObject(o, "auth_reloads", a->auth_reloads);
         cJSON_AddNumberToObject(o, "bridge_ports", a->bridge_ports); /* the APs put into their bridge */
@@ -2709,11 +2774,13 @@ static bool configure(agent *a, const char *path, const char *profiles)
         em_profile_load(profile, &a->profile) != EM_OK)
         return false;
     if (a->profile.legacy) {
-        /* spec 3.10: the pod's starts counted by its agent's sessions, this one first */
+        /* spec 3.10: the pod's starts marked in its database (the agent's own token too, for a
+         * schema without Node_Config), this one first */
         if (!em_new_session_start()) {
             FAIL("no randomness for the pod's session start");
             return false;
         }
+        em_use_start_marker(true);
         a->session_starts = 1;
         /* spec 3.10: a legacy pod has no Multi-AP station (Wifi_Credential_Config without bssid,
          * priority or enabled): a GRE child's pin is its station's parent; its Ethernet uplink is
@@ -3023,9 +3090,11 @@ int main(int argc, char **argv)
         "Bridge:name,ports,fail_mode,controller,other_config,status", "Port:name,interfaces,tag,trunks,vlan_mode",
         "Interface:name,type,ofport,error,link_state,admin_state", "Openflow_Config:bridge,table,priority,rule,action,token",
         "Openflow_State:bridge,openflow_config,success,token",
-        /* the pods' modules (spec 4), only with modules configured: the last two */
+        /* the pods' modules (spec 4), only with modules configured: the last two (a legacy pod's
+         * Node_Config always, its start marker: spec 3.10) */
         "Node_Config:module,key,value,persist", "Node_State:module,key,value"};
-    size_t ntables = sizeof(tables) / sizeof(*tables) - (a.node_on ? 0 : 2);
+    /* (a legacy pod's Node_Config always: its start marker, spec 3.10) */
+    size_t ntables = sizeof(tables) / sizeof(*tables) - (a.node_on ? 0 : a.profile.legacy ? 1 : 2);
     a.ovs = em_ovsdb_open(cfg_str(a.config, "ovsdb"), tables, ntables);
     if (!a.ovs) {
         FAIL("cannot listen on %s", cfg_str(a.config, "ovsdb"));
@@ -3041,7 +3110,7 @@ int main(int argc, char **argv)
                          .transact = transact,
                          .transact_ctx = &a};
     em_engine_init(&a.ap_engine, a.journal, &a.vault, a.pod_id, em_ap_backend(), &a.ap, now);
-    a.ap_engine.mapping = a.profile.id; /* the AP scope plans under the pod's profile */
+    a.ap_engine.mapping = a.profile.mapping; /* the AP scope plans under the pod's profile (spec §5) */
     em_engine_recover(&a.ap_engine);
     /* spec 9: each of the profile's further radios is its own scope, configured by its own M2,
      * with its own journal (radio-<band>, as the reference's) */
@@ -3057,7 +3126,7 @@ int main(int argc, char **argv)
             return 1;
         }
         em_engine_init(&rs->engine, rs->journal, &a.vault, a.pod_id, em_ap_backend(), &rs->ap, now);
-        rs->engine.mapping = a.profile.id;
+        rs->engine.mapping = a.profile.mapping;
         em_engine_recover(&rs->engine);
         a.nradio_scopes++;
     }
@@ -3255,7 +3324,10 @@ int main(int argc, char **argv)
         size_t len;
         while ((len = em_ethernet_receive(&a.eth, frame, sizeof(frame))) > 0)
             receive_frame(&a, frame, len);
-        if (refreshed && source_current(&a))
+        /* spec 3.10: a legacy pod whose start is not marked yet (the refresh writes it) is no
+         * scope's to read: reconcile and the scopes wait for the marker */
+        bool marked = !(em_ovsdb_ready(a.ovs) && em_start_pending(em_ovsdb_tables(a.ovs)));
+        if (refreshed && marked && source_current(&a))
             reconcile(&a);
         if (refreshed && source_current(&a) && a.profile.legacy && !writing(&a)) {
             bridge_port(&a); /* spec 3.10: an AP of EMOSA's into its bridge, its oftag marked */
@@ -3265,23 +3337,24 @@ int main(int argc, char **argv)
         }
         /* the scopes step on the refresh cadence, also while the pod is away: a write
          * in flight times out */
-        if (refreshed && a.uplink_on)
+        bool step = refreshed && marked;
+        if (step && a.uplink_on)
             em_uplink_tick(&a.uplink);
-        if (refreshed && a.wired_on)
+        if (step && a.wired_on)
             em_wired_tick(&a.wired);
-        if (refreshed && a.gtp_on)
+        if (step && a.gtp_on)
             em_gtp_tick(&a.gtp);
-        if (refreshed && a.plan_on)
+        if (step && a.plan_on)
             em_plan_tick(&a.plan);
-        if (refreshed && a.node_on)
+        if (step && a.node_on)
             em_node_tick(&a.node);
-        if (refreshed && a.gre)
+        if (step && a.gre)
             em_gre_tick(a.gre);
-        if (refreshed && a.telemetry_on)
+        if (step && a.telemetry_on)
             em_telemetry_tick(&a.telemetry);
-        if (refreshed && a.steering_on)
+        if (step && a.steering_on)
             em_steering_tick(&a.steering);
-        if (refreshed && a.watch_on)
+        if (step && a.watch_on)
             em_watch_tick(&a.watch);
         write_status(&a);
     }

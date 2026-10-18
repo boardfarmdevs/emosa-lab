@@ -67,6 +67,7 @@ from emosa.opensync.easymesh_view import (
 from emosa.opensync.gre_parent import MONITOR as GRE_PARENT_MONITOR
 from emosa.opensync.gre_parent import GreParentBackend
 from emosa.opensync.gtp_station import GtpStationBackend, GtpStationIntent
+from emosa.opensync.mapping import check_results
 from emosa.opensync.node_config import MONITOR as NODE_CONFIG_MONITOR
 from emosa.opensync.node_config import NodeConfigBackend, NodeConfigIntent
 from emosa.opensync.pod_profile import BRIDGE_MONITOR, PodBackend, RadioBackend, wpa2_psk
@@ -92,7 +93,11 @@ from emosa.opensync.uplink import (
     lower_mac,
     new_session_start,
     start_instance,
+    start_marker,
+    start_marker_ops,
+    start_marker_used,
     uplink_state,
+    use_start_marker,
 )
 from emosa.opensync.uplink import MONITOR as UPLINK_MONITOR
 from emosa.opensync.wired import MONITOR as WIRED_MONITOR
@@ -138,6 +143,9 @@ REFRESH_PERIOD = 0.5
 # EMOSA's topology_query_window of 120 s in its lab), so a held agent never outlives the
 # controller's tolerance.
 RECONNECT_WINDOW = 60
+# spec 3.10: a legacy pod's start marker written again at most this often (s) in one database
+# generation while the pod still has none
+START_RETRY = 5
 # the band of a reported radio, by the operating class its capabilities advertise (spec 9)
 BAND_OF_OPERATING_CLASS = {
     opclass: band for band, classes in OPERATING_CLASSES.items() for opclass, _ in classes
@@ -289,16 +297,53 @@ class PodReportSource:
         self.instance = None  # the start of the pod's OpenSync last published (its radio rows)
         self.published_at = None  # when it was last published
         self.reconnections = {"continued": 0, "fresh": {}}
-        # spec 3.10: a legacy pod's starts as its agent counts them (its sessions), this one first
+        # spec 3.10: a legacy pod's starts as its agent sees them (its start markers, else its
+        # sessions), this one first; the marker's token as last read, and its writes
         self.session_starts = 1 if backend.profile.legacy else None
+        self.start_token = None
+        self.start_writes = 0
+        self.start_tried = None  # (database generation, monotonic time) of the last write
 
     def new_start(self, why):
-        """spec 3.10: a legacy pod's new start, counted by its agent's sessions (its radio rows
-        come back from its vendor's seed with the same UUIDs): a new ownership period, and the
-        writes made once per start written again where the pod lacks them (a re-claim)."""
-        new_session_start()
+        """spec 3.10: a legacy pod's new start (its radio rows come back from its vendor's seed
+        with the same UUIDs; its start marker tells the starts apart, else the agent's sessions
+        do): a new ownership period, and the writes made once per start written again where the
+        pod lacks them (a re-claim)."""
+        if not start_marker_used():
+            new_session_start()
         self.session_starts += 1
         log.info("a legacy pod's new start (%s): its configuration claimed again", why)
+
+    async def mark_start(self, raw):
+        """spec 3.10: a legacy pod's start marker read, or written where the pod has none (a
+        re-seed's or a reboot's database, or the first EMOSA with it): once per START_RETRY s in
+        one database generation. A token other than the last one read is a new start; the first
+        one read is this agent's own start (an EMOSA restart reads the pod's back)."""
+        if not raw["ready"] or not start_marker_used():
+            return
+        if "Node_Config" not in raw["schema"].db.tables:
+            use_start_marker(False)  # the agent's own token from now on (new_session_start)
+            log.warning("the pod's schema has no Node_Config: its starts counted by sessions")
+            return
+        token = start_marker(raw["tables"])
+        if token is not None:
+            if self.start_token is not None and token != self.start_token:
+                self.new_start("a new start marker")
+            self.start_token = token
+            return
+        now = time.monotonic()
+        tried = self.start_tried
+        if tried and tried[0] == raw["generation"] and now - tried[1] < START_RETRY:
+            return
+        self.start_tried = (raw["generation"], now)
+        try:
+            results = await self.backend.session.transact(start_marker_ops(secrets.token_hex(8)))
+            check_results(results, [None, None])
+        except (EmosaError, ConnectionError, TimeoutError) as exc:
+            log.warning("the pod's start marker not written: %s", exc)
+            return
+        self.start_writes += 1
+        log.info("the pod's start marked (spec 3.10): its database had no start marker")
 
     def _fresh_reason(self, device, instance, capabilities, now):
         """Why a new database generation is another pod source (spec 2.5), or None: it
@@ -340,8 +385,8 @@ class PodReportSource:
             reason.replace("_", " "),
             f": {what}" if what else "",
         )
-        if self.backend.profile.legacy:
-            self.new_start("a fresh session")
+        if self.backend.profile.legacy and not start_marker_used():
+            self.new_start("a fresh session")  # (with the marker: the same start, its own)
 
     def _represented(self, radio, bound):
         """The BSSes the agent represents: the bound one, then managed slot VIFs.
@@ -423,6 +468,8 @@ class PodReportSource:
         started = time.monotonic()
         try:
             raw = await self.backend.session.snapshot()
+            if self.backend.profile.legacy:
+                await self.mark_start(raw)  # spec 3.10: before the scopes read the pod
             _, _, _, state, rows = self.backend._binding(raw)
             ident = self.backend.identity
             if not raw["ready"] or not ident:
@@ -786,13 +833,19 @@ async def serve(config, stop):
     agent, controller = mac(config["al_mac"]), mac(config["controller_al"])
     profile = load_profile(config.get("profile", DEFAULT_PROFILE))
     if profile.legacy:
-        new_session_start()  # spec 3.10: the pod's starts counted by its agent's sessions
+        use_start_marker()  # spec 3.10: the pod's starts marked in its database
+        new_session_start()  # (the agent's own token, for a schema without Node_Config)
     session = OvsSession(
         config["ovsdb"],
         monitor_columns=(
             MONITOR  # the pods' modules' tables only with modules configured (spec 4)
             if config.get("modules")
-            else {t: c for t, c in MONITOR.items() if t not in NODE_CONFIG_MONITOR}
+            # (a legacy pod's Node_Config always: its start marker, spec 3.10)
+            else {
+                t: c
+                for t, c in MONITOR.items()
+                if t not in NODE_CONFIG_MONITOR or (profile.legacy and t == "Node_Config")
+            }
         ),
         timeout=2,
         schema_generation=profile.schema,
@@ -1162,12 +1215,14 @@ async def serve(config, stop):
             # spec 2.5: new database generations that continued the pod source (the session
             # kept when it was provisioned), and those that were another source, by reason
             "reconnections": report.reconnections,
-            # spec 3.10: a legacy pod's starts, counted by its agent's sessions, the oftags
-            # restored after an AP's write (each the second full reload of its authenticator),
-            # the APs EMOSA put into their bridge, and its writes of the pod's bridge mode
+            # spec 3.10: a legacy pod's starts as its agent saw them (its start markers, else its
+            # sessions) and the markers it wrote, the oftags restored after an AP's write (each
+            # the second full reload of its authenticator), the APs EMOSA put into their bridge,
+            # and its writes of the pod's bridge mode
             **(
                 {
                     "session_starts": report.session_starts,
+                    "start_marker": {"on": start_marker_used(), "writes": report.start_writes},
                     "auth_reloads": backend.auth_reloads,
                     "bridge_ports": backend.ports_added,
                     "bridge_mode_writes": backend.bridge_modes,
@@ -1354,7 +1409,9 @@ async def serve(config, stop):
                         report.reconnections["config_lost"] = (
                             report.reconnections.get("config_lost", 0) + 1
                         )
-                        if profile.legacy:  # spec 3.10: a re-seed within the window
+                        # spec 3.10: a re-seed within the window (with the start marker, its
+                        # own new start; the configuration lost under the same one is not)
+                        if profile.legacy and not start_marker_used():
                             report.new_start("its configuration lost")
                         lifecycle.renew()
                 now = time.monotonic()

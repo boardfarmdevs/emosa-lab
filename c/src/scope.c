@@ -11,9 +11,11 @@
 #include "ovs.h"
 #include "southbound.h"
 
-/* spec 3.10 (uplink._session_start): a legacy pod's start as its agent counts it, a token renewed
- * for every fresh session, empty on a 6.6 pod. One agent process serves one pod. */
+/* spec 3.10 (uplink._session_start, _start_marker): a legacy pod's start, its start marker's token
+ * (start_marker on), else the agent's own token renewed for every fresh session (a schema
+ * without Node_Config); empty and off on a 6.6 pod. One agent process serves one pod. */
 static char session_start[17];
+static bool start_marker_on;
 
 const cJSON *em_table(const cJSON *tables, const char *name)
 {
@@ -49,8 +51,16 @@ bool em_start_instance(const cJSON *tables, char out[17])
     for (i = 0; i < n; i++)
         cJSON_AddItemToArray(list, cJSON_CreateString(uuids[i]));
     free(uuids);
-    if (session_start[0]) /* a legacy pod's: its session's start too (spec 3.10) */
+    if (start_marker_on) { /* a legacy pod's: its start marker's token, none yet: not ready */
+        const char *token = em_start_marker(tables);
+        if (!token) {
+            cJSON_Delete(list);
+            return false; /* "the pod's start marker is not written yet" */
+        }
+        cJSON_AddItemToArray(list, cJSON_CreateString(token));
+    } else if (session_start[0]) { /* without the marker: its session's start (spec 3.10) */
         cJSON_AddItemToArray(list, cJSON_CreateString(session_start));
+    }
     char *text = em_json_dumps(list, EM_JSON_DEFAULT, false), hex[65];
     cJSON_Delete(list);
     em_sha256_hex(text, strlen(text), hex);
@@ -69,6 +79,57 @@ bool em_new_session_start(void)
     EM_FORMAT_FIXED(session_start, sizeof(session_start), "%s", hex);
     free(hex);
     return true;
+}
+
+void em_use_start_marker(bool on) { start_marker_on = on; }
+
+bool em_start_marker_used(void) { return start_marker_on; }
+
+const char *em_start_marker(const cJSON *tables)
+{
+    const cJSON *row;
+    cJSON_ArrayForEach(row, em_table(tables, "Node_Config"))
+    {
+        const char *module = ovs_str(row, "module"), *key = ovs_str(row, "key");
+        if (module && key && !strcmp(module, EM_START_MODULE) && !strcmp(key, EM_START_KEY)) {
+            const char *value = ovs_str(row, "value");
+            return value && *value ? value : NULL;
+        }
+    }
+    return NULL;
+}
+
+bool em_start_pending(const cJSON *tables) { return start_marker_on && !em_start_marker(tables); }
+
+cJSON *em_start_marker_ops(const char *token)
+{
+    cJSON *ops = cJSON_CreateArray(), *where = cJSON_CreateArray();
+    const char *const pairs[2][2] = {{"module", EM_START_MODULE}, {"key", EM_START_KEY}};
+    for (int i = 0; i < 2; i++) {
+        cJSON *cond = cJSON_CreateArray();
+        cJSON_AddItemToArray(cond, cJSON_CreateString(pairs[i][0]));
+        cJSON_AddItemToArray(cond, cJSON_CreateString("=="));
+        cJSON_AddItemToArray(cond, cJSON_CreateString(pairs[i][1]));
+        cJSON_AddItemToArray(where, cond);
+    }
+    cJSON *wait = cJSON_CreateObject();
+    cJSON_AddStringToObject(wait, "op", "wait");
+    cJSON_AddStringToObject(wait, "table", "Node_Config");
+    cJSON_AddItemToObject(wait, "where", where);
+    cJSON_AddItemToArray(cJSON_AddArrayToObject(wait, "columns"), cJSON_CreateString("module"));
+    cJSON_AddStringToObject(wait, "until", "==");
+    cJSON_AddArrayToObject(wait, "rows");
+    cJSON_AddNumberToObject(wait, "timeout", 0);
+    cJSON_AddItemToArray(ops, wait);
+    cJSON *insert = cJSON_CreateObject(), *row = cJSON_CreateObject();
+    cJSON_AddStringToObject(insert, "op", "insert");
+    cJSON_AddStringToObject(insert, "table", "Node_Config");
+    cJSON_AddStringToObject(row, "module", EM_START_MODULE);
+    cJSON_AddStringToObject(row, "key", EM_START_KEY);
+    cJSON_AddStringToObject(row, "value", token);
+    cJSON_AddItemToObject(insert, "row", row);
+    cJSON_AddItemToArray(ops, insert);
+    return ops;
 }
 
 bool em_row_legacy(const cJSON *row)
