@@ -52,6 +52,23 @@ def agent(request):
     return request.param
 
 
+@pytest.fixture
+def previous(agent):
+    # the upgrade scenarios: EMOSA_BOX_PREVIOUS, the tree of the release lab/upgrade-from names
+    # (its commit in .release), its C agent at EMOSA_BOX_PREVIOUS_C or built in c/build
+    tree = Path(os.environ.get("EMOSA_BOX_PREVIOUS") or "/nonexistent")
+    if not (tree / "src/emosa/agent/pod.py").is_file():
+        unavailable("EMOSA_BOX_PREVIOUS names no tree of the previous release")
+    binary = Path(os.environ.get("EMOSA_BOX_PREVIOUS_C") or tree / "c/build/emosa-agent-c")
+    if agent == "c" and not binary.exists():
+        unavailable(f"no previous C agent at {binary}")
+    wanted = (ROOT / "lab/upgrade-from").read_text().split()[0]
+    release = tree / ".release"
+    have = release.read_text().strip() if release.exists() else "no .release"
+    assert have == wanted, f"EMOSA_BOX_PREVIOUS is {have}, not {wanted}"
+    return tree
+
+
 def test_the_agent_takes_the_pod_and_searches_for_its_controller(agent, tmp_path):
     result = box("boot", agent, tmp_path / "box")
     assert result["passed"]
@@ -911,6 +928,39 @@ def test_a_legacy_pods_start_marker_outlives_an_emosa_restart_not_a_reseed(agent
     result = box("legacy-start-marker", agent, tmp_path / "box", timeout=420)
     assert result["passed"], result
     assert result["restart_same_start"] and result["conflict_kept_across_restart"]
+
+
+def test_a_legacy_pod_whose_database_refuses_its_start_marker_is_held_and_says_why(agent, tmp_path):
+    # spec 3.10, 5: tried every 5 s, the pod not ready and no other row written while a controller
+    # configures it; the status's pending_since and last_error; configured once the table has room
+    result = box("legacy-start-marker-refused", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+    assert result["rows_written_while_pending"] == []
+    marker = result["start_marker_while_pending"]
+    # a refusal at commit (RFC 7047: one result more than the operations) is OUTCOME_UNKNOWN to both
+    # agents' check of the results; the database's own error says what it was
+    assert marker["last_error"] == "OUTCOME_UNKNOWN: constraint violation"
+    assert marker["pending_since"]
+
+
+def test_a_legacy_parent_the_previous_release_configured_is_upgraded_as_a_new_start(
+    agent, previous, tmp_path
+):
+    # spec 3.10, 5: the image's flash, the pod's OpenSync not restarted: a new start and a remap,
+    # no ownership conflict, the marker the one row written (its tunnel untouched)
+    result = box("upgrade-legacy-parent", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+    assert result["rows_written"] == [["Node_Config", "emosa/start", "inserted"]]
+    assert not result["instance_kept"] and not result["ownership_conflicts"]
+
+
+def test_a_pi_parent_the_previous_release_configured_is_upgraded_as_a_remap_only(
+    agent, previous, tmp_path
+):
+    # the same on a 6.6 GRE parent of the Pis' kind: the same start, a remap, nothing written
+    result = box("upgrade-pi-parent", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+    assert result["rows_written"] == [] and result["instance_kept"]
 
 
 def test_a_legacy_pod_switched_to_the_5ghz_profile_takes_wl0_without_a_conflict(agent, tmp_path):

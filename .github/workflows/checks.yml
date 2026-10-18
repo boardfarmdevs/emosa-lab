@@ -371,6 +371,15 @@ jobs:
       - run: bash scripts/build-ovsdb.sh
       - run: python3 scripts/build-wsc-registrar.py
       - run: cmake -S c -B c/build ${{ matrix.flags }} && cmake --build c/build -j
+      - name: The previous release (the upgrade scenarios, lab/upgrade-from)
+        run: |
+          read -r ref _ < lab/upgrade-from
+          git fetch --no-tags --depth=1 origin "$ref"
+          mkdir -p "$RUNNER_TEMP/previous"
+          git archive "$ref" | tar -x -C "$RUNNER_TEMP/previous"
+          echo "$ref" > "$RUNNER_TEMP/previous/.release"
+          cmake -S "$RUNNER_TEMP/previous/c" -B "$RUNNER_TEMP/previous/c/build" ${{ matrix.flags }}
+          cmake --build "$RUNNER_TEMP/previous/c/build" -j
       - name: The scenarios
         run: |
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
@@ -378,6 +387,7 @@ jobs:
           # a sanitized binary stops at its first error, its report in the scenario's agent.log
           ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=print_stacktrace=1 \
           EMOSA_BOX_REQUIRED=1 EMOSA_BOX_AGENTS=${{ matrix.agent }} \
+          EMOSA_BOX_PREVIOUS="$RUNNER_TEMP/previous" \
             uv run pytest -m box --durations=10 --junitxml=box-results-${{ matrix.slug }}.xml
       - uses: actions/upload-artifact@v4
         if: always()

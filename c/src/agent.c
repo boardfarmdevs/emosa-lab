@@ -196,6 +196,10 @@ typedef struct {
     unsigned start_writes;   /* the markers it wrote */
     int start_tried_generation; /* the database generation and time of its last write */
     double start_tried_at;
+    /* since when (wall time, 0: marked) the pod's start has no marker, and why the last write
+     * failed ("" before one did): a pod whose database keeps refusing it stays not ready */
+    double start_pending_since;
+    char start_error[EM_START_ERROR_MAX];
     unsigned auth_reloads;   /* spec 3.10: the oftags auth_reload restored */
     unsigned bridge_ports;   /* spec 3.10: the APs bridge_port put into their bridge */
     unsigned bridge_modes;   /* spec 3.10: the writes bridge_mode made */
@@ -573,7 +577,9 @@ static void new_start(agent *a, const char *why)
 /* spec 3.10 (PodReportSource.mark_start): a legacy pod's start marker read, or written where the pod
  * has none (a re-seed's or a reboot's database, or the first EMOSA with it): once per START_RETRY s
  * in one database generation. A token other than the last one read is a new start; the first one
- * read is this agent's own start (an EMOSA restart reads the pod's back). */
+ * read is this agent's own start (an EMOSA restart reads the pod's back). Unmarked, the pod is not
+ * ready for any scope: since when, and why the last write failed, are in the status
+ * (start_marker.pending_since, last_error). */
 #define START_RETRY 5.0
 static void mark_start(agent *a, const cJSON *tables)
 {
@@ -589,8 +595,11 @@ static void mark_start(agent *a, const cJSON *tables)
         if (a->start_token[0] && strcmp(token, a->start_token))
             new_start(a, "a new start marker");
         EM_FORMAT_FIXED(a->start_token, sizeof(a->start_token), "%.16s", token);
+        a->start_pending_since = 0;
         return;
     }
+    if (a->start_pending_since <= 0)
+        a->start_pending_since = wall();
     int generation = em_ovsdb_generation(a->ovs);
     double t = now();
     if (a->start_tried_at > 0 && a->start_tried_generation == generation && t - a->start_tried_at < START_RETRY)
@@ -599,6 +608,7 @@ static void mark_start(agent *a, const cJSON *tables)
     a->start_tried_at = t;
     uint8_t raw[8];
     if (RAND_bytes(raw, sizeof(raw)) != 1) {
+        EM_FORMAT_FIXED(a->start_error, sizeof(a->start_error), "%s", "no randomness");
         WARN("the pod's start marker not written: no randomness");
         return;
     }
@@ -608,10 +618,12 @@ static void mark_start(agent *a, const cJSON *tables)
     const int counts[2] = {-1, -1};
     cJSON *results = transact(a, ops);
     em_reason r = results ? em_check_results(results, counts, 2) : EM_OUTCOME_UNKNOWN;
+    if (r != EM_OK)
+        em_start_marker_error(r, results, a->start_error, sizeof(a->start_error));
     cJSON_Delete(results);
     cJSON_Delete(ops);
     if (r != EM_OK) {
-        WARN("the pod's start marker not written: %s", em_reason_name(r));
+        WARN("the pod's start marker not written: %s", a->start_error);
         return;
     }
     a->start_writes++;
@@ -2544,6 +2556,14 @@ static cJSON *status(agent *a)
         cJSON *marker = cJSON_AddObjectToObject(o, "start_marker");
         cJSON_AddBoolToObject(marker, "on", em_start_marker_used());
         cJSON_AddNumberToObject(marker, "writes", a->start_writes);
+        if (a->start_pending_since > 0)
+            cJSON_AddNumberToObject(marker, "pending_since", a->start_pending_since);
+        else
+            cJSON_AddNullToObject(marker, "pending_since");
+        if (a->start_error[0])
+            cJSON_AddStringToObject(marker, "last_error", a->start_error);
+        else
+            cJSON_AddNullToObject(marker, "last_error");
         /* and the oftags restored after an AP's write (each the second full reload of its authenticator) */
         cJSON_AddNumberToObject(o, "auth_reloads", a->auth_reloads);
         cJSON_AddNumberToObject(o, "bridge_ports", a->bridge_ports); /* the APs put into their bridge */

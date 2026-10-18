@@ -66,6 +66,18 @@
         }
       }
     },
+    "start_marker": {
+      "type": "object",
+      "description": "spec 3.10: a legacy pod's start marker (EMOSA's Node_Config row emosa/start); absent on a 6.6 pod. Unmarked, the pod is not ready for any scope until a write takes.",
+      "required": ["on", "writes", "pending_since", "last_error"],
+      "additionalProperties": false,
+      "properties": {
+        "on": {"type": "boolean", "description": "false: the pod's schema has no Node_Config, its starts counted by the agent's sessions"},
+        "writes": {"type": "integer", "minimum": 0, "description": "the markers the agent wrote"},
+        "pending_since": {"type": ["number", "null"], "description": "since when (Unix time) the pod's database has had no marker; null while it has one"},
+        "last_error": {"type": ["string", "null"], "description": "why the agent's last write of a marker failed (its reason, and the database's error where it gave one, as OUTCOME_UNKNOWN: constraint violation for a full table); null before one failed"}
+      }
+    },
     "session": {"type": ["object", "null"], "description": "The onboarding session: state, counters and recent events.", "properties": {"state": {"enum": ["waiting_source", "discovering", "admitting", "awaiting_m2", "provisioning", "source_lost", "failed", "incompatible", "closed"]}}},
     "operations": {
       "type": "array",

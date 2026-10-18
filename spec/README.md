@@ -863,13 +863,25 @@ is everything above. For a legacy pod, all of this specification applies, except
   module (§4, the pods' modules). The status's `session_starts` counts the starts the agent saw
   (a legacy profile's only, its own first), `start_marker` says whether the marker is in use and
   how many the agent wrote, and the agent's log says each ("its configuration claimed again",
-  "the pod's start marked"). A legacy schema without `Node_Config` falls back to the agent's own
-  token, renewed for its first session, every fresh session and a `config_lost` reconnection.
+  "the pod's start marked"). A pod whose database keeps refusing the marker stays not ready (it
+  fails safe: nothing else is written to it), and `start_marker` says since when
+  (`pending_since`, Unix time, null while the pod has its marker) and why (`last_error`: the
+  last failed write's reason with the database's own error, as `OUTCOME_UNKNOWN: constraint
+  violation` for a full table: a refusal at commit has one result more than the operations,
+  RFC 7047, which both agents' check of the results reads as an unknown outcome; each try also
+  in the log). A legacy schema without `Node_Config` falls back to
+  the agent's own token, renewed for its first session, every fresh session and a `config_lost` reconnection.
   A 6.6 pod's start is its radio rows alone, as before. Both agents. Box `legacy-reseed-reclaim`,
   `legacy-reseed-reclaim-5g` (wl0 back on 36 at HT80 with its home AP),
-  `legacy-reseed-reclaim-late` (past the reconnection window) and `legacy-start-marker` (the
+  `legacy-reseed-reclaim-late` (past the reconnection window), `legacy-start-marker` (the
   marker read back after an EMOSA restart: the same instance, the M2 found applied, an ownership
-  conflict kept across the restart; a re-seed's new marker releasing it, the M2 written again).
+  conflict kept across the restart; a re-seed's new marker releasing it, the M2 written again),
+  `legacy-start-marker-refused` (the marker refused: no other row written, the status's
+  `pending_since` and `last_error`, the pod configured once the database takes it) and the
+  upgrades from the release before the marker (`lab/upgrade-from`), the pod's OpenSync not
+  restarted: `upgrade-legacy-parent` (a new start and a remap, no conflict, the marker the one
+  row written, the child's tunnel untouched) and `upgrade-pi-parent` (a 6.6 parent: the same
+  start, a remap only, nothing written).
 - **Not served** on a legacy pod, refused at the agent's start
   (`INVALID_INPUT`) or turned off and said so in the status:
   the uplink switch onto a Multi-AP backhaul (§8.3: no Multi-AP station on such a
@@ -1073,7 +1085,12 @@ Rules:
   restart, 18 October), what an earlier operation wrote is
   read under the new mapping, where it may no longer hold: that is not another
   manager's change either, so no ownership conflict, and the next operation begins
-  a new ownership period. An earlier operation's deadline still runs.
+  a new ownership period. An earlier operation's deadline still runs. Any change to a
+  profile file's bytes is such a remap, a layout change too: one new ownership period
+  per pod on that profile, at the first operation the agent plans under the new file
+  (an image that changes a profile, or the first image with this mapping, whose earlier
+  plans had the ID alone). A configuration the pod already runs is still not written
+  again.
 - An `INDETERMINATE` operation becomes `TIMED_OUT` once its deadline has passed
   and the pod does not show it applied: its current Config lacks the write (it
   never landed, or a restart dropped it), or has it while a fresh State does not

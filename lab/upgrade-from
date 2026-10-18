@@ -1,0 +1,1 @@
+8d1d764babbbf5d98a929d00254cdb094a80c945 the release the box's upgrade scenarios start from (its agents configure the pod, this tree's take it over); EMOSA_BOX_PREVIOUS is its tree (git archive), the commit in its .release, its C agent at EMOSA_BOX_PREVIOUS_C or in its c/build

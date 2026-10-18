@@ -94,6 +94,7 @@ from emosa.opensync.uplink import (
     new_session_start,
     start_instance,
     start_marker,
+    start_marker_error,
     start_marker_ops,
     start_marker_used,
     uplink_state,
@@ -303,6 +304,10 @@ class PodReportSource:
         self.start_token = None
         self.start_writes = 0
         self.start_tried = None  # (database generation, monotonic time) of the last write
+        # since when (wall time) the pod's start has no marker, and why the last write failed:
+        # a pod whose database keeps refusing it stays not ready, and the status says why
+        self.start_pending_since = None
+        self.start_error = None
 
     def new_start(self, why):
         """spec 3.10: a legacy pod's new start (its radio rows come back from its vendor's seed
@@ -318,7 +323,9 @@ class PodReportSource:
         """spec 3.10: a legacy pod's start marker read, or written where the pod has none (a
         re-seed's or a reboot's database, or the first EMOSA with it): once per START_RETRY s in
         one database generation. A token other than the last one read is a new start; the first
-        one read is this agent's own start (an EMOSA restart reads the pod's back)."""
+        one read is this agent's own start (an EMOSA restart reads the pod's back). Unmarked, the
+        pod is not ready for any scope: since when, and why the last write failed, are in the
+        status (start_marker.pending_since, last_error)."""
         if not raw["ready"] or not start_marker_used():
             return
         if "Node_Config" not in raw["schema"].db.tables:
@@ -329,18 +336,23 @@ class PodReportSource:
         if token is not None:
             if self.start_token is not None and token != self.start_token:
                 self.new_start("a new start marker")
-            self.start_token = token
+            self.start_token, self.start_pending_since = token, None
             return
+        if self.start_pending_since is None:
+            self.start_pending_since = time.time()
         now = time.monotonic()
         tried = self.start_tried
         if tried and tried[0] == raw["generation"] and now - tried[1] < START_RETRY:
             return
         self.start_tried = (raw["generation"], now)
+        results = None
         try:
             results = await self.backend.session.transact(start_marker_ops(secrets.token_hex(8)))
             check_results(results, [None, None])
         except (EmosaError, ConnectionError, TimeoutError) as exc:
-            log.warning("the pod's start marker not written: %s", exc)
+            code = getattr(exc, "code", Reason.OUTCOME_UNKNOWN)
+            self.start_error = start_marker_error(code, results)
+            log.warning("the pod's start marker not written: %s (%s)", self.start_error, exc)
             return
         self.start_writes += 1
         log.info("the pod's start marked (spec 3.10): its database had no start marker")
@@ -1222,7 +1234,12 @@ async def serve(config, stop):
             **(
                 {
                     "session_starts": report.session_starts,
-                    "start_marker": {"on": start_marker_used(), "writes": report.start_writes},
+                    "start_marker": {
+                        "on": start_marker_used(),
+                        "writes": report.start_writes,
+                        "pending_since": report.start_pending_since,
+                        "last_error": report.start_error,
+                    },
                     "auth_reloads": backend.auth_reloads,
                     "bridge_ports": backend.ports_added,
                     "bridge_mode_writes": backend.bridge_modes,

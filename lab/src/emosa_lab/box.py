@@ -17,10 +17,12 @@ root and touches no host interface.
 import argparse
 import asyncio
 import codecs
+import hashlib
 import json
 import os
 import signal
 import socket
+import sqlite3
 import struct
 import subprocess
 import sys
@@ -531,8 +533,16 @@ class Box:
         hidden_parent_profiles=False,
         phy_netdev_up=None,
         pi_shaped=False,
+        previous=False,
+        start_refused=False,
     ):
         self.agent, self.directory, self.binary = agent, directory, binary
+        # previous: the pod configured by the previous release's agent (previous_release()), on
+        # its own bundled profiles and schemas, until upgraded() starts this one on its state
+        self.previous = previous
+        # start_refused (legacy): the pod's Node_Config full (the schema allows one row, another
+        # module's): its database refuses EMOSA's start marker, constraint violation
+        self.start_refused = start_refused
         # pi_shaped (with bootstrap): the bootstrap on the 5 GHz station bhaul-sta-50 and the
         # 2.4 GHz one off on the pod's own network, as a Pi's (pi2, 17 October)
         self.pi_shaped = pi_shaped
@@ -629,8 +639,20 @@ class Box:
         network(self.interface)
         if self.legacy:  # OpenSync 2.0's schema as the legacy pod has it: no multi_ap
             self.schema = self.directory / "legacy.ovsschema"
-            self.schema.write_text(json.dumps(reference_schema(LEGACY)))
+            schema = reference_schema(LEGACY)
+            if self.start_refused:
+                schema["tables"]["Node_Config"]["maxRows"] = 1
+            self.schema.write_text(json.dumps(schema))
         tables, operations = recorded_pod(self.pod_rows, drop=self.drop)
+        if self.start_refused:  # the one row the table takes: another module's setting
+            operations = [
+                *operations,
+                {
+                    "op": "insert",
+                    "table": "Node_Config",
+                    "row": {"module": "hook", "key": "redirector", "value": "auto"},
+                },
+            ]
         self.serial = next(iter(tables["AWLAN_Node"].values()))["serial_number"]
         if self.foreign_broker:
             node = next(o for o in operations if o["table"] == "AWLAN_Node")
@@ -806,6 +828,18 @@ class Box:
             ),
             **({"EMOSA_NETNS": self.netns_path} if self.netns else {}),
         }
+        if self.previous:  # the previous release's agent first; upgraded() starts this one
+            tree = previous_release()
+            self.current = (self.binary, self.env)
+            self.binary = Path(
+                os.environ.get("EMOSA_BOX_PREVIOUS_C") or tree / "c/build/emosa-agent-c"
+            )
+            self.env = {
+                **self.env,
+                "PYTHONPATH": str(tree / "src"),
+                "EMOSA_SCHEMAS": str(tree / "schemas"),
+                "EMOSA_PROFILES": str(tree / "src/emosa/profiles"),
+            }
         if self.reply_cut:
             await self.reply_cut.start()
         await self.start(config, fleet)
@@ -1065,7 +1099,8 @@ async def apply_configuration(db):
             kind = auth_reload(state, row) if legacy else None
             db.applied.append((name, kind, oftag))
             if kind == "full":  # the authenticator's start: it hears the AP's bridge, when up
-                bridge = row.get("bridge")
+                bridge = row.get("bridge")  # unset (an empty set) on a seed's operator AP
+                bridge = bridge if isinstance(bridge, str) else None
                 db.served[name] = not bridge or (
                     name in members.get(bridge, set()) and up.get(bridge, True)
                 )
@@ -7815,6 +7850,292 @@ async def legacy_start_marker(box):
     )
 
 
+def row_name(row):
+    """A raw row's name for a result: its if_name, name or module/key, else its UUID."""
+    if isinstance(row.get("module"), str) and isinstance(row.get("key"), str):
+        return f"{row['module']}/{row['key']}"
+    for column in ("if_name", "name", "hwaddr"):
+        if isinstance(row.get(column), str) and row[column]:
+            return row[column]
+    return row["_uuid"][1]
+
+
+def versions(raw):
+    """{table: {uuid: (name, _version)}} of raw rows (seed_rows')."""
+    return {
+        table: {r["_uuid"][1]: (row_name(r), r["_version"][1]) for r in rows}
+        for table, rows in raw.items()
+    }
+
+
+async def pod_versions(box):
+    """Every row of the pod's database as versions() gives it."""
+    return versions(await seed_rows(box.db, box.schema or reference_path()))
+
+
+# what the box's own managers and stations write (wm, nm, the DHCP server); every other table is
+# written by the agent only
+POD_MANAGED = ("Wifi_Associated_Clients", "DHCP_leased_IP")
+
+
+def rows_written(before, after):
+    """The rows the agent wrote between two pod_versions(): [(table, name, how)], how inserted,
+    deleted or updated; the State tables and POD_MANAGED left out."""
+    written = []
+    for table in sorted(set(before) | set(after)):
+        if table.endswith("_State") or table in POD_MANAGED:
+            continue
+        old, new = before.get(table, {}), after.get(table, {})
+        for uuid in sorted(set(old) | set(new)):
+            if uuid not in old:
+                written.append((table, new[uuid][0], "inserted"))
+            elif uuid not in new:
+                written.append((table, old[uuid][0], "deleted"))
+            elif old[uuid][1] != new[uuid][1]:
+                written.append((table, new[uuid][0], "updated"))
+    return written
+
+
+def start_marker_tries(box):
+    """The agent's failed writes of the pod's start marker, as its log has them."""
+    try:
+        return (box.directory / "agent.log").read_text().count("start marker not written")
+    except OSError:
+        return 0
+
+
+async def legacy_start_marker_refused(box):
+    """spec 3.10, 5 (18 October): a legacy pod whose database refuses EMOSA's start marker (its
+    Node_Config full: the schema allows one row, another module's). The agent tries again every
+    5 s; the pod stays not ready, and while a controller configures it the agent writes nothing
+    else to it, though its seed has the operator's APs and onboarding stations: every row as the
+    seed made it; the controller's M2 refused, NOT_READY. The status says since when and why
+    (start_marker.pending_since, last_error OUTCOME_UNKNOWN: constraint violation: a refusal at
+    commit has one result more than the operations, RFC 7047, which both agents' check of the
+    results reads as an unknown outcome). Once the table has room the next try writes the marker,
+    and the pod is configured."""
+    started = time.time()
+    t0 = time.monotonic()
+
+    async def waited():
+        return time.monotonic() - t0 > 22
+
+    await serve_radios(box, waited, seconds=30)
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    status = box.status() or {}
+    marker = status.get("start_marker") or {}
+    written = rows_written(versions(box.seed), await pod_versions(box))
+    held_states = operation_states(box)
+    tries = start_marker_tries(box)
+    since = marker.get("pending_since")
+    held = (
+        not written
+        and not await start_markers(box)
+        and marker.get("on") is True
+        and marker.get("writes") == 0
+        and marker.get("last_error") == "OUTCOME_UNKNOWN: constraint violation"
+        and isinstance(since, (int, float))
+        and started - 30 < since <= time.time()
+        and tries >= 3
+        and not any(state == "OBSERVED_APPLIED" for state, _ in held_states)
+    )
+    hook = [u for u, r in (await box.rows("Node_Config")).items() if r.get("module") == "hook"]
+    await box.transact(
+        [{"op": "delete", "table": "Node_Config", "where": [["_uuid", "==", ["uuid", hook[0]]]]}]
+    )
+    room = time.monotonic()
+    before = len(status.get("operations") or [])
+
+    async def configured():
+        ops = (box.status() or {}).get("operations") or []
+        return bool(await start_markers(box)) and all_applied(ops[before:])
+
+    done = await serve_radios(box, configured, searches=searches, m1s=m1s, seconds=60)
+    marked_after = time.monotonic() - room
+    after = (box.status() or {}).get("start_marker") or {}
+    markers = await start_markers(box)
+    return box.result(
+        passed=held
+        and done is not None
+        and len(markers) == 1
+        and after.get("writes") == 1
+        and after.get("pending_since") is None,
+        held=held,
+        rows_written_while_pending=written,
+        operations_while_pending=[list(s) for s in held_states],
+        tries=tries,
+        start_marker_while_pending=marker,
+        configured_once_room=done is not None,
+        seconds_to_configured=round(marked_after, 1),
+        start_marker_after=after,
+    )
+
+
+def previous_release():
+    """The previous release's tree for the upgrade scenarios (EMOSA_BOX_PREVIOUS; lab/upgrade-from
+    names the commit), its C agent at EMOSA_BOX_PREVIOUS_C or built in its c/build."""
+    path = os.environ.get("EMOSA_BOX_PREVIOUS")
+    if not path or not (Path(path) / "src/emosa/agent/pod.py").is_file():
+        raise RuntimeError("EMOSA_BOX_PREVIOUS names no tree of the previous release")
+    return Path(path).resolve()
+
+
+async def upgraded(box, done):
+    """This release's image flashed over the previous one's: the previous release's agent killed
+    and this one started on its journal and state (on the gateway's flash, kept) with its
+    configuration, on the bundled profiles; the pod's OpenSync not restarted. Every Search and M1
+    answered until done(operations before) holds. False at the deadline."""
+    box.process.kill()
+    box.process.wait(10)
+    box.binary, box.env = box.current
+    box.command = agent_command(
+        box.agent, box.directory / "agent.json", box.binary, box.env["EMOSA_PROFILES"]
+    )
+    operations = len((box.status() or {}).get("operations") or [])
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    box.restart_agent()
+    found = await serve_radios(box, lambda: done(operations), searches=searches, m1s=m1s)
+    return found is not None
+
+
+def journal_mappings(box, scope="journal"):
+    """The mappings the AP scope's operations were planned under, oldest first, from the agent's
+    journal (spec §5); None if it cannot be read."""
+    path = box.status_path.parent / scope / "journal.db"
+    try:
+        db = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+        try:
+            rows = db.execute("SELECT record FROM operations ORDER BY rowid").fetchall()
+        finally:
+            db.close()
+        records = [json.loads(r) for (r,) in rows]
+    except (sqlite3.Error, ValueError):
+        return None
+    return [(r.get("plan") or {}).get("mapping") for r in records]
+
+
+async def upgrade(box, parent, ready, lease, tunnel):
+    """spec 3.10, 5 (18 October): a GRE parent the previous release's agent configured, a child on
+    its tunnel (``lease`` its address there, ``tunnel`` its Inet row), upgraded to this release
+    with the pod's OpenSync not restarted. The result's parts: what the upgrade wrote, the
+    operations after it, the instances and mappings before and after; or a failed result."""
+    _, failure = await gre_parent_up(box, parent)
+    if failure:
+        return failure
+    await ready(box)
+    await box.transact(
+        [
+            {
+                "op": "insert",
+                "table": "DHCP_leased_IP",
+                "row": {"hwaddr": GRE_CHILD_MAC, "inet_addr": lease},
+            }
+        ]
+    )
+    await box.client_join(GRE_CHILD_MAC, parent)
+    made = await gre_await_tunnel(box, tunnel, present=True)
+    await gre_nm_apply(box)
+    if not (made and await gre_await_applied(box)):
+        return box.result(
+            passed=False, failed="the child's tunnel not made on the previous release"
+        )
+    await asyncio.sleep(3)  # the previous agent's scopes past their steps
+    onboard = last_operation(box)
+    before, mapped = await pod_versions(box), journal_mappings(box)
+    count = len((box.status() or {}).get("operations") or [])
+
+    async def settled(operations):
+        ops = (box.status() or {}).get("operations") or []
+        return len(ops) > operations and all_applied(ops[operations:])
+
+    flashed = await upgraded(box, settled)
+    await asyncio.sleep(10)  # this release's scopes past their first steps on the pod
+    status = box.status() or {}
+    after = status.get("operations") or []
+    states = operation_states(box) + [
+        (op.get("state"), op.get("reason"))
+        for ops in (status.get("radio_operations") or {}).values()
+        for op in ops
+        if isinstance(op, dict)
+    ]
+    gre = status.get("gre_parent") or {}
+    return {
+        "flashed": flashed,
+        "written": rows_written(before, await pod_versions(box)),
+        "new_operations": after[count:],
+        "conflicts": [s for s in states if "OWNERSHIP_CONFLICT" in s]
+        + ([gre] if "OWNERSHIP_CONFLICT" in json.dumps(gre) else []),
+        "instances": [evidence_instance(onboard), evidence_instance(last_operation(box))],
+        "mappings": [(mapped or [None])[-1], (journal_mappings(box) or [None])[-1]],
+        "tunnel": await gre_inet(box, tunnel),
+        "status": status,
+    }
+
+
+def noop(op):
+    return bool(((op or {}).get("application_evidence") or {}).get("observed_noop"))
+
+
+def upgrade_result(box, got, *, profile, new_start, written):
+    """The upgrade's result against what this pod kind should show: ``written`` the rows the
+    upgrade writes, ``new_start`` whether it is a new start of the pod (spec 3.10)."""
+    if "flashed" not in got:
+        return got
+    first, last = got["instances"]
+    previous, mapping = got["mappings"]
+    fingerprint = hashlib.sha256(
+        (ROOT / "src/emosa/profiles" / f"{profile}.json").read_bytes()
+    ).hexdigest()[:12]
+    status = got["status"]
+    return box.result(
+        passed=got["flashed"]
+        and not got["conflicts"]
+        and got["written"] == written
+        and bool(got["new_operations"])
+        and all(noop(op) for op in got["new_operations"])
+        and (first != last if new_start else first == last)
+        and previous == profile
+        and mapping == f"{profile}@{fingerprint}"
+        and got["tunnel"] is not None,
+        rows_written=got["written"],
+        writes=len(got["written"]),
+        ownership_conflicts=got["conflicts"],
+        operations_after=[(op.get("state"), noop(op)) for op in got["new_operations"]],
+        instance_kept=first == last,
+        mappings=got["mappings"],
+        backhaul_tunnel=bool(got["tunnel"]),
+        start_marker=status.get("start_marker"),
+        session_starts=status.get("session_starts"),
+    )
+
+
+async def upgrade_legacy_parent(box):
+    """spec 3.10, 5 (18 October): the step an image's flash takes on a converted pod. The
+    previous release's agent (8d1d764: the start the agent's own session, the mapping the
+    profile's ID) configures a legacy pod as GRE parent, a child on its tunnel; then this
+    release's starts on its journal, the pod's OpenSync not restarted. The pod has no start
+    marker: a new start (another instance) and a remap (ID@fingerprint), so no ownership conflict;
+    the fresh session's M2 and every scope find the pod as configured (observed_noop). The one
+    row written is the marker; the parent AP, its Inet row and the child's tunnel untouched."""
+    got = await upgrade(box, LEGACY_PARENT, legacy_parent_ready, LEGACY_CHILD_IP, "pgd5_10")
+    return upgrade_result(
+        box,
+        got,
+        profile=LEGACY_PROFILE,
+        new_start=True,
+        written=[("Node_Config", "emosa/start", "inserted")],
+    )
+
+
+async def upgrade_pi_parent(box):
+    """upgrade-legacy-parent on a 6.6 pod of the Pis' kind as GRE parent (pi1's), a child on its
+    tunnel: the same start (its radio rows'), a remap only, no conflict, every scope's operation
+    observed_noop, and nothing written: its parent AP, its Inet row, the child's tunnel and its
+    br-home port untouched."""
+    got = await upgrade(box, GRE_AP, gre_parent_ready, GRE_CHILD_IP, "pgd2_10")
+    return upgrade_result(box, got, profile=GRE_PROFILE, new_start=False, written=[])
+
+
 def node_config_status(box):
     return (box.status() or {}).get("node_config") or {}
 
@@ -8338,6 +8659,9 @@ SCENARIOS = {
     "legacy-reseed-reclaim-5g": legacy_reseed_reclaim,
     "legacy-reseed-reclaim-late": legacy_reseed_reclaim_late,
     "legacy-start-marker": legacy_start_marker,
+    "legacy-start-marker-refused": legacy_start_marker_refused,
+    "upgrade-legacy-parent": upgrade_legacy_parent,
+    "upgrade-pi-parent": upgrade_pi_parent,
     "legacy-profile-5g": legacy_profile_5g,
     "legacy-gtp-station-unassociated": legacy_gtp_station_unassociated,
     "legacy-cloud-cleared": legacy_cloud_cleared,
@@ -8630,6 +8954,11 @@ OPTIONS["legacy-gre-move"] = {
         "secret_ref": "backhaul",
     },
 }
+# spec 3.10, 5: the start marker refused (Node_Config full), on the seed-stations pod
+OPTIONS["legacy-start-marker-refused"] = {**OPTIONS["legacy-seed-stations"], "start_refused": True}
+# the previous release's agent configures each GRE parent kind, then this one takes it over
+OPTIONS["upgrade-legacy-parent"] = {**OPTIONS["legacy-parent"], "previous": True}
+OPTIONS["upgrade-pi-parent"] = {**OPTIONS["gre-parent-child"], "previous": True}
 
 
 async def run(scenario, agent, directory, *, binary=None):

@@ -32,6 +32,11 @@ const char *em_start_marker(const cJSON *tables);
 bool em_start_pending(const cJSON *tables);
 /* The marker's guarded insert, only where the pod has none (start_marker_ops): the caller's. */
 cJSON *em_start_marker_ops(const char *token);
+/* Why the marker's write failed, as the status gives it (start_marker_error): the reason, and the
+ * database's own error in `results` (NULL: none) where it gave one, "INVALID_INPUT: constraint
+ * violation"; `size` at least EM_START_ERROR_MAX (a reason name and 64 bytes of the error). */
+#define EM_START_ERROR_MAX 96
+void em_start_marker_error(em_reason reason, const cJSON *results, char *out, size_t size);
 /* The 6.6 osw encoding of WPA2-PSK/CCMP with one PSK slot, or on a legacy pod (spec 3.10) the
  * security map's encryption WPA-PSK and a key (radio_scope.wpa2_psk). */
 bool em_row_wpa2_psk(const cJSON *row);

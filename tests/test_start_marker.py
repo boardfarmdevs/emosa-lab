@@ -20,6 +20,7 @@ from emosa.opensync.uplink import (
     START_MODULE,
     start_instance,
     start_marker,
+    start_marker_error,
     start_marker_ops,
     start_pending,
 )
@@ -103,7 +104,7 @@ def source(session):
         profile=types.SimpleNamespace(legacy=True), session=session
     )
     report.session_starts, report.start_token, report.start_writes = 1, None, 0
-    report.start_tried = None
+    report.start_tried = report.start_pending_since = report.start_error = None
     return report
 
 
@@ -146,15 +147,46 @@ def test_an_agent_writes_a_marker_where_the_pod_has_none_once_per_retry(marked, 
 
 
 def test_a_marker_not_taken_is_logged_and_tried_again_later(marked, monkeypatch, caplog):
-    session = Session([{}, {"error": "constraint violation"}])
+    session = Session([{}, {"error": "constraint violation", "details": "too many rows"}])
     report = source(session)
     clock = [100.0]
     monkeypatch.setattr("emosa.agent.pod.time.monotonic", lambda: clock[0])
+    monkeypatch.setattr("emosa.agent.pod.time.time", lambda: 1_760_000_000.0 + clock[0])
     asyncio.run(report.mark_start(raw({})))
     assert report.start_writes == 0 and "start marker not written" in caplog.text
+    # the status says why, and since when the pod has been unmarked (not ready)
+    assert report.start_error == "INVALID_INPUT: constraint violation"
+    assert report.start_pending_since == 1_760_000_100.0
     clock[0] += 6
     asyncio.run(report.mark_start(raw({})))
-    assert len(session.sent) == 2
+    assert len(session.sent) == 2 and report.start_pending_since == 1_760_000_100.0
+    # taken at last: the marker read back, the pod no longer pending (its last error kept)
+    asyncio.run(report.mark_start(raw(marker("0123456789abcdef"))))
+    assert report.start_pending_since is None
+    assert report.start_error == "INVALID_INPUT: constraint violation"
+
+
+def test_a_marker_refused_at_commit_is_an_unknown_outcome_with_the_databases_error(
+    marked, monkeypatch
+):
+    # RFC 7047: a refusal at commit (a constraint violation) has one result more than the
+    # operations, which the agents' check reads as an unknown outcome; the error says what it was
+    session = Session([{}, {"uuid": ["uuid", "u"]}, {"error": "constraint violation"}])
+    report = source(session)
+    monkeypatch.setattr("emosa.agent.pod.time.monotonic", lambda: 100.0)
+    asyncio.run(report.mark_start(raw({})))
+    assert report.start_writes == 0
+    assert report.start_error == "OUTCOME_UNKNOWN: constraint violation"
+
+
+def test_a_marker_writes_failure_is_its_reason_and_the_databases_error():
+    assert start_marker_error(Reason.PRECONDITION_FAILED, [{"error": "timed out"}, {}]) == (
+        "PRECONDITION_FAILED: timed out"
+    )
+    assert start_marker_error(Reason.OUTCOME_UNKNOWN) == "OUTCOME_UNKNOWN"
+    assert start_marker_error(Reason.INVALID_INPUT, [{}, {"error": "x" * 100}]) == (
+        "INVALID_INPUT: " + "x" * 64
+    )
 
 
 def test_a_profiles_mapping_is_its_id_and_its_files_content(tmp_path):

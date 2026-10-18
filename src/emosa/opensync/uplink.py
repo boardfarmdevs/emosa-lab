@@ -240,6 +240,17 @@ def start_marker_ops(token):
     ]
 
 
+def start_marker_error(code, results=None):
+    """Why the marker's write failed, as the status gives it: the reason, and the database's own
+    error where it gave one, of an operation or of the commit ("OUTCOME_UNKNOWN: constraint
+    violation": a refusal at commit has one result more than the operations, RFC 7047)."""
+    for result in results if isinstance(results, list) else ():
+        error = result.get("error") if isinstance(result, dict) else None
+        if isinstance(error, str) and error:
+            return f"{code}: {error[:64]}"
+    return str(code)
+
+
 def start_instance(decoded):
     """Which start of the pod's OpenSync: a hash of its radio rows' UUIDs.
 

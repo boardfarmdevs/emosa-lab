@@ -1689,6 +1689,26 @@ static void start_marker(void)
               !cJSON_GetObjectItemCaseSensitive(row, "persist"),
           "its row: EMOSA's module, never persist");
     cJSON_Delete(ops);
+    /* why a write failed, as the status gives it (start_marker_error's cases) */
+    char why[EM_START_ERROR_MAX];
+    cJSON *results = cJSON_Parse("[{\"error\": \"timed out\"}, {}]");
+    em_start_marker_error(EM_PRECONDITION_FAILED, results, why, sizeof(why));
+    CHECK(!strcmp(why, "PRECONDITION_FAILED: timed out"), "the database's error: %s", why);
+    cJSON_Delete(results);
+    em_start_marker_error(EM_OUTCOME_UNKNOWN, NULL, why, sizeof(why));
+    CHECK(!strcmp(why, "OUTCOME_UNKNOWN"), "no results: %s", why);
+    char long_error[101], expected[96];
+    memset(long_error, 'x', 100);
+    long_error[100] = 0;
+    results = cJSON_CreateArray();
+    cJSON_AddItemToArray(results, cJSON_CreateObject());
+    cJSON *failed = cJSON_CreateObject();
+    cJSON_AddStringToObject(failed, "error", long_error);
+    cJSON_AddItemToArray(results, failed);
+    em_start_marker_error(EM_INVALID_INPUT, results, why, sizeof(why));
+    snprintf(expected, sizeof(expected), "INVALID_INPUT: %.64s", long_error);
+    CHECK(!strcmp(why, expected), "a long error, its first 64 bytes: %s", why);
+    cJSON_Delete(results);
 }
 
 int main(int argc, char **argv)
