@@ -58,6 +58,14 @@ static em_profile own_slots(const em_ap_scope *s)
     return em_profile_slots_on(s->profile, band_of(s), s->multi_bss);
 }
 
+/* the parent AP's ssid_broadcast as set_parent renders it: the profile's gre_parent.vif, else
+ * hidden (PodBackend._parent_vif) */
+static const char *parent_broadcast(const em_profile *p)
+{
+    const char *v = str(p->gre_parent_vif, "ssid_broadcast");
+    return v ? v : "disabled";
+}
+
 static bool ssid_ok(const char *s)
 {
     size_t n = s ? strlen(s) : 0;
@@ -348,10 +356,22 @@ static cJSON *additional(const em_ap_scope *s, const cJSON *tables, bool states)
         /* a Multi-AP backhaul BSS, or the GRE parent AP (spec 8.6) as a parent renders it, not a
          * Multi-AP BSS (multi_ap none or unset): a Multi-AP BSS left in a parent's slot (a pod
          * promoted to GRE parent while onboarded, finding A) keeps its own value, so that the
-         * intent is not satisfied and the slot is converted (PodBackend.role) */
+         * intent is not satisfied and the slot is converted (PodBackend.role). Its Config row
+         * needs the profile's ssid_broadcast too (one an earlier profile wrote hidden keeps a role
+         * of its own, so that its next M2 writes the flag); its State is not judged by the flag,
+         * which a pod's wm need not echo */
         const char *role = multi_ap && !strcmp(multi_ap, "backhaul_bss") ? "backhaul" : "fronthaul";
-        if (em_profile_parent_slot(&own, name))
+        char hidden[64];
+        if (em_profile_parent_slot(&own, name)) {
             role = !multi_ap || !strcmp(multi_ap, "none") ? "backhaul" : multi_ap;
+            const char *broadcast = ovs_str(row, "ssid_broadcast");
+            if (!states && !strcmp(role, "backhaul") &&
+                (!broadcast || strcmp(broadcast, parent_broadcast(s->profile)))) {
+                EM_FORMAT_FIXED(hidden, sizeof(hidden), "backhaul, ssid_broadcast %.24s",
+                                broadcast && *broadcast ? broadcast : "unset");
+                role = hidden;
+            }
+        }
         cJSON_AddItemToArray(entry, cJSON_CreateString(role));
         cJSON_AddItemToArray(entry, em_row_string(row, "ssid"));
         char fp[65];

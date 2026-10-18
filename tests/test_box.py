@@ -784,6 +784,14 @@ def test_an_agent_on_an_older_profile_still_sets_the_home_aps_rekey_and_ft(agent
     assert result["bridge_mode"]["vif"] == [86400, 0]
 
 
+def test_a_parent_ap_an_older_image_hid_is_unhidden_by_one_write(agent, tmp_path):
+    # spec 3.10, 8.6 (17 October): a converted pod's wl1.1 written hidden before its profiles
+    # broadcast it; the next image writes it once, then finds it applied
+    result = box("legacy-parent-unhide", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+    assert result["writes_after_flash"] == 1 and result["noop_after_restart"]
+
+
 def test_a_legacy_pods_backhaul_bss_is_its_gre_parent_ap_on_its_underlay(agent, tmp_path):
     # spec 3.10, 8.6: the former manager's 169.254.2.1 on wl1.1 replaced by the pod's underlay
     result = box("legacy-parent", agent, tmp_path / "box", timeout=240)

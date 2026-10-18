@@ -528,6 +528,7 @@ class Box:
         seeded_fronthaul=False,
         vendor_bridges=False,
         old_profiles=False,
+        hidden_parent_profiles=False,
         phy_netdev_up=None,
         pi_shaped=False,
     ):
@@ -545,6 +546,9 @@ class Box:
         # old_profiles: the agents read the profiles as an image before 15 October has them (the
         # legacy ones' fronthaul rows without group_rekey and ft_psk), a binary deployed alone
         self.old_profiles = old_profiles
+        # hidden_parent_profiles: the agents start on the profiles as an image before 17 October
+        # has them (the legacy GRE profiles' parent AP hidden)
+        self.hidden_parent_profiles = hidden_parent_profiles
         # phy_netdev_up: the fleet's setting for the radios' own netdevs (spec 3.10), when set; the
         # agents' default (on) otherwise
         self.phy_netdev_up = phy_netdev_up
@@ -794,7 +798,11 @@ class Box:
             **os.environ,
             "EMOSA_SCHEMAS": str(ROOT / "schemas"),
             "EMOSA_PROFILES": str(
-                old_profiles(self.directory) if self.old_profiles else ROOT / "src/emosa/profiles"
+                old_profiles(self.directory)
+                if self.old_profiles
+                else hidden_parent_profiles(self.directory)
+                if self.hidden_parent_profiles
+                else ROOT / "src/emosa/profiles"
             ),
             **({"EMOSA_NETNS": self.netns_path} if self.netns else {}),
         }
@@ -4251,6 +4259,22 @@ async def with_profile(box, profile, done):
     return found is not None
 
 
+async def on_profiles(box, profiles, done):
+    """An image with other profiles flashed (spec 3.10): the agent killed and started again on
+    its journal reading the profiles in ``profiles``, its configuration and the pod's OpenSync
+    start unchanged, and every Search and M1 answered until done(operations before) holds. False
+    at the deadline."""
+    box.process.kill()
+    box.process.wait(10)
+    box.env["EMOSA_PROFILES"] = str(profiles)
+    box.command = agent_command(box.agent, box.directory / "agent.json", box.binary, profiles)
+    operations = len((box.status() or {}).get("operations") or [])
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    box.restart_agent()
+    found = await serve_radios(box, lambda: done(operations), searches=searches, m1s=m1s)
+    return found is not None
+
+
 async def pod_own_rows(box):
     """The pod's own rows as a GRE parent's changes must leave them: its Inet rows and VIFs other
     than EMOSA's (the fronthaul, the slots, the tunnels), and br-home's ports other than the
@@ -6277,6 +6301,85 @@ async def legacy_parent(box):
     )
 
 
+async def row_version(box, table, uuid):
+    """The pod's row's _version (a new one at every write of the row), or None."""
+    (result,) = await db_transact(
+        box.db,
+        [
+            {
+                "op": "select",
+                "table": table,
+                "where": [["_uuid", "==", ["uuid", uuid]]],
+                "columns": ["_version"],
+            }
+        ],
+    )
+    rows = result.get("rows") or []
+    return rows[0]["_version"] if rows else None
+
+
+async def legacy_parent_unhide(box):
+    """spec 3.10, 8.6: a converted pod whose GRE parent AP wl1.1 an image before 17 October wrote
+    hidden (its profiles' gre_parent.vif without ssid_broadcast), with the M2's SSID and key. The
+    agent on the bundled profiles (the image with the change flashed, the pod's OpenSync not
+    restarted) writes the same row once, now broadcasting, its SSID and key unchanged; started
+    again after that, it finds the set applied (observed_noop), writes the row no more and takes
+    nothing as drifted. wm's State in the box never echoes ssid_broadcast, as a pod's need not."""
+    ap, failure = await gre_parent_up(box, LEGACY_PARENT)
+    if failure:
+        return failure
+    uuid, before = await box.vif("Wifi_VIF_Config", LEGACY_PARENT)
+    if before.get("ssid_broadcast") != "disabled":
+        return box.result(passed=False, failed="wl1.1 not written hidden on the older profiles")
+    bundled = ROOT / "src/emosa/profiles"
+    hidden = await row_version(box, "Wifi_VIF_Config", uuid)
+
+    async def settled(operations):
+        await apply_configuration(box.db)
+        ops = (box.status() or {}).get("operations") or []
+        return len(ops) > operations and all_applied(ops[operations:])
+
+    def noop(op):
+        return bool((op.get("application_evidence") or {}).get("observed_noop"))
+
+    count = len((box.status() or {}).get("operations") or [])
+    flashed = await on_profiles(box, bundled, settled)
+    ops = (box.status() or {}).get("operations") or []
+    unhide = ops[count:]
+    after_uuid, after = await box.vif("Wifi_VIF_Config", LEGACY_PARENT)
+    shown = await row_version(box, "Wifi_VIF_Config", uuid)
+    count = len(ops)
+    restarted = await on_profiles(box, bundled, settled)
+    again = ((box.status() or {}).get("operations") or [])[count:]
+    _, last = await box.vif("Wifi_VIF_Config", LEGACY_PARENT)
+    kept = await row_version(box, "Wifi_VIF_Config", uuid)
+    lost = ((box.status() or {}).get("reconnections") or {}).get("config_lost", 0)
+    same = {
+        k: ((after or {}).get(k), before.get(k)) for k in ("ssid", "security", "bridge", "enabled")
+    }
+    return box.result(
+        passed=flashed
+        and after_uuid == uuid
+        and (after or {}).get("ssid_broadcast") == "enabled"
+        and all(a == b for a, b in same.values())
+        and [noop(op) for op in unhide].count(False) == 1
+        and shown != hidden
+        and restarted
+        and all(noop(op) for op in again)
+        and kept == shown
+        and (last or {}).get("ssid_broadcast") == "enabled"
+        and not lost,
+        same_row=after_uuid == uuid,
+        broadcast=[before.get("ssid_broadcast"), (after or {}).get("ssid_broadcast")],
+        unchanged={k: a == b for k, (a, b) in same.items()},
+        writes_after_flash=[noop(op) for op in unhide].count(False),
+        row_written=shown != hidden,
+        noop_after_restart=[noop(op) for op in again],
+        row_written_after_restart=kept != shown,
+        config_lost=lost,
+    )
+
+
 async def bridge_members(box, bridge):
     """The Port names in the pod's Bridge `bridge`."""
     ports = await box.rows("Port")
@@ -6507,6 +6610,19 @@ def old_profiles(directory):
         if data.get("schema") == "opensync-2.0":
             for column in ("group_rekey", "ft_psk"):
                 data["fronthaul"]["vif"].pop(column, None)
+        (out / path.name).write_text(json.dumps(data, indent=2) + "\n")
+    return out
+
+
+def hidden_parent_profiles(directory):
+    """The bundled profiles as an image before 17 October has them: the legacy GRE profiles'
+    parent AP hidden (their gre_parent.vif without ssid_broadcast). The directory written."""
+    out = directory / "profiles-hidden-parent"
+    out.mkdir(exist_ok=True)
+    for path in (ROOT / "src/emosa/profiles").glob("*.json"):
+        data = json.loads(path.read_text())
+        if data.get("schema") == "opensync-2.0" and data.get("backhaul_mode") == "gre-parent":
+            data["gre_parent"]["vif"].pop("ssid_broadcast", None)
         (out / path.name).write_text(json.dumps(data, indent=2) + "\n")
     return out
 
@@ -8085,6 +8201,7 @@ SCENARIOS = {
     "legacy-bridge-mode": legacy_bridge_mode,
     "legacy-bridge-mode-repair": legacy_bridge_mode_repair,
     "legacy-bridge-mode-old-profile": legacy_bridge_mode_repair,
+    "legacy-parent-unhide": legacy_parent_unhide,
     "legacy-phy-netdev": legacy_phy_netdev,
     "legacy-phy-netdev-foreign": legacy_phy_netdev_foreign,
     "legacy-parent": legacy_parent,
@@ -8310,6 +8427,8 @@ OPTIONS["legacy-bridge-mode-old-profile"] = {
     "old_profiles": True,
 }
 OPTIONS["legacy-parent"] = {"legacy": True, "multi_bss": True, "underlay": LEGACY_UNDERLAY}
+# a pod converted by an image before 17 October (wl1.1 hidden), the agent then on the bundled ones
+OPTIONS["legacy-parent-unhide"] = {**OPTIONS["legacy-parent"], "hidden_parent_profiles": True}
 OPTIONS["legacy-parent-child"] = OPTIONS["legacy-parent"]
 OPTIONS["legacy-parent-child-gone"] = OPTIONS["legacy-parent"]
 OPTIONS["legacy-pod-6-6-profile"] = {"legacy": True, "profile": PLAIN_PROFILE}

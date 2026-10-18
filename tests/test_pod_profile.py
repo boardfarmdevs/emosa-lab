@@ -414,8 +414,33 @@ def test_a_gre_parent_pods_backhaul_bss_is_its_parent_ap(tmp_path):
     # the fronthaul slots stay Multi-AP, and the parent AP is a backhaul BSS for the
     # configured set and the view
     assert rows["Wifi_VIF_Config", "fh-24"]["multi_ap"] == "fronthaul_bss"
-    assert pod.role({"if_name": "b-ap-24", "multi_ap": "none"}) == "backhaul"
+    assert pod.role({"if_name": "b-ap-24", "multi_ap": "none", "ssid_broadcast": "disabled"}) == (
+        "backhaul"
+    )
     assert pod.parent_aps == {"b-ap-24"}
+
+
+def test_a_parent_ap_is_the_backhaul_only_with_the_profiles_broadcast(tmp_path):
+    """Spec 8.6: a parent AP's Config row is the backhaul only with the profile's ssid_broadcast
+    too. One written hidden before its profile broadcast it (a converted pod's wl1.1 before 17
+    October) keeps a role of its own, so that the intent is not satisfied and its next M2 writes
+    the flag; its State is judged without it, as a pod's wm need not echo it."""
+    hidden = {"if_name": "b-ap-24", "multi_ap": "none", "ssid_broadcast": "disabled"}
+    shown = {**hidden, "ssid_broadcast": "enabled"}
+    (tmp_path / "shown").mkdir()
+    (tmp_path / "plain").mkdir()
+    pod = gre_parent(tmp_path / "shown", vif={"ssid_broadcast": "enabled"})
+    assert pod.role(shown) == "backhaul"
+    assert pod.role(hidden) == "backhaul, ssid_broadcast disabled"
+    assert pod.role({"if_name": "b-ap-24", "multi_ap": "none"}) == "backhaul, ssid_broadcast unset"
+    assert pod.role(hidden, config=False) == "backhaul"
+    assert pod.role({"if_name": "b-ap-24"}, config=False) == "backhaul"
+    # a Multi-AP BSS left in the slot keeps its own value, whatever its flag
+    assert pod.role({**shown, "multi_ap": "backhaul_bss"}) == "backhaul_bss"
+    # the default profile hides its parent AP: a hidden row is the backhaul, a broadcasting not
+    plain = gre_parent(tmp_path / "plain")
+    assert plain.role(hidden) == "backhaul"
+    assert plain.role(shown) == "backhaul, ssid_broadcast enabled"
 
 
 def test_a_profile_may_declare_additional_radios(tmp_path):
@@ -479,6 +504,7 @@ def with_parent_ap_50(raw=None):
         "ssid": "mesh_backhaul",
         "enabled": True,
         "multi_ap": "none",
+        "ssid_broadcast": "disabled",  # the profile's (hidden: its gre_parent.vif sets none)
         **SECURITY,
         "wpa_psks": ["map", [["key", "ExtraKey3-2026"]]],
     }

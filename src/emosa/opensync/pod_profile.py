@@ -686,7 +686,7 @@ class PodBackend(OpenSyncBackend):
                 extras = self._extras(decoded, radio_uuid)
                 configured["additional"] = self._additional(e["config"] for e in extras.values())
                 observed["additional"] = self._additional(
-                    e["state"] for e in extras.values() if e["state"]
+                    (e["state"] for e in extras.values() if e["state"]), config=False
                 )
             fresh = raw["ready"] and bool(state)
             ready = fresh or bool(raw["ready"] and self.identity and vif_uuid is None)
@@ -724,25 +724,33 @@ class PodBackend(OpenSyncBackend):
         except EmosaError:
             return None
 
-    def role(self, row):
+    def role(self, row, config=True):
         """A slot row's role: a Multi-AP backhaul BSS, or the GRE parent AP. A parent AP's slot is
         the backhaul only as a parent renders it, not a Multi-AP BSS (multi_ap none, or unset): a
         Multi-AP BSS left in it (a pod promoted to GRE parent while onboarded, finding A) keeps its
-        own value, so that the intent is not satisfied and the slot is converted."""
+        own value, so that the intent is not satisfied and the slot is converted. Its Config row
+        (``config``) needs the profile's ssid_broadcast too: one an earlier profile wrote hidden
+        (a converted pod's wl1.1 before 17 October) keeps a role of its own, so that its next M2
+        writes the flag. Its State is not judged by the flag, which a pod's wm need not echo."""
         multi_ap = row.get("multi_ap")
         if row.get("if_name") in self.parent_aps:
-            return "backhaul" if multi_ap in (None, "none") else multi_ap
+            if multi_ap not in (None, "none"):
+                return multi_ap
+            broadcast = row.get("ssid_broadcast")
+            if config and broadcast != self._parent_vif()["ssid_broadcast"]:
+                return f"backhaul, ssid_broadcast {broadcast or 'unset'}"
+            return "backhaul"
         return "backhaul" if multi_ap == "backhaul_bss" else "fronthaul"
 
-    def _additional(self, rows):
-        """Sorted [role, ssid, key fingerprint] of extra BSS rows (Config or State)."""
+    def _additional(self, rows, config=True):
+        """Sorted [role, ssid, key fingerprint] of extra BSS rows (Config, or State)."""
         values = []
         for row in rows:
             key = psk(row) if wpa2_psk(row) else None
             usable = row.get("mode") == "ap" and row.get("enabled") is True
             values.append(
                 [
-                    self.role(row),
+                    self.role(row, config),
                     row.get("ssid"),
                     self.vault.fingerprint(key) if key is not None and usable else None,
                 ]
@@ -1362,7 +1370,7 @@ class RadioBackend(PodBackend):
                     self.bss_id,
                     {
                         "additional": self._additional(
-                            e["state"] for e in extras.values() if e["state"]
+                            (e["state"] for e in extras.values() if e["state"]), config=False
                         )
                     },
                     "ovsdb",

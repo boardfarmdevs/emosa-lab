@@ -1466,9 +1466,16 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
   and four scans finding nothing, 17 October), its move back to a broadcasting parent 12 s in
   all. Only the parent AP changes: a legacy pod's fronthaul broadcasts as before, its unclaimed APs
   stay hidden, and an AP beacons either way, so the vendor healthcheck (§3.10) sees no change.
-  When the parent AP is made from the seed's row, the flag rides on that write; on a pod
-  whose parent AP is already written hidden, the one write that unhides it may rebuild the VIF
-  (a few seconds without beacons, at most one failing healthcheck round, as for a key change).
+  When the parent AP is made from the seed's row, the flag rides on that write. A pod converted
+  before (its `wl1.1` written hidden by an earlier image, with the M2's SSID and key) gets it
+  too: the slot's Config row is the parent AP only with the profile's `ssid_broadcast` as well
+  (`gre_parent.vif`'s, hidden when it sets none), so the hidden row keeps a role of its own, the
+  intent is not satisfied and the first M2 after the new image (the agent's start) writes the
+  same row once; after that the set is applied (`observed_noop`) and nothing is written or
+  taken as drifted. The row's State is judged without the flag, which a pod's `wm` need not
+  echo, else the write would never be seen applied. That one write may rebuild the VIF (a few
+  seconds without beacons, at most one failing healthcheck round, as for a key change). Both
+  agents (box `legacy-parent-unhide`).
   The parent AP is named `b-ap-<band>` (`b-ap-24` on the 2.4 GHz radio,
   `b-ap-50` on 5 GHz), as the OpenSync cloud and `local-noc` name it, so the pod's own
   fallback can find it. The slot is the parent AP only as a parent renders it: a Multi-AP
