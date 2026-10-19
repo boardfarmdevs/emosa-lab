@@ -57,8 +57,10 @@ class RadioPlan:
             self.engine._save(op)
 
     def key(self):
-        """At most one write per OpenSync start."""
-        return f"{self.backend.instance}:radio-plan"
+        """At most one write per OpenSync start and plan: a start EMOSA continues (the same start
+        marker after an EMOSA restart) gets one more when the plan changed."""
+        wanted = self.engine.vault.fingerprint(self.intent.record())
+        return f"{self.backend.instance}:radio-plan:{wanted[:16]}"
 
     def _wanted(self, op, snap):
         if not snap.ready:

@@ -39,13 +39,29 @@ from pathlib import Path
 from emosa.agent.gre_parent import GreTunnels
 from emosa.agent.gtp_station import RETRY, UNASSOCIATED, GtpStation
 from emosa.agent.node_config import NodeConfig
-from emosa.agent.peers import PeerDirectory, children, loops, mac_bytes, parent_bssids, upstream
+from emosa.agent.peers import (
+    PeerDirectory,
+    ap_state,
+    children,
+    loops,
+    mac_bytes,
+    parent_bssids,
+    upstream,
+)
 from emosa.agent.probe_watch import ProbeWatch
 from emosa.agent.radio_plan import RadioPlan
 from emosa.agent.renew import CONTROLLER_TIMEOUT, M2_TIMEOUT, RenewRules
 from emosa.agent.steering import ClientSteering
 from emosa.agent.telemetry import MqttSubscriber, TelemetrySetup
-from emosa.agent.uplink import HOLD_BACKOFF, HOLD_BACKOFF_CAP, UplinkSwitch, m2_backhaul
+from emosa.agent.uplink import (
+    HOLD_BACKOFF,
+    HOLD_BACKOFF_CAP,
+    KEPT_BACKOFF,
+    KEPT_TRIES,
+    PARENT_WAIT_CAP,
+    UplinkSwitch,
+    m2_backhaul,
+)
 from emosa.agent.wired import WiredUplink
 from emosa.config import validate
 from emosa.errors import EmosaError, Reason
@@ -267,8 +283,18 @@ class PodReportSource:
     chooses what the agent represents and keeps the report source current.
     """
 
-    def __init__(self, backend, binding, pod_id, stations=(), directory=None):
+    def __init__(self, backend, binding, pod_id, stations=(), directory=None, aps_path=None):
         self.backend, self.binding = backend, binding
+        # spec 8.3: the pod's APs enabled in its Wifi_VIF_State on its current start, as
+        # of the last refresh (none while the pod is away), and every AP of the pod seen, kept in
+        # ``aps_path`` so that a restarted agent still names them while its pod is away: a child
+        # whose kept backhaul target is one of them waits for it
+        self.aps_up, self.aps_known, self.aps_path = frozenset(), set(), aps_path
+        try:
+            known = json.loads(aps_path.read_text()) if aps_path else []
+            self.aps_known = {b for b in known if isinstance(b, str) and mac_bytes(b)}
+        except (OSError, ValueError, TypeError):
+            pass
         # the pod's backhaul stations: the one cm uses as a Multi-AP uplink is its EasyMesh
         # backhaul (option 1); each is a backhaul STA radio of the pod (spec 8.3)
         self.stations = tuple(s for s in stations if s)
@@ -487,6 +513,7 @@ class PodReportSource:
             if not raw["ready"] or not ident:
                 raise EmosaError(Reason.NOT_READY, "bound radio State unavailable")
             device = device_view(rows, parent_aps=self.backend.parent_aps)
+            self._aps(frozenset(b.bssid.hex(":") for r in device.radios for b in r.bsses))
             radio = device.radio(mac(ident["radio_mac"]))
             if radio is None:
                 raise EmosaError(Reason.NOT_READY, "bound radio absent from the view")
@@ -742,8 +769,25 @@ class PodReportSource:
             mismatch = isinstance(exc, EmosaError) and exc.code == Reason.SCHEMA_MISMATCH
             self.refused = Reason.SCHEMA_MISMATCH.value if mismatch else None
             self.facts = None
+            self.aps_up = frozenset()
             self.source.invalidate()
             return False
+
+    def _aps(self, up):
+        """The pod's APs up on this refresh; a new one is kept as known (``aps_path``)."""
+        self.aps_up = up
+        if up <= self.aps_known:
+            return
+        self.aps_known |= up
+        if self.aps_path is not None:
+            try:
+                self.aps_path.write_text(json.dumps(sorted(self.aps_known)) + "\n")
+            except OSError as exc:
+                log.warning("the pod's known APs not kept: %s", exc)
+
+    def ap_up(self, also=()):
+        """Each AP of the pod known (and ``also``, its GRE parent APs), True while it is up."""
+        return {b: b in self.aps_up for b in sorted(self.aps_known | set(also))}
 
     _clients = None
     _unavailable = None
@@ -971,6 +1015,14 @@ async def serve(config, stop):
             else lambda: parent_bssids(directory.peers()),
             hold_backoff=uplink_config.get("hold_backoff", HOLD_BACKOFF),
             hold_backoff_cap=uplink_config.get("hold_backoff_cap", HOLD_BACKOFF_CAP),
+            # spec 8.3: a kept target on another fleet pod waits for that pod's AP, read
+            # from the peers' statuses as the parent set is
+            parent_ap=(lambda bssid: None)
+            if directory is None
+            else lambda bssid: ap_state(directory.peers(), bssid),
+            kept_tries=uplink_config.get("kept_tries", KEPT_TRIES),
+            kept_backoff=uplink_config.get("kept_backoff", KEPT_BACKOFF),
+            parent_wait_cap=uplink_config.get("parent_wait_cap", PARENT_WAIT_CAP),
         )
     wired = None
     if uplink_config["mode"] == WIRED:  # a wired pod: its uplink port into br-home (spec §8.4)
@@ -1187,7 +1239,9 @@ async def serve(config, stop):
     binding = PeerBinding(config["interface"], 1, agent, controller, (controller,))
     # every backhaul station of the pod, the one it bootstraps on first (spec 8.3)
     stations = tuple(dict.fromkeys((station, *(s for _, s in backend.profile.uplink_stations))))
-    report = PodReportSource(backend, binding, pod_id, stations, directory)
+    report = PodReportSource(
+        backend, binding, pod_id, stations, directory, aps_path=state_dir / "aps.json"
+    )
     mids = MidSequence(secrets.randbelow(65536))
     run_id = config.get("run_id", pod_id)
     # EasyMesh message set toward this controller: easymesh-6.1 unless the
@@ -1215,6 +1269,8 @@ async def serve(config, stop):
     def status():
         snapshot = report.source.current()
         ops = [operation_status(op) for op in store.operations()]
+        gre_parent = tunnels.status() if tunnels else None
+        gre_aps = (gre_parent or {}).get("ap_bssid")
         return {
             "pod_id": pod_id,
             "profile": backend.profile.id,
@@ -1279,7 +1335,12 @@ async def serve(config, stop):
             ),
             "steering": {"mode": "owm", **steering.status()} if steering else {"mode": "off"},
             "probe_watch": watch.status() if watch else None,
-            "gre_parent": tunnels.status() if tunnels else None,
+            "gre_parent": gre_parent,
+            # spec 8.3: each AP of the pod known, True while up (the fleet's children
+            # whose kept backhaul target it is wait for it), its GRE parent APs among them
+            "ap_up": report.ap_up(
+                str(b).lower() for b in (gre_aps if isinstance(gre_aps, list) else [gre_aps]) if b
+            ),
             "gtp_station": gtp_station.status() if gtp_station else None,
             "radio_plan": radio_plan.status() if radio_plan else None,
             "node_config": node_config.status() if node_config else None,

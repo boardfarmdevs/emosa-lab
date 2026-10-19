@@ -843,11 +843,19 @@ void em_gtp_tick(em_gtp_scope *g)
     /* GtpStation._wanted */
     op = em_journal_latest(g->journal);
     cJSON *owned = em_journal_ownership(g->journal, g->intent.pod_id);
-    char key[56]; /* one write per start and station, one more after each removal */
+    /* one write per start, station and credential (a start EMOSA continues gets one more when the
+     * credential changed), one more after each removal */
+    char key[80], fp[65];
+    em_reason fp_why;
+    cJSON *rec = record(&g->intent), *t = target(g, rec, &fp_why); /* NULL: an unusable credential */
+    if (!em_engine_fingerprint(&g->engine, rec, t, fp))
+        fp[0] = '\0';
+    cJSON_Delete(t);
+    cJSON_Delete(rec);
     if (g->attempt)
-        EM_FORMAT_FIXED(key, sizeof(key), "%s:%s:%u", g->instance, g->intent.station, g->attempt);
+        EM_FORMAT_FIXED(key, sizeof(key), "%s:%s:%.16s:%u", g->instance, g->intent.station, fp, g->attempt);
     else
-        EM_FORMAT_FIXED(key, sizeof(key), "%s:%s", g->instance, g->intent.station); /* 16+1+15 */
+        EM_FORMAT_FIXED(key, sizeof(key), "%s:%s:%.16s", g->instance, g->intent.station, fp); /* 16+1+15+1+16 */
     cJSON *done = NULL;
     bool wanted = false;
     double now = g->monotonic();

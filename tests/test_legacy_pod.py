@@ -728,6 +728,27 @@ def test_a_seeded_legacy_pods_gtp_station_is_written_in_one_transaction(tmp_path
     assert ops[5]["row"] == {"enabled": True, "network": True}  # the seed's scheme stays
 
 
+def test_a_gtp_stations_write_is_one_per_start_and_credential(tmp_path):
+    """spec 3.10 (19 October, the bench): a start EMOSA continues (the same start marker after an
+    EMOSA restart) gets one more write when the station's credential changed; the same
+    credential keeps the key, so it is not written again."""
+    from emosa.agent.gtp_station import GtpStation
+    from emosa.opensync.gtp_station import GtpStationIntent
+    from emosa.store import Store
+
+    pod = SeededPod()
+    backend, intent, vault = gtp(tmp_path, pod)
+    asyncio.run(backend.snapshot())
+
+    def key(i):
+        return GtpStation("pod-1", backend, Store(tmp_path / "gtp"), vault, i, run_id="t").key()
+
+    assert key(intent) == key(GtpStationIntent("pod-1", "wl1", "site-gtp", "gtp"))
+    assert key(intent) != key(GtpStationIntent("pod-1", "wl1", "site-gtp-2", "gtp"))
+    vault.write_simulated("gtp2", GTP_KEY + "x")
+    assert key(intent) != key(GtpStationIntent("pod-1", "wl1", "site-gtp", "gtp2"))
+
+
 def test_a_pinned_gtp_station_on_a_pod_without_its_inet_row(tmp_path):
     pod = SeededPod(inet=False)
     backend, intent, _ = gtp(tmp_path, pod, bssid=GTP_PIN)

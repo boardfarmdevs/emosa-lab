@@ -18,6 +18,13 @@
 /* a failed switch's hold: the first wait before the switch is made again, and the longest */
 #define EM_UPLINK_HOLD_BACKOFF 600
 #define EM_UPLINK_HOLD_BACKOFF_CAP 9600
+/* a kept backhaul target on another fleet pod (spec 8.3): the switches made to it with that
+ * pod's AP up before it is given up, the wait after a failed one (doubled after each), and how
+ * long it waits for that AP at most (seconds of wall time) */
+#define EM_UPLINK_KEPT_TRIES 3
+#define EM_UPLINK_KEPT_BACKOFF 120
+#define EM_UPLINK_PARENT_WAIT_CAP 1800
+#define EM_UPLINK_PARENT_WAITING "kept target waiting for its parent"
 
 typedef struct {
     em_ovsdb *ovs;
@@ -41,6 +48,9 @@ typedef struct {
      * wall clock it is kept in (NULL: time()) */
     double hold_backoff, hold_backoff_cap;
     double (*wall)(void);
+    /* a kept target on another fleet pod (0: EM_UPLINK_KEPT_TRIES, EM_UPLINK_KEPT_BACKOFF,
+     * EM_UPLINK_PARENT_WAIT_CAP) */
+    double kept_tries_max, kept_backoff, parent_wait_cap;
     /* credentials: fixed (configuration) or the backhaul BSS of an applied M2 set: the AP scope's
      * first, then each further radio's scope (spec 9: a pod whose fronthaul radio maps no backhaul
      * BSS has it only in its 5 GHz radio's set) */
@@ -60,6 +70,10 @@ typedef struct {
      * not Multi-AP); NULL: no parents known, every target is Multi-AP */
     bool (*is_parent)(void *ctx, const uint8_t bssid[6]);
     void *is_parent_ctx;
+    /* spec 8.3: whether the fleet pod whose AP bssid is has it up: 1, 0, or -1 when no
+     * fleet agent says (em_peers_ap_state); NULL: -1 */
+    int (*ap_state)(void *ctx, const uint8_t bssid[6]);
+    void *ap_state_ctx;
     em_journal *journal;
     em_engine engine;
     char instance[17];
@@ -83,6 +97,12 @@ typedef struct {
     } move;
     char waiting[128];
     bool has_waiting;
+    /* spec 8.3: the kept target's switches that failed with its parent's AP up (kept in target.json),
+     * its retry after a failed one, and its wait for its parent's AP */
+    unsigned kept_tries;
+    bool has_kept_retry, has_parent_wait;
+    char retry_target[18], retry_station[33], retry_mode[10], wait_bssid[18];
+    double retry_at, wait_since;
     /* spec 8.6: the BSS the station was on before any EMOSA move (its bootstrap upstream, cm's own
      * association), recorded once and persisted, so a steer back to it is a revert */
     char bootstrap_bssid[18], bootstrap_ssid[65];

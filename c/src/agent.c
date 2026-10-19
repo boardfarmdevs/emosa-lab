@@ -308,6 +308,11 @@ typedef struct {
     size_t nradios;
     bool peers_on;              /* the fleet's other agents (spec §8.5): with a run_dir */
     em_peers peers;
+    /* spec §8.3: every AP of the pod seen (an enabled VIF with a MAC in its State), kept
+     * in <state_dir>/aps.json so that a restarted agent still names them while its pod is away;
+     * the status says which are up (ap_up), for the fleet's children whose kept target one is */
+    uint8_t aps_known[EM_PEER_APS][6];
+    size_t naps_known;
     em_backhaul_link links[16]; /* the Wi-Fi backhaul's 1905 neighbors, as of the last refresh */
     size_t nlinks;
     em_early early; /* the Early AP Capability Report awaiting its Ack */
@@ -538,6 +543,15 @@ static bool upstream_is_parent(void *ctx, const uint8_t bssid[6])
     return em_peers_is_parent(&a->peers, bssid);
 }
 
+/* spec §8.3: whether the fleet pod whose AP bssid is has it up (the uplink scope's
+ * parent-AP hook): a kept target on another fleet pod waits for it */
+static int upstream_ap_state(void *ctx, const uint8_t bssid[6])
+{
+    agent *a = ctx;
+    em_peers_read(&a->peers, now());
+    return em_peers_ap_state(&a->peers, bssid);
+}
+
 static void close_session(agent *a, em_session_state end);
 
 /* the pod's backhaul stations: the configured one (or the profile's) first, then the profile's
@@ -660,6 +674,104 @@ static const char *fresh_reason(const agent *a, const em_device_view *view, cons
     if (!same_identity(caps, &a->caps))
         return "capabilities_changed";
     return NULL;
+}
+
+static bool ap_known(const agent *a, const uint8_t bssid[6])
+{
+    for (size_t i = 0; i < a->naps_known; i++)
+        if (!memcmp(a->aps_known[i], bssid, 6))
+            return true;
+    return false;
+}
+
+static void aps_path(const agent *a, char *out, size_t n)
+{
+    EM_FORMAT_FIXED(out, n, "%s/aps.json", a->state_dir); /* EM_STATE_DIR_MAX */
+}
+
+/* spec 8.3: the pod's APs seen on this refresh among those known; a new one kept in aps.json */
+static void note_aps(agent *a)
+{
+    bool grew = false;
+    for (size_t r = 0; r < a->view.nradios; r++)
+        for (size_t b = 0; b < a->view.radios[r].nbss; b++) {
+            const uint8_t *bssid = a->view.radios[r].bss[b].bssid;
+            if (!ap_known(a, bssid) && a->naps_known < EM_PEER_APS) {
+                memcpy(a->aps_known[a->naps_known++], bssid, 6);
+                grew = true;
+            }
+        }
+    if (!grew)
+        return;
+    cJSON *list = cJSON_CreateArray();
+    for (size_t i = 0; i < a->naps_known; i++) {
+        char *text = em_mac_str(a->aps_known[i]);
+        cJSON_AddItemToArray(list, cJSON_CreateString(text));
+        free(text);
+    }
+    char path[700], *body = em_json_dumps(list, EM_JSON_DEFAULT, false);
+    cJSON_Delete(list);
+    aps_path(a, path, sizeof(path));
+    if (!body || !em_write_file(path, body, false))
+        WARN("the pod's known APs not kept in %s", path);
+    free(body);
+}
+
+/* the APs aps.json keeps (a file on the disk: an entry that is not a MAC is not an AP) */
+static void load_aps(agent *a)
+{
+    char path[700];
+    aps_path(a, path, sizeof(path));
+    char *body = em_read_file(path, 1 << 16, NULL);
+    cJSON *list = body ? cJSON_Parse(body) : NULL, *x;
+    free(body);
+    if (cJSON_IsArray(list)) {
+        cJSON_ArrayForEach(x, list)
+        {
+            uint8_t mac[6];
+            if (cJSON_IsString(x) && em_parse_mac(x->valuestring, mac) && !ap_known(a, mac) &&
+                a->naps_known < EM_PEER_APS)
+                memcpy(a->aps_known[a->naps_known++], mac, 6);
+        }
+    }
+    cJSON_Delete(list);
+}
+
+static int by_text(const void *x, const void *y) { return strcmp(*(char *const *)x, *(char *const *)y); }
+
+static bool source_current(agent *a);
+
+/* spec 8.3: each AP of the pod known (and its GRE parent APs, gre_aps from its status), true while
+ * enabled in the pod's Wifi_VIF_State on its current start with the report source live */
+static cJSON *ap_up_status(agent *a, const cJSON *gre_aps)
+{
+    char *names[EM_PEER_APS * 2];
+    size_t n = 0;
+    for (size_t i = 0; i < a->naps_known; i++)
+        names[n++] = em_mac_str(a->aps_known[i]);
+    /* its GRE parent APs: one BSSID, or a list */
+    uint8_t mac[6];
+    if (cJSON_IsString(gre_aps) && em_parse_mac(gre_aps->valuestring, mac) && !ap_known(a, mac))
+        names[n++] = em_mac_str(mac);
+    if (cJSON_IsArray(gre_aps)) {
+        const cJSON *x;
+        cJSON_ArrayForEach(x, gre_aps)
+            if (n < EM_PEER_APS * 2 && cJSON_IsString(x) && em_parse_mac(x->valuestring, mac) && !ap_known(a, mac))
+                names[n++] = em_mac_str(mac);
+    }
+    qsort(names, n, sizeof(names[0]), by_text);
+    bool live = source_current(a);
+    cJSON *o = cJSON_CreateObject();
+    for (size_t i = 0; i < n; i++) {
+        bool up = false;
+        for (size_t r = 0; live && em_parse_mac(names[i], mac) && r < a->view.nradios; r++)
+            for (size_t b = 0; b < a->view.radios[r].nbss; b++)
+                up = up || !memcmp(a->view.radios[r].bss[b].bssid, mac, 6);
+        if (!cJSON_GetObjectItemCaseSensitive(o, names[i]))
+            cJSON_AddBoolToObject(o, names[i], up);
+        free(names[i]);
+    }
+    return o;
 }
 
 static bool refresh(agent *a)
@@ -948,6 +1060,7 @@ static bool refresh(agent *a)
     a->tx_power = radio->has_tx_power ? radio->tx_power : 0;
     a->view = *view;
     free(view);
+    note_aps(a);
     a->represented = rep;
     a->has_primary = primary;
     backhaul_links(a, t);
@@ -2652,7 +2765,11 @@ static cJSON *status(agent *a)
         cJSON_Delete(x);
     }
     cJSON_AddItemToObject(o, "probe_watch", a->watch_on ? em_watch_status(&a->watch) : cJSON_CreateNull());
-    cJSON_AddItemToObject(o, "gre_parent", a->gre ? em_gre_status(a->gre) : cJSON_CreateNull());
+    cJSON *gre_parent = a->gre ? em_gre_status(a->gre) : cJSON_CreateNull();
+    cJSON_AddItemToObject(o, "gre_parent", gre_parent);
+    /* spec 8.3: each AP of the pod known, true while up (the fleet's children whose kept
+     * backhaul target it is wait for it), its GRE parent APs among them */
+    cJSON_AddItemToObject(o, "ap_up", ap_up_status(a, cJSON_GetObjectItemCaseSensitive(gre_parent, "ap_bssid")));
     cJSON_AddItemToObject(o, "gtp_station", a->gtp_on ? em_gtp_status(&a->gtp) : cJSON_CreateNull());
     cJSON_AddItemToObject(o, "radio_plan", a->plan_on ? em_plan_status(&a->plan) : cJSON_CreateNull());
     cJSON_AddItemToObject(o, "node_config", a->node_on ? em_node_status(&a->node) : cJSON_CreateNull());
@@ -2747,6 +2864,8 @@ static bool configure(agent *a, const char *path, const char *profiles)
         em_peers_init(&a->peers, cfg_str(c, "run_dir"), a->pod_id);
         a->peers_on = true;
     }
+    if (a->state_dir)
+        load_aps(a); /* the pod's APs seen by an earlier run */
     a->profile_id = cfg_str(c, "profile") ? cfg_str(c, "profile") : "opensync-lab-hwsim-6.6.1-v1";
     const char *set = cfg_str(c, "message_set"), *m2 = cfg_str(c, "m2_session");
     a->r1 = set && !strcmp(set, "r1");
@@ -2837,6 +2956,13 @@ static bool configure(agent *a, const char *path, const char *profiles)
         const cJSON *backoff_cap = cJSON_GetObjectItemCaseSensitive(uplink, "hold_backoff_cap");
         a->uplink.hold_backoff = cJSON_IsNumber(backoff) ? backoff->valuedouble : 0;
         a->uplink.hold_backoff_cap = cJSON_IsNumber(backoff_cap) ? backoff_cap->valuedouble : 0;
+        /* a kept target on another fleet pod: absent, the scope's defaults */
+        const cJSON *tries = cJSON_GetObjectItemCaseSensitive(uplink, "kept_tries");
+        const cJSON *kept_backoff = cJSON_GetObjectItemCaseSensitive(uplink, "kept_backoff");
+        const cJSON *wait_cap = cJSON_GetObjectItemCaseSensitive(uplink, "parent_wait_cap");
+        a->uplink.kept_tries_max = cJSON_IsNumber(tries) ? tries->valuedouble : 0;
+        a->uplink.kept_backoff = cJSON_IsNumber(kept_backoff) ? kept_backoff->valuedouble : 0;
+        a->uplink.parent_wait_cap = cJSON_IsNumber(wait_cap) ? wait_cap->valuedouble : 0;
         const char *bssid = cfg_str(uplink, "bssid");
         uint8_t mac[6];
         if (!a->uplink.station) {
@@ -3214,6 +3340,8 @@ int main(int argc, char **argv)
         a.uplink.loops_ctx = &a;
         a.uplink.is_parent = a.peers_on ? upstream_is_parent : NULL; /* spec 8.6 fleet parent set */
         a.uplink.is_parent_ctx = &a;
+        a.uplink.ap_state = a.peers_on ? upstream_ap_state : NULL; /* spec 8.3 parent's AP */
+        a.uplink.ap_state_ctx = &a;
         const char *ubssid = cfg_str(cJSON_GetObjectItemCaseSensitive(a.config, "uplink"), "bssid");
         em_reason why = em_uplink_open(&a.uplink, a.state_dir, &a.schemas, ubssid ? ubssid : "");
         if (why != EM_OK) {

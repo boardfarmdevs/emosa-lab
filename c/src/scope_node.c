@@ -562,8 +562,12 @@ void em_node_tick(em_node_scope *s)
     const char *pod_id = str(s->intent, "pod_id");
     op = em_journal_latest(s->journal);
     cJSON *owned = em_journal_ownership(s->journal, pod_id);
-    char key[32];
-    EM_FORMAT_FIXED(key, sizeof(key), "%s:node-config", s->instance); /* 16+12 */
+    /* one write per start and configuration: a start EMOSA continues (the same start marker
+     * after an EMOSA restart) gets one more when the settings changed */
+    char key[48], fp[65];
+    if (!em_engine_fingerprint(&s->engine, s->intent, NULL, fp))
+        fp[0] = '\0';
+    EM_FORMAT_FIXED(key, sizeof(key), "%s:node-config:%.16s", s->instance, fp); /* 16+13+16 */
     cJSON *done = NULL;
     bool wanted = false;
     if (!snap.ready) {
@@ -623,7 +627,9 @@ static cJSON *flags(em_node_scope *s, const char *module, const cJSON *settings,
                 seen = &s->seen[i];
         if (seen && seen->started && s->monotonic() - seen->since > RESTART_GRACE) /* installed, not running */
             cJSON_AddItemToArray(f, cJSON_CreateString("restart_not_taken"));
-    } else if (wanted) {
+    } else if (wanted && !same(str(state, "running"), wanted)) {
+        /* the module already runs the configured file (its update result gone with a re-seed's
+         * Node_State): not pending */
         cJSON_AddItemToArray(f, cJSON_CreateString("update_pending"));
     }
     return f;

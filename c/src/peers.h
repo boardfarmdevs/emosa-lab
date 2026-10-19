@@ -18,6 +18,7 @@
 
 #define EM_PEERS_MAX 32
 #define EM_PEER_BACKHAULS 8
+#define EM_PEER_APS 32
 
 typedef struct {
     char pod_id[64];
@@ -26,6 +27,13 @@ typedef struct {
     size_t nbackhaul;
     uint8_t parent_aps[EM_PEER_BACKHAULS][6];    /* its GRE parent APs' BSSIDs (spec 8.6) */
     size_t nparent_aps;
+    /* its pod's APs it knows, each up while enabled in the pod's Wifi_VIF_State on its current
+     * start with its report source live (spec 8.3); has_ap_up false from an agent that
+     * does not say */
+    bool has_ap_up;
+    uint8_t aps[EM_PEER_APS][6];
+    bool ap_on[EM_PEER_APS];
+    size_t naps;
     bool has_station;                            /* on its EasyMesh backhaul: */
     uint8_t station[6], parent[6];               /* its station, and that station's parent */
     cJSON *measured;                             /* its pod's stations' measurements, owned */
@@ -49,6 +57,11 @@ const em_peer *em_peers_upstream(const em_peers *d, const uint8_t parent[6]);
 /* True when bssid is a GRE parent AP of the fleet (spec 8.6): a Backhaul Steering target among
  * them is a 3-address GRE join, not Multi-AP. */
 bool em_peers_is_parent(const em_peers *d, const uint8_t bssid[6]);
+/* Whether the fleet pod whose AP bssid is has it up (spec 8.3): 1 while enabled in that
+ * pod's Wifi_VIF_State on its current start with its report source live, 0 while not, -1 when no
+ * fleet agent says (no fleet pod has it, or its agent does not publish its APs' state): a kept
+ * backhaul target waits for its parent only on 0. */
+int em_peers_ap_state(const em_peers *d, const uint8_t bssid[6]);
 /* True when an upstream target would put a loop into br-home: one of the own BSSes, or a BSS of a
  * pod whose upstream chain reaches this pod (own_al) or runs in a circle. */
 bool em_peers_loops(const em_peers *d, const uint8_t own_al[6], const uint8_t (*own)[6], size_t nown,

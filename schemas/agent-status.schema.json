@@ -127,7 +127,8 @@
         "parent": {"type": ["string", "null"], "description": "The BSS the station is on (lower case)."},
         "option": {"enum": [1, 2]},
         "held": {"type": ["object", "null"], "description": "Held on option 2 and why; EMOSA does not switch this pod again until it is admitted anew."},
-        "waiting": {"type": ["string", "null"]},
+        "waiting": {"type": ["string", "null"], "description": "Why no switch is being made; \"kept target waiting for its parent\" while a kept target's fleet pod has its AP down (spec §8.3)."},
+        "kept": {"type": "object", "description": "A kept backhaul target on another fleet pod (spec §8.3): its switches failed with that pod's AP up, its retry, and its wait for that AP (wall-clock seconds).", "properties": {"tries": {"type": "integer", "minimum": 0}, "tries_max": {"type": "integer", "minimum": 1}, "retry_at": {"type": ["number", "null"]}, "retry_target": {"type": ["string", "null"]}, "waiting_for_parent": {"type": ["string", "null"]}, "waiting_since": {"type": ["number", "null"]}}},
         "operation": {
           "type": ["object", "null"],
           "properties": {
@@ -148,6 +149,7 @@
     "node_config": {"description": "The pod's modules' settings and reports (spec 4, the pods' modules), with modules configured; null without.", "type": ["object", "null"], "properties": {"modules": {"type": "object", "additionalProperties": {"type": "object", "properties": {"settings_written": {"type": "boolean"}, "settings_echoed": {"type": "array", "items": {"type": "string"}}, "state": {"type": ["string", "null"]}, "boot_id": {"type": ["string", "null"]}, "version": {"type": ["string", "null"]}, "running": {"type": ["string", "null"]}, "slot": {"type": ["string", "null"]}, "update": {"type": ["string", "null"]}, "update_sha256": {"type": ["string", "null"]}, "events_prev": {"type": ["string", "null"], "description": "The module's events before the pod's last boot, as its own log on flash has them."}, "flags": {"type": "array", "items": {"enum": ["state_error", "not_started_at_boot", "update_failed", "update_pending", "restart_not_taken"]}}}}}, "differs": {"type": ["array", "null"], "items": {"type": "string"}}, "waiting": {"type": ["string", "null"]}, "operation": {"type": ["object", "null"]}}},
     "probe_watch": {"description": "The stations whose probe requests the pod watches (spec §3.9); null without telemetry.", "type": ["object", "null"], "properties": {"watched": {"type": "array", "items": {"type": "string"}}, "asked": {"type": "integer", "minimum": 0}, "waiting": {"type": ["string", "null"]}, "operation": {"type": ["object", "null"]}}},
     "writes": {"type": "integer", "minimum": 0},
+    "ap_up": {"description": "Each AP of the pod the agent has seen (and its GRE parent APs), true while enabled in the pod's Wifi_VIF_State on its current start with the report source live (spec §8.3): a fleet child whose kept backhaul target it is waits for it.", "type": "object", "additionalProperties": {"type": "boolean"}},
     "worker_pid": {"type": "integer"},
     "updated": {"type": "number"}
   }

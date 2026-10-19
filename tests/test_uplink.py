@@ -8,7 +8,14 @@ import json
 import pytest
 
 from emosa.agent.pod import uplink_bssid
-from emosa.agent.uplink import DEADLINE, HOLD_BACKOFF, UplinkSwitch, m2_backhaul
+from emosa.agent.uplink import (
+    DEADLINE,
+    HOLD_BACKOFF,
+    KEPT_BACKOFF,
+    PARENT_WAITING,
+    UplinkSwitch,
+    m2_backhaul,
+)
 from emosa.clock import ManualClock
 from emosa.errors import EmosaError, Reason
 from emosa.model import State
@@ -841,6 +848,178 @@ def test_the_controllers_steer_back_still_needs_the_station_on_the_bootstrap(tmp
     asyncio.run(switch.tick())
     assert switch.latest().state == State.CONFIG_COMMITTED
     assert switch.steering_outcome(boot["bssid"]) is None
+
+
+def kept_on_parent(tmp_path, up, **options):
+    """A pod moved onto NEXT, another fleet pod's backhaul BSS whose state ``up["NEXT"]`` gives
+    (spec 8.3), then started again: the kept target is NEXT."""
+    switch, pod, clock, store = on_easymesh(
+        tmp_path, parent_ap=lambda bssid: up.get(bssid), **options
+    )
+    switch.steer(NEXT)
+    asyncio.run(switch.tick())
+    pod.adopt(parent=NEXT)
+    asyncio.run(switch.tick())
+    assert switch.steering_outcome(NEXT) is True
+    return switch, pod, clock, store
+
+
+def test_a_kept_target_waits_for_its_parents_ap_then_is_switched_to_without_a_steer(tmp_path):
+    """Spec 8.3 (a gateway outage, 19 October): the kept target's pod is still coming back when
+    this pod starts again. No switch is made while that pod has the target's AP down, however
+    long past the deadline; once it is up the kept target is switched to, and applied."""
+    up = {NEXT: True}
+    switch, pod, clock, store = kept_on_parent(tmp_path, up)
+    up[NEXT] = False  # the parent pod reboots: its home APs may be back, this one is not
+    pod.restart("00000000-0000-4000-8000-0000000000a2")
+    sent = len(pod.sent)
+    asyncio.run(switch.tick())
+    status = switch.status()
+    assert len(pod.sent) == sent and status["waiting"] == PARENT_WAITING
+    assert status["kept"]["waiting_for_parent"] == NEXT and status["kept"]["tries"] == 0
+    clock.advance(DEADLINE + 60)  # longer than a switch's deadline: still waiting, none timed out
+    asyncio.run(switch.tick())
+    assert len(pod.sent) == sent and switch.status()["waiting"] == PARENT_WAITING
+    assert switch.latest().state == State.OBSERVED_APPLIED  # the last start's move, not a failure
+    assert json.loads((store.directory / "target.json").read_text())["target"] == NEXT
+    up[NEXT] = True  # its AP back
+    asyncio.run(switch.tick())
+    assert len(pod.sent) == sent + 1 and pod.sent[-1][2]["row"]["bssid"] == NEXT
+    pod.adopt(parent=NEXT)
+    asyncio.run(switch.tick())
+    status = switch.status()
+    assert switch.latest().state == State.OBSERVED_APPLIED and status["parent"] == NEXT
+    assert status["kept"]["waiting_for_parent"] is None and not switch.held()
+
+
+def test_a_kept_target_failed_with_its_parent_up_is_tried_again_then_given_up(tmp_path):
+    """Spec 8.3: a switch to the kept target made with its pod's AP up that is not applied is tried
+    again after a backoff (2 then 4 minutes), the pod on its bootstrap meanwhile (no switch to the
+    configured upstream); after the third such failure the target is given up as before."""
+    up = {NEXT: True}
+    switch, pod, clock, store = kept_on_parent(tmp_path, up)
+    pod.restart("00000000-0000-4000-8000-0000000000a2")
+    asyncio.run(switch.tick())
+    for tries, backoff in ((1, KEPT_BACKOFF), (2, 2 * KEPT_BACKOFF)):
+        assert pod.sent[-1][2]["row"]["bssid"] == NEXT
+        clock.advance(DEADLINE + 1)
+        asyncio.run(switch.tick())
+        status = switch.status()
+        assert switch.latest().state == State.TIMED_OUT and not switch.held()
+        assert status["kept"]["tries"] == tries and status["kept"]["retry_target"] == NEXT
+        kept = json.loads((store.directory / "target.json").read_text())
+        assert (kept["target"], kept["tries"]) == (NEXT, tries)
+        pod.revert()  # cm: the station back on its bootstrap credential
+        sent = len(pod.sent)
+        clock.advance(backoff - 1)
+        asyncio.run(switch.tick())
+        assert len(pod.sent) == sent and switch.status()["waiting"].startswith(
+            "kept target tried again in"
+        )
+        clock.advance(1)
+        asyncio.run(switch.tick())  # tried again: a switch of its own on the same start
+        assert len(pod.sent) == sent + 1 and pod.sent[-1][2]["row"]["bssid"] == NEXT
+    clock.advance(DEADLINE + 1)
+    asyncio.run(switch.tick())  # the third failure: given up
+    assert not switch.held() and not (store.directory / "target.json").exists()
+    assert switch.status()["bssid"] == PARENT and switch.status()["kept"]["tries"] == 0
+    pod.revert()
+    asyncio.run(switch.tick())
+    assert pod.sent[-1][2]["row"]["bssid"] == PARENT  # then the configured upstream
+
+
+def test_a_kept_target_whose_parent_does_not_come_back_is_given_up_at_the_cap(tmp_path):
+    """Spec 8.3: the wait for the kept target's pod is bounded (parent_wait_cap, 30 minutes by
+    default): then the target is given up and the configured upstream switched to."""
+    up = {NEXT: True}
+    switch, pod, clock, store = kept_on_parent(tmp_path, up, parent_wait_cap=600)
+    up[NEXT] = False
+    pod.restart("00000000-0000-4000-8000-0000000000a2")
+    sent = len(pod.sent)
+    asyncio.run(switch.tick())
+    clock.advance(599)
+    asyncio.run(switch.tick())
+    assert len(pod.sent) == sent and switch.status()["waiting"] == PARENT_WAITING
+    clock.advance(1)
+    asyncio.run(switch.tick())
+    assert not (store.directory / "target.json").exists() and switch.status()["bssid"] == PARENT
+    asyncio.run(switch.tick())
+    assert len(pod.sent) == sent + 1 and pod.sent[-1][2]["row"]["bssid"] == PARENT
+
+
+def test_a_kept_target_whose_parent_left_the_fleet_is_tried_once_as_before(tmp_path):
+    """Spec 8.3: a kept target no fleet agent speaks for (its pod removed, or an agent that does not
+    publish its APs) keeps the earlier rule: one switch, given up when not applied."""
+    up = {NEXT: True}
+    switch, pod, clock, store = kept_on_parent(tmp_path, up)
+    del up[NEXT]  # its pod's agent gone from the fleet
+    pod.restart("00000000-0000-4000-8000-0000000000a2")
+    asyncio.run(switch.tick())
+    assert pod.sent[-1][2]["row"]["bssid"] == NEXT
+    clock.advance(DEADLINE + 1)
+    asyncio.run(switch.tick())
+    assert not (store.directory / "target.json").exists() and switch.status()["bssid"] == PARENT
+
+
+def test_a_kept_try_its_parent_went_down_during_counts_none_and_waits_again(tmp_path):
+    """Spec 8.3: a switch whose parent's AP went down before it could be applied is no failed try:
+    the target waits for that AP again, its tries untouched."""
+    up = {NEXT: True}
+    switch, pod, clock, store = kept_on_parent(tmp_path, up)
+    pod.restart("00000000-0000-4000-8000-0000000000a2")
+    asyncio.run(switch.tick())
+    assert pod.sent[-1][2]["row"]["bssid"] == NEXT
+    up[NEXT] = False
+    clock.advance(DEADLINE + 1)
+    asyncio.run(switch.tick())
+    assert switch.status()["kept"]["tries"] == 0
+    pod.revert()
+    sent = len(pod.sent)
+    asyncio.run(switch.tick())
+    asyncio.run(switch.tick())
+    assert len(pod.sent) == sent and switch.status()["waiting"] == PARENT_WAITING
+    assert json.loads((store.directory / "target.json").read_text())["target"] == NEXT
+
+
+def test_a_gre_childs_kept_parent_up_but_not_joined_is_undone_then_tried_again(tmp_path):
+    """Spec 8.3 for a GRE child (a Pi under a converted pod's parent AP): a kept switch made with
+    the parent's AP up and not applied is undone as before (its pod stays up on its fallback
+    station), then the kept target is switched to again after the backoff."""
+    up = {GRE_PARENT: True}
+    switch, pod, clock, store = rig(
+        tmp_path,
+        bssid=None,
+        parents=lambda: frozenset({GRE_PARENT}),
+        parent_ap=lambda bssid: up.get(bssid),
+    )
+    asyncio.run(switch.tick())  # the bootstrap recorded
+    assert switch.steer(GRE_PARENT) is None
+    asyncio.run(switch.tick())
+    pod.adopt_gre(parent=GRE_PARENT)
+    asyncio.run(switch.tick())
+    assert switch.steering_outcome(GRE_PARENT) is True
+    pod.restart("00000000-0000-4000-8000-0000000000a2")
+    asyncio.run(switch.tick())
+    assert pod.sent[-1][2]["row"]["bssid"] == GRE_PARENT
+    fallback = {"if_name": "g-bhaul-sta-24", "if_type": "gre", "is_used": True}
+    pod.tables["Connection_Manager_Uplink"] = {UPLINK: fallback}
+    clock.advance(DEADLINE + 1)
+    asyncio.run(switch.tick())  # timed out with the parent up: undone, tried again later
+    assert not switch.held() and switch.status()["kept"]["tries"] == 1
+    assert json.loads((store.directory / "target.json").read_text())["target"] == GRE_PARENT
+    undo = pod.sent[-1]
+    assert ("delete", "Wifi_Credential_Config") in [(o["op"], o.get("table")) for o in undo]
+    pod.tables["Wifi_VIF_Config"] = bootstrap()["Wifi_VIF_Config"]
+    pod.generation += 1
+    asyncio.run(switch.tick())
+    assert switch.latest().state == State.OBSERVED_APPLIED  # the undo
+    sent = len(pod.sent)
+    asyncio.run(switch.tick())
+    assert len(pod.sent) == sent
+    clock.advance(KEPT_BACKOFF)
+    asyncio.run(switch.tick())
+    asyncio.run(switch.tick())
+    assert len(pod.sent) == sent + 1 and pod.sent[-1][2]["row"]["bssid"] == GRE_PARENT
 
 
 def test_the_configured_upstream_not_reached_after_a_kept_one_holds(tmp_path):

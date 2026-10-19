@@ -546,16 +546,22 @@ static void keep_target(em_uplink_scope *u)
 {
     char path[700];
     target_path(u, path, sizeof(path));
-    if (!strcmp(u->bssid, u->configured) && !strcmp(u->wanted, u->configured_station)) {
+    /* a kept target waiting to be tried again is still the one kept */
+    const char *to = u->has_kept_retry ? u->retry_target : u->bssid;
+    const char *station = u->has_kept_retry ? u->retry_station : u->wanted;
+    const char *mode = u->has_kept_retry ? u->retry_mode : u->mode;
+    if (!strcmp(to, u->configured) && !strcmp(station, u->configured_station)) {
         unlink(path);
         return;
     }
     cJSON *o = cJSON_CreateObject();
     cJSON_AddStringToObject(o, "configured", u->configured);
-    cJSON_AddStringToObject(o, "target", u->bssid);
-    cJSON_AddStringToObject(o, "station", u->wanted);
-    cJSON_AddStringToObject(o, "mode", u->mode);
+    cJSON_AddStringToObject(o, "target", to);
+    cJSON_AddStringToObject(o, "station", station);
+    cJSON_AddStringToObject(o, "mode", mode);
     cJSON_AddNumberToObject(o, "moves", u->moves);
+    if (u->kept_tries)
+        cJSON_AddNumberToObject(o, "tries", u->kept_tries);
     char *text = em_json_dumps(o, EM_JSON_DEFAULT, false);
     cJSON_Delete(o);
     if (!em_write_file(path, text, true))
@@ -635,6 +641,8 @@ em_reason em_uplink_open(em_uplink_scope *u, const char *state_dir, const em_jou
                 EM_FORMAT_FIXED(u->mode, sizeof(u->mode), "gre");
             const cJSON *moves = cJSON_GetObjectItemCaseSensitive(kept, "moves");
             u->moves = cJSON_IsNumber(moves) ? (unsigned)moves->valueint : 1;
+            const cJSON *tries = cJSON_GetObjectItemCaseSensitive(kept, "tries");
+            u->kept_tries = cJSON_IsNumber(tries) && tries->valueint > 0 ? (unsigned)tries->valueint : 0;
             const char *station = str(kept, "station");
             if (bound(u, station))
                 EM_FORMAT_FIXED(u->wanted, sizeof(u->wanted), "%s", station); /* a bound if_name */
@@ -832,13 +840,53 @@ static bool move_failed(em_uplink_scope *u, const cJSON *op, const char *reason)
 /* a switch to the kept target failed on a later start: back to the configured upstream once the
  * pod is off the failed switch, no hold (a switch to the configured upstream holds). Kept, the target held the
  * pod on option 2 for good once its BSS was gone (rdk-1004, 5 Oct 2026). */
+/* a new upstream (the controller's move, a kept target applied or given up): no tries counted,
+ * no retry or wait for a parent pending */
+static void kept_reset(em_uplink_scope *u)
+{
+    u->kept_tries = 0;
+    u->has_kept_retry = u->has_parent_wait = false;
+}
+
+static int ap_state(const em_uplink_scope *u, const char *bssid)
+{
+    uint8_t mac[6];
+    return u->ap_state && bssid && em_parse_mac(bssid, mac) ? u->ap_state(u->ap_state_ctx, mac) : -1;
+}
+
+static unsigned kept_tries_max(const em_uplink_scope *u)
+{
+    return u->kept_tries_max > 0 ? (unsigned)u->kept_tries_max : EM_UPLINK_KEPT_TRIES;
+}
+
 static bool kept_failed(em_uplink_scope *u, const cJSON *op, const char *reason)
 {
     const char *bssid = str(cJSON_GetObjectItemCaseSensitive(op, "intent"), "bssid");
     if (!bssid || !strcmp(bssid, u->configured) || strcmp(bssid, u->bssid))
         return false;
-    em_log(EM_LOG_WARNING, "emosa.agent.uplink", "kept backhaul target %s not reached (%s): back to the configured %s",
-            bssid, reason, u->configured);
+    /* spec 8.3: a target on another fleet pod is given up only after kept_tries_max switches made
+     * with that pod's AP up failed; a switch its AP went down during counts none, and the target
+     * waits for it again. Meanwhile the pod is back on its bootstrap as below. */
+    int up = ap_state(u, bssid);
+    if (up >= 0 && (!up || u->kept_tries + 1 < kept_tries_max(u))) {
+        if (up)
+            u->kept_tries++;
+        double base = u->kept_backoff > 0 ? u->kept_backoff : EM_UPLINK_KEPT_BACKOFF;
+        double wait = up ? base * (double)(1u << (u->kept_tries - 1)) : 0;
+        u->has_kept_retry = true;
+        EM_FORMAT_FIXED(u->retry_target, sizeof(u->retry_target), "%s", bssid);
+        EM_FORMAT_FIXED(u->retry_station, sizeof(u->retry_station), "%s", u->wanted);
+        EM_FORMAT_FIXED(u->retry_mode, sizeof(u->retry_mode), "%s", u->mode);
+        u->retry_at = wall(u) + wait;
+        em_log(EM_LOG_WARNING, "emosa.agent.uplink",
+               "kept backhaul target %s not reached (%s), its parent's AP %s: tried again in %d s (%u of %u tries failed)",
+               bssid, reason, up ? "up" : "down", (int)wait, u->kept_tries, kept_tries_max(u));
+    } else {
+        u->kept_tries = 0;
+        u->has_kept_retry = false;
+        em_log(EM_LOG_WARNING, "emosa.agent.uplink", "kept backhaul target %s not reached (%s): back to the configured %s",
+               bssid, reason, u->configured);
+    }
     EM_FORMAT_FIXED(u->bssid, sizeof(u->bssid), "%s", u->configured);
     EM_FORMAT_FIXED(u->wanted, sizeof(u->wanted), "%s", u->configured_station);
     EM_FORMAT_FIXED(u->mode, sizeof(u->mode), "multi-ap"); /* the configured upstream's kind */
@@ -984,6 +1032,11 @@ static void settle(em_uplink_scope *u, cJSON *op, const em_snapshot *snap, bool 
             save_with_facts(u, op);
             em_log(EM_LOG_INFO, "emosa.agent.uplink", "uplink on the EasyMesh backhaul: %s parent %s", u->facts.kind,
                     u->facts.parent);
+            const char *to = str(cJSON_GetObjectItemCaseSensitive(op, "intent"), "bssid");
+            if (u->kept_tries && to && !strcmp(to, u->bssid)) {
+                kept_reset(u); /* spec 8.3: the kept target reached */
+                keep_target(u);
+            }
             if (retry_attempt(u)) {
                 char path[700];
                 hold_path(u, path, sizeof(path));
@@ -1194,6 +1247,64 @@ static cJSON *undo_intent(em_uplink_scope *u, const em_snapshot *snap)
     return intent;
 }
 
+/* spec 8.3: a failed kept target's retry is due after its backoff, the stations taken off enabled
+ * again and, for a GRE child (no configured upstream), its undo of the failed switch done: the
+ * target is switched to again, a switch of its own (a Multi-AP pod's waits in wanted for the pod
+ * back on its bootstrap, as any switch after a failed one does) */
+static void kept_again(em_uplink_scope *u)
+{
+    if (!u->has_kept_retry || u->nreenable || (!u->bssid[0] && u->fallback_after))
+        return;
+    cJSON *op = em_journal_latest(u->journal);
+    bool active = op && em_state_active(em_state_of(op));
+    cJSON_Delete(op);
+    if (wall(u) < u->retry_at || active)
+        return;
+    EM_FORMAT_FIXED(u->bssid, sizeof(u->bssid), "%s", u->retry_target);
+    EM_FORMAT_FIXED(u->wanted, sizeof(u->wanted), "%s", u->retry_station);
+    EM_FORMAT_FIXED(u->mode, sizeof(u->mode), "%s", u->retry_mode);
+    u->has_kept_retry = false;
+    u->moves++;
+    keep_target(u);
+    em_log(EM_LOG_INFO, "emosa.agent.uplink", "kept backhaul target %s: switching to it again (%u of %u tries failed)",
+           u->bssid, u->kept_tries, kept_tries_max(u));
+}
+
+/* spec 8.3: a switch to a kept target whose AP another fleet pod has down is not made: it waits for
+ * that AP (no deadline running), at most parent_wait_cap; then the target is given up as a failed
+ * one is. True while it waits (the waiting text says so). */
+static bool waits_for_parent(em_uplink_scope *u, const cJSON *intent)
+{
+    const char *bssid = str(intent, "bssid"), *imode = str(intent, "mode");
+    bool moving = u->has_move && !u->move.done && bssid && !strcmp(u->move.target, bssid);
+    if ((imode && !strcmp(imode, "bootstrap")) || !bssid || !bssid[0] || !strcmp(bssid, u->configured) || moving ||
+        ap_state(u, bssid) != 0) {
+        u->has_parent_wait = false; /* the controller's move, or a parent up or not in the fleet */
+        return false;
+    }
+    double now = wall(u), cap = u->parent_wait_cap > 0 ? u->parent_wait_cap : EM_UPLINK_PARENT_WAIT_CAP;
+    if (!u->has_parent_wait || strcmp(u->wait_bssid, bssid)) {
+        u->has_parent_wait = true;
+        EM_FORMAT_FIXED(u->wait_bssid, sizeof(u->wait_bssid), "%s", bssid);
+        u->wait_since = now;
+        em_log(EM_LOG_INFO, "emosa.agent.uplink", "kept backhaul target %s: waiting for its parent's AP", bssid);
+    }
+    if (now - u->wait_since < cap) {
+        wait_for(u, EM_UPLINK_PARENT_WAITING);
+        return true;
+    }
+    em_log(EM_LOG_WARNING, "emosa.agent.uplink", "kept backhaul target %s: its parent's AP not up in %d s: back to the configured %s",
+           bssid, (int)cap, u->configured);
+    kept_reset(u);
+    EM_FORMAT_FIXED(u->bssid, sizeof(u->bssid), "%s", u->configured);
+    EM_FORMAT_FIXED(u->wanted, sizeof(u->wanted), "%s", u->configured_station);
+    EM_FORMAT_FIXED(u->mode, sizeof(u->mode), "multi-ap");
+    u->moves++;
+    keep_target(u);
+    wait_for(u, "kept target given up: its parent not back");
+    return true;
+}
+
 static cJSON *wanted(em_uplink_scope *u, const cJSON *op, const em_snapshot *snap)
 {
     if (held(u) && !hold_over(u)) {
@@ -1245,6 +1356,14 @@ static cJSON *wanted(em_uplink_scope *u, const cJSON *op, const em_snapshot *sna
         }
         if (undo) {
             intent = undo;
+        } else if (u->has_kept_retry) {
+            /* spec 8.3: the failed kept target is tried again after its backoff (kept_again);
+             * meanwhile the pod stays on its bootstrap, no switch to the configured upstream */
+            char text[128];
+            double left = u->retry_at - wall(u);
+            EM_FORMAT_FIXED(text, sizeof(text), "kept target tried again in %d s", left > 0 ? (int)left : 0);
+            wait_for(u, text);
+            return NULL;
         } else if (!u->bssid[0]) {
             wait_for(u, "no upstream (awaiting a Backhaul Steering Request)");
             return NULL;
@@ -1309,6 +1428,10 @@ static cJSON *wanted(em_uplink_scope *u, const cJSON *op, const em_snapshot *sna
         }
         cJSON_Delete(u->fallback_after);
         u->fallback_after = NULL;
+    }
+    if (waits_for_parent(u, intent)) {
+        cJSON_Delete(intent);
+        return NULL;
     }
     if (u->settled && !u->settled(u->settled_ctx)) {
         wait_for(u, "fronthaul not settled");
@@ -1581,6 +1704,7 @@ void em_uplink_tick(em_uplink_scope *u)
     enable_own(u);
     undo_without_snapshot(u);
     follow_cm(u);
+    kept_again(u);
     op = em_journal_latest(u->journal);
     cJSON *intent = wanted(u, op, &snap);
     cJSON_Delete(op);
@@ -1707,6 +1831,7 @@ const char *em_uplink_steer(em_uplink_scope *u, const char *bssid, const char *b
         EM_FORMAT_FIXED(u->mode, sizeof(u->mode), "bootstrap");
         EM_FORMAT_FIXED(u->bssid, sizeof(u->bssid), "%s", u->configured);
         u->moves++;
+        kept_reset(u);
         keep_target(u);
         em_log(EM_LOG_INFO, "emosa.agent.uplink", "backhaul revert requested: %s -> bootstrap %s",
                u->move.previous, target_bssid);
@@ -1740,13 +1865,14 @@ const char *em_uplink_steer(em_uplink_scope *u, const char *bssid, const char *b
     EM_FORMAT_FIXED(u->move.previous_station, sizeof(u->move.previous_station), "%s", u->wanted);
     EM_FORMAT_FIXED(u->move.mode, sizeof(u->move.mode), "%s", mode);
     EM_FORMAT_FIXED(u->move.previous_mode, sizeof(u->move.previous_mode), "%s", u->mode);
+    kept_reset(u);
     if (strcmp(target_bssid, u->bssid) || strcmp(chosen, u->wanted) || strcmp(mode, u->mode)) {
         EM_FORMAT_FIXED(u->bssid, sizeof(u->bssid), "%s", target_bssid);
         EM_FORMAT_FIXED(u->wanted, sizeof(u->wanted), "%s", chosen);
         EM_FORMAT_FIXED(u->mode, sizeof(u->mode), "%s", mode);
         u->moves++;
-        keep_target(u);
     }
+    keep_target(u);
     em_log(EM_LOG_INFO, "emosa.agent.uplink", "backhaul move requested: %s (%s) -> %s (%s)", u->move.previous,
            u->move.previous_station, target_bssid, chosen);
     return NULL;
@@ -1817,6 +1943,15 @@ cJSON *em_uplink_status(em_uplink_scope *u)
     cJSON *owned = em_journal_ownership(u->journal, u->pod_id);
     cJSON_AddItemToObject(o, "held", owned ? owned : cJSON_CreateNull());
     cJSON_AddItemToObject(o, "waiting", u->has_waiting ? cJSON_CreateString(u->waiting) : cJSON_CreateNull());
+    /* spec 8.3: the kept target's failed tries with its parent's AP up, its retry, and its wait for
+     * that AP (wall-clock seconds) */
+    cJSON *kept = cJSON_AddObjectToObject(o, "kept");
+    cJSON_AddNumberToObject(kept, "tries", u->kept_tries);
+    cJSON_AddNumberToObject(kept, "tries_max", kept_tries_max(u));
+    cJSON_AddItemToObject(kept, "retry_at", u->has_kept_retry ? cJSON_CreateNumber(u->retry_at) : cJSON_CreateNull());
+    cJSON_AddItemToObject(kept, "retry_target", u->has_kept_retry ? cJSON_CreateString(u->retry_target) : cJSON_CreateNull());
+    cJSON_AddItemToObject(kept, "waiting_for_parent", u->has_parent_wait ? cJSON_CreateString(u->wait_bssid) : cJSON_CreateNull());
+    cJSON_AddItemToObject(kept, "waiting_since", u->has_parent_wait ? cJSON_CreateNumber(u->wait_since) : cJSON_CreateNull());
     cJSON *op = em_journal_latest(u->journal);
     if (op) {
         cJSON *x = cJSON_AddObjectToObject(o, "operation");

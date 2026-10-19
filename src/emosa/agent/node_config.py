@@ -2,8 +2,10 @@
 """The agent writes its pod's modules' settings and reads their reports (spec 4, the pods' modules).
 
 ``NodeConfig`` writes the settings (``emosa.opensync.node_config``) at most once per start of the
-pod's OpenSync, with its own operation journal, when something differs from them. Not repeated on
-that start, even when a row is changed again: the next start writes them again.
+pod's OpenSync and configuration, with its own operation journal, when something differs from
+them. Not repeated on that start, even when a row is changed again: the next start writes them
+again, and so does a changed configuration on the same start (an EMOSA restart that continues it,
+the same start marker).
 
 Each module reports in ``Node_State``, by the keys EMOSA reads: ``state`` (``ok`` or
 ``error:<reason>``), ``boot_id``, ``version`` (the SHA-256 of the module's installed file),
@@ -90,8 +92,10 @@ class NodeConfig:
             self.engine._save(op)
 
     def key(self):
-        """At most one write per OpenSync start."""
-        return f"{self.backend.instance}:node-config"
+        """At most one write per OpenSync start and configuration: a start EMOSA continues (the
+        same start marker after an EMOSA restart) gets one more when the settings changed."""
+        wanted = self.engine.vault.fingerprint(self.intent.record())
+        return f"{self.backend.instance}:node-config:{wanted[:16]}"
 
     def _wanted(self, op, snap):
         if not snap.ready:
@@ -174,7 +178,9 @@ class NodeConfig:
             since = self.unstarted.get(module)
             if since is not None and self.monotonic() - since > RESTART_GRACE:
                 flags.append("restart_not_taken")  # installed, not running
-        elif wanted:
+        elif wanted and state.get("running") != wanted:
+            # the module already runs the configured file (its update result gone with a
+            # re-seed's Node_State): not pending
             flags.append("update_pending")
         return flags
 

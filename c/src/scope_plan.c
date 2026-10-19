@@ -841,8 +841,14 @@ void em_plan_tick(em_plan_scope *s)
     /* RadioPlan._wanted */
     op = em_journal_latest(s->journal);
     cJSON *owned = em_journal_ownership(s->journal, s->intent.pod_id);
-    char key[32];
-    EM_FORMAT_FIXED(key, sizeof(key), "%s:radio-plan", s->instance); /* 16+11 */
+    /* one write per start and plan: a start EMOSA continues (the same start marker after an
+     * EMOSA restart) gets one more when the plan changed */
+    char key[48], fp[65];
+    cJSON *rec = record(&s->intent);
+    if (!em_engine_fingerprint(&s->engine, rec, NULL, fp))
+        fp[0] = '\0';
+    cJSON_Delete(rec);
+    EM_FORMAT_FIXED(key, sizeof(key), "%s:radio-plan:%.16s", s->instance, fp); /* 16+12+16 */
     cJSON *done = NULL;
     bool wanted = false;
     if (!snap.ready) {

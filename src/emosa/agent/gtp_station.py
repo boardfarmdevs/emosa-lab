@@ -92,8 +92,15 @@ class GtpStation:
             self.engine._save(op)
 
     def key(self):
-        """One write per OpenSync start and station, and one more after each removal."""
-        key = f"{self.backend.instance}:{self.intent.station}"
+        """One write per OpenSync start, station and credential (a start EMOSA continues gets one
+        more when the credential changed), and one more after each removal."""
+        vault = self.engine.vault
+        try:
+            target = self.intent.target(vault)
+        except EmosaError:
+            target = None  # an unusable credential: the request refuses it
+        wanted = vault.fingerprint({**self.intent.record(), "target": target})
+        key = f"{self.backend.instance}:{self.intent.station}:{wanted[:16]}"
         return key if not self.attempt else f"{key}:{self.attempt}"
 
     async def _guard(self, snap):

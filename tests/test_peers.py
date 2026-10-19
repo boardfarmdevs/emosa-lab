@@ -7,7 +7,15 @@ import struct
 
 import pytest
 
-from emosa.agent.peers import PeerDirectory, children, loops, mac_bytes, parent_bssids, upstream
+from emosa.agent.peers import (
+    PeerDirectory,
+    ap_state,
+    children,
+    loops,
+    mac_bytes,
+    parent_bssids,
+    upstream,
+)
 from emosa.opensync.easymesh_view import neighbors_1905
 from emosa.wire.cmdu import Message, Reassembler, Tlv
 from emosa.wire.link_metrics import BackhaulLinkMetrics, BackhaulPair
@@ -86,6 +94,26 @@ def test_the_fleet_parent_set_is_read_from_the_peers_gre_parent_status(tmp_path)
     assert plain.parent_aps == frozenset()  # a backhaul BSS is not a GRE parent AP
     # the switch's parents() consumes lower-case MAC text
     assert parent_bssids(peers) == {"72:00:00:00:6a:00"}
+
+
+def test_a_fleet_pods_ap_state_is_read_per_bss_from_its_status(tmp_path):
+    # Spec 8.3: a kept target waits for its pod's AP, that BSS's own state: the parent's
+    # home AP up while its backhaul AP is not is no reason to switch. An agent that does not
+    # publish its APs' state, or a BSS no fleet pod has, says nothing (None).
+    write(tmp_path, "OWN", status("02:72:00:00:00:03"))
+    rebooting = status("02:72:00:00:00:01", parent_ap="72:00:00:00:6a:00")
+    rebooting["ap_up"] = {"82:00:00:00:6A:00": True, "72:00:00:00:6a:00": False}
+    write(tmp_path, "PARENT", rebooting)
+    write(tmp_path, "OLD", status("02:72:00:00:00:02", backhaul_bss="72:00:00:00:6b:00"))
+    peers = PeerDirectory(tmp_path / "OWN", "OWN", alive=lambda pid: True).peers()
+    assert ap_state(peers, "72:00:00:00:6a:00") is False
+    assert ap_state(peers, "82:00:00:00:6a:00") is True
+    assert ap_state(peers, "72:00:00:00:6b:00") is None  # an agent without ap_up
+    assert ap_state(peers, "72:00:00:00:6c:00") is None  # no fleet pod's
+    rebooting["ap_up"]["72:00:00:00:6a:00"] = True
+    (tmp_path / "PARENT" / "status.json").write_text(json.dumps(rebooting))
+    peers = PeerDirectory(tmp_path / "OWN", "OWN", alive=lambda pid: True).peers()
+    assert ap_state(peers, "72:00:00:00:6A:00") is True
 
 
 def test_an_upstream_whose_chain_reaches_this_pod_is_a_loop(tmp_path):

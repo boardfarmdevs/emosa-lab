@@ -48,6 +48,9 @@ class Peer:
     parent: bytes | None  # that station's parent BSSID
     measured: dict  # its pod's stations' measurements (spec 3.6), by lower-case MAC text
     parent_aps: frozenset = frozenset()  # its GRE parent APs' BSSIDs (spec 8.6)
+    # its pod's APs it knows, each True while enabled in the pod's Wifi_VIF_State on its current
+    # start with its report source live (spec 8.3); None from an agent that does not say
+    ap_up: dict | None = None
 
 
 def peer(pod_id, status):
@@ -66,6 +69,12 @@ def peer(pod_id, status):
     ap_bssid = gre.get("ap_bssid") if isinstance(gre, dict) else None
     listed_aps = ap_bssid if isinstance(ap_bssid, list) else [ap_bssid]
     parent_aps = frozenset(b for b in (mac_bytes(x) for x in listed_aps) if b)
+    listed_up = status.get("ap_up")
+    ap_up = (
+        {b: up is True for b, up in ((mac_bytes(x), y) for x, y in listed_up.items()) if b}
+        if isinstance(listed_up, dict)
+        else None
+    )
     return Peer(
         str(status.get("pod_id") or pod_id),
         al,
@@ -74,6 +83,7 @@ def peer(pod_id, status):
         mac_bytes(backhaul.get("parent")),
         measured if isinstance(measured, dict) else {},
         parent_aps,
+        ap_up,
     )
 
 
@@ -112,6 +122,17 @@ def parent_bssids(peers):
     Backhaul Steering target among them is a 3-address GRE join, not Multi-AP. A child learns
     its fleet's parents only this way (no 1905 frame names another pod's parent AP)."""
     return frozenset(b.hex(":") for p in peers for b in p.parent_aps)
+
+
+def ap_state(peers, bssid):
+    """Whether the fleet pod whose AP ``bssid`` (MAC text) is has it up (spec 8.3): True
+    while enabled in that pod's Wifi_VIF_State on its current start with its report source live,
+    False while not, None when no fleet agent says (no fleet pod has it, or its agent does not
+    publish its APs' state): a kept backhaul target waits for its parent only on False."""
+    target = mac_bytes(bssid.lower() if isinstance(bssid, str) else bssid)
+    if target is None:
+        return None
+    return next((p.ap_up[target] for p in peers if p.ap_up and target in p.ap_up), None)
 
 
 def upstream(peers, parent):

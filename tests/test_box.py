@@ -316,6 +316,26 @@ def test_a_gre_child_left_up_after_its_kept_parent_failed_is_undone(agent, tmp_p
     assert result["passed"], result
 
 
+def test_a_legacy_pods_continued_start_gets_its_changed_module_settings_and_ap(agent, tmp_path):
+    result = box("legacy-continued-start-changes", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+
+
+def test_a_gre_childs_kept_target_waits_for_its_rebooting_parents_ap(agent, tmp_path):
+    result = box("gre-child-kept-parent-rebooting", agent, tmp_path / "box", timeout=480)
+    assert result["passed"], result
+
+
+def test_a_gre_childs_kept_parent_not_back_is_given_up_at_the_cap(agent, tmp_path):
+    result = box("gre-child-kept-parent-never-back", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+
+
+def test_a_gre_childs_kept_parent_up_not_joined_is_tried_again_then_given_up(agent, tmp_path):
+    result = box("gre-child-kept-parent-up-not-joined", agent, tmp_path / "box", timeout=600)
+    assert result["passed"], result
+
+
 def test_an_agent_stopped_ends_cleanly(agent, tmp_path):
     result = box("agent-stops-cleanly", agent, tmp_path / "box")
     assert result["passed"], result

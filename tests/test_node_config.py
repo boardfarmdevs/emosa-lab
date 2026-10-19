@@ -181,6 +181,38 @@ def test_the_settings_are_written_in_one_transaction_and_another_modules_rows_ke
     assert len(pod.sent) == 1  # once per start
 
 
+def test_changed_settings_on_a_start_emosa_continues_are_written_once(tmp_path):
+    """spec 4, 3.10 (19 October, the bench): EMOSA restarted on the same start of the pod's
+    OpenSync (a legacy pod's start marker read back) writes the module's settings when they
+    changed meanwhile (the fleet's new update): once, on that start, with no ownership conflict.
+    Unchanged settings are not written again."""
+    pod = Pod()
+    first = scope(tmp_path, pod)
+    asyncio.run(first.tick())
+    asyncio.run(first.tick())
+    assert first.status()["operation"]["state"] == State.OBSERVED_APPLIED and len(pod.sent) == 1
+    first.store.close()  # EMOSA stops
+    again = scope(tmp_path, pod)  # and starts again, the configuration unchanged
+    asyncio.run(again.tick())
+    asyncio.run(again.tick())
+    assert len(pod.sent) == 1 and again.status()["waiting"] is None
+    again.store.close()
+    sha = "e" * 64
+    url = f"http://192.0.2.1:6650/{sha}"
+    changed = {"hook": {**SETTINGS["hook"], "update_url": url, "update_sha256": sha}}
+    later = scope(tmp_path, pod, modules=changed)  # restarted with the fleet's new update
+    asyncio.run(later.tick())
+    asyncio.run(later.tick())
+    status = later.status()
+    assert len(pod.sent) == 2 and status["operation"]["state"] == State.OBSERVED_APPLIED
+    assert status["modules"]["hook"]["settings_written"] is True and status["differs"] == []
+    assert status["waiting"] is None
+    config = {(r["module"], r["key"]): r["value"] for r in pod.tables["Node_Config"].values()}
+    assert config[("hook", "update_sha256")] == sha
+    asyncio.run(later.tick())
+    assert len(pod.sent) == 2  # once
+
+
 def test_a_row_another_writer_added_meanwhile_is_a_conflict(tmp_path):
     pod = Pod()
     backend = NodeConfigBackend(
@@ -270,6 +302,10 @@ def test_the_status_reads_the_modules_report_and_flags_what_it_means(tmp_path):
     pod.tables["Node_State"] = report(update="ok", update_sha256="d" * 64)  # an older request
     asyncio.run(agent.tick())
     assert agent.status()["modules"]["hook"]["flags"] == ["update_pending"]
+    # a re-seed wiped the module's update result, but it runs the configured file: not pending
+    pod.tables["Node_State"] = report(version=SHA, running=SHA)
+    asyncio.run(agent.tick())
+    assert agent.status()["modules"]["hook"]["flags"] == []
 
 
 REQUIRED_STATUS = {

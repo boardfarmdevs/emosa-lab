@@ -65,6 +65,11 @@ SOURCE = "uplink-policy"
 # a failed switch's hold: the first wait before the switch is made again, doubled with each
 # held retry up to the cap (spec 8.3); seconds of wall time, kept in the hold's record
 HOLD_BACKOFF, HOLD_BACKOFF_CAP = 600, 9600
+# a kept backhaul target on another fleet pod (spec 8.3): the switches made to it with that
+# pod's AP up before it is given up, the wait after a failed one (doubled after each), and how long
+# it waits for that AP at most; seconds of wall time
+KEPT_TRIES, KEPT_BACKOFF, PARENT_WAIT_CAP = 3, 120, 1800
+PARENT_WAITING = "kept target waiting for its parent"
 OWNERSHIP_HOLD = "the station's configuration was changed by another manager"
 
 
@@ -85,6 +90,10 @@ class UplinkSwitch:
         hold_backoff=HOLD_BACKOFF,
         hold_backoff_cap=HOLD_BACKOFF_CAP,
         wall=None,
+        parent_ap=None,
+        kept_tries=KEPT_TRIES,
+        kept_backoff=KEPT_BACKOFF,
+        parent_wait_cap=PARENT_WAIT_CAP,
     ):
         """``credentials()`` -> (ssid, secret_ref) of the EasyMesh backhaul, or None.
 
@@ -93,8 +102,17 @@ class UplinkSwitch:
         ``parents()`` -> the BSSIDs that are GRE parent APs of this fleet (spec 8.6): a
         Backhaul Steering Request to one of them is a 3-address GRE move, not Multi-AP.
         ``wall()``: seconds of wall time, for a hold's backoff (default time.time).
+        ``parent_ap(bssid)`` -> whether the fleet pod whose AP ``bssid`` is has it up: True,
+        False, or None when no fleet agent says (spec 8.3; emosa.agent.peers.ap_state).
         """
         self.hold_backoff, self.hold_backoff_cap = hold_backoff, hold_backoff_cap
+        self.parent_ap = parent_ap or (lambda bssid: None)
+        self.kept_tries_max, self.kept_backoff = kept_tries, kept_backoff
+        self.parent_wait_cap = parent_wait_cap
+        # the kept target's switches that failed with its parent's AP up (kept in target.json),
+        # its retry after a failed one ({"target", "station", "mode", "retry_at"}), and its wait
+        # for its parent's AP ({"bssid", "since"})
+        self.kept_tries, self.kept_retry, self.parent_wait = 0, None, None
         self.wall = wall or time.time
         self.pod_id, self.backend, self.store = pod_id, backend, store
         self.credentials, self.bssid, self.run_id = credentials, bssid, run_id
@@ -136,6 +154,7 @@ class UplinkSwitch:
             kept = json.loads(self.target_path.read_text())
             if kept.get("configured") == bssid and kept.get("target"):
                 self.bssid, self.moves = kept["target"], int(kept.get("moves", 1))
+                self.kept_tries = int(kept.get("tries", 0))
                 self.mode = GRE if kept.get("mode") == GRE else MULTI_AP
                 if kept.get("station") in backend.bound:
                     self.station = kept["station"]
@@ -317,6 +336,9 @@ class UplinkSwitch:
                 op.application_evidence, op.reason = evidence, None
                 self._save(op, {"observation": self.backend.facts})
                 log.info("uplink on the EasyMesh backhaul: %s", self.backend.facts)
+                if self.kept_tries and op.intent.get("bssid") == self.bssid:
+                    self._kept_reset()  # spec 8.3: the kept target reached
+                    self._keep_target()
                 if self._retry() is not None:
                     self.hold_path.unlink(missing_ok=True)
                     log.info("uplink switch applied on its retry: the hold's backoff cleared")
@@ -347,20 +369,23 @@ class UplinkSwitch:
                 self.hold(op, f"switch {op.state.lower()}: {op.reason}")
 
     def _keep_target(self):
-        if self.bssid == self.configured and self.station == self.configured_station:
+        # a kept target waiting to be tried again is still the one kept
+        retry = self.kept_retry or {}
+        target = retry.get("target", self.bssid)
+        station, mode = retry.get("station", self.station), retry.get("mode", self.mode)
+        if target == self.configured and station == self.configured_station:
             self.target_path.unlink(missing_ok=True)
         else:
-            self.target_path.write_text(
-                json.dumps(
-                    {
-                        "configured": self.configured,
-                        "target": self.bssid,
-                        "station": self.station,
-                        "mode": self.mode,
-                        "moves": self.moves,
-                    }
-                )
-            )
+            kept = {
+                "configured": self.configured,
+                "target": target,
+                "station": station,
+                "mode": mode,
+                "moves": self.moves,
+            }
+            if self.kept_tries:
+                kept["tries"] = self.kept_tries
+            self.target_path.write_text(json.dumps(kept))
 
     def _record_bootstrap(self):
         """The BSS the station is on before any EMOSA move is its bootstrap upstream (spec 8.6):
@@ -412,18 +437,109 @@ class UplinkSwitch:
         bssid = op.intent.get("bssid")
         if bssid == self.configured or bssid != self.bssid:
             return False
-        log.warning(
-            "kept backhaul target %s not reached (%s): back to the configured %s",
-            bssid,
-            reason,
-            self.configured,
-        )
+        # spec 8.3: a target on another fleet pod is given up only after ``kept_tries`` switches
+        # made with that pod's AP up failed; a switch its AP went down during counts none, and
+        # the target waits for it again. Meanwhile the pod is back on its bootstrap as below.
+        up = self.parent_ap(bssid)
+        if up is not None and (not up or self.kept_tries + 1 < self.kept_tries_max):
+            if up:
+                self.kept_tries += 1
+            wait = self.kept_backoff * 2 ** (self.kept_tries - 1) if up else 0
+            self.kept_retry = {
+                "target": bssid,
+                "station": self.station,
+                "mode": self.mode,
+                "retry_at": self.wall() + wait,
+            }
+            log.warning(
+                "kept backhaul target %s not reached (%s), its parent's AP %s: tried again in %d s"
+                " (%d of %d tries failed)",
+                bssid,
+                reason,
+                "up" if up else "down",
+                wait,
+                self.kept_tries,
+                self.kept_tries_max,
+            )
+        else:
+            self.kept_tries, self.kept_retry = 0, None
+            log.warning(
+                "kept backhaul target %s not reached (%s): back to the configured %s",
+                bssid,
+                reason,
+                self.configured,
+            )
         self.bssid, self.station = self.configured, self.configured_station
         self.mode = MULTI_AP  # the configured upstream's kind (a GRE child's configured is None)
         self.moves += 1  # a switch of its own
         self._keep_target()
         self.fallback_after = {"instance": op.plan.get("instance"), "intent": op.intent}
         self._enable_taken_off(op)
+        return True
+
+    def _kept_reset(self):
+        """A new upstream (the controller's move, a kept target applied or given up): no tries
+        counted, no retry or wait for a parent pending."""
+        self.kept_tries, self.kept_retry, self.parent_wait = 0, None, None
+
+    def _kept_again(self):
+        """Spec 8.3: a failed kept target's retry is due after its backoff, the stations taken off
+        enabled again and, for a GRE child (no configured upstream), its undo of the failed
+        switch done: the target is switched to again, a switch of its own (a Multi-AP pod's waits
+        in _wanted for the pod back on its bootstrap, as any switch after a failed one does)."""
+        retry = self.kept_retry
+        if retry is None or self._reenable is not None:
+            return
+        if self.bssid is None and self.fallback_after is not None:
+            return
+        op = self.latest()
+        if self.wall() < retry["retry_at"] or (op is not None and op.state in ACTIVE):
+            return
+        self.bssid, self.station, self.mode = retry["target"], retry["station"], retry["mode"]
+        self.kept_retry = None
+        self.moves += 1
+        self._keep_target()
+        log.info(
+            "kept backhaul target %s: switching to it again (%d of %d tries failed)",
+            self.bssid,
+            self.kept_tries,
+            self.kept_tries_max,
+        )
+
+    def _waits_for_parent(self, intent):
+        """Spec 8.3: a switch to a kept target whose AP another fleet pod has down is not made: it
+        waits for that AP (no deadline running), at most ``parent_wait_cap``; then the target
+        is given up as a failed one is. True while it waits (``self.waiting`` says so)."""
+        bssid = intent.bssid
+        move = self.move
+        if (
+            intent.mode == BOOTSTRAP
+            or bssid is None
+            or bssid == self.configured
+            or (move is not None and move["result"] is None and move["target"] == bssid)
+            or self.parent_ap(bssid) is not False
+        ):
+            self.parent_wait = None  # the controller's move, or a parent up or not in the fleet
+            return False
+        now = self.wall()
+        if self.parent_wait is None or self.parent_wait["bssid"] != bssid:
+            self.parent_wait = {"bssid": bssid, "since": now}
+            log.info("kept backhaul target %s: waiting for its parent's AP", bssid)
+        if now - self.parent_wait["since"] < self.parent_wait_cap:
+            self.waiting = PARENT_WAITING
+            return True
+        log.warning(
+            "kept backhaul target %s: its parent's AP not up in %d s: back to the configured %s",
+            bssid,
+            self.parent_wait_cap,
+            self.configured,
+        )
+        self._kept_reset()
+        self.bssid, self.station = self.configured, self.configured_station
+        self.mode = MULTI_AP
+        self.moves += 1
+        self._keep_target()
+        self.waiting = "kept target given up: its parent not back"
         return True
 
     def steer(self, bssid, band=None, channel=None):
@@ -476,6 +592,7 @@ class UplinkSwitch:
             }
             self.mode, self.bssid = BOOTSTRAP, self.configured
             self.moves += 1
+            self._kept_reset()
             self._keep_target()
             log.info("backhaul revert requested: %s -> bootstrap %s", previous, bssid)
             return None
@@ -501,10 +618,11 @@ class UplinkSwitch:
             "previous_mode": previous_mode,
             "result": None,
         }
+        self._kept_reset()
         if (bssid, station, mode) != (previous, previous_station, previous_mode):
             self.bssid, self.station, self.mode = bssid, station, mode
             self.moves += 1
-            self._keep_target()
+        self._keep_target()
         log.info(
             "backhaul move requested: %s (%s) -> %s (%s)",
             previous,
@@ -607,6 +725,12 @@ class UplinkSwitch:
                 undo = self._undo(snap)
             if undo is not None:
                 intent = undo
+            elif self.kept_retry is not None:
+                # spec 8.3: the failed kept target is tried again after its backoff (_kept_again);
+                # meanwhile the pod stays on its bootstrap, no switch to the configured upstream
+                wait = max(0, int(self.kept_retry["retry_at"] - self.wall()))
+                self.waiting = f"kept target tried again in {wait} s"
+                return None
             elif self.bssid is None:
                 self.waiting = "no upstream (awaiting a Backhaul Steering Request)"
                 return None
@@ -644,6 +768,8 @@ class UplinkSwitch:
                 self.waiting = "the pod returning to its bootstrap uplink"
                 return None
             self.fallback_after = None
+        if self._waits_for_parent(intent):
+            return None
         if not self.settled():
             self.waiting = "fronthaul not settled"
             return None
@@ -820,6 +946,7 @@ class UplinkSwitch:
         await self._enable_own()
         await self._undo_without_snapshot()
         self._follow_cm(self.latest())
+        self._kept_again()
         intent = self._wanted(self.latest(), snap)
         if intent is None:
             return
@@ -856,6 +983,16 @@ class UplinkSwitch:
             "option": 1 if facts.get("kind") == MULTI_AP else 2,
             "held": self.held(),
             "waiting": self.waiting,
+            # spec 8.3: the kept target's failed tries with its parent's AP up, its retry, and its
+            # wait for that AP (wall-clock seconds)
+            "kept": {
+                "tries": self.kept_tries,
+                "tries_max": self.kept_tries_max,
+                "retry_at": (self.kept_retry or {}).get("retry_at"),
+                "retry_target": (self.kept_retry or {}).get("target"),
+                "waiting_for_parent": (self.parent_wait or {}).get("bssid"),
+                "waiting_since": (self.parent_wait or {}).get("since"),
+            },
             "operation": None
             if op is None
             else {

@@ -75,6 +75,14 @@ static bool peer(const char *pod_id, const cJSON *status, em_peer *out)
                 em_parse_mac(x->valuestring, out->parent_aps[out->nparent_aps]))
                 out->nparent_aps++;
     }
+    /* each AP of the peer's pod it knows and whether it is up */
+    const cJSON *ap_up = cJSON_GetObjectItemCaseSensitive(status, "ap_up"), *ap;
+    out->has_ap_up = cJSON_IsObject(ap_up);
+    if (out->has_ap_up) {
+        cJSON_ArrayForEach(ap, ap_up)
+            if (out->naps < EM_PEER_APS && ap->string && em_parse_mac(ap->string, out->aps[out->naps]))
+                out->ap_on[out->naps++] = cJSON_IsTrue(ap);
+    }
     const cJSON *backhaul = cJSON_GetObjectItemCaseSensitive(pod, "backhaul");
     const char *station = text(backhaul, "mac"), *parent = text(backhaul, "parent");
     out->has_station = station && parent && em_parse_mac(station, out->station) && em_parse_mac(parent, out->parent);
@@ -150,6 +158,15 @@ bool em_peers_is_parent(const em_peers *d, const uint8_t bssid[6])
         if (among((const uint8_t(*)[6])d->peers[i].parent_aps, d->peers[i].nparent_aps, bssid))
             return true;
     return false;
+}
+
+int em_peers_ap_state(const em_peers *d, const uint8_t bssid[6])
+{
+    for (size_t i = 0; i < d->n; i++)
+        for (size_t j = 0; d->peers[i].has_ap_up && j < d->peers[i].naps; j++)
+            if (!memcmp(d->peers[i].aps[j], bssid, 6))
+                return d->peers[i].ap_on[j] ? 1 : 0;
+    return -1;
 }
 
 bool em_peers_loops(const em_peers *d, const uint8_t own_al[6], const uint8_t (*own)[6], size_t nown,

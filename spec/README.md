@@ -693,8 +693,9 @@ is everything above. For a legacy pod, all of this specification applies, except
   is no pin by default: a pinned pod would stay on that BSS when the site's GTP BSS changes.
   - **When:** the pod is bound and its uplink station (the profile's `uplink.station`) has no
     `Wifi_VIF_Config` row. A row already there is left alone, whoever wrote it (the pod, an
-    operator, a start-up hook). The write is made once per start of the pod's OpenSync (§8.3);
-    the next start writes it again.
+    operator, a start-up hook). The write is made once per start of the pod's OpenSync (§8.3)
+    and credential: the next start writes it again, and so does a changed credential on a start
+    EMOSA continues (its start marker read back after an EMOSA restart).
   - **Write:** one guarded transaction:
     1. `wait` on the serial, and that the station has no `Wifi_VIF_Config` row;
     2. `insert Wifi_Credential_Config`: `ssid`, `security` (`encryption` `WPA-PSK` and `key`),
@@ -803,7 +804,8 @@ is everything above. For a legacy pod, all of this specification applies, except
     telemetry (§3.6) is off on a converted pod, a fleet's `telemetry` ignored with a warning in
     the log: nothing of EMOSA's takes the cloud's place. What the vendor's own scripts send past
     OpenSync (a log upload, say) is not the agent's to change.
-  - **Write:** once per start of the pod's OpenSync, in one guarded transaction: `wait` on the
+  - **Write:** once per start of the pod's OpenSync and plan (a start EMOSA continues gets one
+    more when the plan changed), in one guarded transaction: `wait` on the
     serial and on each changed row as it is (`if_name` and `mode` of a VIF; `if_name` and
     `enabled` of an Inet row; `if_name`, `channel` and `ht_mode` of the radio, `enabled` too for
     an idle radio; the node's three
@@ -972,7 +974,10 @@ to value, `[a-z0-9_]` keys, values of 1 to 1024 characters) and, optionally, a f
 (`modules`), with `update_url` (`http://<advertise>:<files.port>/<sha256>`) and `update_sha256`
 for an update; the fleet refuses an update without `files`.
 - **The agent** writes each module's settings once per start of the pod's OpenSync (its start
-  marker's on a legacy pod, §3.10), in one guarded transaction, with its own journal
+  marker's on a legacy pod, §3.10) and configuration: a start EMOSA continues (the marker read
+  back after an EMOSA restart) gets one more write when the settings changed meanwhile (a new
+  operation; what already matches is not written again; 19 October, the bench), in one guarded
+  transaction, with its own journal
   (`node-config`): a `Node_Config` row per setting (`persist` true), a changed value updated, a
   key it no longer sets or a second row of one key removed, each `wait`ed on as it is, and a new
   key's insert guarded by its absence. Another module's rows are never touched. Applied when the
@@ -1339,6 +1344,22 @@ The agent makes the switch itself when its configuration has
   `cm` then uses, and made once per failed switch. A pod whose fallback station keeps its
   uplink working never restarts to drop the credential, and the station would stay pinned to a
   parent it cannot join (the Pis, 13 October). Both agents.
+- **A kept target on another fleet pod waits for that pod's AP** (19 October: a converted
+  pod rebooting in a gateway outage brought its parent AP back four minutes after its child's
+  kept switch had timed out, and the child never tried again). Each agent's status says which of
+  its pod's APs are up (`ap_up`: every AP it has seen, kept across its restarts, and its GRE
+  parent APs, true while enabled in the pod's `Wifi_VIF_State` on its current start with its
+  report source live), and a child reads its fleet's as it reads the parent set (§8.5). While
+  the pod that has the kept target's own BSS has it down, the switch is not made and no deadline
+  runs; the status says `kept target waiting for its parent`. Another of that pod's APs up is no
+  reason to switch. Once it is up, the switch is made with its deadline. A switch made with the
+  AP up that is not applied is undone as above (the pod on its bootstrap meanwhile, no switch to
+  the configured upstream) and made again after `kept_backoff` (2 minutes, doubled after each);
+  the target is dropped only after `kept_tries` (3) such failures. A switch the AP went down
+  during counts none, and the target waits again. The wait is bounded by `parent_wait_cap`
+  (30 minutes); a target no fleet agent speaks for (its pod gone from the fleet, or an agent
+  without `ap_up`) keeps the rule above: one switch, dropped when it fails. A new move of the
+  controller's, or the kept target applied, clears the tries. Both agents.
 - **A GRE move onto another station: make-before-break.** A GRE move's switch (§8.6) writes only
   its own station; `cm` keeps a working uplink in use and moves among equal ones only at its
   periodic pass (two minutes on the Pis' `cm2`, 17 October), so with the old station still up the
