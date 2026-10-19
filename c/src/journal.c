@@ -247,6 +247,44 @@ cJSON *em_journal_latest(em_journal *j)
     return op ? cJSON_Duplicate(op, true) : NULL;
 }
 
+static const char *str(const cJSON *o, const char *k);
+
+const cJSON *em_journal_start_latest(em_journal *j, const char *source, const char *pod, const char *prefix)
+{
+    const cJSON *found = NULL, *op;
+    size_t n = strlen(prefix);
+    cJSON_ArrayForEach(op, em_journal_operations_view(j))
+    {
+        const char *key = str(op, "idempotency_key"), *from = str(op, "request_source");
+        const char *of = str(cJSON_GetObjectItemCaseSensitive(op, "intent"), "pod_id");
+        if (key && from && of && !strcmp(from, source) && !strcmp(of, pod) && !strncmp(key, prefix, n))
+            found = op;
+    }
+    return found;
+}
+
+bool em_start_write(const cJSON *latest, const char *tag, bool (*same)(const char *base, size_t len, const void *ctx),
+                    const void *ctx, char *key, size_t size)
+{
+    const char *k = latest ? str(latest, "idempotency_key") : NULL;
+    if (!k) {
+        EM_FORMAT_FIXED(key, size, "%s", tag);
+        return false;
+    }
+    /* its base and number: tag#<n>, the first write's key without one (0) */
+    const char *mark = strrchr(k, '#');
+    size_t len = strlen(k);
+    unsigned long number = 0;
+    if (mark && mark[1] && strspn(mark + 1, "0123456789") == strlen(mark + 1)) {
+        len = (size_t)(mark - k);
+        number = strtoul(mark + 1, NULL, 10); /* (ULONG_MAX when out of range: the next one wraps) */
+    }
+    if (same ? same(k, len, ctx) : len == strlen(tag) && !strncmp(k, tag, len))
+        return true;
+    EM_FORMAT_FIXED(key, size, "%s#%lu", tag, number + 1);
+    return false;
+}
+
 size_t em_journal_count(em_journal *j) { return (size_t)cJSON_GetArraySize(em_journal_operations_view(j)); }
 
 cJSON *em_journal_wsc_receipt(em_journal *j, const char *id)

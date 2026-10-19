@@ -5,7 +5,7 @@
 pod's OpenSync and configuration, with its own operation journal, when something differs from
 them. Not repeated on that start, even when a row is changed again: the next start writes them
 again, and so does a changed configuration on the same start (an EMOSA restart that continues it,
-the same start marker).
+the same start marker), going back to an earlier one included.
 
 Each module reports in ``Node_State``, by the keys EMOSA reads: ``state`` (``ok`` or
 ``error:<reason>``), ``boot_id``, ``version`` (the SHA-256 of the module's installed file),
@@ -24,6 +24,7 @@ from emosa.model import ACTIVE, State
 from emosa.opensync.node_config import NodeConfigIntent
 from emosa.operations import transition
 from emosa.reconcile import Engine
+from emosa.store import start_write
 
 log = logging.getLogger("emosa.agent.node_config")
 DEADLINE = 30  # the settings are in the database once the write is
@@ -59,6 +60,7 @@ class NodeConfig:
         self.engine = Engine(store, vault, {pod_id: backend}, clock, intent_type=NodeConfigIntent)
         self.engine.recover()
         self.waiting = None
+        self.key = None  # the wanted write's idempotency key (start_write)
         self.monotonic = monotonic or time.monotonic
         self.seen = {}  # module -> (boot_id, the last event seq logged)
         self.unstarted = {}  # module -> since when an update reported ok has not been running
@@ -91,11 +93,14 @@ class NodeConfig:
             op.reason = Reason.APPLY_TIMEOUT
             self.engine._save(op)
 
-    def key(self):
-        """At most one write per OpenSync start and configuration: a start EMOSA continues (the
-        same start marker after an EMOSA restart) gets one more when the settings changed."""
+    def start_write(self):
+        """At most one write per OpenSync start and configuration (``emosa.store.start_write``):
+        a start EMOSA continues (the same start marker after an EMOSA restart) gets one more when
+        the settings changed, and so does going back to earlier settings on that start."""
         wanted = self.engine.vault.fingerprint(self.intent.record())
-        return f"{self.backend.instance}:node-config:{wanted[:16]}"
+        prefix = f"{self.backend.instance}:node-config:"
+        latest = self.store.start_latest(SOURCE, self.pod_id, prefix)
+        return start_write(latest, prefix + wanted[:16])
 
     def _wanted(self, op, snap):
         if not snap.ready:
@@ -107,7 +112,7 @@ class NodeConfig:
         if op is not None and op.state in ACTIVE:
             self.waiting = "write in progress"
             return False
-        done = self.store.lookup(SOURCE, self.pod_id, self.key())
+        done, self.key = self.start_write()
         if done is not None:
             self.waiting = (
                 None
@@ -158,7 +163,7 @@ class NodeConfig:
         if snap is None or not self._wanted(self.latest(), snap):
             return
         op = self.engine.request(
-            self.intent, source=SOURCE, key=self.key(), run_id=self.run_id, deadline=DEADLINE
+            self.intent, source=SOURCE, key=self.key, run_id=self.run_id, deadline=DEADLINE
         )
         if op.state == State.REQUESTED:
             op = await self.engine.execute(op.operation_id)

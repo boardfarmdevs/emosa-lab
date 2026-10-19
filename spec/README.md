@@ -695,7 +695,9 @@ is everything above. For a legacy pod, all of this specification applies, except
     `Wifi_VIF_Config` row. A row already there is left alone, whoever wrote it (the pod, an
     operator, a start-up hook). The write is made once per start of the pod's OpenSync (§8.3)
     and credential: the next start writes it again, and so does a changed credential on a start
-    EMOSA continues (its start marker read back after an EMOSA restart).
+    EMOSA continues (its start marker read back after an EMOSA restart), going back to an
+    earlier one included: the start's latest write stands for its credential, not any earlier
+    write.
   - **Write:** one guarded transaction:
     1. `wait` on the serial, and that the station has no `Wifi_VIF_Config` row;
     2. `insert Wifi_Credential_Config`: `ssid`, `security` (`encryption` `WPA-PSK` and `key`),
@@ -805,7 +807,8 @@ is everything above. For a legacy pod, all of this specification applies, except
     the log: nothing of EMOSA's takes the cloud's place. What the vendor's own scripts send past
     OpenSync (a log upload, say) is not the agent's to change.
   - **Write:** once per start of the pod's OpenSync and plan (a start EMOSA continues gets one
-    more when the plan changed), in one guarded transaction: `wait` on the
+    more when the plan changed, going back to an earlier plan included), in one guarded
+    transaction: `wait` on the
     serial and on each changed row as it is (`if_name` and `mode` of a VIF; `if_name` and
     `enabled` of an Inet row; `if_name`, `channel` and `ht_mode` of the radio, `enabled` too for
     an idle radio; the node's three
@@ -976,8 +979,9 @@ for an update; the fleet refuses an update without `files`.
 - **The agent** writes each module's settings once per start of the pod's OpenSync (its start
   marker's on a legacy pod, §3.10) and configuration: a start EMOSA continues (the marker read
   back after an EMOSA restart) gets one more write when the settings changed meanwhile (a new
-  operation; what already matches is not written again; 19 October, the bench), in one guarded
-  transaction, with its own journal
+  operation; what already matches is not written again; 19 October, the bench), going back to
+  earlier settings included (the start's latest write stands for its settings, not any earlier
+  write: a rollback is written), in one guarded transaction, with its own journal
   (`node-config`): a `Node_Config` row per setting (`persist` true), a changed value updated, a
   key it no longer sets or a second row of one key removed, each `wait`ed on as it is, and a new
   key's insert guarded by its absence. Another module's rows are never touched. Applied when the

@@ -3,6 +3,7 @@
 #include "scope_gtp.h"
 
 #include <ctype.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -818,6 +819,36 @@ static void settle(em_gtp_scope *g, cJSON *op, const em_snapshot *snap, bool hav
     cJSON_Delete(target);
 }
 
+/* GtpStation.start_write's same: the latest write on this start has the credential (fp, its 16
+ * characters), at this removal count or later */
+typedef struct {
+    const em_gtp_scope *g;
+    const char *fp;
+    size_t prefix;
+} gtp_written;
+
+static bool written_at(const char *base, size_t len, const void *ctx)
+{
+    const gtp_written *w = ctx;
+    size_t n = strlen(w->fp);
+    if (len < w->prefix + n || strncmp(base + w->prefix, w->fp, n))
+        return false;
+    const char *rest = base + w->prefix + n, *end = base + len;
+    if (rest == end)
+        return w->g->attempt == 0;
+    if (*rest != ':' || ++rest == end)
+        return false;
+    unsigned long attempt = 0;
+    for (; rest < end; rest++) {
+        if (*rest < '0' || *rest > '9')
+            return false;
+        attempt = attempt * 10 + (unsigned long)(*rest - '0');
+        if (attempt > UINT_MAX)
+            return true; /* more removals than the count holds: at or past it */
+    }
+    return attempt >= w->g->attempt;
+}
+
 void em_gtp_tick(em_gtp_scope *g)
 {
     em_snapshot snap = {0};
@@ -843,20 +874,28 @@ void em_gtp_tick(em_gtp_scope *g)
     /* GtpStation._wanted */
     op = em_journal_latest(g->journal);
     cJSON *owned = em_journal_ownership(g->journal, g->intent.pod_id);
-    /* one write per start, station and credential (a start EMOSA continues gets one more when the
-     * credential changed), one more after each removal */
-    char key[80], fp[65];
+    /* one write per start, station and credential (GtpStation.start_write: a start EMOSA continues
+     * gets one more when the credential changed, and so does going back to an earlier one on that
+     * start), one more after each removal */
+    char prefix[40], tag[72], key[96] = "", fp[65];
     em_reason fp_why;
     cJSON *rec = record(&g->intent), *t = target(g, rec, &fp_why); /* NULL: an unusable credential */
+    if (!t)
+        t = cJSON_CreateNull(); /* fingerprinted as the Python agent's "target": None */
     if (!em_engine_fingerprint(&g->engine, rec, t, fp))
         fp[0] = '\0';
     cJSON_Delete(t);
     cJSON_Delete(rec);
+    fp[16] = '\0';
+    EM_FORMAT_FIXED(prefix, sizeof(prefix), "%s:%s:", g->instance, g->intent.station); /* 16+1+15+1 */
     if (g->attempt)
-        EM_FORMAT_FIXED(key, sizeof(key), "%s:%s:%.16s:%u", g->instance, g->intent.station, fp, g->attempt);
+        EM_FORMAT_FIXED(tag, sizeof(tag), "%s%s:%u", prefix, fp, g->attempt);
     else
-        EM_FORMAT_FIXED(key, sizeof(key), "%s:%s:%.16s", g->instance, g->intent.station, fp); /* 16+1+15+1+16 */
-    cJSON *done = NULL;
+        EM_FORMAT_FIXED(tag, sizeof(tag), "%s%s", prefix, fp);
+    gtp_written ctx = {g, fp, strlen(prefix)};
+    /* this start's latest write, done when it stands for the credential (borrowed: the journal is
+     * not written before its last use below) */
+    const cJSON *done = em_journal_start_latest(g->journal, SOURCE, g->intent.pod_id, prefix);
     bool wanted = false;
     double now = g->monotonic();
     if (!snap.ready) {
@@ -869,7 +908,7 @@ void em_gtp_tick(em_gtp_scope *g)
         char text[128];
         EM_FORMAT_FIXED(text, sizeof(text), "removed, not associated: written again in %d s", (int)(g->retry_at - now));
         wait_for(g, text);
-    } else if ((done = em_journal_lookup(g->journal, SOURCE, g->intent.pod_id, key))) {
+    } else if (em_start_write(done, tag, written_at, &ctx, key, sizeof(key))) {
         if (!strcmp(em_state_of(done), "OBSERVED_APPLIED")) {
             wait_for(g, NULL);
         } else {
@@ -887,7 +926,6 @@ void em_gtp_tick(em_gtp_scope *g)
         wait_for(g, NULL);
         wanted = true;
     }
-    cJSON_Delete(done);
     cJSON_Delete(owned);
     cJSON_Delete(op);
     em_snapshot_clear(&snap);

@@ -2,10 +2,11 @@
 """The agent writes a legacy pod's station on the site's GTP BSS (spec 3.10).
 
 ``GtpStation`` writes the station (``emosa.opensync.gtp_station``) once per start of the pod's
-OpenSync, with its own operation journal, while the station has no row: a legacy pod's core
-makes none, and its database is its vendor's seed again at every start. A row already there is
-left alone, whoever wrote it. A failed or refused write is not retried on the same start: the
-next start, or a new admission, tries again.
+OpenSync and credential, with its own operation journal, while the station has no row: a legacy
+pod's core makes none, and its database is its vendor's seed again at every start. A row already
+there is left alone, whoever wrote it. A failed or refused write is not retried on the same start
+and credential: the next start, a changed credential (going back to an earlier one included), or
+a new admission, tries again.
 
 The guard: the pods' vendor healthcheck reboots a pod after ten minutes of a configured station
 that is not associated. The station in the scope's form (the GTP's SSID) that stays unassociated
@@ -23,6 +24,7 @@ from emosa.model import ACTIVE, State
 from emosa.opensync.gtp_station import GtpStationIntent
 from emosa.operations import transition
 from emosa.reconcile import Engine
+from emosa.store import start_write
 
 log = logging.getLogger("emosa.agent.gtp_station")
 DEADLINE = 30  # wm shows the station as soon as it has taken the row
@@ -52,6 +54,7 @@ class GtpStation:
         self.engine = Engine(store, vault, {pod_id: backend}, clock, intent_type=GtpStationIntent)
         self.engine.recover()
         self.waiting = None
+        self.key = None  # the wanted write's idempotency key (start_write)
         self.unassociated, self.retry, self.monotonic = unassociated, tuple(retry), monotonic
         self.start = None  # the start of the pod's OpenSync the attempts below count on
         self.attempt = 0  # the station's writes removed on that start
@@ -91,17 +94,28 @@ class GtpStation:
             op.reason = Reason.APPLY_TIMEOUT
             self.engine._save(op)
 
-    def key(self):
-        """One write per OpenSync start, station and credential (a start EMOSA continues gets one
-        more when the credential changed), and one more after each removal."""
+    def start_write(self):
+        """One write per OpenSync start, station and credential (``emosa.store.start_write``: a
+        start EMOSA continues gets one more when the credential changed, and so does going back
+        to an earlier one on that start), and one more after each removal: the latest write on
+        this start stands for the credential when it has it, at this removal count or later (the
+        count starts again with EMOSA)."""
         vault = self.engine.vault
         try:
             target = self.intent.target(vault)
         except EmosaError:
             target = None  # an unusable credential: the request refuses it
-        wanted = vault.fingerprint({**self.intent.record(), "target": target})
-        key = f"{self.backend.instance}:{self.intent.station}:{wanted[:16]}"
-        return key if not self.attempt else f"{key}:{self.attempt}"
+        wanted = vault.fingerprint({**self.intent.record(), "target": target})[:16]
+        prefix = f"{self.backend.instance}:{self.intent.station}:"
+        tag = f"{prefix}{wanted}" + (f":{self.attempt}" if self.attempt else "")
+
+        def same(base):
+            written, colon, attempt = base[len(prefix) :].partition(":")
+            if written != wanted or (colon and not attempt.isdigit()):
+                return False
+            return (int(attempt) if colon else 0) >= self.attempt
+
+        return start_write(self.store.start_latest(SOURCE, self.pod_id, prefix), tag, same)
 
     async def _guard(self, snap):
         """The station's guard: True once it removed the station (nothing else on this tick)."""
@@ -199,7 +213,7 @@ class GtpStation:
                 f"{int(self.retry_at - self.monotonic())} s"
             )
             return False
-        done = self.store.lookup(SOURCE, self.pod_id, self.key())
+        done, self.key = self.start_write()
         if done is not None:
             self.waiting = (
                 None
@@ -237,7 +251,7 @@ class GtpStation:
         if not self._wanted(self.latest(), snap):
             return
         op = self.engine.request(
-            self.intent, source=SOURCE, key=self.key(), run_id=self.run_id, deadline=DEADLINE
+            self.intent, source=SOURCE, key=self.key, run_id=self.run_id, deadline=DEADLINE
         )
         if op.state == State.REQUESTED:
             op = await self.engine.execute(op.operation_id)

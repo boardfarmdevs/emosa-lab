@@ -2,9 +2,11 @@
 """The agent writes a legacy pod's radio plan (spec 3.10, profile ``radio_plan: emosa``).
 
 ``RadioPlan`` writes the plan (``emosa.opensync.radio_plan``) at most once per start of the
-pod's OpenSync, with its own operation journal: when something differs from it (an unclaimed
-AP's Inet row on, the wired pod's fronthaul radio off the profile's channel; the AP itself is left
-on). Not repeated on that start, even when a row is changed again: the next start writes it again.
+pod's OpenSync and plan, with its own operation journal: when something differs from it (an
+unclaimed AP's Inet row on, the wired pod's fronthaul radio off the profile's channel; the AP
+itself is left on). Not repeated on that start, even when a row is changed again: the next start
+writes it again, and so does a changed plan on the same start (going back to an earlier one
+included).
 """
 
 import logging
@@ -14,6 +16,7 @@ from emosa.model import ACTIVE, State
 from emosa.opensync.radio_plan import RadioPlanIntent
 from emosa.operations import transition
 from emosa.reconcile import Engine
+from emosa.store import start_write
 
 log = logging.getLogger("emosa.agent.radio_plan")
 DEADLINE = 30  # wm shows an AP off as soon as it has taken the row
@@ -27,6 +30,7 @@ class RadioPlan:
         self.engine = Engine(store, vault, {pod_id: backend}, clock, intent_type=RadioPlanIntent)
         self.engine.recover()
         self.waiting = None
+        self.key = None  # the wanted write's idempotency key (start_write)
 
     def latest(self):
         ops = self.store.operations()
@@ -56,11 +60,14 @@ class RadioPlan:
             op.reason = Reason.APPLY_TIMEOUT
             self.engine._save(op)
 
-    def key(self):
-        """At most one write per OpenSync start and plan: a start EMOSA continues (the same start
-        marker after an EMOSA restart) gets one more when the plan changed."""
+    def start_write(self):
+        """At most one write per OpenSync start and plan (``emosa.store.start_write``): a start
+        EMOSA continues (the same start marker after an EMOSA restart) gets one more when the plan
+        changed, and so does going back to an earlier plan on that start."""
         wanted = self.engine.vault.fingerprint(self.intent.record())
-        return f"{self.backend.instance}:radio-plan:{wanted[:16]}"
+        prefix = f"{self.backend.instance}:radio-plan:"
+        latest = self.store.start_latest(SOURCE, self.pod_id, prefix)
+        return start_write(latest, prefix + wanted[:16])
 
     def _wanted(self, op, snap):
         if not snap.ready:
@@ -72,7 +79,7 @@ class RadioPlan:
         if op is not None and op.state in ACTIVE:
             self.waiting = "write in progress"
             return False
-        done = self.store.lookup(SOURCE, self.pod_id, self.key())
+        done, self.key = self.start_write()
         if done is not None:
             self.waiting = (
                 None
@@ -94,7 +101,7 @@ class RadioPlan:
         if snap is None or not self._wanted(self.latest(), snap):
             return
         op = self.engine.request(
-            self.intent, source=SOURCE, key=self.key(), run_id=self.run_id, deadline=DEADLINE
+            self.intent, source=SOURCE, key=self.key, run_id=self.run_id, deadline=DEADLINE
         )
         if op.state == State.REQUESTED:
             op = await self.engine.execute(op.operation_id)

@@ -321,6 +321,11 @@ def test_a_legacy_pods_continued_start_gets_its_changed_module_settings_and_ap(a
     assert result["passed"], result
 
 
+def test_a_legacy_pods_continued_start_gets_its_earlier_module_settings_back(agent, tmp_path):
+    result = box("legacy-continued-start-reverted", agent, tmp_path / "box", timeout=360)
+    assert result["passed"], result
+
+
 def test_a_gre_childs_kept_target_waits_for_its_rebooting_parents_ap(agent, tmp_path):
     result = box("gre-child-kept-parent-rebooting", agent, tmp_path / "box", timeout=480)
     assert result["passed"], result

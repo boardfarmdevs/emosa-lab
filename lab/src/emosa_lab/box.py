@@ -8042,6 +8042,78 @@ async def legacy_continued_start_changes(box):
     )
 
 
+async def legacy_continued_start_reverted(box):
+    """spec 3.10, 4 (19 October, a rollback on the bench): going back to earlier settings on a
+    start EMOSA continues is written too. Onboarded with the fleet's module "hook" (its settings,
+    A, written), EMOSA is restarted with the hook's update changed (B, written on that start),
+    then again with A. The start marker is read back each time (the same start): A is written
+    once more on it (a third operation, the pod's settings A's again, nothing waiting). Before,
+    A's first write stood for it on that start, and the pod stayed on B."""
+    state = await onboarded(box)
+    if not state.get("applied"):
+        return box.result(passed=False, failed=state.get("failed", "not applied"))
+
+    def node_operation():
+        return node_config_status(box).get("operation") or {}
+
+    first = await box.until(
+        lambda: node_operation().get("state") == "OBSERVED_APPLIED" and node_operation()
+    )
+    if not first:
+        return box.result(passed=False, failed="settings not applied", node=node_config_status(box))
+    markers = await start_markers(box)
+    config_path = box.directory / "agent.json"
+    original = json.loads(config_path.read_text())["modules"]["hook"]
+    sha = "e" * 64
+    changed = {
+        **original,
+        "update_sha256": sha,
+        "update_url": f"http://{NODE_ADVERTISE}:6650/{sha}",
+    }
+    written = [first]
+    for hook in (changed, original):
+        box.process.kill()
+        box.process.wait(10)
+        config = json.loads(config_path.read_text())
+        config["modules"]["hook"] = hook
+        config_path.write_text(json.dumps(config, indent=2) + "\n")
+        before = len((box.status() or {}).get("operations") or [])
+        searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+        box.restart_agent()
+        await new_operation(box, before, "OBSERVED_APPLIED", searches, m1s)
+        seen = {w.get("operation_id") for w in written}
+
+        def written_again(seen=seen):
+            operation = node_operation()
+            fresh = operation.get("operation_id") not in seen
+            return operation.get("state") == "OBSERVED_APPLIED" and fresh and operation
+
+        node = await box.until(written_again, seconds=60)
+        if not node:
+            break
+        written.append(node)
+    settings = await node_settings(box)
+    after = await start_markers(box)
+    status = node_config_status(box)
+    same_start = [r.get("value") for r in after] == [r.get("value") for r in markers] and all(
+        w.get("instance") == first.get("instance") for w in written
+    )
+    reverted = (
+        len(written) == 3
+        and (settings.get(("hook", "update_sha256")) or (None,))[0] == original["update_sha256"]
+        and status.get("waiting") is None
+        and ((status.get("modules") or {}).get("hook") or {}).get("settings_written") is True
+    )
+    return box.result(
+        passed=same_start and reverted,
+        same_start=same_start,
+        reverted=reverted,
+        writes=len(written),
+        node_operation=node_operation(),
+        waiting=status.get("waiting"),
+    )
+
+
 async def legacy_start_marker(box):
     """spec 3.10, §5 (18 October): a legacy pod's start marker. Onboarded, the pod's database has
     EMOSA's marker, a Node_Config row emosa/start with a token, not persist. EMOSA restarted on its
@@ -8932,6 +9004,7 @@ SCENARIOS = {
     "legacy-reseed-reclaim-late": legacy_reseed_reclaim_late,
     "legacy-start-marker": legacy_start_marker,
     "legacy-continued-start-changes": legacy_continued_start_changes,
+    "legacy-continued-start-reverted": legacy_continued_start_reverted,
     "legacy-start-marker-refused": legacy_start_marker_refused,
     "upgrade-legacy-parent": upgrade_legacy_parent,
     "upgrade-pi-parent": upgrade_pi_parent,
@@ -9219,6 +9292,7 @@ OPTIONS["legacy-phy-netdev-foreign"] = OPTIONS["legacy-reseed-reclaim-5g"]
 OPTIONS["legacy-reseed-reclaim-late"] = OPTIONS["legacy-radio-plan"]
 OPTIONS["legacy-start-marker"] = {"legacy": True}
 OPTIONS["legacy-continued-start-changes"] = {"legacy": True, "modules": NODE_MODULES}
+OPTIONS["legacy-continued-start-reverted"] = {"legacy": True, "modules": NODE_MODULES}
 OPTIONS["legacy-profile-5g"] = OPTIONS["legacy-radio-plan"]
 # the station's guard, its times shortened: removed after 8 s unassociated, written again 12 s later
 OPTIONS["legacy-gtp-station-unassociated"] = {

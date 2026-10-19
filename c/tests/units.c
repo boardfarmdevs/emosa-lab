@@ -484,6 +484,62 @@ static void journal_tampered(const char *scratch, const char *schemas)
     em_schema_free(s.receipt);
 }
 
+/* one write per start and configuration, a revert included (emosa.store.start_write): the
+ * configurations A, then B, then A again on one start are three writes, an unchanged one none */
+static bool written_twice(const char *base, size_t len, const void *ctx)
+{
+    (void)ctx;
+    return len >= 2 && !strncmp(base + len - 2, ":2", 2);
+}
+
+static void start_writes(const char *scratch, const char *schemas)
+{
+    char dir[600], vdir[600], key[64];
+    snprintf(dir, sizeof(dir), "%s/journal-s", scratch);
+    snprintf(vdir, sizeof(vdir), "%s/secrets-s", scratch);
+    em_journal_schemas s = {em_schema_load(schemas, "operation"), em_schema_load(schemas, "event"),
+                            em_schema_load(schemas, "wsc-receipt")};
+    em_reason why;
+    em_journal *j = em_journal_open(dir, &s, &why);
+    em_vault v;
+    em_vault_open(&v, vdir);
+    fake_pod pod = {"old", "old", false, 1};
+    em_backend backend = {"fake", fake_target, fake_snapshot, fake_plan, fake_submit};
+    em_engine e;
+    em_engine_init(&e, j, &v, "pod-1", backend, &pod, fake_clock);
+    cJSON *intent = intent_for("home");
+    const char *tags[] = {"s1:scope:A", "s1:scope:B", "s1:scope:A"};
+    const char *keys[] = {"s1:scope:A", "s1:scope:B#1", "s1:scope:A#2"};
+    for (int i = 0; i < 3; i++) {
+        const cJSON *latest = em_journal_start_latest(j, "unit", "pod-1", "s1:scope:");
+        CHECK(!em_start_write(latest, tags[i], NULL, NULL, key, sizeof(key)), "write %d wanted", i);
+        CHECK(!strcmp(key, keys[i]), "write %d's key: %s", i, key);
+        cJSON *op = em_engine_request(&e, intent, "unit", key, "run-s", 30, "semantic", NULL, &why);
+        CHECK(op != NULL, "write %d requested", i);
+        cJSON_Delete(op);
+        latest = em_journal_start_latest(j, "unit", "pod-1", "s1:scope:");
+        CHECK(em_start_write(latest, tags[i], NULL, NULL, key, sizeof(key)), "write %d: then done", i);
+    }
+    const cJSON *latest = em_journal_start_latest(j, "unit", "pod-1", "s1:scope:");
+    CHECK(!em_start_write(latest, "s1:scope:B", NULL, NULL, key, sizeof(key)) && !strcmp(key, "s1:scope:B#3"),
+          "B again: numbered past the latest (%s)", key);
+    CHECK(!em_journal_start_latest(j, "unit", "pod-1", "s2:scope:"), "another start: none of its own");
+    CHECK(!em_journal_start_latest(j, "other", "pod-1", "s1:scope:"), "another source: none");
+    CHECK(!em_start_write(NULL, "s2:scope:A", NULL, NULL, key, sizeof(key)) && !strcmp(key, "s2:scope:A"),
+          "the first write of a start: its tag");
+    cJSON *op = em_engine_request(&e, intent, "unit", "s1:scope:C:2#3", "run-s", 30, "semantic", NULL, &why);
+    cJSON_Delete(op);
+    latest = em_journal_start_latest(j, "unit", "pod-1", "s1:scope:");
+    CHECK(em_start_write(latest, "s1:scope:C:1", written_twice, NULL, key, sizeof(key)),
+          "same: the base without its number");
+    em_engine_free(&e);
+    em_journal_close(j);
+    cJSON_Delete(intent);
+    em_schema_free(s.operation);
+    em_schema_free(s.event);
+    em_schema_free(s.receipt);
+}
+
 static void files(const char *scratch)
 {
     char path[512], tmp[520], big[512];
@@ -1736,6 +1792,7 @@ int main(int argc, char **argv)
     schema_keywords(argv[2]);
     helpers(argv[2]);
     journal_tampered(argv[2], argv[1]);
+    start_writes(argv[2], argv[1]);
     environment_files(argv[2]);
     supervisor(argv[2]);
     second_radio_profile(argv[1], argv[2]);

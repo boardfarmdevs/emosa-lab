@@ -25,6 +25,23 @@ def holds_rows(record):
     return bool(evidence.get("created")) and not evidence.get("released")
 
 
+def start_write(latest, tag, same=None):
+    """One write per OpenSync start and configuration, a revert included (spec 3.10, 4): (the
+    operation that stands for the configuration ``tag`` on this start, else None; the key of the
+    write wanted when there is none). A scope's latest operation on this start (``latest``, from
+    ``Store.start_latest``) stands for it when its key without its number (``tag#<n>``) is
+    ``tag``, or ``same(that key)`` says so. A write after it is numbered one past it, so that
+    going back to an earlier configuration (A, then B, then A) is written again."""
+    if latest is None:
+        return None, tag
+    base, mark, n = latest.idempotency_key.rpartition("#")
+    if not (mark and n.isdigit()):
+        base, n = latest.idempotency_key, "0"
+    if base == tag if same is None else same(base):
+        return latest, None
+    return None, f"{tag}#{int(n) + 1}"
+
+
 RECONCILED = frozenset(
     {
         State.SUBMITTED,
@@ -135,6 +152,17 @@ class Store:
             "SELECT record FROM operations WHERE source=? AND pod=? AND idem=?", (source, pod, key)
         ).fetchone()
         return Operation.from_dict(json.loads(row[0])) if row else None
+
+    def start_latest(self, source: str, pod: str, prefix: str):
+        """A scope's latest operation on this start of the pod's OpenSync: the last one whose
+        key begins with ``prefix`` (the start's instance and the scope), or None."""
+        for key, record in self.db.execute(
+            "SELECT idem, record FROM operations WHERE source=? AND pod=? ORDER BY rowid DESC",
+            (source, pod),
+        ):
+            if key.startswith(prefix):
+                return Operation.from_dict(json.loads(record))
+        return None
 
     def operations(self, run_id=None) -> list[Operation]:
         rows = (

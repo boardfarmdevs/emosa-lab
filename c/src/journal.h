@@ -35,6 +35,17 @@ const char *em_journal_process_id(const em_journal *j);
 const cJSON *em_journal_operations_view(em_journal *j);
 /* The most recent operation, borrowed as above; NULL when there is none. */
 const cJSON *em_journal_latest_view(em_journal *j);
+/* A scope's latest operation on this start of the pod's OpenSync (emosa.store.Store.start_latest):
+ * the last one of source and pod whose key begins with prefix (the start's instance and the
+ * scope), borrowed as above; NULL when there is none. */
+const cJSON *em_journal_start_latest(em_journal *j, const char *source, const char *pod, const char *prefix);
+/* One write per OpenSync start and configuration, a revert included (emosa.store.start_write):
+ * true when latest (em_journal_start_latest's, NULL: none) stands for the configuration tag: its
+ * key without its number (tag#<n>) is tag, or same(that base, its length, ctx) says so. Otherwise
+ * key gets the write's key: tag, numbered one past latest's after it (key's size has room for tag,
+ * '#' and 20 digits), so that going back to an earlier configuration is written again. */
+bool em_start_write(const cJSON *latest, const char *tag, bool (*same)(const char *base, size_t len, const void *ctx),
+                    const void *ctx, char *key, size_t size);
 
 /* Owned results (cJSON_Delete); NULL when absent. */
 cJSON *em_journal_get(em_journal *j, const char *operation_id);

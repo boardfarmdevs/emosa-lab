@@ -562,13 +562,17 @@ void em_node_tick(em_node_scope *s)
     const char *pod_id = str(s->intent, "pod_id");
     op = em_journal_latest(s->journal);
     cJSON *owned = em_journal_ownership(s->journal, pod_id);
-    /* one write per start and configuration: a start EMOSA continues (the same start marker
-     * after an EMOSA restart) gets one more when the settings changed */
-    char key[48], fp[65];
+    /* one write per start and configuration (NodeConfig.start_write): a start EMOSA continues
+     * (the same start marker after an EMOSA restart) gets one more when the settings changed,
+     * and so does going back to earlier settings on that start */
+    char prefix[32], tag[48], key[72] = "", fp[65];
     if (!em_engine_fingerprint(&s->engine, s->intent, NULL, fp))
         fp[0] = '\0';
-    EM_FORMAT_FIXED(key, sizeof(key), "%s:node-config:%.16s", s->instance, fp); /* 16+13+16 */
-    cJSON *done = NULL;
+    EM_FORMAT_FIXED(prefix, sizeof(prefix), "%s:node-config:", s->instance); /* 16+13 */
+    EM_FORMAT_FIXED(tag, sizeof(tag), "%s%.16s", prefix, fp);
+    /* this start's latest write, done when it stands for the settings (borrowed: the journal is
+     * not written before its last use below) */
+    const cJSON *done = em_journal_start_latest(s->journal, SOURCE, pod_id, prefix);
     bool wanted = false;
     if (!snap.ready) {
         wait_for(s, "pod not bound");
@@ -576,7 +580,7 @@ void em_node_tick(em_node_scope *s)
         wait_for(s, "another manager changed the settings: admit the pod anew");
     } else if (op && em_state_active(em_state_of(op))) {
         wait_for(s, "write in progress");
-    } else if ((done = em_journal_lookup(s->journal, SOURCE, pod_id, key))) {
+    } else if (em_start_write(done, tag, NULL, NULL, key, sizeof(key))) {
         if (!strcmp(em_state_of(done), "OBSERVED_APPLIED")) {
             wait_for(s, NULL);
         } else {
@@ -590,7 +594,6 @@ void em_node_tick(em_node_scope *s)
         wait_for(s, NULL);
         wanted = cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(snap.config, "pending"));
     }
-    cJSON_Delete(done);
     cJSON_Delete(owned);
     cJSON_Delete(op);
     em_snapshot_clear(&snap);

@@ -741,12 +741,79 @@ def test_a_gtp_stations_write_is_one_per_start_and_credential(tmp_path):
     asyncio.run(backend.snapshot())
 
     def key(i):
-        return GtpStation("pod-1", backend, Store(tmp_path / "gtp"), vault, i, run_id="t").key()
+        scope = GtpStation("pod-1", backend, Store(tmp_path / "gtp"), vault, i, run_id="t")
+        return scope.start_write()[1]
 
     assert key(intent) == key(GtpStationIntent("pod-1", "wl1", "site-gtp", "gtp"))
     assert key(intent) != key(GtpStationIntent("pod-1", "wl1", "site-gtp-2", "gtp"))
     vault.write_simulated("gtp2", GTP_KEY + "x")
     assert key(intent) != key(GtpStationIntent("pod-1", "wl1", "site-gtp", "gtp2"))
+
+
+def started(scope_for, source, configurations, attempt=0):
+    """Each configuration in turn on one start of the pod, each by a scope EMOSA started anew
+    (``attempt``: the GTP station's removals so far): [(a write wanted, its key)], each wanted
+    write requested."""
+    found = []
+    for configuration in configurations:
+        scope = scope_for(configuration)
+        if attempt:
+            scope.attempt = attempt
+        done, key = scope.start_write()
+        if done is None:
+            scope.engine.request(scope.intent, source=source, key=key, run_id="t")
+        found.append((done is None, key))
+        scope.store.close()
+    return found
+
+
+def test_a_plan_or_credential_and_its_revert_on_one_start_are_three_writes(tmp_path):
+    """spec 3.10 (19 October, a rollback on the bench): the radio plan's and the GTP station's
+    configurations A, then B, then A again on one start are three writes, each numbered past the
+    start's latest (A's second write not taken for its first); A again is none. The GTP station's
+    removal is one more write, and EMOSA started anew (its removals counted from 0) not."""
+    from emosa.agent import gtp_station
+    from emosa.agent import radio_plan as plan_scope
+    from emosa.opensync.gtp_station import GtpStationIntent
+    from emosa.opensync.radio_plan import RadioPlanBackend, RadioPlanIntent
+    from emosa.store import Store
+
+    def numbered(found):
+        (a, ka), (b, kb), (again, kagain), (unchanged, kunchanged) = found
+        assert (a, b, again, unchanged) == (True, True, True, False)
+        assert "#" not in ka and kb.endswith("#1") and kagain == f"{ka}#2" and kunchanged is None
+        assert kb.partition("#")[0] != ka
+
+    pod = OperatorPod()
+    vault = SecretStore(tmp_path / "secrets")
+    plans = {
+        "A": RadioPlanIntent("pod-1", ("wl1.1", "wl1.2"), "2.4G", 6, "HT20"),
+        "B": RadioPlanIntent("pod-1", ("wl1.1", "wl1.2"), "2.4G", 11, "HT20"),
+    }
+
+    def plan(name):
+        backend = RadioPlanBackend("pod-1", pod, vault, serial=SERIAL, intent=plans[name])
+        asyncio.run(backend.snapshot())
+        return plan_scope.RadioPlan("pod-1", backend, Store(tmp_path / "plan"), vault, run_id="t")
+
+    numbered(started(plan, plan_scope.SOURCE, "ABAA"))
+
+    seeded = SeededPod()
+    backend, intent, vault = gtp(tmp_path, seeded)
+    asyncio.run(backend.snapshot())
+    vault.write_simulated("gtp2", GTP_KEY + "x")
+    credentials = {"A": intent, "B": GtpStationIntent("pod-1", "wl1", "site-gtp", "gtp2")}
+
+    def station(name):
+        store = Store(tmp_path / "gtp")
+        return gtp_station.GtpStation("pod-1", backend, store, vault, credentials[name], run_id="t")
+
+    first = started(station, gtp_station.SOURCE, "ABAA")
+    numbered(first)
+    ((removed, key),) = started(station, gtp_station.SOURCE, "A", attempt=1)
+    assert removed and key == f"{first[0][1]}:1#3"
+    # EMOSA anew, its removals from 0
+    assert started(station, gtp_station.SOURCE, "A") == [(False, None)]
 
 
 def test_a_pinned_gtp_station_on_a_pod_without_its_inet_row(tmp_path):

@@ -841,15 +841,19 @@ void em_plan_tick(em_plan_scope *s)
     /* RadioPlan._wanted */
     op = em_journal_latest(s->journal);
     cJSON *owned = em_journal_ownership(s->journal, s->intent.pod_id);
-    /* one write per start and plan: a start EMOSA continues (the same start marker after an
-     * EMOSA restart) gets one more when the plan changed */
-    char key[48], fp[65];
+    /* one write per start and plan (RadioPlan.start_write): a start EMOSA continues (the same
+     * start marker after an EMOSA restart) gets one more when the plan changed, and so does
+     * going back to an earlier plan on that start */
+    char prefix[32], tag[48], key[72] = "", fp[65];
     cJSON *rec = record(&s->intent);
     if (!em_engine_fingerprint(&s->engine, rec, NULL, fp))
         fp[0] = '\0';
     cJSON_Delete(rec);
-    EM_FORMAT_FIXED(key, sizeof(key), "%s:radio-plan:%.16s", s->instance, fp); /* 16+12+16 */
-    cJSON *done = NULL;
+    EM_FORMAT_FIXED(prefix, sizeof(prefix), "%s:radio-plan:", s->instance); /* 16+12 */
+    EM_FORMAT_FIXED(tag, sizeof(tag), "%s%.16s", prefix, fp);
+    /* this start's latest write, done when it stands for the plan (borrowed: the journal is not
+     * written before its last use below) */
+    const cJSON *done = em_journal_start_latest(s->journal, SOURCE, s->intent.pod_id, prefix);
     bool wanted = false;
     if (!snap.ready) {
         wait_for(s, "pod not bound");
@@ -857,7 +861,7 @@ void em_plan_tick(em_plan_scope *s)
         wait_for(s, "another manager changed the plan: admit the pod anew");
     } else if (op && em_state_active(em_state_of(op))) {
         wait_for(s, "write in progress");
-    } else if ((done = em_journal_lookup(s->journal, SOURCE, s->intent.pod_id, key))) {
+    } else if (em_start_write(done, tag, NULL, NULL, key, sizeof(key))) {
         if (!strcmp(em_state_of(done), "OBSERVED_APPLIED")) {
             wait_for(s, NULL);
         } else {
@@ -871,7 +875,6 @@ void em_plan_tick(em_plan_scope *s)
         wait_for(s, NULL);
         wanted = cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(snap.config, "pending"));
     }
-    cJSON_Delete(done);
     cJSON_Delete(owned);
     cJSON_Delete(op);
     em_snapshot_clear(&snap);

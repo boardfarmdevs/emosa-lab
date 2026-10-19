@@ -213,6 +213,36 @@ def test_changed_settings_on_a_start_emosa_continues_are_written_once(tmp_path):
     assert len(pod.sent) == 2  # once
 
 
+def test_going_back_to_earlier_settings_on_one_start_is_written(tmp_path):
+    """spec 4, 3.10 (19 October, a rollback on the bench): the settings A, then B, then A again,
+    each by an EMOSA restart that continues the pod's start, are three writes (the last one puts
+    A back, not taken for A's first write); the same settings again are none."""
+    pod = Pod()
+    sha = "e" * 64
+    url = f"http://192.0.2.1:6650/{sha}"
+    changed = {"hook": {**SETTINGS["hook"], "update_url": url, "update_sha256": sha}}
+
+    def run(modules=None):
+        agent = scope(tmp_path, pod, modules=modules)
+        asyncio.run(agent.tick())
+        asyncio.run(agent.tick())
+        status = agent.status()
+        agent.store.close()  # EMOSA stops
+        values = {(r["module"], r["key"]): r["value"] for r in pod.tables["Node_Config"].values()}
+        return status, values[("hook", "update_sha256")]
+
+    status, written = run()
+    assert len(pod.sent) == 1 and written == SHA
+    status, written = run(changed)
+    assert len(pod.sent) == 2 and written == sha
+    status, written = run()  # back to A
+    assert len(pod.sent) == 3 and written == SHA
+    assert status["operation"]["state"] == State.OBSERVED_APPLIED and status["waiting"] is None
+    assert status["modules"]["hook"]["settings_written"] is True and status["differs"] == []
+    status, written = run()  # A unchanged
+    assert len(pod.sent) == 3 and status["waiting"] is None
+
+
 def test_a_row_another_writer_added_meanwhile_is_a_conflict(tmp_path):
     pod = Pod()
     backend = NodeConfigBackend(
