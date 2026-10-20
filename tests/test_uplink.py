@@ -1091,6 +1091,40 @@ def test_a_parked_target_survives_a_restart_and_is_taken_up_again_at_most_kept_r
     assert switch.status()["kept"]["parked"] is None and switch.status()["bssid"] == PARENT
 
 
+def test_a_parked_target_its_ap_unnamed_for_a_while_is_not_armed_by_it(tmp_path):
+    """Spec 8.3: a parked target (its tries used with its AP up) whose AP no agent names for a
+    while (EMOSA and its pod's agent started again, that agent not saying yet) is not armed by it:
+    no agent naming the AP is no down. Named up again it stays parked, a rearm not spent; only a
+    down then up takes it up again."""
+    up = {NEXT: True}
+    switch, pod, clock, store = kept_on_parent(tmp_path, up, kept_tries=1)
+    pod.restart("00000000-0000-4000-8000-0000000000a2")
+    asyncio.run(switch.tick())
+    clock.advance(DEADLINE + 1)
+    asyncio.run(switch.tick())  # its one try failed with its AP up: parked, not armed
+    pod.revert()
+    asyncio.run(switch.tick())  # the configured upstream
+    pod.adopt()
+    asyncio.run(switch.tick())
+    up.clear()  # its pod's agent started again: it names nothing yet
+    switch = restarted(switch, tmp_path, pod, clock, up, kept_tries=1)
+    sent = len(pod.sent)
+    asyncio.run(switch.tick())
+    asyncio.run(switch.tick())
+    assert json.loads((store.directory / "target.json").read_text())["parked"] == {"armed": False}
+    up[NEXT] = True  # named again: up all along
+    asyncio.run(switch.tick())
+    status = switch.status()
+    assert len(pod.sent) == sent and status["kept"]["parked"] == NEXT
+    assert status["kept"]["rearms"] == 0
+    up[NEXT] = False  # down
+    asyncio.run(switch.tick())
+    up[NEXT] = True  # and up again
+    asyncio.run(switch.tick())
+    assert len(pod.sent) == sent + 1 and pod.sent[-1][2]["row"]["bssid"] == NEXT
+    assert switch.status()["kept"]["rearms"] == 1
+
+
 def test_a_kept_try_its_parent_went_down_during_counts_none_and_waits_again(tmp_path):
     """Spec 8.3: a switch whose parent's AP went down before it could be applied is no failed try:
     the target waits for that AP again, its tries untouched."""

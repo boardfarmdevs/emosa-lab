@@ -581,8 +581,9 @@ class UplinkSwitch:
 
     def _parked_again(self):
         """Spec 8.3: a parked target is taken up again, its tries anew, once its parent's AP is
-        reported up after it was not (an AP up throughout is no reason): a switch of its own,
-        after any undo of the failed one. Each time counts towards ``kept_rearms``."""
+        reported up after it was reported down (an AP up throughout is no reason, nor one no
+        agent names for a while, as after EMOSA's restart): a switch of its own, after any undo
+        of the failed one. Each time counts towards ``kept_rearms``."""
         parked = self.parked
         if parked is None or self._reenable is not None:
             return
@@ -591,8 +592,9 @@ class UplinkSwitch:
         op = self.latest()
         if op is not None and op.state in ACTIVE:
             return
-        if self.parent_ap(parked["target"]) is not True:
-            if not parked["armed"]:
+        up = self.parent_ap(parked["target"])
+        if up is not True:
+            if up is False and not parked["armed"]:
                 parked["armed"] = True
                 self._keep_target()
             return

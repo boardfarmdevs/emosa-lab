@@ -3302,8 +3302,10 @@ async def kept_target_unmarked_named_late(box):
 async def kept_target_parked_rearmed(box):
     """Spec 8.3: the kept fleet target's AP is up but the child cannot join it: after its tries
     (kept_tries 1 here) the target is given up and parked, not forgotten (target.json keeps it),
-    nothing tried while that AP stays up. An EMOSA restart keeps it parked and tries nothing.
-    Its AP goes down and up again: the target is taken up again (rearms 1), its tries anew,
+    nothing tried while that AP stays up. An EMOSA restart, the target's agent naming no AP for a
+    while (as when the agents start again), keeps it parked and not armed: no agent naming the AP
+    is no down, so nothing is tried once the AP is named up again. Its AP goes down and up again:
+    the target is taken up again (rearms 1), its tries anew,
     switched to without a steer and applied; reached, it is kept as any target, rearms back to 0."""
     if not await steered_onto_fleet_target(box):
         return box.result(passed=False, failed="the move onto the fleet target did not complete")
@@ -3317,14 +3319,19 @@ async def kept_target_parked_rearmed(box):
     await asyncio.sleep(10)
     operations = len(journal_records(box, "uplink") or [])  # its switches so far
     still = (uplink_status(box).get("kept") or {}).get("parked") == TARGET_PARENT
-    # EMOSA starts again (the pod not): parked still, nothing tried
+    # EMOSA starts again (the pod not), the target's agent naming no AP for a while: parked
+    # still and not armed by that; named up again (up all along), nothing tried
+    target_pod(box, None)
     box.process.kill()
     box.process.wait(10)
     box.restart_agent()
     restarted = await box.until(
         lambda: (uplink_status(box).get("kept") or {}).get("parked") == TARGET_PARENT, seconds=60
     )
+    await asyncio.sleep(5)  # the agent's peer directory (1 s cache) has the AP unnamed
+    target_pod(box, True)
     await asyncio.sleep(10)
+    unarmed = (kept_target(box) or {}).get("parked") == {"armed": False}
     quiet = (
         len(journal_records(box, "uplink") or []) == operations
         and (uplink_status(box).get("kept") or {}).get("parked") == TARGET_PARENT
@@ -3347,6 +3354,7 @@ async def kept_target_parked_rearmed(box):
         and bool(parked)
         and still
         and bool(restarted)
+        and unarmed
         and quiet
         and bool(rearmed)
         and bool(switched)
@@ -3360,6 +3368,7 @@ async def kept_target_parked_rearmed(box):
         parked=parked,
         parked_while_up=still,
         parked_after_restart=bool(restarted),
+        not_armed_while_unnamed=unarmed,
         nothing_tried_while_parked=quiet,
         taken_up_again=bool(rearmed),
         switched=bool(switched),

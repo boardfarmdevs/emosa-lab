@@ -1370,8 +1370,9 @@ static void note_fleet(em_uplink_scope *u)
 }
 
 /* UplinkSwitch._parked_again (spec 8.3): a parked target is taken up again, its tries anew, once its
- * parent's AP is reported up after it was not (an AP up throughout is no reason): a switch of its
- * own, after any undo of the failed one. Each time counts towards kept_rearms_max. */
+ * parent's AP is reported up after it was reported down (an AP up throughout is no reason, nor one no
+ * agent names for a while, as after EMOSA's restart): a switch of its own, after any undo of the
+ * failed one. Each time counts towards kept_rearms_max. */
 static void parked_again(em_uplink_scope *u)
 {
     if (!u->has_parked || u->nreenable || (!u->bssid[0] && u->fallback_after))
@@ -1381,8 +1382,9 @@ static void parked_again(em_uplink_scope *u)
     cJSON_Delete(op);
     if (active)
         return;
-    if (ap_state(u, u->parked_target) != 1) {
-        if (!u->parked_armed) {
+    int up = ap_state(u, u->parked_target);
+    if (up != 1) {
+        if (up == 0 && !u->parked_armed) {
             u->parked_armed = true;
             keep_target(u);
         }

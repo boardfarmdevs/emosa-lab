@@ -1387,8 +1387,9 @@ The agent makes the switch itself when its configuration has
   agent has ever named keeps the rule above: one switch, forgotten when it fails. A fleet pod's
   target given up (its tries used, or the wait capped) is parked, not forgotten: the uplink back
   on its configured upstream, `target.json` keeping the target, and it is taken up again, its
-  tries anew, once its parent's AP is reported up after it was not (an AP up throughout is no
-  reason), at most `kept_rearms` (3) times; then it is forgotten. The parked state and the count
+  tries anew, once its parent's AP is reported up after it was reported down (an AP up
+  throughout is no reason, nor one no fleet agent names for a while, as when the agents start
+  again), at most `kept_rearms` (3) times; then it is forgotten. The parked state and the count
   are kept across EMOSA's restarts, which take a parked target up no sooner. Each give-up's log
   says which case it was (no fleet agent names it, its tries failed, its parent not back) and
   whether the target is parked or forgotten. A new move of the controller's, or the kept target
