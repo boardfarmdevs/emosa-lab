@@ -49,7 +49,9 @@
     },
     "README 3.2 What EMOSA reads and writes": {
       "vectors": ["translation-southbound.json", "scope-writes.json"],
-      "python": ["test_pod_profile.py", "test_radio_scope.py"]
+      "box": ["node-config-commit-refused"],
+      "python": ["test_pod_profile.py", "test_radio_scope.py", "test_ovsdb.py"],
+      "units": ["commit_refused"]
     },
     "README 3.3 Translation: OVSDB → EasyMesh": {
       "vectors": ["translation-northbound.json", "uplink.json"],

@@ -160,23 +160,23 @@ def test_a_marker_not_taken_is_logged_and_tried_again_later(marked, monkeypatch,
     clock[0] += 6
     asyncio.run(report.mark_start(raw({})))
     assert len(session.sent) == 2 and report.start_pending_since == 1_760_000_100.0
-    # taken at last: the marker read back, the pod no longer pending (its last error kept)
+    # taken at last: the marker read back, the pod no longer pending and its last error cleared
     asyncio.run(report.mark_start(raw(marker("0123456789abcdef"))))
-    assert report.start_pending_since is None
-    assert report.start_error == "INVALID_INPUT: constraint violation"
+    assert report.start_pending_since is None and report.start_error is None
 
 
-def test_a_marker_refused_at_commit_is_an_unknown_outcome_with_the_databases_error(
-    marked, monkeypatch
-):
+def test_a_marker_refused_at_commit_is_a_refusal_with_the_databases_error(marked, monkeypatch):
     # RFC 7047: a refusal at commit (a constraint violation) has one result more than the
-    # operations, which the agents' check reads as an unknown outcome; the error says what it was
-    session = Session([{}, {"uuid": ["uuid", "u"]}, {"error": "constraint violation"}])
+    # operations: nothing written, as definite as an operation's error; its details (which can
+    # quote a value written) are not kept
+    session = Session(
+        [{}, {"uuid": ["uuid", "u"]}, {"error": "constraint violation", "details": "secret"}]
+    )
     report = source(session)
     monkeypatch.setattr("emosa.agent.pod.time.monotonic", lambda: 100.0)
     asyncio.run(report.mark_start(raw({})))
     assert report.start_writes == 0
-    assert report.start_error == "OUTCOME_UNKNOWN: constraint violation"
+    assert report.start_error == "INVALID_INPUT: constraint violation"
 
 
 def test_a_marker_writes_failure_is_its_reason_and_the_databases_error():

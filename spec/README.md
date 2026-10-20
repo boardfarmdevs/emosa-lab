@@ -327,6 +327,17 @@ nothing is written. Guarded AP VIF fields: `if_name`, `mode`, `enabled`, `ssid`,
 `wpa`, `wpa_key_mgmt`, `wpa_psks`, `security`, and the pairwise cipher flags.
 EMOSA MUST NOT write any other table or column.
 
+A transaction's results are read as RFC 7047 (4.1.3) gives them: one per
+operation. An operation's error refuses the whole transaction (a failed `wait`:
+the guarded rows changed, an ownership conflict; any other: `FAILED`,
+`INVALID_INPUT`). Every operation done but the commit refused (a full table, a
+broken reference) is one result more, an error: nothing of it is applied, so it is
+`FAILED`, `INVALID_INPUT`, as definite as an operation's error and not an unknown
+outcome. Either way the operation's commit evidence keeps the database's error
+(`database_error`, its RFC 7047 error string, at most 64 characters; never its
+`details`, which can quote a value written, a passphrase among them). Results of
+any other shape, or none, are an unknown outcome (`INDETERMINATE`).
+
 ### 3.3 Translation: OVSDB → EasyMesh
 
 | OpenSync (State) | EasyMesh / 1905.1 |
@@ -878,10 +889,9 @@ is everything above. For a legacy pod, all of this specification applies, except
   "the pod's start marked"). A pod whose database keeps refusing the marker stays not ready (it
   fails safe: nothing else is written to it), and `start_marker` says since when
   (`pending_since`, Unix time, null while the pod has its marker) and why (`last_error`: the
-  last failed write's reason with the database's own error, as `OUTCOME_UNKNOWN: constraint
-  violation` for a full table: a refusal at commit has one result more than the operations,
-  RFC 7047, which both agents' check of the results reads as an unknown outcome; each try also
-  in the log). A legacy schema without `Node_Config` falls back to
+  last failed write's reason with the database's own error, as `INVALID_INPUT: constraint
+  violation` for a full table, a refusal at commit (§3.2); null again once the marker is read
+  back; each try also in the log). A legacy schema without `Node_Config` falls back to
   the agent's own token, renewed for its first session, every fresh session and a `config_lost` reconnection.
   A 6.6 pod's start is its radio rows alone, as before. Both agents. Box `legacy-reseed-reclaim`,
   `legacy-reseed-reclaim-5g` (wl0 back on 36 at HT80 with its home AP),

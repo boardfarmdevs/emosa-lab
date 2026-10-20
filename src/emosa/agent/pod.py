@@ -362,7 +362,8 @@ class PodReportSource:
         if token is not None:
             if self.start_token is not None and token != self.start_token:
                 self.new_start("a new start marker")
-            self.start_token, self.start_pending_since = token, None
+            # marked: why an earlier write failed no longer holds the pod
+            self.start_token, self.start_pending_since, self.start_error = token, None, None
             return
         if self.start_pending_since is None:
             self.start_pending_since = time.time()

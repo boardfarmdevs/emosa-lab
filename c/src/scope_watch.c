@@ -388,8 +388,10 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
         return;
     }
     em_reason checked = em_check_results(results, counts, n);
+    cJSON *refused = checked != EM_OK ? em_failed_check_evidence(checked, results) : NULL; /* mapping.failed_check */
     cJSON_Delete(results);
     if (checked != EM_OK) {
+        out->evidence = refused;
         cJSON_Delete(p);
         EM_FORMAT_FIXED(out->status, sizeof(out->status), "%s", checked == EM_OUTCOME_UNKNOWN ? "unknown" : "rejected");
         out->reason = checked;

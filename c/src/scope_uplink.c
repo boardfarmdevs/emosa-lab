@@ -488,7 +488,7 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
         cJSON_AddNullToObject(out->evidence, "restore");
         return;
     }
-    em_submit_result result;
+    em_submit_result result = {0};
     const char *refusal;
     cJSON *restore_out = NULL; /* the pin's vconf snapshot, for the revert (NULL unless from bootstrap) */
     em_reason e;
@@ -519,6 +519,7 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
     EM_FORMAT_FIXED(out->status, sizeof(out->status), "%s", result.status);
     out->reason = result.reason;
     if (strcmp(result.status, "committed")) {
+        out->evidence = em_refusal_evidence(result.database_error); /* NULL unless refused with one */
         cJSON_Delete(restore_out);
         return;
     }
@@ -1484,7 +1485,7 @@ static em_reason take_off(em_uplink_scope *u, const char *const *names, size_t n
         taken[i] = emosa[i] = false;
     }
     em_ovs_session session = {em_ovsdb_tables(u->ovs), em_ovsdb_generation(u->ovs), u->transact, u->transact_ctx};
-    em_submit_result result;
+    em_submit_result result = {0};
     *off = 0;
     em_reason e = u->legacy ? EM_OK
                             : em_uplink_take_off(u->serial, &session, names, (const cJSON *const *)restores, n,
@@ -1594,7 +1595,7 @@ static void enable_own(em_uplink_scope *u)
         EM_FORMAT_FIXED(list + strlen(list), sizeof(list) - strlen(list), "%s%s", i ? ", " : "", names[i]);
     }
     em_ovs_session session = {em_ovsdb_tables(u->ovs), em_ovsdb_generation(u->ovs), u->transact, u->transact_ctx};
-    em_submit_result result;
+    em_submit_result result = {0};
     size_t on = 0;
     em_reason e = em_uplink_enable(u->serial, &session, names, u->nreenable, &result, &on);
     if (e == EM_OK && on && strcmp(result.status, "committed")) {

@@ -477,15 +477,22 @@ def advertised_eirp_cases():
 INSERTED = "00000000-0000-4000-8000-0000000000ff"
 
 
+# what a refused commit's details say in the vectors: a value written, which the scopes never keep
+COMMIT_DETAILS = "a value written: not-a-passphrase"
+
+
 class Recorder:
     """An OVSDB session over fixed rows that records every transaction. With ``owm``, a
     steering client row a transaction inserts appears in the rows as owm steering it; the
-    transactions numbered in ``lost`` (from 0) are carried out but their replies are lost."""
+    transactions numbered in ``lost`` (from 0) are carried out but their replies are lost. With
+    ``commit_error``, every operation is done but the commit refused (RFC 7047: one result more,
+    that error, with details quoting a value written)."""
 
-    def __init__(self, raw, *, owm=False, lost=(), selects=False):
+    def __init__(self, raw, *, owm=False, lost=(), selects=False, commit_error=None):
         self.schema = Schema(json.loads(reference_path().read_text()))
         self.tables, self.sent = raw, []
         self.owm, self.lost = owm, set(lost)
+        self.commit_error = commit_error
         # selects: a select of a whole table answered from the rows (the requested columns a row
         # has), as the pod's database does; otherwise no rows
         self.selects = selects
@@ -512,10 +519,13 @@ class Recorder:
             "select": {"rows": []},
             "insert": {"uuid": ["uuid", INSERTED]},
         }
-        return [
+        results = [
             self.select(op) if op["op"] == "select" else replies.get(op["op"], {"count": 1})
             for op in operations
         ]
+        if self.commit_error:
+            results.append({"error": self.commit_error, "details": COMMIT_DETAILS})
+        return results
 
     def select(self, op):
         if not self.selects or op.get("where"):
@@ -3425,15 +3435,21 @@ def scope_write_case(name, raw, backend, intent):
             await backend.snapshot()  # the AP scope binds the pod here, and may refuse
             await backend.plan(intent)
         except EmosaError as exc:
-            return None, exc.code.value
+            return None, exc.code.value, None
         attempt = {"attempt_id": "a", "transaction_id": "t", "session_generation": 1}
-        return (await backend.submit(intent, attempt)).status, None
+        result = await backend.submit(intent, attempt)
+        return result.status, None, result.evidence.get("database_error")
 
-    status, refusal = asyncio.run(run())
+    status, refusal, error = asyncio.run(run())
     expected = {"status": status, "transactions": backend.session.sent}
     if refusal:
         expected["refusal"] = refusal
-    return {"name": name, "ovsdb_tables": raw, "intent": intent.record(), "expected": expected}
+    if error:  # a refusal the database replied with (spec 3.2): its error kept
+        expected["database_error"] = error
+    case = {"name": name, "ovsdb_tables": raw, "intent": intent.record(), "expected": expected}
+    if getattr(backend.session, "commit_error", None):
+        case["commit_error"] = backend.session.commit_error
+    return case
 
 
 def scope_writes_vectors():
@@ -3718,6 +3734,7 @@ def scope_writes_vectors():
         backend = SteeringBackend("pod-1", Recorder(copy.deepcopy(raw)), serial=SERIAL)
         cases.append({"scope": "steering", **scope_write_case(name, raw, backend, intent)})
     cases.extend(ap_scope_cases())
+    cases.extend(commit_refused_cases())
     return {
         "description": "spec §3.4, §3.6, §3.7, §3.9: the scopes' guarded OVSDB writes on the "
         "recorded pod rows (with the case's changes): the AP scope's M2 intents (with the "
@@ -3725,11 +3742,70 @@ def scope_writes_vectors():
         "statistics publishing, the probe watch's rows, and a steering window that replaces "
         "the station's watch row. Per case: the plan's refusal (a Reason), or the submission's "
         "status and every transaction sent. The server replies to every insert with the UUID "
-        "00000000-0000-4000-8000-0000000000ff. Every scope is bound to pod_id.",
+        "00000000-0000-4000-8000-0000000000ff. Every scope is bound to pod_id. Spec 3.2: with "
+        "a case's commit_error the server refuses the commit (one result more, that error), "
+        "and the case says the database's error kept (database_error); a case's own serial "
+        "is the pod's.",
         "serial": SERIAL,
         "pod_id": "pod-1",
         "cases": cases,
     }
+
+
+# the refused commits' pod: the recorded rows under a serial of their own
+REFUSED_SERIAL = "EMOSAPOD0000000A"
+
+
+def commit_refused_cases():
+    """Spec 3.2 (RFC 7047 4.1.3): the telemetry scope's and the AP scope's writes, every
+    operation done and the commit refused: a refusal with the database's error, not an unknown
+    outcome."""
+    from emosa.opensync.telemetry import TelemetryBackend, TelemetryIntent
+
+    raw = json.loads(json.dumps(pod_rows()).replace(SERIAL, REFUSED_SERIAL))
+    for node in raw["AWLAN_Node"].values():
+        node["firmware_version"] = "6.6.1.0-lab"
+    telemetry = TelemetryIntent(
+        "pod-1", "10.101.0.40", 8883, f"emosa/stats/{REFUSED_SERIAL}", "2.4G", 5, 5, 5, True
+    )
+    backend = TelemetryBackend(
+        "pod-1",
+        Recorder(copy.deepcopy(raw), commit_error="referential integrity violation"),
+        serial=REFUSED_SERIAL,
+        radio_type="2.4G",
+        survey=True,
+    )
+    cases = [
+        {
+            "scope": "telemetry",
+            "serial": REFUSED_SERIAL,
+            **scope_write_case("telemetry-commit-refused", raw, backend, telemetry),
+        }
+    ]
+    primary = Intent("pod-1", "radio-1", "bss-1", "emosa-mesh-2", "ref-primary")
+    with tempfile.TemporaryDirectory() as directory:
+        vault = SecretStore(Path(directory) / "secrets")
+        for ref, passphrase in PASSPHRASES.items():
+            vault.write_simulated(ref, passphrase)
+        backend = PodBackend(
+            "pod-1",
+            Recorder(copy.deepcopy(raw), commit_error="constraint violation"),
+            vault,
+            serial=REFUSED_SERIAL,
+            multi_bss=False,
+        )
+        case = scope_write_case("ap-update-commit-refused", raw, backend, primary)
+    cases.append(
+        {
+            "scope": "ap",
+            "serial": REFUSED_SERIAL,
+            "profile": DEFAULT,
+            "multi_bss": False,
+            "passphrases": PASSPHRASES,
+            **case,
+        }
+    )
+    return cases
 
 
 def ap_scope_cases():
@@ -3987,6 +4063,12 @@ def engine_vectors():
                 ),
                 "conflict": SubmitResult("conflict", {}, Reason.PRECONDITION_FAILED),
                 "rejected": SubmitResult("rejected", {}, Reason.NOT_READY),
+                # spec 3.2: the pod's database refused it (at commit), and said why
+                "refused": SubmitResult(
+                    "rejected",
+                    {"attribution": "reply", "database_error": "constraint violation"},
+                    Reason.INVALID_INPUT,
+                ),
                 "unknown": SubmitResult(
                     "unknown", {"attribution": "unknown"}, Reason.OUTCOME_UNKNOWN
                 ),
@@ -4063,6 +4145,7 @@ def engine_vectors():
             ],
         ),
         ("rejected", [("script", None, "rejected"), ("request", [a], "k1", 30), ("execute", 0)]),
+        ("refused", [("script", None, "refused"), ("request", [a], "k1", 30), ("execute", 0)]),
         (
             "changed-by-another-manager",
             [
@@ -4251,6 +4334,7 @@ def engine_vectors():
                                         "attribution"
                                     ),
                                     "commit_attribution": o.commit_evidence.get("attribution"),
+                                    "database_error": o.commit_evidence.get("database_error"),
                                 }
                                 for o in (store.get(i) for i in ids)
                             ],

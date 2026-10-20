@@ -610,6 +610,7 @@ static void mark_start(agent *a, const cJSON *tables)
             new_start(a, "a new start marker");
         EM_FORMAT_FIXED(a->start_token, sizeof(a->start_token), "%.16s", token);
         a->start_pending_since = 0;
+        a->start_error[0] = '\0'; /* marked: why an earlier write failed no longer holds the pod */
         return;
     }
     if (a->start_pending_since <= 0)

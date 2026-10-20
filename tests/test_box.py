@@ -280,6 +280,13 @@ def test_a_pods_module_gets_its_settings_and_its_report_is_read(agent, tmp_path)
     assert result["passed"], result
 
 
+def test_a_write_the_pods_database_refuses_at_commit_is_failed_with_its_error(agent, tmp_path):
+    # spec 3.2, RFC 7047: one result more than the operations, an error: FAILED at once, the
+    # database's error kept as its commit evidence, nothing written
+    result = box("node-config-commit-refused", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+
+
 def test_a_wired_pods_backhaul_stations_all_off_are_left_alone(agent, tmp_path):
     # spec 8.4, 8.3: the Pis' bootstrap, a station row per band and none on a wired pod
     result = box("wired-stations-off", agent, tmp_path / "box")
@@ -967,10 +974,12 @@ def test_a_legacy_pod_whose_database_refuses_its_start_marker_is_held_and_says_w
     assert result["passed"], result
     assert result["rows_written_while_pending"] == []
     marker = result["start_marker_while_pending"]
-    # a refusal at commit (RFC 7047: one result more than the operations) is OUTCOME_UNKNOWN to both
-    # agents' check of the results; the database's own error says what it was
-    assert marker["last_error"] == "OUTCOME_UNKNOWN: constraint violation"
+    # a refusal at commit (RFC 7047: one result more than the operations) is as definite as an
+    # operation's error to both agents (spec 3.2); the database's own error says what it was, and
+    # it is cleared once the marker is taken
+    assert marker["last_error"] == "INVALID_INPUT: constraint violation"
     assert marker["pending_since"]
+    assert result["start_marker_after"]["last_error"] is None
 
 
 def test_a_legacy_parent_the_previous_release_configured_is_upgraded_as_a_new_start(

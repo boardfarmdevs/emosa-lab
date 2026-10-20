@@ -872,6 +872,10 @@ static void control_vectors(const char *dir)
 /* -- translation-southbound.json, steering.json ------------------------------------- */
 
 /* An OVSDB session over fixed rows that records every transaction (the generator's). */
+/* the case's refused commit (scope-writes commit_error): every operation done and one result more,
+ * that error, with details quoting a value written (the generator's Recorder, COMMIT_DETAILS) */
+static const char *commit_error;
+
 static cJSON *record(void *ctx, const cJSON *operations)
 {
     cJSON *sent = ctx, *results = cJSON_CreateArray();
@@ -891,6 +895,12 @@ static cJSON *record(void *ctx, const cJSON *operations)
         } else if (strcmp(kind, "wait")) {
             cJSON_AddNumberToObject(r, "count", 1);
         }
+        cJSON_AddItemToArray(results, r);
+    }
+    if (commit_error) {
+        cJSON *r = cJSON_CreateObject();
+        cJSON_AddStringToObject(r, "error", commit_error);
+        cJSON_AddStringToObject(r, "details", "a value written: not-a-passphrase");
         cJSON_AddItemToArray(results, r);
     }
     return results;
@@ -970,7 +980,7 @@ static void southbound_vectors(const char *dir)
             session.transact = record_answering;
             session.ctx = &answer;
         }
-        em_submit_result result;
+        em_submit_result result = {0};
         bool multi_bss = cJSON_IsTrue(cJSON_GetObjectItem(c, "multi_bss"));
         const char *underlay = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(c, "underlay"));
         const char *radio = str(c, "radio"); /* a further radio's own scope (spec 9) */
@@ -1011,7 +1021,7 @@ static void southbound_vectors(const char *dir)
         const char *name = str(c, "name");
         cJSON *sent = cJSON_CreateArray();
         em_ovs_session session = {cJSON_GetObjectItemCaseSensitive(c, "ovsdb_tables"), 1, record, sent};
-        em_submit_result result;
+        em_submit_result result = {0};
         em_steering_rows created;
         checks++;
         em_reason r = em_steering_open("MVXPOD023F87E628DD", &session, &intent, &result, &created);
@@ -1148,7 +1158,7 @@ static void uplink_vectors(const char *dir)
                                    cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(in, "legacy"))};
         cJSON *sent = cJSON_CreateArray();
         em_ovs_session session = {tables, 1, record, sent};
-        em_submit_result result;
+        em_submit_result result = {0};
         const char *refusal;
         const char *serial = ovs_str_first_serial(tables);
         em_reason r = em_uplink_submit(serial, &session, &intent, passphrase,
@@ -1961,11 +1971,12 @@ static void backhaul_steering_vectors(const char *dir)
 static void scope_writes_vectors(const char *dir)
 {
     cJSON *doc = load(dir, "scope-writes.json");
-    const char *serial = str(doc, "serial");
     const cJSON *c;
     cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "cases"))
     {
         const char *name = str(c, "name"), *scope = str(c, "scope");
+        /* the pod's serial: the case's own, else the recorded pod's */
+        const char *serial = str(c, "serial") ? str(c, "serial") : str(doc, "serial");
         em_ovsdb *ovs = em_ovsdb_fixed(cJSON_GetObjectItemCaseSensitive(c, "ovsdb_tables"), 1, "conformance");
         const cJSON *intent = cJSON_GetObjectItemCaseSensitive(c, "intent");
         cJSON *sent = cJSON_CreateArray(), *attempt = cJSON_CreateObject();
@@ -2063,10 +2074,18 @@ static void scope_writes_vectors(const char *dir)
                 fail("scope-writes", name, em_reason_name(why));
         } else {
             em_submit_out out = {0};
+            commit_error = str(c, "commit_error");
             backend.submit(ctx, intent, attempt, &out);
+            commit_error = NULL;
             const char *want = str(expected, "status");
             if (!want || strcmp(want, out.status))
                 fail("scope-writes", name, out.status);
+            /* a refusal the database replied with keeps its error, and only then (spec 3.2) */
+            const char *error = strcmp(out.status, "committed") ? str(out.evidence, "database_error") : NULL;
+            const char *wanted_error = str(expected, "database_error");
+            checks++;
+            if (wanted_error ? !error || strcmp(error, wanted_error) : error != NULL)
+                fail("scope-writes", name, error ? error : "no database error");
             cJSON_Delete(out.evidence);
         }
         checks++;
@@ -2164,6 +2183,10 @@ static void scripted_submit(void *ctx, const cJSON *intent, const cJSON *attempt
     } else if (!strcmp(p->result, "rejected")) {
         strcpy(out->status, "rejected");
         out->reason = EM_NOT_READY;
+    } else if (!strcmp(p->result, "refused")) { /* spec 3.2: the pod's database refused it, and said why */
+        strcpy(out->status, "rejected");
+        out->reason = EM_INVALID_INPUT;
+        out->evidence = em_refusal_evidence("constraint violation");
     } else { /* unknown, or lost: no reply */
         strcpy(out->status, "unknown");
         out->reason = EM_OUTCOME_UNKNOWN;
@@ -2296,6 +2319,8 @@ static void engine_vectors(const char *dir)
                 cJSON_AddItemToObject(o, "attribution", null_or(cJSON_GetObjectItemCaseSensitive(evidence, "attribution")));
                 cJSON_AddItemToObject(o, "commit_attribution",
                                       null_or(cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(op, "commit_evidence"), "attribution")));
+                cJSON_AddItemToObject(o, "database_error",
+                                      null_or(cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(op, "commit_evidence"), "database_error")));
                 cJSON_AddItemToArray(ops, o);
                 cJSON_Delete(op);
             }

@@ -317,8 +317,51 @@ static void merge(cJSON *into, const cJSON *from, const char *skip)
     }
 }
 
+const char *em_database_error(const cJSON *results)
+{
+    const cJSON *result, *list = cJSON_IsArray(results) ? results : NULL;
+    cJSON_ArrayForEach(result, list)
+    {
+        const cJSON *error = cJSON_GetObjectItemCaseSensitive(result, "error");
+        if (cJSON_IsString(error) && *error->valuestring)
+            return error->valuestring;
+    }
+    return NULL;
+}
+
+cJSON *em_refusal_evidence(const char *database_error)
+{
+    if (!database_error || !*database_error)
+        return NULL;
+    char error[65];
+    EM_FORMAT_FIXED(error, sizeof(error), "%.64s", database_error);
+    cJSON *evidence = cJSON_CreateObject();
+    cJSON_AddStringToObject(evidence, "attribution", "reply");
+    cJSON_AddStringToObject(evidence, "database_error", error);
+    return evidence;
+}
+
+cJSON *em_failed_check_evidence(em_reason checked, const cJSON *results)
+{
+    return checked == EM_INVALID_INPUT || checked == EM_PRECONDITION_FAILED
+               ? em_refusal_evidence(em_database_error(results))
+               : NULL;
+}
+
 em_reason em_check_results(const cJSON *results, const int *counts, size_t n)
 {
+    /* RFC 7047 4.1.3: every operation done but the commit refused is one result more, an error:
+     * nothing of it applied, a refusal as definite as an operation's */
+    if (cJSON_IsArray(results) && (size_t)cJSON_GetArraySize(results) == n + 1) {
+        const cJSON *last = cJSON_GetArrayItem(results, (int)n);
+        bool done = cJSON_IsString(cJSON_GetObjectItemCaseSensitive(last, "error"));
+        for (size_t i = 0; done && i < n; i++) {
+            const cJSON *r = cJSON_GetArrayItem(results, (int)i), *e = cJSON_GetObjectItemCaseSensitive(r, "error");
+            done = cJSON_IsObject(r) && (!e || cJSON_IsNull(e) || (cJSON_IsString(e) && !*e->valuestring));
+        }
+        if (done)
+            return EM_INVALID_INPUT;
+    }
     if (!cJSON_IsArray(results) || (size_t)cJSON_GetArraySize(results) != n)
         return EM_OUTCOME_UNKNOWN;
     for (size_t i = 0; i < n; i++) {
@@ -347,6 +390,9 @@ static em_reason commit(em_ovs_session *s, cJSON *ops, const int *counts, em_sub
     strcpy(out->status, r == EM_OK ? "committed"
                         : r == EM_PRECONDITION_FAILED ? "conflict"
                         : r == EM_OUTCOME_UNKNOWN ? "unknown" : "rejected");
+    /* a refusal's (or a conflict's) database error; an unknown outcome has none */
+    const char *error = r == EM_INVALID_INPUT || r == EM_PRECONDITION_FAILED ? em_database_error(results) : NULL;
+    EM_FORMAT_FIXED(out->database_error, sizeof(out->database_error), "%.64s", error ? error : "");
     if (results_out && r == EM_OK)
         *results_out = results;
     else

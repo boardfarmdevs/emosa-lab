@@ -94,6 +94,7 @@ typedef struct {
 typedef struct {
     char status[12];
     em_reason reason;
+    char database_error[65]; /* the database's error when not committed (em_database_error), else "" */
 } em_submit_result;
 
 /* Plan and submit one M2 intent on the bound fronthaul (and, multi_bss, the slots). A GRE
@@ -238,7 +239,18 @@ cJSON *em_ovs_strings(const char *const *items, size_t n);
 cJSON *em_ovs_guard(const char *table, const char *uuid, const cJSON *row, const char *const *columns, size_t n);
 cJSON *em_ovs_absent(const char *table, cJSON *where, const char *column);
 
-/* check_results: every result an object without "error"; counts where >= 0. */
+/* check_results (RFC 7047 4.1.3): every result an object without "error"; counts where >= 0. An
+ * operation's error refuses (a failed wait: EM_PRECONDITION_FAILED); every operation done and one
+ * result more, an error, is a refusal at commit (EM_INVALID_INPUT); any other shape is unknown. */
 em_reason em_check_results(const cJSON *results, const int *counts, size_t n);
+/* mapping.database_error: the database's own error string in the results (of an operation or of
+ * the commit; never its details), or NULL. */
+const char *em_database_error(const cJSON *results);
+/* mapping.failed_check's evidence: {"attribution": "reply", "database_error": its first 64
+ * characters} (owned), or NULL without one. */
+cJSON *em_refusal_evidence(const char *database_error);
+/* That evidence for a check that did not pass: a refusal's or a conflict's database error; NULL
+ * for an unknown outcome (or none given). */
+cJSON *em_failed_check_evidence(em_reason checked, const cJSON *results);
 
 #endif

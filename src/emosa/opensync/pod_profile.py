@@ -43,7 +43,13 @@ from emosa.backends.base import Snapshot, SubmitResult
 from emosa.clock import utc_now
 from emosa.errors import EmosaError, Reason
 from emosa.model import Observation
-from emosa.opensync.mapping import OpenSyncBackend, check_results, guard, where_uuid
+from emosa.opensync.mapping import (
+    OpenSyncBackend,
+    check_results,
+    failed_check,
+    guard,
+    where_uuid,
+)
 from emosa.opensync.profiles import load as load_profile
 from emosa.opensync.radio_scope import psk, wpa2_psk
 from emosa.opensync.uplink import start_instance, start_pending
@@ -1279,11 +1285,7 @@ class PodBackend(OpenSyncBackend):
         except (ConnectionError, TimeoutError):
             return SubmitResult("unknown", {"attribution": "unknown"}, Reason.OUTCOME_UNKNOWN)
         except EmosaError as exc:
-            if exc.code == Reason.PRECONDITION_FAILED:
-                return SubmitResult("conflict", {}, exc.code)
-            return SubmitResult(
-                "unknown" if exc.code == Reason.OUTCOME_UNKNOWN else "rejected", {}, exc.code
-            )
+            return failed_check(exc)
         instance = self._instance(decoded)
         return SubmitResult(
             "committed",

@@ -583,6 +583,49 @@ static void stats_config_rows(void)
     cJSON_Delete(tables);
 }
 
+/* RFC 7047 4.1.3 (spec 3.2): every operation done, the commit refused, is one result more, an
+ * error: a refusal like an operation's error, with the database's error string and never its
+ * details (as test_ovsdb) */
+static void commit_refused(void)
+{
+    const int counts[2] = {-1, 1};
+    cJSON *refused = cJSON_Parse("[{}, {\"count\": 1}, {\"error\": \"referential integrity violation\","
+                                 " \"details\": \"secret\"}]");
+    em_reason r = em_check_results(refused, counts, 2);
+    CHECK(r == EM_INVALID_INPUT, "refused at commit: %s", em_reason_name(r));
+    cJSON *evidence = em_failed_check_evidence(r, refused);
+    char *text = em_json_dumps(evidence, EM_JSON_COMPACT, true);
+    CHECK(text && !strcmp(text, "{\"attribution\":\"reply\",\"database_error\":\"referential integrity violation\"}"),
+          "its evidence: %s", text ? text : "none");
+    free(text);
+    cJSON_Delete(evidence);
+    cJSON_Delete(refused);
+    cJSON *wait = cJSON_Parse("[{\"error\": \"timed out\"}, null]");
+    r = em_check_results(wait, counts, 2);
+    evidence = em_failed_check_evidence(r, wait);
+    CHECK(r == EM_PRECONDITION_FAILED && !strcmp(cJSON_GetStringValue(cJSON_GetObjectItem(evidence, "database_error")), "timed out"),
+          "a failed wait: a conflict with its error");
+    cJSON_Delete(evidence);
+    cJSON_Delete(wait);
+    /* one result more without an error, or after an operation's error: an unknown outcome, no error kept */
+    const char *odd[] = {"[{}, {\"count\": 1}, {}]", "[{\"error\": \"timed out\"}, {}, {\"error\": \"x\"}]"};
+    for (size_t i = 0; i < 2; i++) {
+        cJSON *results = cJSON_Parse(odd[i]);
+        r = em_check_results(results, counts, 2);
+        evidence = em_failed_check_evidence(r, results);
+        CHECK(r == EM_OUTCOME_UNKNOWN && !evidence, "odd results %zu: unknown (%s)", i, em_reason_name(r));
+        cJSON_Delete(evidence);
+        cJSON_Delete(results);
+    }
+    char long_error[100];
+    memset(long_error, 'x', sizeof(long_error) - 1);
+    long_error[sizeof(long_error) - 1] = '\0';
+    evidence = em_refusal_evidence(long_error);
+    CHECK(strlen(cJSON_GetStringValue(cJSON_GetObjectItem(evidence, "database_error"))) == 64, "cut at 64");
+    cJSON_Delete(evidence);
+    CHECK(!em_refusal_evidence("") && !em_refusal_evidence(NULL), "no error: no evidence");
+}
+
 static void files(const char *scratch)
 {
     char path[512], tmp[520], big[512];
@@ -1837,6 +1880,7 @@ int main(int argc, char **argv)
     journal_tampered(argv[2], argv[1]);
     start_writes(argv[2], argv[1]);
     stats_config_rows();
+    commit_refused();
     environment_files(argv[2]);
     supervisor(argv[2]);
     second_radio_profile(argv[1], argv[2]);

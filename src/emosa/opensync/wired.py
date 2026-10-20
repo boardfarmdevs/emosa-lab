@@ -29,7 +29,7 @@ from emosa.backends.base import Snapshot, SubmitResult
 from emosa.clock import utc_now
 from emosa.errors import EmosaError, Reason
 from emosa.model import Observation
-from emosa.opensync.mapping import check_results, where_uuid
+from emosa.opensync.mapping import check_results, failed_check, where_uuid
 from emosa.opensync.uplink import start_instance
 
 MODE = "opensync-6.6-wired-uplink"
@@ -370,11 +370,7 @@ class WiredBackend:
         except (ConnectionError, TimeoutError):
             return SubmitResult("unknown", {"attribution": "unknown"}, Reason.OUTCOME_UNKNOWN)
         except EmosaError as exc:
-            if exc.code == Reason.PRECONDITION_FAILED:
-                return SubmitResult("conflict", {}, exc.code)
-            return SubmitResult(
-                "unknown" if exc.code == Reason.OUTCOME_UNKNOWN else "rejected", {}, exc.code
-            )
+            return failed_check(exc)
         return SubmitResult(
             "committed",
             {

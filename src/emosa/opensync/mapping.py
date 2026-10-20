@@ -32,8 +32,35 @@ def guard(table, row_id, row, columns):
     }
 
 
+def database_error(results):
+    """The database's own error in a transaction's results, of an operation or of the commit (its
+    RFC 7047 error string, at most 64 characters; never its details, which can quote a value
+    written), or None."""
+    for result in results if isinstance(results, list) else ():
+        error = result.get("error") if isinstance(result, dict) else None
+        if isinstance(error, str) and error:
+            return error[:64]
+    return None
+
+
 def check_results(results, expected_counts):
-    if not isinstance(results, list) or len(results) != len(expected_counts):
+    """RFC 7047 4.1.3: one result per operation; an operation's error refuses the transaction
+    (a failed wait is a conflict). Every operation done but the commit refused is one result
+    more, an error: nothing of it applied, a refusal as definite as an operation's."""
+    n = len(expected_counts)
+    if (
+        isinstance(results, list)
+        and len(results) == n + 1
+        and isinstance(results[-1], dict)
+        and isinstance(results[-1].get("error"), str)
+        and all(isinstance(r, dict) and not r.get("error") for r in results[:-1])
+    ):
+        raise EmosaError(
+            Reason.INVALID_INPUT,
+            "transaction not committed by server",
+            database_error=database_error(results[-1:]),
+        )
+    if not isinstance(results, list) or len(results) != n:
         raise EmosaError(Reason.OUTCOME_UNKNOWN, "incomplete transaction result")
     for result, count in zip(results, expected_counts, strict=True):
         if not isinstance(result, dict):
@@ -44,9 +71,24 @@ def check_results(results, expected_counts):
                 if result["error"] == "timed out"
                 else Reason.INVALID_INPUT
             )
-            raise EmosaError(code, "transaction rejected by server")
+            raise EmosaError(
+                code, "transaction rejected by server", database_error=database_error([result])
+            )
         if count is not None and result.get("count") != count:
             raise EmosaError(Reason.OUTCOME_UNKNOWN, "unexpected matched-row count")
+
+
+def failed_check(exc):
+    """A scope's SubmitResult for a transaction check_results did not pass: a conflict (a wait
+    failed), an unknown outcome, or a refusal; with the database's error (database_error) where it
+    gave one, attributed to its reply."""
+    error = exc.details.get("database_error")
+    evidence = {"attribution": "reply", "database_error": error} if error else {}
+    if exc.code == Reason.PRECONDITION_FAILED:
+        return SubmitResult("conflict", evidence, exc.code)
+    if exc.code == Reason.OUTCOME_UNKNOWN:
+        return SubmitResult("unknown", evidence, exc.code)
+    return SubmitResult("rejected", evidence, exc.code)
 
 
 class OpenSyncBackend:
@@ -415,11 +457,7 @@ class OpenSyncBackend:
         except (ConnectionError, TimeoutError):
             return SubmitResult("unknown", {"attribution": "unknown"}, Reason.OUTCOME_UNKNOWN)
         except EmosaError as exc:
-            if exc.code == Reason.PRECONDITION_FAILED:
-                return SubmitResult("conflict", {}, exc.code)
-            return SubmitResult(
-                "unknown" if exc.code == Reason.OUTCOME_UNKNOWN else "rejected", {}, exc.code
-            )
+            return failed_check(exc)
         return SubmitResult(
             "committed",
             {

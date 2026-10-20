@@ -181,12 +181,14 @@ class Engine:
                 elif result.status == "conflict":
                     transition(op, State.OWNERSHIP_CONFLICT)
                     op.reason = Reason.OWNERSHIP_CONFLICT
+                    self._refused(op, result)
                     self.store.conflict(
                         op.pod_id, {"operation_id": op.operation_id, "reason": result.reason}
                     )
                 elif result.status == "rejected":
                     transition(op, State.FAILED)
                     op.reason = result.reason
+                    self._refused(op, result)
                 else:
                     transition(op, State.INDETERMINATE)
                     op.reason = Reason.OUTCOME_UNKNOWN
@@ -205,6 +207,13 @@ class Engine:
         if receipt is None or receipt["process_id"] != self.store.process_id or guard is None:
             raise EmosaError(Reason.NOT_READY, "WSC exchange authority is no longer live")
         await guard()
+
+    @staticmethod
+    def _refused(op, result):
+        """A refusal the pod's database replied with: its error is the operation's commit
+        evidence (RFC 7047: an operation's, or the commit's)."""
+        if result.evidence.get("attribution") == "reply" and result.evidence.get("database_error"):
+            op.commit_evidence = dict(result.evidence)
 
     @staticmethod
     def _matches(values, target):

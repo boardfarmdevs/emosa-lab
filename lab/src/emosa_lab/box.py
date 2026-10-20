@@ -535,6 +535,7 @@ class Box:
         pi_shaped=False,
         previous=False,
         start_refused=False,
+        node_config_full=False,
     ):
         self.agent, self.directory, self.binary = agent, directory, binary
         # previous: the pod configured by the previous release's agent (previous_release()), on
@@ -543,6 +544,9 @@ class Box:
         # start_refused (legacy): the pod's Node_Config full (the schema allows one row, another
         # module's): its database refuses EMOSA's start marker, constraint violation
         self.start_refused = start_refused
+        # node_config_full (a 6.6 pod): its Node_Config takes no row more than it is seeded with,
+        # so the database refuses any write that adds one at commit (constraint violation)
+        self.node_config_full = node_config_full
         # pi_shaped (with bootstrap): the bootstrap on the 5 GHz station bhaul-sta-50 and the
         # 2.4 GHz one off on the pod's own network, as a Pi's (pi2, 17 October)
         self.pi_shaped = pi_shaped
@@ -701,6 +705,12 @@ class Box:
                 stderr=subprocess.STDOUT,
             )
             await wait_for_port(1883)
+        if self.node_config_full and not self.legacy:
+            seeded = sum(o["op"] == "insert" and o["table"] == "Node_Config" for o in operations)
+            schema = reference_schema()
+            schema["tables"]["Node_Config"]["maxRows"] = seeded
+            self.schema = self.directory / "node-config-full.ovsschema"
+            self.schema.write_text(json.dumps(schema))
         # its own short directory: Unix socket paths are limited to 108 bytes
         self.db = SimDatabase(schema=self.schema, generation=LEGACY if self.legacy else None)
         await self.db.start()
@@ -8314,10 +8324,10 @@ async def legacy_start_marker_refused(box):
     5 s; the pod stays not ready, and while a controller configures it the agent writes nothing
     else to it, though its seed has the operator's APs and onboarding stations: every row as the
     seed made it; the controller's M2 refused, NOT_READY. The status says since when and why
-    (start_marker.pending_since, last_error OUTCOME_UNKNOWN: constraint violation: a refusal at
-    commit has one result more than the operations, RFC 7047, which both agents' check of the
-    results reads as an unknown outcome). Once the table has room the next try writes the marker,
-    and the pod is configured."""
+    (start_marker.pending_since, last_error INVALID_INPUT: constraint violation: a refusal at
+    commit, one result more than the operations, RFC 7047, as definite as an operation's error).
+    Once the table has room the next try writes the marker, the pod is configured and last_error
+    is cleared."""
     started = time.time()
     t0 = time.monotonic()
 
@@ -8337,7 +8347,7 @@ async def legacy_start_marker_refused(box):
         and not await start_markers(box)
         and marker.get("on") is True
         and marker.get("writes") == 0
-        and marker.get("last_error") == "OUTCOME_UNKNOWN: constraint violation"
+        and marker.get("last_error") == "INVALID_INPUT: constraint violation"
         and isinstance(since, (int, float))
         and started - 30 < since <= time.time()
         and tries >= 3
@@ -8363,7 +8373,8 @@ async def legacy_start_marker_refused(box):
         and done is not None
         and len(markers) == 1
         and after.get("writes") == 1
-        and after.get("pending_since") is None,
+        and after.get("pending_since") is None
+        and after.get("last_error") is None,
         held=held,
         rows_written_while_pending=written,
         operations_while_pending=[list(s) for s in held_states],
@@ -8402,9 +8413,9 @@ async def upgraded(box, done):
     return found is not None
 
 
-def journal_mappings(box, scope="journal"):
-    """The mappings the AP scope's operations were planned under, oldest first, from the agent's
-    journal (spec §5); None if it cannot be read."""
+def journal_records(box, scope="journal"):
+    """The operations of one of the agent's journals (<state_dir>/<scope>), oldest first; None if
+    it cannot be read."""
     path = box.status_path.parent / scope / "journal.db"
     try:
         db = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
@@ -8412,10 +8423,16 @@ def journal_mappings(box, scope="journal"):
             rows = db.execute("SELECT record FROM operations ORDER BY rowid").fetchall()
         finally:
             db.close()
-        records = [json.loads(r) for (r,) in rows]
+        return [json.loads(r) for (r,) in rows]
     except (sqlite3.Error, ValueError):
         return None
-    return [(r.get("plan") or {}).get("mapping") for r in records]
+
+
+def journal_mappings(box, scope="journal"):
+    """The mappings the AP scope's operations were planned under, oldest first, from the agent's
+    journal (spec §5); None if it cannot be read."""
+    records = journal_records(box, scope)
+    return None if records is None else [(r.get("plan") or {}).get("mapping") for r in records]
 
 
 async def upgrade(box, parent, ready, lease, tunnel):
@@ -8644,6 +8661,51 @@ async def node_config(box):
         events_logged=logged,
         session_after_restart=session,
         rewritten=sorted([list(k), list(v)] for k, v in rewritten.items()),
+    )
+
+
+async def node_config_commit_refused(box):
+    """spec 3.2 (RFC 7047 4.1.3): node-config's pod whose Node_Config takes no row more than it is
+    seeded with. The module's write, every operation done, is refused at commit (constraint
+    violation, one result more than the operations): nothing of it in the pod, and its operation
+    FAILED with INVALID_INPUT at once (not INDETERMINATE, then TIMED_OUT at its deadline), the
+    database's error its commit evidence in the agent's journal (never the error's details). Not
+    written again on the same start."""
+
+    def operation():
+        return node_config_status(box).get("operation") or {}
+
+    settled = await box.until(
+        lambda: (
+            operation().get("state") not in (None, "REQUESTED", "VALIDATED", "SUBMITTED")
+            and operation()
+        ),
+        seconds=60,
+    )
+    await asyncio.sleep(5)  # a write again would show by now
+    final = operation()
+    records = journal_records(box, "node-config") or []
+    record = next(
+        (r for r in records if r.get("operation_id") == (settled or {}).get("operation_id")), {}
+    )
+    written = sorted(
+        r.get("key")
+        for r in (await box.rows("Node_Config")).values()
+        if r.get("module") == "hook" and r.get("key") != "stale"
+    )
+    return box.result(
+        passed=bool(settled)
+        and settled.get("state") == "FAILED"
+        and settled.get("reason") == "INVALID_INPUT"
+        and record.get("commit_evidence")
+        == {"attribution": "reply", "database_error": "constraint violation"}
+        and final.get("operation_id") == settled.get("operation_id")
+        and len(records) == 1
+        and not written,
+        operation=settled,
+        commit_evidence=record.get("commit_evidence"),
+        operations=len(records),
+        hook_rows_written=written,
     )
 
 
@@ -9076,6 +9138,7 @@ SCENARIOS = {
     "legacy-gtp-station-unassociated": legacy_gtp_station_unassociated,
     "legacy-cloud-cleared": legacy_cloud_cleared,
     "node-config": node_config,
+    "node-config-commit-refused": node_config_commit_refused,
     "legacy-seed-stations": legacy_seed_stations,
     "legacy-dark-radio": legacy_dark_radio,
     "legacy-seed-station-unwired": legacy_seed_station_unwired,
@@ -9093,6 +9156,7 @@ OPTIONS = {  # the box each scenario needs beyond the default
     "backhaul-capability": {"backhaul": True},
     "wired-stations-off": {"wired": True, "stations_off": True},
     "node-config": {"modules": NODE_MODULES},
+    "node-config-commit-refused": {"modules": NODE_MODULES, "node_config_full": True},
     "backhaul-steering": {"backhaul": True},
     "revert-by-record": {
         "backhaul": True,

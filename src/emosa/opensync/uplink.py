@@ -35,7 +35,13 @@ from emosa.backends.base import Snapshot, SubmitResult
 from emosa.clock import utc_now
 from emosa.errors import EmosaError, Reason
 from emosa.model import Observation
-from emosa.opensync.mapping import check_results, guard, where_uuid
+from emosa.opensync.mapping import (
+    check_results,
+    database_error,
+    failed_check,
+    guard,
+    where_uuid,
+)
 
 MODE = "opensync-6.6-uplink"
 PROVENANCE = "opensync-cm:Connection_Manager_Uplink+owm:Wifi_VIF_State"
@@ -242,13 +248,10 @@ def start_marker_ops(token):
 
 def start_marker_error(code, results=None):
     """Why the marker's write failed, as the status gives it: the reason, and the database's own
-    error where it gave one, of an operation or of the commit ("OUTCOME_UNKNOWN: constraint
-    violation": a refusal at commit has one result more than the operations, RFC 7047)."""
-    for result in results if isinstance(results, list) else ():
-        error = result.get("error") if isinstance(result, dict) else None
-        if isinstance(error, str) and error:
-            return f"{code}: {error[:64]}"
-    return str(code)
+    error where it gave one, of an operation or of the commit ("INVALID_INPUT: constraint
+    violation": a refusal at commit, one result more than the operations, RFC 7047)."""
+    error = database_error(results)
+    return f"{code}: {error}" if error else str(code)
 
 
 def start_instance(decoded):
@@ -727,11 +730,7 @@ class UplinkBackend:
         except (ConnectionError, TimeoutError):
             return SubmitResult("unknown", {"attribution": "unknown"}, Reason.OUTCOME_UNKNOWN)
         except EmosaError as exc:
-            if exc.code == Reason.PRECONDITION_FAILED:
-                return SubmitResult("conflict", {}, exc.code)
-            return SubmitResult(
-                "unknown" if exc.code == Reason.OUTCOME_UNKNOWN else "rejected", {}, exc.code
-            )
+            return failed_check(exc)
         return SubmitResult(
             "committed",
             {
@@ -789,11 +788,7 @@ class UplinkBackend:
         except (ConnectionError, TimeoutError):
             return SubmitResult("unknown", {"attribution": "unknown"}, Reason.OUTCOME_UNKNOWN)
         except EmosaError as exc:
-            if exc.code == Reason.PRECONDITION_FAILED:
-                return SubmitResult("conflict", {}, exc.code)
-            return SubmitResult(
-                "unknown" if exc.code == Reason.OUTCOME_UNKNOWN else "rejected", {}, exc.code
-            )
+            return failed_check(exc)
         return SubmitResult(
             "committed",
             {

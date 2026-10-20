@@ -7,7 +7,7 @@ import pytest
 
 from emosa.errors import EmosaError, Reason
 from emosa.model import Intent, State
-from emosa.opensync.mapping import OpenSyncBackend, check_results, where_uuid
+from emosa.opensync.mapping import OpenSyncBackend, check_results, failed_check, where_uuid
 from emosa.opensync.session import OvsSession
 from emosa.reconcile import Engine
 from emosa.secrets import SecretStore
@@ -235,6 +235,40 @@ def test_transaction_result_validation():
         with pytest.raises(EmosaError):
             check_results(results, [1])
     check_results([{}, {"count": 1}], [None, 1])
+
+
+@pytest.mark.unit
+def test_a_refusal_at_commit_is_definite_and_keeps_only_the_databases_error():
+    """RFC 7047 4.1.3 (spec 3.2): every operation done, the commit refused, is one result more,
+    an error: a refusal (FAILED, INVALID_INPUT) like an operation's error, not an unknown outcome.
+    The scope's result keeps the database's error string, never its details."""
+    refused = [{}, {"count": 1}, {"error": "referential integrity violation", "details": "secret"}]
+    with pytest.raises(EmosaError) as raised:
+        check_results(refused, [None, 1])
+    assert raised.value.code == Reason.INVALID_INPUT
+    assert raised.value.details == {"database_error": "referential integrity violation"}
+    result = failed_check(raised.value)
+    assert (result.status, result.reason) == ("rejected", Reason.INVALID_INPUT)
+    assert result.evidence == {
+        "attribution": "reply",
+        "database_error": "referential integrity violation",
+    }
+    # an operation's error: refused the same way, a failed wait a conflict, both with the error
+    with pytest.raises(EmosaError) as raised:
+        check_results(
+            [{}, {"error": "constraint violation", "details": "secret"}, None], [None] * 3
+        )
+    assert failed_check(raised.value).evidence["database_error"] == "constraint violation"
+    with pytest.raises(EmosaError) as raised:
+        check_results([{"error": "timed out"}, None], [None, 1])
+    assert failed_check(raised.value).status == "conflict"
+    # one result more without an error, or after an operation's error: not RFC 7047's shape, an
+    # unknown outcome with no database error
+    for results in ([{}, {"count": 1}, {}], [{"error": "timed out"}, {}, {"error": "x"}]):
+        with pytest.raises(EmosaError) as raised:
+            check_results(results, [None, 1])
+        assert raised.value.code == Reason.OUTCOME_UNKNOWN
+        assert failed_check(raised.value).evidence == {}
 
 
 def test_snapshot_budget_exhaustion_is_not_ready(tmp_path):

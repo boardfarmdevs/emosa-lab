@@ -642,7 +642,7 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
     }
     em_ovs_session session = {em_ovsdb_tables(s->ovs), generation, s->transact, s->transact_ctx};
     resolver r = {s->vault, {0}, 0};
-    em_submit_result result;
+    em_submit_result result = {0};
     em_reason e = s->band ? em_radio_submit(s->profile, s->serial, s->band, s->multi_bss, s->underlay, &session,
                                             &in, resolve, &r, &result)
                           : em_ap_submit(s->profile, s->serial, s->multi_bss, s->underlay, &session, &in, resolve,
@@ -657,6 +657,7 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
     }
     EM_FORMAT_FIXED(out->status, sizeof(out->status), "%s", result.status);
     out->reason = result.reason;
+    out->evidence = em_refusal_evidence(result.database_error); /* NULL unless refused with one */
     if (!strcmp(result.status, "committed")) {
         out->evidence = cJSON_CreateObject();
         cJSON_AddStringToObject(out->evidence, "attribution", "reply");

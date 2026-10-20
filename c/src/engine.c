@@ -425,6 +425,18 @@ static void reject(em_engine *e, cJSON *op, em_reason r)
     em_engine_save(e, op, NULL);
 }
 
+/* Reconciler._refused: a refusal the pod's database replied with, its error the operation's
+ * commit evidence (RFC 7047: an operation's, or the commit's); out keeps nothing */
+static void refused(cJSON *op, em_submit_out *out)
+{
+    const cJSON *evidence = out->evidence;
+    const char *attribution = str(evidence, "attribution"), *error = str(evidence, "database_error");
+    if (attribution && !strcmp(attribution, "reply") && error && *error) {
+        set(op, "commit_evidence", out->evidence);
+        out->evidence = NULL;
+    }
+}
+
 cJSON *em_engine_execute(em_engine *e, const char *operation_id)
 {
     cJSON *op = em_journal_get(e->journal, operation_id);
@@ -509,6 +521,7 @@ cJSON *em_engine_execute(em_engine *e, const char *operation_id)
     } else if (!strcmp(out.status, "conflict")) {
         em_transition(op, "OWNERSHIP_CONFLICT", NULL);
         em_set_reason(op, "OWNERSHIP_CONFLICT");
+        refused(op, &out);
         cJSON *evidence = cJSON_CreateObject();
         cJSON_AddStringToObject(evidence, "operation_id", str(op, "operation_id"));
         cJSON_AddStringToObject(evidence, "reason", em_reason_name(out.reason));
@@ -517,6 +530,7 @@ cJSON *em_engine_execute(em_engine *e, const char *operation_id)
     } else if (!strcmp(out.status, "rejected")) {
         em_transition(op, "FAILED", NULL);
         em_set_reason(op, em_reason_name(out.reason));
+        refused(op, &out);
     } else {
         em_transition(op, "INDETERMINATE", NULL);
         em_set_reason(op, "OUTCOME_UNKNOWN");

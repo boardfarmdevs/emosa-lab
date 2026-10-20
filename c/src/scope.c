@@ -134,16 +134,11 @@ cJSON *em_start_marker_ops(const char *token)
 
 void em_start_marker_error(em_reason reason, const cJSON *results, char *out, size_t size)
 {
-    const cJSON *result, *list = cJSON_IsArray(results) ? results : NULL;
-    cJSON_ArrayForEach(result, list)
-    {
-        const cJSON *error = cJSON_GetObjectItemCaseSensitive(result, "error");
-        if (cJSON_IsString(error) && *error->valuestring) {
-            EM_FORMAT_FIXED(out, size, "%s: %.64s", em_reason_name(reason), error->valuestring);
-            return;
-        }
-    }
-    EM_FORMAT_FIXED(out, size, "%s", em_reason_name(reason));
+    const char *error = em_database_error(results);
+    if (error)
+        EM_FORMAT_FIXED(out, size, "%s: %.64s", em_reason_name(reason), error);
+    else
+        EM_FORMAT_FIXED(out, size, "%s", em_reason_name(reason));
 }
 
 bool em_row_legacy(const cJSON *row)

@@ -29,7 +29,7 @@ from emosa.backends.base import Snapshot, SubmitResult
 from emosa.clock import utc_now
 from emosa.errors import EmosaError, Reason
 from emosa.model import Observation
-from emosa.opensync.mapping import check_results, where_uuid
+from emosa.opensync.mapping import check_results, failed_check, where_uuid
 from emosa.opensync.steering import CLIENT_ROW, GROUP_COLUMN, WATCH_MARKER, is_watch_row, pairs
 from emosa.opensync.uplink import start_instance
 
@@ -267,11 +267,10 @@ class WatchBackend:
         except (ConnectionError, TimeoutError):
             return SubmitResult("unknown", {"attribution": "unknown"}, Reason.OUTCOME_UNKNOWN)
         except EmosaError as exc:
-            if exc.code == Reason.PRECONDITION_FAILED:
-                return SubmitResult("rejected", {}, exc.code)
-            return SubmitResult(
-                "unknown" if exc.code == Reason.OUTCOME_UNKNOWN else "rejected", {}, exc.code
-            )
+            failed = failed_check(exc)
+            if failed.status == "conflict":  # a failed wait refuses the watch's write
+                return SubmitResult("rejected", failed.evidence, exc.code)
+            return failed
         return SubmitResult(
             "committed",
             {

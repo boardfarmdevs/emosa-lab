@@ -279,7 +279,7 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
     em_steering_intent in;
     intent_struct(intent, &in);
     em_ovs_session os = session(s);
-    em_submit_result result;
+    em_submit_result result = {0};
     em_steering_rows created;
     em_reason e = em_steering_open(s->serial, &os, &in, &result, &created);
     if (e != EM_OK) { /* the plan raised at submission */
@@ -289,8 +289,10 @@ static void submit(void *ctx, const cJSON *intent, const cJSON *attempt, em_subm
     }
     EM_FORMAT_FIXED(out->status, sizeof(out->status), "%s", result.status);
     out->reason = result.reason;
-    if (strcmp(result.status, "committed"))
+    if (strcmp(result.status, "committed")) {
+        out->evidence = em_refusal_evidence(result.database_error); /* NULL unless refused with one */
         return;
+    }
     out->evidence = cJSON_CreateObject();
     cJSON_AddStringToObject(out->evidence, "attribution", "reply");
     cJSON_AddTrueToObject(out->evidence, "transaction_validated");
