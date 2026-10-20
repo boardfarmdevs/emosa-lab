@@ -201,10 +201,14 @@ gateway_broker() {    # gateway_broker LAN: the pods' broker in the gateway (mos
     lxc exec "$CTL" -- sh -c "cat > '$MQTT_DIR/broker.pem'" < "$t/broker.pem"
     lxc exec "$CTL" -- sh -c "umask 077; cat > '$MQTT_DIR/broker.key'" < "$t/broker.key"
     rm -rf "$t"
+    # the configuration beside the PKI, which a gateway deployed anew keeps: an image with EMOSA's
+    # broker starts mosquitto from it when it is there (meta-cmf's emosa_broker_conf), so the pods
+    # publish from the gateway's start; and in the image's own place, for an image without that
     cx "$CTL" sh -c "printf '%s\n' 'per_listener_settings true' 'user root' \
         'listener 8883 $lan' 'cafile $MQTT_DIR/ca.pem' 'certfile $MQTT_DIR/broker.pem' \
         'keyfile $MQTT_DIR/broker.key' 'require_certificate true' 'use_identity_as_username true' \
-        'listener 1883 127.0.0.1' 'allow_anonymous true' > /etc/mosquitto/mosquitto.conf"
+        'listener 1883 127.0.0.1' 'allow_anonymous true' > '$MQTT_DIR/mosquitto.conf' &&
+        cp '$MQTT_DIR/mosquitto.conf' /etc/mosquitto/mosquitto.conf"
     cx "$CTL" systemctl enable -q mosquitto
     cx "$CTL" systemctl restart mosquitto
     for ct in "$CTL" emosa; do    # the lab's broker proxies: none
