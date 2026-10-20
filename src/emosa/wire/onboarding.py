@@ -6,6 +6,7 @@ qualify a complete EasyMesh profile or accept a physical backend. See the explic
 feature/interpretation contract in docs/reference/protocol/native-onboarding.md.
 """
 
+import logging
 import time
 from collections import deque
 
@@ -48,6 +49,8 @@ from emosa.wire.reports import (
 )
 from emosa.wire.steering import SteeringCoordinator
 from emosa.wire.unassociated import UnassociatedCoordinator
+
+log = logging.getLogger("emosa.wire.onboarding")
 
 R3_CONTROLLER_FIELDS = (
     "controller_capability_absent",
@@ -921,6 +924,14 @@ class OnboardingRecovery:
         if self.session.state == "provisioning":
             self.failures = 0
         if self.session.state in ("source_lost", "failed"):
+            # the session's end, with its reason (its last event) and its peer (the controller)
+            events = self.session.events
+            log.info(
+                "the session ended (%s): %s; controller %s",
+                self.session.state,
+                events[-1] if events else self.session.state,
+                self.session.binding.controller_al.hex(":"),
+            )
             self.history.append(
                 {
                     "event": self.session.state,

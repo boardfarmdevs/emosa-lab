@@ -82,6 +82,27 @@ static void file_names(void)
     }
 }
 
+/* a line as em_vlog writes it: its time (ISO 8601, UTC, milliseconds, Z), a space, then `rest` */
+static bool stamped(const char *text, const char *rest)
+{
+    static const char shape[] = "dddd-dd-ddTdd:dd:dd.dddZ";
+    for (size_t i = 0; i + 1 < sizeof(shape); i++)
+        if (shape[i] == 'd' ? text[i] < '0' || text[i] > '9' : text[i] != shape[i])
+            return false;
+    return text[EM_LOG_STAMP - 1] == ' ' && !strncmp(text + EM_LOG_STAMP, rest, strlen(rest));
+}
+
+static void the_line_time(void)
+{
+    struct timespec at = {.tv_sec = 1792524191, .tv_nsec = 123456789};
+    char out[EM_LOG_STAMP];
+    em_log_stamp(&at, out);
+    CHECK(!strcmp(out, "2026-10-20T19:23:11.123Z"), "stamp %s", out);
+    at = (struct timespec){.tv_sec = 0, .tv_nsec = 7000000};
+    em_log_stamp(&at, out);
+    CHECK(!strcmp(out, "1970-01-01T00:00:00.007Z"), "stamp %s", out);
+}
+
 static void messages_through_the_logger(void)
 {
     em_log(EM_LOG_INFO, "emosa.agent", "before the log is opened: stderr");
@@ -98,8 +119,12 @@ static void messages_through_the_logger(void)
     CHECK(messages == 1, "%d messages", messages);
     CHECK(last_level == RDK_LOG_WARN, "level %d", (int)last_level);
     CHECK(!strcmp(last_module, "LOG.RDK.EMOSA"), "module %s", last_module);
-    CHECK(!strcmp(last_text, "emosa.agent.uplink[MVXPOD023F87E628DD]: uplink held on option 2: no confirmation\n"),
-          "text %s", last_text);
+    /* its time, its level, its component with the pod (the file's), the message */
+    char named[96] = "WARNING emosa.agent.uplink[";
+    size_t at = strlen(named), pod = strlen(last_config.fileName) - strlen("EMOSA_") - strlen(".txt");
+    memcpy(named + at, last_config.fileName + strlen("EMOSA_"), pod);
+    memcpy(named + at + pod, "]: uplink held on option 2: no confirmation\n", 45);
+    CHECK(stamped(last_text, named) && strlen(last_text) == EM_LOG_STAMP + strlen(named), "text %s", last_text);
 
     static const struct {
         em_log_level level;
@@ -124,7 +149,7 @@ static void messages_through_the_logger(void)
     em_log_open("fleet", NULL);
     CHECK(!strcmp(last_config.fileName, "EMOSAFleetLog.txt"), "file %s", last_config.fileName);
     em_log(EM_LOG_INFO, "emosa.fleet", "pod %s", "MVXPOD1");
-    CHECK(!strcmp(last_text, "emosa.fleet: pod MVXPOD1\n"), "text %s", last_text);
+    CHECK(stamped(last_text, "INFO emosa.fleet: pod ") && !strchr(last_text, '['), "text %s", last_text);
 
     /* the logger refuses: stderr */
     init_result = 1;
@@ -138,6 +163,7 @@ int main(void)
 {
     em_init();
     file_names();
+    the_line_time();
     messages_through_the_logger();
     printf("%d checks, %d failures\n", checks, failures);
     return failures != 0;

@@ -47,11 +47,14 @@ typedef struct {
     bool shut; /* and the writing side was told */
 } flow;
 
+#define PEER_MAX (INET_ADDRSTRLEN + 6) /* "a.b.c.d:port" */
+
 typedef struct {
     int client, upstream; /* -1 when closed */
     int port;
     bool connecting;
-    flow up, down; /* client to upstream, upstream to client */
+    flow up, down;       /* client to upstream, upstream to client */
+    char peer[PEER_MAX]; /* the client's address and port, which each line of the pair names */
 } pair;
 
 static volatile sig_atomic_t stopping;
@@ -105,18 +108,27 @@ static void close_pair(pair *p, const char *why)
     if (p->upstream >= 0)
         close(p->upstream);
     if (why)
-        INFO("port %d: connection closed (%s)", p->port, why);
+        INFO("port %d: connection from %s closed (%s)", p->port, p->peer, why);
     p->client = p->upstream = -1;
 }
 
-static void open_pair(pair *pairs, int fd, int port)
+/* the client's address and port, as its lines name it ("?" when not known) */
+static void peer_of(const struct sockaddr_in *sa, char out[PEER_MAX])
+{
+    char address[INET_ADDRSTRLEN];
+    if (sa->sin_family != AF_INET || !inet_ntop(AF_INET, &sa->sin_addr, address, sizeof(address)) ||
+        !em_format(out, PEER_MAX, "%s:%u", address, (unsigned)ntohs(sa->sin_port)))
+        (void)em_copy(out, PEER_MAX, "?");
+}
+
+static void open_pair(pair *pairs, int fd, int port, const char *peer)
 {
     pair *p = NULL;
     for (size_t i = 0; i < PAIRS_MAX && !p; i++)
         if (pairs[i].client < 0)
             p = &pairs[i];
     if (!p) {
-        WARN("port %d: %d connections already, one refused", port, PAIRS_MAX);
+        WARN("port %d: %d connections already, %s refused", port, PAIRS_MAX, peer);
         close(fd);
         return;
     }
@@ -129,7 +141,7 @@ static void open_pair(pair *pairs, int fd, int port)
                              .sin_addr = {.s_addr = htonl(INADDR_LOOPBACK)}};
     int rc = connect(up, (struct sockaddr *)&sa, sizeof(sa));
     if (rc && errno != EINPROGRESS) {
-        WARN("port %d: nothing listens on 127.0.0.1 (%s)", port, strerror(errno));
+        WARN("port %d: nothing listens on 127.0.0.1 for %s (%s)", port, peer, strerror(errno));
         close(up);
         close(fd);
         return;
@@ -139,6 +151,7 @@ static void open_pair(pair *pairs, int fd, int port)
     p->upstream = up;
     p->port = port;
     p->connecting = rc != 0;
+    (void)em_copy(p->peer, sizeof(p->peer), peer);
 }
 
 /* read what one side sent into its flow; false: the pair failed */
@@ -184,12 +197,13 @@ static void step(pair *p, short client_events, short upstream_events)
         int error = 0;
         socklen_t len = sizeof(error);
         if (getsockopt(p->upstream, SOL_SOCKET, SO_ERROR, &error, &len) || error) {
-            WARN("port %d: nothing listens on 127.0.0.1 (%s)", p->port, strerror(error ? error : errno));
+            WARN("port %d: nothing listens on 127.0.0.1 for %s (%s)", p->port, p->peer,
+                 strerror(error ? error : errno));
             close_pair(p, NULL);
             return;
         }
         p->connecting = false;
-        INFO("port %d: connection forwarded", p->port);
+        INFO("port %d: connection from %s forwarded", p->port, p->peer);
     }
     bool ok = true;
     if (client_events & (POLLIN | POLLHUP | POLLERR))
@@ -234,9 +248,13 @@ static int serve(listener *listeners, size_t nlisteners)
         for (size_t i = 0; i < nlisteners; i++) {
             if (!(fds[i].revents & POLLIN))
                 continue;
-            int fd = accept4(listeners[i].fd, NULL, NULL, SOCK_NONBLOCK | SOCK_CLOEXEC);
+            struct sockaddr_in sa = {0};
+            socklen_t len = sizeof(sa);
+            int fd = accept4(listeners[i].fd, (struct sockaddr *)&sa, &len, SOCK_NONBLOCK | SOCK_CLOEXEC);
+            char peer[PEER_MAX];
+            peer_of(&sa, peer);
             if (fd >= 0)
-                open_pair(pairs, fd, listeners[i].port);
+                open_pair(pairs, fd, listeners[i].port, peer);
         }
         for (size_t i = 0; i < PAIRS_MAX; i++) {
             const struct pollfd *c = &fds[nlisteners + 2 * i], *u = &fds[nlisteners + 2 * i + 1];

@@ -39,6 +39,7 @@ import sys
 import time
 from pathlib import Path
 
+from emosa import logs
 from emosa.config import validate
 
 log = logging.getLogger("emosa.gtp")
@@ -340,9 +341,7 @@ def main(argv=None):
     parser.add_argument("config", type=Path)
     parser.add_argument("event", nargs="*", help="lease: ACTION MAC IP [HOSTNAME]")
     args = parser.parse_args(argv)
-    logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s"
-    )
+    logs.configure()
     gtp = GTP(load(args.config))
     if args.command == "setup":
         result = gtp.setup(args.config)

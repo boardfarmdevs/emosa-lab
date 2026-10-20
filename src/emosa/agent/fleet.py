@@ -49,6 +49,7 @@ import ovs.jsonrpc
 import ovs.poller
 import ovs.stream
 
+from emosa import logs
 from emosa.config import validate, validator
 from emosa.errors import EmosaError, Reason
 from emosa.opensync.profiles import DEFAULT as DEFAULT_PROFILE
@@ -844,9 +845,7 @@ def main():
     parser.add_argument("config", type=Path, help="fleet JSON (listen, advertise, ports, ...)")
     parser.add_argument("serial", nargs="?")
     args = parser.parse_args()
-    logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s"
-    )
+    logs.configure()
     if args.command == "serve":  # a configuration that is not valid: the last valid one (spec 4)
         try:
             config = json.loads(args.config.read_text())

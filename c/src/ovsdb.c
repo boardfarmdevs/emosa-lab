@@ -46,6 +46,8 @@ struct em_ovsdb {
     em_json_scanner scan; /* where the scan of buf stopped */
     double received;      /* when the pod last sent anything (monotonic) */
     bool probing;         /* an echo sent since */
+    char peer[48];        /* the pod's address and port, as it dialled ("?" unknown) */
+    char lost[96];        /* why the last connection was lost (em_ovsdb_lost) */
 };
 
 static double now(void)
@@ -281,13 +283,17 @@ static bool read_conn(em_ovsdb *s)
         if (r > 0) {
             s->received = now();
             s->probing = false;
-            if (!em_ovsdb_input(s, chunk, (size_t)r))
+            if (!em_ovsdb_input(s, chunk, (size_t)r)) {
+                (void)em_copy(s->lost, sizeof(s->lost), "not JSON-RPC");
                 return false;
+            }
             continue;
         }
         if (r < 0 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR))
             return true;
-        return false; /* closed or failed */
+        /* closed or failed */
+        (void)em_copy(s->lost, sizeof(s->lost), r == 0 ? "the pod closed it" : strerror(errno));
+        return false;
     }
 }
 
@@ -387,16 +393,27 @@ static bool start_monitor(em_ovsdb *s)
     return ok;
 }
 
+const char *em_ovsdb_peer(const em_ovsdb *s) { return s->peer[0] ? s->peer : "?"; }
+
+const char *em_ovsdb_lost(const em_ovsdb *s) { return s->lost[0] ? s->lost : "unknown"; }
+
 bool em_ovsdb_pump(em_ovsdb *s)
 {
-    int fd = accept4(s->listener, NULL, NULL, SOCK_NONBLOCK | SOCK_CLOEXEC);
+    struct sockaddr_in sa = {0};
+    socklen_t len = sizeof(sa);
+    int fd = accept4(s->listener, (struct sockaddr *)&sa, &len, SOCK_NONBLOCK | SOCK_CLOEXEC);
     if (fd >= 0) {
         disconnect(s); /* a new connection replaces the old one */
         s->conn = fd;
         s->generation++;
         s->received = now();
         s->probing = false;
+        char address[INET_ADDRSTRLEN];
+        if (sa.sin_family != AF_INET || !inet_ntop(AF_INET, &sa.sin_addr, address, sizeof(address)) ||
+            !em_format(s->peer, sizeof(s->peer), "%s:%u", address, (unsigned)ntohs(sa.sin_port)))
+            (void)em_copy(s->peer, sizeof(s->peer), "?");
         if (!start_monitor(s)) {
+            (void)em_copy(s->lost, sizeof(s->lost), "its monitor not started");
             disconnect(s);
             return false;
         }
@@ -411,6 +428,7 @@ bool em_ovsdb_pump(em_ovsdb *s)
     /* the probe (PROBE): an idle connection gets an echo; one still silent after it is dropped */
     double idle = now() - s->received;
     if (idle >= 2 * PROBE) {
+        (void)em_format(s->lost, sizeof(s->lost), "silent %.0f s, the probe unanswered", idle);
         disconnect(s);
         return false;
     }
@@ -422,6 +440,7 @@ bool em_ovsdb_pump(em_ovsdb *s)
         bool sent = send_json(s, echo);
         cJSON_Delete(echo);
         if (!sent) {
+            (void)em_copy(s->lost, sizeof(s->lost), "the probe not sent");
             disconnect(s);
             return false;
         }

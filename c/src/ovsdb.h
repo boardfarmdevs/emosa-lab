@@ -24,6 +24,11 @@ size_t em_ovsdb_fds(const em_ovsdb *s, int *fds, size_t max);
 /* Accept a pod, read what arrived, answer echoes, apply monitor updates; never blocks.
  * Returns false when the pod connection was lost this call. */
 bool em_ovsdb_pump(em_ovsdb *s);
+/* The pod's address and port as it last dialled ("?" unknown), and why its last connection was
+ * lost ("the pod closed it", the socket's error, "silent N s, the probe unanswered", ...): the
+ * agent's line for a lost connection names both. */
+const char *em_ovsdb_peer(const em_ovsdb *s);
+const char *em_ovsdb_lost(const em_ovsdb *s);
 
 /* Connected and monitored: the cache is the pod's current rows. */
 bool em_ovsdb_ready(const em_ovsdb *s);

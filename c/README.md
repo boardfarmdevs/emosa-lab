@@ -103,7 +103,10 @@ Known differences from the Python agent:
 
 **Logging** (`log.c`). Every message has a level and the reference's logger name
 (`emosa.agent.uplink`, `emosa.fleet`, ...). By default it is one line on stderr,
-`LEVEL component: text`, which systemd's journal keeps. Built with
+`TIME LEVEL component: text`, which systemd's journal keeps; TIME is ISO 8601 in UTC to
+the millisecond (`2026-10-20T19:23:11.123Z`), as the reference's `emosa.logs` writes it,
+on every line through RDK's logger too. The lines for a pod's lost OVSDB connection, a
+forwarded connection's close and a session's end name the reason and the peer. Built with
 `-DEMOSA_RDK_LOGGER=ON`, the programs log through RDK's logger (rdk-logger:
 `rdk_logger.h`, `librdkloggers`) instead: module `LOG.RDK.EMOSA`, its level from
 `debug.ini` (`LOG.RDK.DEFAULT` unless the file names the module), each program into

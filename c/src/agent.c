@@ -569,7 +569,7 @@ static int upstream_ap_state(void *ctx, const uint8_t bssid[6])
     return em_peers_ap_state(&a->peers, bssid);
 }
 
-static void close_session(agent *a, em_session_state end);
+static void close_session(agent *a, em_session_state end, const char *why);
 
 /* the pod's backhaul stations: the configured one (or the profile's) first, then the profile's
  * station on each band, each once */
@@ -981,7 +981,7 @@ static bool refresh(agent *a)
         a->caps = caps;
         if (!keeps && a->at.state != S_NONE && a->at.state != S_FAILED && a->at.state != S_SOURCE_LOST &&
             a->at.state != S_INCOMPATIBLE)
-            close_session(a, S_SOURCE_LOST);
+            close_session(a, S_SOURCE_LOST, "a further radio came, went or moved before provisioning");
     } else if (power_rose(before, nreported, &a->caps)) {
         /* spec 2.5: a radio reports more power than the maximum EIRP it advertised (the source began
          * before the pod reported any): its capabilities are taken again with the higher maximum,
@@ -998,7 +998,7 @@ static bool refresh(agent *a)
         a->max_eirp = max_eirp;
         if (a->at.state != S_NONE && a->at.state != S_FAILED && a->at.state != S_SOURCE_LOST &&
             a->at.state != S_INCOMPATIBLE)
-            close_session(a, S_SOURCE_LOST);
+            close_session(a, S_SOURCE_LOST, "a radio's power rose above its advertised maximum");
     } else if (a->at.state == S_PROVISIONING && a->at.window > 0 && same_identity(&a->caps, &caps)) {
         /* spec 2.5, 9: the fronthaul radio's channel moved (the station it shares the radio with
          * follows its parent, as under a gateway's automatic channel selection): a provisioned
@@ -1024,7 +1024,7 @@ static bool refresh(agent *a)
         em_inventory_tlv(view, radio, "mac80211_hwsim", &a->inventory);
         if (a->at.state != S_NONE && a->at.state != S_FAILED && a->at.state != S_SOURCE_LOST &&
             a->at.state != S_INCOMPATIBLE)
-            close_session(a, S_SOURCE_LOST);
+            close_session(a, S_SOURCE_LOST, why);
     }
     a->nreported = nreported; /* each radio's maximum EIRP, as its capabilities advertise it */
     for (size_t k = 0; k < nreported; k++) {
@@ -1597,8 +1597,17 @@ static void end_session(agent *a)
 }
 
 /* an attempt that failed between ticks: the next tick begins its back-off */
-static void close_session(agent *a, em_session_state end)
+/* the session's end, with its reason and its peer (the controller) (OnboardingRecovery.tick) */
+static void ended_line(const agent *a, const char *state, const char *why)
 {
+    char *controller = em_mac_str(a->controller);
+    LOG("the session ended (%s): %s; controller %s", state, why, controller ? controller : "?");
+    free(controller);
+}
+
+static void close_session(agent *a, em_session_state end, const char *why)
+{
+    ended_line(a, SESSION_NAMES[end], why);
     end_session(a);
     a->at.state = end;
 }
@@ -1748,7 +1757,7 @@ static void next_radio(agent *a)
     if (r != EM_OK || !rs->context_live || caps.max_bss == 0) {
         if (r == EM_OK)
             em_m1_free(&rs->m1);
-        close_session(a, S_FAILED);
+        close_session(a, S_FAILED, r != EM_OK ? em_reason_name(r) : "the further radio's scope context not live");
         count(&a->counts, "radio_m1_failed");
         return;
     }
@@ -1851,7 +1860,7 @@ static void admitted(agent *a)
     if (r != EM_OK || !a->context_live) {
         if (r == EM_OK)
             em_m1_free(&a->m1);
-        close_session(a, S_FAILED);
+        close_session(a, S_FAILED, r != EM_OK ? em_reason_name(r) : "the scope context not live");
         count(&a->counts, r == EM_OK ? "rejected_NOT_READY" : "m1_failed");
         return;
     }
@@ -2516,6 +2525,7 @@ static void session_tick(agent *a)
         count(&a->counts, step.ended);
         if (step.window_passed)
             count(&a->counts, "reconnection_window_passed");
+        ended_line(a, step.ended, step.window_passed ? "reconnection_window_passed" : step.ended);
         end_session(a);
         return;
     }
@@ -3480,7 +3490,7 @@ int main(int argc, char **argv)
         if (a.mqtt)
             em_mqtt_pump(a.mqtt, now());
         if (!em_ovsdb_pump(a.ovs))
-            WARN("pod OVSDB connection lost");
+            WARN("pod OVSDB connection from %s lost: %s", em_ovsdb_peer(a.ovs), em_ovsdb_lost(a.ovs));
         double t = now();
         bool refreshed = t >= next_refresh;
         if (refreshed) {

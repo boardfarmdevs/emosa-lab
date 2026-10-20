@@ -36,6 +36,7 @@ import time
 from dataclasses import replace
 from pathlib import Path
 
+from emosa import logs
 from emosa.agent.gre_parent import GreTunnels
 from emosa.agent.gtp_station import RETRY, UNASSOCIATED, GtpStation
 from emosa.agent.node_config import NodeConfig
@@ -1695,10 +1696,7 @@ def main():
     )
     parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args()
-    logging.basicConfig(
-        level=logging.DEBUG if args.verbose else logging.INFO,
-        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-    )
+    logs.configure(logging.DEBUG if args.verbose else logging.INFO)
     config = json.loads(args.config.read_text())
     validate("agent-config", config)
 
