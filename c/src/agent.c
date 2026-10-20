@@ -3474,6 +3474,7 @@ int main(int argc, char **argv)
         cfg_str(a.config, "al_mac"), cfg_str(a.config, "controller_al"), cfg_str(a.config, "ovsdb"),
         a.r1 ? "r1" : "easymesh-6.1");
     double next_refresh = 0;
+    bool present = false; /* the pod's 1905 entity as of the last loop (spec 2.5: its discovery) */
     uint8_t frame[1600];
     while (!stopping) {
         int fds[4];
@@ -3501,7 +3502,14 @@ int main(int argc, char **argv)
             next_refresh = t + REFRESH_PERIOD; /* from the start, as the lease counts */
         }
         session_tick(&a);
-        if (t >= a.next_discovery) {
+        /* spec 2.5: the pod's 1905 entity is there while its source is current or its session is
+         * held through its reconnection; a pod away past the window has none, and its agent sends
+         * no Topology Discovery until it is back, then one at once */
+        bool here = source_current(&a) || a.at.state == S_PROVISIONING;
+        if (here && !present)
+            a.next_discovery = 0;
+        present = here;
+        if (here && t >= a.next_discovery) {
             em_tlv tlvs[2] = {{0x01, 6, a.al}, {0x02, 6, a.al}};
             send_message(&a, EM_MULTICAST, 0x0000, next_mid(&a), tlvs, 2, false);
             a.next_discovery = t + DISCOVERY_PERIOD;

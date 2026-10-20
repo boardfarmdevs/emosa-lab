@@ -83,7 +83,7 @@ Sent by the agent:
 
 | Type | Message | When |
 | --- | --- | --- |
-| `0x0000` | Topology Discovery | on start, then every 60 s |
+| `0x0000` | Topology Discovery | once the pod is there, then every 60 s while it is (its source current, or its session held through its reconnection, §2.5): none for a pod away past the reconnection window, one at once when it is back (box `away-silent`) |
 | `0x0001` | Topology Notification | after admission: when the pod's BSS set changes, and on every client join or leave (with a Client Association Event TLV `0x92`) |
 | `0x0003` | Topology Response | in answer to a Topology Query |
 | `0x0006` | Link Metric Response | in answer to a Link Metric Query, once provisioned |

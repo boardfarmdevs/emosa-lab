@@ -1285,7 +1285,7 @@ async def serve(config, stop):
     # controller needs the R1 form (see emosa.wire.autoconfiguration).
     message_set = check_message_set(config.get("message_set", EASYMESH_61))
     lifecycle, last_status, last_facts, last_write = None, None, None, 0
-    next_discovery = 0
+    next_discovery, present = 0, False  # present: the pod's 1905 entity as of the last loop
     last_kept = None  # (the session's kept reconnections, the session) last checked for drift
     renewals = RenewRules(
         time.monotonic(), topology_query_window=config.get("topology_query_window")
@@ -1539,7 +1539,16 @@ async def serve(config, stop):
                             report.new_start("its configuration lost")
                         lifecycle.renew()
                 now = time.monotonic()
-                if now >= next_discovery:
+                # spec 2.5: the pod's 1905 entity is there while its source is current or its
+                # session is held through its reconnection; a pod away past the window has none,
+                # and its agent sends no Topology Discovery until it is back, then one at once
+                here = report.facts is not None or (
+                    lifecycle.session is not None and lifecycle.session.state == "provisioning"
+                )
+                if here and not present:
+                    next_discovery = 0
+                present = here
+                if here and now >= next_discovery:
                     for piece in topology_discovery(agent, mids):
                         endpoint.send(piece)
                     next_discovery = now + DISCOVERY_PERIOD

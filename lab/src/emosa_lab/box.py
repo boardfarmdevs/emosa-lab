@@ -6123,6 +6123,31 @@ def topology_notifications(box):
     return len(box.sent(TOPOLOGY_NOTIFICATION))
 
 
+async def away_silent(box):
+    """spec 2.5: the pod away past the reconnection window (its link cut, 70 s on): its 1905
+    entity is gone, and its agent sends no frame at all for the 70 s after (more than a
+    discovery period: no Topology Discovery for the absent pod). The pod back, a Topology
+    Discovery at once."""
+    if not (await onboarded(box)).get("applied"):
+        return box.result(passed=False, failed="not onboarded")
+    await dial(box.db, f"tcp:127.0.0.1:{AGENT_PORT}", connect=False)
+    await asyncio.sleep(70)  # the window (60 s) passed, the session ended
+    box.controller.poll()
+    quiet_from = len(box.controller.messages)
+    await asyncio.sleep(70)
+    box.controller.poll()
+    during = [f"0x{m.message_type:04x}" for m in box.controller.messages[quiet_from:]]
+    discoveries = len(box.sent(TOPOLOGY_DISCOVERY))
+    back_at = time.monotonic()
+    await dial(box.db, f"tcp:127.0.0.1:{AGENT_PORT}")
+    back = await box.until(lambda: len(box.sent(TOPOLOGY_DISCOVERY)) > discoveries, seconds=10)
+    return box.result(
+        passed=not during and bool(back),
+        frames_while_away=during,
+        discovery_after_s=round(time.monotonic() - back_at, 1) if back else None,
+    )
+
+
 async def transport_cut(box):
     """The pod's management connection to the agent cut for 20 s, as for a backhaul move (spec
     2.5): the provisioned session is held meanwhile and kept when the pod dials again (the same
@@ -9699,6 +9724,7 @@ SCENARIOS = {
     "adapter-restart": adapter_restart,
     "transport-cut": transport_cut,
     "transport-cut-long": transport_cut_long,
+    "away-silent": away_silent,
     "pod-vanished": pod_vanished,
     "reconnect-moved-uplink": reconnect_moved_uplink,
     "reconnect-channel-follows": reconnect_channel_follows,

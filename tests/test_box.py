@@ -471,6 +471,12 @@ def test_a_pod_connection_cut_past_the_reconnection_window_is_onboarded_again(ag
     assert result["passed"], result
 
 
+def test_an_agent_whose_pod_is_away_past_the_window_sends_no_1905_frame(agent, tmp_path):
+    # spec 2.5: no Topology Discovery for an absent pod; one at once when it is back
+    result = box("away-silent", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+
+
 def test_a_pod_gone_without_a_fin_is_noticed_by_the_echo_probe(agent, tmp_path):
     # spec 3.1: the pod's database frozen, its connection open; the agent's probe drops it
     result = box("pod-vanished", agent, tmp_path / "box", timeout=180)
