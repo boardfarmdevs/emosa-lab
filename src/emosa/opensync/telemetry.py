@@ -44,8 +44,12 @@ MONITOR = {
         "report_type",
         "reporting_interval",
         "sampling_interval",
+        "survey_interval_ms",
     ],
 }
+# the survey types that take the radio off its channel: the channel list's (off-chan), every
+# channel (full)
+OFF_CHANNEL = ("off-chan", "full")
 
 
 @dataclass(frozen=True)
@@ -133,6 +137,29 @@ def survey_rows(decoded, radio_type):
         and r.get("radio_type") == radio_type
         and r.get("survey_type") == "on-chan"
     ]
+
+
+def stats_config(decoded):
+    """The pod's ``Wifi_Stats_Config`` rows, whoever wrote them (spec §3.6), in their uuid order:
+    each its radio type, statistics type and survey type, the sampling interval (seconds) of a
+    row that takes the radio off its channel (OFF_CHANNEL; None for any other) and its
+    ``survey_interval_ms`` (the time on each other channel)."""
+    rows = [r for _, r in sorted(decoded.get("Wifi_Stats_Config", {}).items())]
+    return {
+        "rows": len(rows),
+        "list": [
+            {
+                "radio": r.get("radio_type"),
+                "type": r.get("stats_type"),
+                "survey": r.get("survey_type"),
+                "off_chan_interval": r.get("sampling_interval")
+                if r.get("survey_type") in OFF_CHANNEL
+                else None,
+                "dwell_ms": r.get("survey_interval_ms"),
+            }
+            for r in rows
+        ],
+    }
 
 
 def survey_key(row):

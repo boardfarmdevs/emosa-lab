@@ -68,9 +68,9 @@
     },
     "README 3.6 The pod's own statistics": {
       "vectors": ["telemetry.json", "scope-writes.json", "metrics.json"],
-      "box": ["telemetry", "foreign-broker", "telemetry-broker-restart"],
+      "box": ["telemetry", "stats-config-status", "foreign-broker", "telemetry-broker-restart"],
       "python": ["test_pod_telemetry.py", "test_station_telemetry.py"],
-      "units": ["mqtt_parser", "telemetry_limits"],
+      "units": ["mqtt_parser", "telemetry_limits", "stats_config_rows"],
       "fuzz": ["stats", "mqtt"]
     },
     "README 3.7 Client steering": {

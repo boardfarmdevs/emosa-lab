@@ -16,7 +16,7 @@ from emosa.errors import EmosaError, Reason
 from emosa.model import State
 from emosa.opensync.schema import Schema, reference_path
 from emosa.opensync.stats import PodStats, Report
-from emosa.opensync.telemetry import MONITOR, TelemetryBackend, TelemetryIntent
+from emosa.opensync.telemetry import MONITOR, TelemetryBackend, TelemetryIntent, stats_config
 from emosa.secrets import SecretStore
 from emosa.store import Store
 
@@ -305,3 +305,96 @@ def test_agent_configuration():
     ):
         with pytest.raises(EmosaError):
             telemetry_intent("pod-1", SERIAL, bad)
+
+
+@pytest.mark.parametrize(
+    "schema_path",
+    [reference_path(), Path("tests/fixtures/opensync/opensync-2.0.0.ovsschema")],
+    ids=["6.6", "2.0"],
+)
+def test_the_pods_statistics_rows_are_in_its_status_whoever_wrote_them(schema_path):
+    """spec 3.6: each of the pod's Wifi_Stats_Config rows (its operator's cloud's too), in their
+    uuid order, as the session monitors them; a row that takes the radio off its channel with its
+    sampling interval as its off-channel interval, any other with none (as the C units)."""
+    schema = Schema(json.loads(schema_path.read_text()))
+    empty = ["set", []]
+    raw = {
+        "c3": {
+            "stats_type": "neighbor",
+            "radio_type": "5G",
+            "survey_type": "off-chan",
+            "report_type": "raw",
+            "reporting_interval": 120,
+            "sampling_interval": 30,
+            "survey_interval_ms": 50,
+            "channel_list": ["set", [36, 40]],
+        },
+        "c1": {
+            "stats_type": "client",
+            "radio_type": "2.4G",
+            "survey_type": empty,
+            "report_type": "raw",
+            "reporting_interval": 10,
+            "sampling_interval": 5,
+            "survey_interval_ms": empty,
+        },
+        "c4": {
+            "stats_type": "neighbor",
+            "radio_type": "2.4G",
+            "survey_type": "full",
+            "report_type": "raw",
+            "reporting_interval": 600,
+            "sampling_interval": 300,
+            "survey_interval_ms": 80,
+        },
+        "c2": {
+            "stats_type": "survey",
+            "radio_type": "2.4G",
+            "survey_type": "on-chan",
+            "report_type": "raw",
+            "reporting_interval": 10,
+            "sampling_interval": 5,
+            "survey_interval_ms": empty,
+        },
+    }
+    monitored = {
+        u: schema.row(
+            "Wifi_Stats_Config",
+            {k: v for k, v in r.items() if k in MONITOR["Wifi_Stats_Config"]},
+        )
+        for u, r in raw.items()
+    }
+    assert stats_config({"Wifi_Stats_Config": monitored}) == {
+        "rows": 4,
+        "list": [
+            {
+                "radio": "2.4G",
+                "type": "client",
+                "survey": None,
+                "off_chan_interval": None,
+                "dwell_ms": None,
+            },
+            {
+                "radio": "2.4G",
+                "type": "survey",
+                "survey": "on-chan",
+                "off_chan_interval": None,
+                "dwell_ms": None,
+            },
+            {
+                "radio": "5G",
+                "type": "neighbor",
+                "survey": "off-chan",
+                "off_chan_interval": 30,
+                "dwell_ms": 50,
+            },
+            {
+                "radio": "2.4G",
+                "type": "neighbor",
+                "survey": "full",
+                "off_chan_interval": 300,
+                "dwell_ms": 80,
+            },
+        ],
+    }
+    assert stats_config({}) == {"rows": 0, "list": []}

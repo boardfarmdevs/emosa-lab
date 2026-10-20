@@ -540,6 +540,49 @@ static void start_writes(const char *scratch, const char *schemas)
     em_schema_free(s.receipt);
 }
 
+/* spec 3.6: the pod's statistics rows in its status, whoever wrote them, in their uuid order; the
+ * sampling interval only for a row that takes the radio off its channel (as test_pod_telemetry) */
+static void stats_config_rows(void)
+{
+    cJSON *tables = cJSON_Parse(
+        "{\"Wifi_Stats_Config\": {"
+        "\"c3\": {\"stats_type\": \"neighbor\", \"radio_type\": \"5G\", \"survey_type\": \"off-chan\","
+        " \"report_type\": \"raw\", \"reporting_interval\": 120, \"sampling_interval\": 30,"
+        " \"survey_interval_ms\": 50, \"channel_list\": [\"set\", [36, 40]]},"
+        "\"c1\": {\"stats_type\": \"client\", \"radio_type\": \"2.4G\", \"survey_type\": [\"set\", []],"
+        " \"report_type\": \"raw\", \"reporting_interval\": 10, \"sampling_interval\": 5,"
+        " \"survey_interval_ms\": [\"set\", []]},"
+        "\"c4\": {\"stats_type\": \"neighbor\", \"radio_type\": \"2.4G\", \"survey_type\": \"full\","
+        " \"report_type\": \"raw\", \"reporting_interval\": 600, \"sampling_interval\": 300,"
+        " \"survey_interval_ms\": 80},"
+        "\"c2\": {\"stats_type\": \"survey\", \"radio_type\": \"2.4G\", \"survey_type\": \"on-chan\","
+        " \"report_type\": \"raw\", \"reporting_interval\": 10, \"sampling_interval\": 5,"
+        " \"survey_interval_ms\": [\"set\", []]}}}");
+    cJSON *wanted = cJSON_Parse(
+        "{\"rows\": 4, \"list\": ["
+        "{\"radio\": \"2.4G\", \"type\": \"client\", \"survey\": null, \"off_chan_interval\": null, \"dwell_ms\": null},"
+        "{\"radio\": \"2.4G\", \"type\": \"survey\", \"survey\": \"on-chan\", \"off_chan_interval\": null,"
+        " \"dwell_ms\": null},"
+        "{\"radio\": \"5G\", \"type\": \"neighbor\", \"survey\": \"off-chan\", \"off_chan_interval\": 30,"
+        " \"dwell_ms\": 50},"
+        "{\"radio\": \"2.4G\", \"type\": \"neighbor\", \"survey\": \"full\", \"off_chan_interval\": 300,"
+        " \"dwell_ms\": 80}]}");
+    cJSON *got = em_stats_config_status(tables);
+    char *text = em_json_dumps(got, EM_JSON_COMPACT, false);
+    CHECK(tables && wanted && cJSON_Compare(got, wanted, true), "the rows in uuid order: %s", text ? text : "");
+    free(text);
+    cJSON_Delete(got);
+    cJSON *none = cJSON_CreateObject(); /* no such table */
+    got = em_stats_config_status(none);
+    CHECK(cJSON_GetObjectItemCaseSensitive(got, "rows")->valueint == 0 &&
+              cJSON_GetArraySize(cJSON_GetObjectItemCaseSensitive(got, "list")) == 0,
+          "no rows: none");
+    cJSON_Delete(got);
+    cJSON_Delete(none);
+    cJSON_Delete(wanted);
+    cJSON_Delete(tables);
+}
+
 static void files(const char *scratch)
 {
     char path[512], tmp[520], big[512];
@@ -1793,6 +1836,7 @@ int main(int argc, char **argv)
     helpers(argv[2]);
     journal_tampered(argv[2], argv[1]);
     start_writes(argv[2], argv[1]);
+    stats_config_rows();
     environment_files(argv[2]);
     supervisor(argv[2]);
     second_radio_profile(argv[1], argv[2]);

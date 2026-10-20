@@ -215,6 +215,11 @@ def test_the_pods_statistics_are_set_up_and_reach_the_agent(agent, tmp_path):
     assert result["passed"], result
 
 
+def test_the_pods_statistics_rows_are_in_the_agents_status(agent, tmp_path):
+    result = box("stats-config-status", agent, tmp_path / "box")
+    assert result["passed"], result
+
+
 def test_another_managers_broker_is_not_taken_over(agent, tmp_path):
     result = box("foreign-broker", agent, tmp_path / "box")
     assert result["passed"], result

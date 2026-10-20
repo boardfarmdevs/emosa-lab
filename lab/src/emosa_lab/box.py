@@ -1920,6 +1920,69 @@ async def telemetry(box):
     )
 
 
+# another manager's neighbor scan off the 5 GHz radio's channel, as the status reports it
+OFF_CHANNEL_SCAN = {
+    "stats_type": "neighbor",
+    "radio_type": "5G",
+    "survey_type": "off-chan",
+    "report_type": "raw",
+    "reporting_interval": 120,
+    "sampling_interval": 30,
+    "survey_interval_ms": 50,
+    "channel_list": ["set", [36, 40]],
+}
+OFF_CHANNEL_ENTRY = {
+    "radio": "5G",
+    "type": "neighbor",
+    "survey": "off-chan",
+    "off_chan_interval": 30,
+    "dwell_ms": 50,
+}
+
+
+async def stats_config_status(box):
+    """spec 3.6: the agent's status lists the pod's Wifi_Stats_Config rows, whoever wrote them:
+    the telemetry scope's client and on-channel survey reports (no off-channel interval), then
+    another manager's off-channel neighbor scan with its interval and dwell, and that row gone
+    again once it is deleted."""
+    if not (await onboarded(box)).get("applied"):
+        return box.result(passed=False, failed="not onboarded")
+    applied = await telemetry_applied(box)
+
+    def listed(count):
+        rows = (box.status() or {}).get("stats_config") or {}
+        return rows if rows.get("rows") == count else None
+
+    own = await box.until(lambda: listed(2), seconds=20)
+    result = await box.transact(
+        [{"op": "insert", "table": "Wifi_Stats_Config", "row": OFF_CHANNEL_SCAN}]
+    )
+    uuid = result[0]["uuid"][1]
+    added = await box.until(lambda: listed(3), seconds=20)
+    await box.transact(
+        [
+            {
+                "op": "delete",
+                "table": "Wifi_Stats_Config",
+                "where": [["_uuid", "==", ["uuid", uuid]]],
+            }
+        ]
+    )
+    removed = await box.until(lambda: listed(2), seconds=20)
+    entries = (own or {}).get("list") or []
+    return box.result(
+        passed=bool(applied)
+        and sorted(e.get("type") for e in entries) == ["client", "survey"]
+        and all(e.get("off_chan_interval") is None for e in entries)
+        and OFF_CHANNEL_ENTRY in ((added or {}).get("list") or [])
+        and removed is not None
+        and OFF_CHANNEL_ENTRY not in removed.get("list", []),
+        own=own,
+        added=added,
+        removed=removed,
+    )
+
+
 async def foreign_broker(box):
     """The pod already publishes to another manager's broker (the operator's cloud): the
     agent does not take it over; its write is refused and the pod's settings stay (spec 3.6)."""
@@ -8913,6 +8976,7 @@ SCENARIOS = {
     "channel-selection": channel_selection,
     "channel-scan": channel_scan,
     "telemetry": telemetry,
+    "stats-config-status": stats_config_status,
     "foreign-broker": foreign_broker,
     "metrics": metrics,
     "unassociated": unassociated,
@@ -9022,6 +9086,7 @@ OPTIONS = {  # the box each scenario needs beyond the default
     "forgotten-agent": {"topology_query_window": 20},
     "agent-netns": {"netns": True},
     "telemetry": {"telemetry": True},
+    "stats-config-status": {"telemetry": True},
     "foreign-broker": {"telemetry": True, "foreign_broker": True},
     "metrics": {"telemetry": True},
     "unassociated": {"telemetry": True},

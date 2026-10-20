@@ -46,6 +46,10 @@ void em_telemetry_tick(em_telemetry_scope *t);
 /* TelemetrySetup.status: {"waiting", "operation"}. */
 cJSON *em_telemetry_status(em_telemetry_scope *t);
 
+/* emosa.opensync.telemetry.stats_config: the pod's Wifi_Stats_Config rows, whoever wrote them, in
+ * their uuid order ({"rows", "list": [{"radio", "type", "survey", "off_chan_interval", "dwell_ms"}]}). */
+cJSON *em_stats_config_status(const cJSON *tables);
+
 /* The scope's backend (the engine's), for vectors and tests. */
 em_backend em_telemetry_backend(void);
 

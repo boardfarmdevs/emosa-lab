@@ -307,7 +307,7 @@ Monitored, read-only:
 | `Wifi_Associated_Clients` | `mac`, `state` |
 | `Wifi_Credential_Config` | `ssid`, `security`, `onboard_type`, `priority`, `enabled` |
 | `Connection_Manager_Uplink` | `if_name`, `if_type`, `is_used`, `has_L2`, `has_L3`, `bridge` |
-| `Wifi_Stats_Config` | `stats_type`, `radio_type`, `report_type`, `reporting_interval`, `sampling_interval` |
+| `Wifi_Stats_Config` | `stats_type`, `radio_type`, `survey_type`, `report_type`, `reporting_interval`, `sampling_interval`, `survey_interval_ms` |
 
 Written, each as one guarded transaction. A cold create and a multi-BSS set are
 preceded by a read-only `select` of `Wifi_Inet_Config`.
@@ -452,6 +452,13 @@ What it keeps, per station, is only what the pod measured:
 These measurements are in the agent's status. EMOSA sends an EasyMesh metric
 only when it can be built completely from them; until then it sends none
 (§9).
+
+The agent's status also lists the pod's `Wifi_Stats_Config` rows, whoever wrote
+them and whatever its telemetry mode (`stats_config`): their number and, per
+row, its radio type, statistics type and survey type, its sampling interval when
+it takes the radio off its channel (survey type `off-chan` or `full`) and its
+`survey_interval_ms`, the time on each other channel. A radio away from its
+channel cannot answer its stations, so such a row can delay their associations.
 
 ### 3.7 Client steering
 

@@ -198,6 +198,54 @@ static size_t rows_of(const cJSON *tables, const char *type, const char *radio_t
     return n;
 }
 
+static int by_uuid(const void *x, const void *y)
+{
+    return strcmp((*(const cJSON *const *)x)->string, (*(const cJSON *const *)y)->string);
+}
+
+static void add_text(cJSON *o, const char *name, const char *value)
+{
+    cJSON_AddItemToObject(o, name, value ? cJSON_CreateString(value) : cJSON_CreateNull());
+}
+
+static void add_long(cJSON *o, const char *name, bool has, long value)
+{
+    cJSON_AddItemToObject(o, name, has ? cJSON_CreateNumber((double)value) : cJSON_CreateNull());
+}
+
+cJSON *em_stats_config_status(const cJSON *tables)
+{
+    const cJSON *table = em_table(tables, "Wifi_Stats_Config"), *r;
+    size_t n = 0, k = 0;
+    cJSON_ArrayForEach(r, table) n++;
+    const cJSON **rows = malloc((n ? n : 1) * sizeof(*rows));
+    if (!rows)
+        return cJSON_CreateNull();
+    cJSON_ArrayForEach(r, table) if (k < n) rows[k++] = r;
+    n = k;
+    qsort(rows, n, sizeof(*rows), by_uuid);
+    cJSON *o = cJSON_CreateObject(), *list = cJSON_CreateArray();
+    cJSON_AddNumberToObject(o, "rows", (double)n);
+    for (k = 0; k < n; k++) {
+        cJSON *x = cJSON_CreateObject();
+        const char *survey = ovs_str(rows[k], "survey_type");
+        long sampling = 0, dwell = 0;
+        bool has_sampling = ovs_int(rows[k], "sampling_interval", &sampling);
+        bool has_dwell = ovs_int(rows[k], "survey_interval_ms", &dwell);
+        /* the survey types that take the radio off its channel: the channel list's, every channel */
+        bool off = survey && (!strcmp(survey, "off-chan") || !strcmp(survey, "full"));
+        add_text(x, "radio", ovs_str(rows[k], "radio_type"));
+        add_text(x, "type", ovs_str(rows[k], "stats_type"));
+        add_text(x, "survey", survey);
+        add_long(x, "off_chan_interval", off && has_sampling, sampling);
+        add_long(x, "dwell_ms", has_dwell, dwell);
+        cJSON_AddItemToArray(list, x);
+    }
+    free(rows);
+    cJSON_AddItemToObject(o, "list", list);
+    return o;
+}
+
 static cJSON *mqtt_settings(const cJSON *node)
 {
     cJSON *m = cJSON_CreateObject();

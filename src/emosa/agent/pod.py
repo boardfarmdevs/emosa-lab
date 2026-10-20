@@ -99,7 +99,7 @@ from emosa.opensync.stats import PodStats
 from emosa.opensync.steering import MONITOR as STEERING_MONITOR
 from emosa.opensync.steering import SteeringBackend
 from emosa.opensync.telemetry import MONITOR as TELEMETRY_MONITOR
-from emosa.opensync.telemetry import TelemetryBackend, TelemetryIntent
+from emosa.opensync.telemetry import TelemetryBackend, TelemetryIntent, stats_config
 from emosa.opensync.uplink import (
     BSSID,
     GRE,
@@ -509,6 +509,7 @@ class PodReportSource:
             if self.backend.profile.legacy:
                 await self.mark_start(raw)  # spec 3.10: before the scopes read the pod
             _, _, _, state, rows = self.backend._binding(raw)
+            self.stats_config = stats_config(rows)
             ident = self.backend.identity
             if not raw["ready"] or not ident:
                 raise EmosaError(Reason.NOT_READY, "bound radio State unavailable")
@@ -770,6 +771,7 @@ class PodReportSource:
             self.refused = Reason.SCHEMA_MISMATCH.value if mismatch else None
             self.facts = None
             self.aps_up = frozenset()
+            self.stats_config = None
             self.source.invalidate()
             return False
 
@@ -792,6 +794,7 @@ class PodReportSource:
     _clients = None
     _unavailable = None
     refused = None  # SCHEMA_MISMATCH while the pod's schema is not the profile's generation
+    stats_config = None  # the pod's Wifi_Stats_Config rows as of the last refresh (spec §3.6)
 
 
 def make_bridge(
@@ -1333,6 +1336,9 @@ async def serve(config, stop):
                 if telemetry
                 else {"mode": "off"}
             ),
+            # spec 3.6: the pod's statistics rows, whoever wrote them (one that takes its radio off
+            # its channel can delay its stations' associations); null while the pod is away
+            "stats_config": report.stats_config if snapshot is not None else None,
             "steering": {"mode": "owm", **steering.status()} if steering else {"mode": "off"},
             "probe_watch": watch.status() if watch else None,
             "gre_parent": gre_parent,

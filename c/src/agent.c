@@ -2757,6 +2757,11 @@ static cJSON *status(agent *a)
     } else {
         cJSON_AddStringToObject(telemetry, "mode", "off");
     }
+    /* spec 3.6: the pod's statistics rows, whoever wrote them (one that takes its radio off its
+     * channel can delay its stations' associations); null while the pod is away */
+    cJSON_AddItemToObject(o, "stats_config", source_current(a) && em_ovsdb_ready(a->ovs)
+                                                 ? em_stats_config_status(em_ovsdb_tables(a->ovs))
+                                                 : cJSON_CreateNull());
     cJSON *st = cJSON_AddObjectToObject(o, "steering");
     cJSON_AddStringToObject(st, "mode", a->steering_on ? "owm" : "off");
     if (a->steering_on) {
