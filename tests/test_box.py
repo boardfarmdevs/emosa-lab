@@ -490,9 +490,26 @@ def test_a_session_not_yet_provisioned_is_not_held_across_a_cut(agent, tmp_path)
     assert result["passed"], result
 
 
-def test_a_fronthaul_channel_move_is_a_fresh_session_not_a_refusal(agent, tmp_path):
-    # spec 2.5: the Pis' 2.4 GHz fallback, the fronthaul following its station's channel
+def test_a_fronthaul_following_its_station_keeps_the_session_and_reports_each_move(agent, tmp_path):
+    # spec 2.5, 9: a gateway's 2.4 GHz automatic channel selection, 6 -> 11 -> 1
     result = box("fronthaul-channel-moves", agent, tmp_path / "box")
+    assert result["passed"], result
+
+
+def test_a_fronthaul_move_with_no_station_is_reported_with_its_normal_preferences(agent, tmp_path):
+    result = box("fronthaul-channel-moves-unheld", agent, tmp_path / "box")
+    assert result["passed"], result
+
+
+def test_a_fronthaul_move_before_provisioning_is_a_fresh_session_not_a_refusal(agent, tmp_path):
+    result = box("fronthaul-moves-not-provisioned", agent, tmp_path / "box")
+    assert result["passed"], result
+
+
+def test_channel_selection_off_channel_6_is_answered(agent, tmp_path):
+    # finding 24: the Python agent left the request unanswered off channel 6
+    result = box("channel-selection-off-6", agent, tmp_path / "box")
+    assert result["codes"] == {"accepted": 0, "declined": 2}, result
     assert result["passed"], result
 
 

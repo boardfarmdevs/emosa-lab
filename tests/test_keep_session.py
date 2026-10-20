@@ -46,8 +46,9 @@ async def provisioned(rig, **options):
     return session, source, sent, clock
 
 
-def republish(source, clock, revision, *, lineage=0, capabilities=None):
-    """The pod's source published again: the facts last published (kept across invalidation)."""
+def republish(source, clock, revision, *, lineage=0, capabilities=None, held=frozenset()):
+    """The pod's source published again: the facts last published (kept across invalidation);
+    ``held`` the radios a station on them holds."""
     last_capabilities, last_topology = source._last_facts[:2]
     return source.publish(
         revision,
@@ -55,6 +56,7 @@ def republish(source, clock, revision, *, lineage=0, capabilities=None):
         last_topology,
         observed_at=clock.monotonic(),
         lineage=lineage,
+        held_radios=held,
     )
 
 
@@ -249,7 +251,12 @@ def test_a_session_not_yet_provisioned_loses_its_source_at_once(rig):
     asyncio.run(scenario())
 
 
-def test_a_moved_channel_is_kept_with_a_channel_preference_report(rig):
+@pytest.mark.parametrize("held", [True, False])
+def test_a_moved_channel_is_kept_with_a_channel_preference_report(rig, held):
+    """Spec 2.5: a radio held by a station on it is reported with its new channel the only
+    operable one (a Channel Preference TLV); one with no station on it with its normal
+    preferences (none, as a Channel Preference Query is answered)."""
+
     async def scenario():
         session, source, sent, clock = await provisioned(rig)
         searches, count = session.counts["search_sent"], len(sent)
@@ -257,7 +264,14 @@ def test_a_moved_channel_is_kept_with_a_channel_preference_report(rig):
         source.invalidate()
         clock.advance(15)
         await session.tick()
-        republish(source, clock, (2, 1), capabilities=moved(before))
+        ruid = before.radios[0].basic.ruid
+        republish(
+            source,
+            clock,
+            (2, 1),
+            capabilities=moved(before),
+            held=frozenset({ruid}) if held else frozenset(),
+        )
         await session.tick()
         assert session.state == "provisioning"
         assert session.capabilities == moved(before)
@@ -267,7 +281,11 @@ def test_a_moved_channel_is_kept_with_a_channel_preference_report(rig):
         assert 0x0001 in types, "a Topology Notification"
         assert 0x8005 in types, "an unsolicited Channel Preference Report"
         report = next(f for f in sent[count:] if int.from_bytes(f[16:18], "big") == 0x8005)
-        assert report[22] == 0x8B, "its first TLV is a Channel Preference TLV"
+        if held:
+            assert report[22] == 0x8B, "its first TLV is a Channel Preference TLV"
+            assert report[25:31] == ruid
+        else:
+            assert report[22] == 0x00, "no Channel Preference TLV: the End of Message"
         session.close()
 
     asyncio.run(scenario())

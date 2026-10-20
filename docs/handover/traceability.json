@@ -31,7 +31,7 @@
     },
     "README 2.5 Onboarding": {
       "vectors": ["onboarding.json", "wsc-m2.json", "session-timing.json", "early-report.json"],
-      "box": ["boot", "onboard", "refuse", "early-report", "renew", "no-m2", "silent-controller", "forgotten-agent", "unserved-pod", "new-source", "pod-recreated", "transport-cut-long", "reconnect-moved-uplink", "reconnect-channel-follows", "reconnect-not-provisioned", "reconnect-config-lost", "agent-stops-cleanly", "fronthaul-channel-moves"],
+      "box": ["boot", "onboard", "refuse", "early-report", "renew", "no-m2", "silent-controller", "forgotten-agent", "unserved-pod", "new-source", "pod-recreated", "transport-cut-long", "reconnect-moved-uplink", "reconnect-channel-follows", "reconnect-not-provisioned", "reconnect-config-lost", "agent-stops-cleanly", "fronthaul-channel-moves", "fronthaul-channel-moves-unheld", "fronthaul-moves-not-provisioned"],
       "python": ["test_autoconfiguration.py", "test_provisioning_session.py", "test_discovery_session.py", "test_wsc.py", "test_keep_session.py"],
       "fuzz": ["wsc"]
     },
@@ -60,7 +60,7 @@
     },
     "README 3.4 Translation: EasyMesh → OVSDB": {
       "vectors": ["translation-southbound.json", "control.json", "scope-writes.json"],
-      "box": ["onboard", "multi-bss", "set-beyond-slots", "fronthaul-role", "fronthaul-role-cold", "channel-selection"],
+      "box": ["onboard", "multi-bss", "set-beyond-slots", "fronthaul-role", "fronthaul-role-cold", "channel-selection", "channel-selection-off-6"],
       "python": ["test_pod_profile.py", "test_channel_procedures.py", "test_wsc_operation_bridge.py"]
     },
     "README 3.5 Pod profiles": {

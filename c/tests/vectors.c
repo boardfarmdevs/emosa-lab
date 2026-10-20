@@ -838,6 +838,56 @@ static void control_case(const cJSON *c, const cJSON *agent, const em_device_vie
     free(probes);
 }
 
+/* spec 2.5: a kept session's reports when its radios' operable channels moved (em_control_moved):
+ * the Channel Preference Report, a TLV for each moved radio a station holds, then the Operating
+ * Channel Report */
+static void channel_move_vectors(const cJSON *moves, const cJSON *agent, const em_device_view *view,
+                                 const uint8_t ruid[6])
+{
+    const cJSON *c, *r;
+    checks++;
+    if (!cJSON_GetArraySize(cJSON_GetObjectItemCaseSensitive(moves, "cases")))
+        fail("control", "channel_moves", "no cases");
+    cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(moves, "cases"))
+    {
+        const char *name = str(c, "name");
+        em_control control = {0};
+        em_parse_mac(str(agent, "al_mac"), control.binding.local_al);
+        em_parse_mac(str(agent, "controller_al"), control.binding.controller_al);
+        memcpy(control.binding.sources[0], control.binding.controller_al, 6);
+        control.binding.nsources = 1;
+        control.radio = em_view_radio(view, ruid);
+        cJSON_ArrayForEach(r, cJSON_GetObjectItemCaseSensitive(c, "radios"))
+        {
+            em_control_radio *x = &control.radios[control.nradios];
+            if (control.nradios < 4 && em_parse_mac(str(r, "ruid"), x->ruid)) {
+                x->op_class = (uint8_t)num(r, "class");
+                x->channel = (int)num(r, "channel");
+                x->max_eirp_dbm = (int8_t)num(r, "max_eirp");
+                x->tx_power_dbm = (int)num(r, "tx_power");
+                x->held = cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(r, "held"));
+                x->measured = true;
+                control.nradios++;
+            }
+        }
+        uint8_t moved[4][6];
+        size_t nmoved = 0;
+        cJSON_ArrayForEach(r, cJSON_GetObjectItemCaseSensitive(c, "moved"))
+        {
+            if (nmoved < 4 && cJSON_IsString(r) && em_parse_mac(r->valuestring, moved[nmoved]))
+                nmoved++;
+        }
+        control.previous_mid = (uint16_t)(num(agent, "first_mid") - 1);
+        em_frames out = {0};
+        checks++;
+        if (em_control_moved(&control, (const uint8_t(*)[6])moved, nmoved, &out) != EM_OK)
+            fail("control", name, "not sent");
+        else if (!frames_equal(&out, cJSON_GetObjectItemCaseSensitive(c, "frames")))
+            fail("control", name, "frames differ");
+        em_frames_free(&out);
+    }
+}
+
 static void control_vectors(const char *dir)
 {
     cJSON *doc = load(dir, "control.json");
@@ -855,8 +905,10 @@ static void control_vectors(const char *dir)
     em_parse_mac(str(agent, "radio"), ruid);
     const cJSON *c;
     cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(doc, "cases")) control_case(c, agent, view, ruid, NULL);
-    /* spec 9: the second radio on UNII-1 channel 44, and on UNII-3 channel 149 (V54's radio B) */
-    static const char *const sets[] = {"multi_radio", "multi_radio_unii3", "multi_radio_unreported"};
+    /* spec 9: the second radio on UNII-1 channel 44, and on UNII-3 channel 149 (the bench's radio B); the
+     * fronthaul on channel 11, its station's (finding 24) */
+    static const char *const sets[] = {"multi_radio", "multi_radio_unii3", "multi_radio_unreported",
+                                       "fronthaul_on_11"};
     for (size_t s = 0; s < sizeof(sets) / sizeof(sets[0]); s++) {
         const cJSON *multi = cJSON_GetObjectItemCaseSensitive(doc, sets[s]);
         checks++;
@@ -865,6 +917,7 @@ static void control_vectors(const char *dir)
         cJSON_ArrayForEach(c, cJSON_GetObjectItemCaseSensitive(multi, "cases"))
             control_case(c, agent, view, ruid, cJSON_GetObjectItemCaseSensitive(multi, "radios"));
     }
+    channel_move_vectors(cJSON_GetObjectItemCaseSensitive(doc, "channel_moves"), agent, view, ruid);
     free(view);
     cJSON_Delete(doc);
 }

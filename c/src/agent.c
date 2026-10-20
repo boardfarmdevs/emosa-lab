@@ -478,6 +478,23 @@ static size_t operable_moved(const em_tlv_list *before, const em_tlv_list *after
     return n;
 }
 
+/* spec 2.5: a provisioned session kept while radios' operable channels moved (a further radio's, or
+ * the fronthaul's): the radios that moved are due their Channel Preference and Operating Channel
+ * Reports (report_channel_moves) */
+static void channel_moves_kept(agent *a, const em_tlv_list *caps)
+{
+    uint8_t moved[1 + EXTRA_RADIOS][6];
+    size_t n = operable_moved(&a->caps, caps, moved, 1 + EXTRA_RADIOS);
+    for (size_t i = 0; i < n; i++) {
+        bool known = false;
+        for (size_t j = 0; j < a->nchannel_moves; j++)
+            known = known || !memcmp(a->channel_moves[j], moved[i], 6);
+        if (!known && a->nchannel_moves < 1 + EXTRA_RADIOS)
+            memcpy(a->channel_moves[a->nchannel_moves++], moved[i], 6);
+    }
+    count(&a->counts, "channel_move_kept");
+}
+
 /* The radios the agent shows, the fronthaul first, then each further radio the pod has brought
  * up (spec 9), each with the BSSes the agent represents on it, on its channel. */
 static size_t shown_radios(const agent *a, em_topology_radio out[1 + EXTRA_RADIOS])
@@ -838,12 +855,16 @@ static bool refresh(agent *a)
         for (size_t i = 0; i < radio->nbss; i++)
             if (!strcmp(radio->bss[i].if_name, a->profile.slots[k].if_name))
                 rep.bss[rep.nbss++] = radio->bss[i];
-    int channel = primary ? radio->channel : a->profile.channel;
     /* the capabilities are fixed for one pod source (spec 2.4): a new OVSDB generation (the
      * pod recreated, maybe with another radio) is a new source with a new session, and its
      * capabilities are taken again */
     int source = em_ovsdb_generation(a->ovs);
     bool fresh = !a->caps_fixed || a->caps_generation != source;
+    /* a cold pod has the radio but no BSS yet: the radio on the channel the profile would create
+     * the BSS on. Spec 9: a fronthaul already reported whose BSS is not up for a moment (its radio
+     * between two channels, as a station it shares the radio with roams) stays on the channel it
+     * was reported on, so that a move from one channel to another changes its capabilities once */
+    int channel = primary ? radio->channel : !fresh ? a->channel : a->profile.channel;
     /* spec 9 (bound_radios): the fronthaul, then each of the profile's further radios the pod has
      * brought up, on its observed channel; the fronthaul carries one BSS plus its radio's slots, a
      * further radio its own slots and at least one; each its own Operational/Configured radio,
@@ -954,18 +975,8 @@ static bool refresh(agent *a)
          * went, or a session not provisioned yet, starts afresh with new M1s. */
         LOG("a further radio moved channel or came and went: capabilities taken");
         bool keeps = a->at.state == S_PROVISIONING && a->at.window > 0 && same_identity(&a->caps, &caps);
-        if (keeps) {
-            uint8_t moved[1 + EXTRA_RADIOS][6];
-            size_t n = operable_moved(&a->caps, &caps, moved, 1 + EXTRA_RADIOS);
-            for (size_t i = 0; i < n; i++) {
-                bool known = false;
-                for (size_t j = 0; j < a->nchannel_moves; j++)
-                    known = known || !memcmp(a->channel_moves[j], moved[i], 6);
-                if (!known && a->nchannel_moves < 1 + EXTRA_RADIOS)
-                    memcpy(a->channel_moves[a->nchannel_moves++], moved[i], 6);
-            }
-            count(&a->counts, "channel_move_kept");
-        }
+        if (keeps)
+            channel_moves_kept(a, &caps);
         em_tlv_list_free(&a->caps);
         a->caps = caps;
         if (!keeps && a->at.state != S_NONE && a->at.state != S_FAILED && a->at.state != S_SOURCE_LOST &&
@@ -988,11 +999,18 @@ static bool refresh(agent *a)
         if (a->at.state != S_NONE && a->at.state != S_FAILED && a->at.state != S_SOURCE_LOST &&
             a->at.state != S_INCOMPATIBLE)
             close_session(a, S_SOURCE_LOST);
+    } else if (a->at.state == S_PROVISIONING && a->at.window > 0 && same_identity(&a->caps, &caps)) {
+        /* spec 2.5, 9: the fronthaul radio's channel moved (the station it shares the radio with
+         * follows its parent, as under a gateway's automatic channel selection): a provisioned
+         * session is kept, as for a further radio, its new operable channel reported */
+        LOG("the fronthaul radio moved channel: capabilities taken");
+        channel_moves_kept(a, &caps);
+        em_tlv_list_free(&a->caps);
+        a->caps = caps;
     } else {
-        /* spec 2.5: the fronthaul radio's channel moved (its pod's uplink moved it, the radio
-         * shared with its station) or another radio is in its place: another pod source, a fresh
-         * session with these capabilities, never a refusal (that would make a channel move an
-         * outage). Spec 9's 2.4 GHz contract is channel 6 only today: not kept with reports yet. */
+        /* spec 2.5: the fronthaul radio's channel moved under a session not provisioned yet, or
+         * another radio is in its place: another pod source, a fresh session with these
+         * capabilities, never a refusal (that would make a channel move an outage) */
         const char *why = same_identity(&a->caps, &caps) ? "fronthaul_moved" : "capabilities_changed";
         count(&a->reconnections_fresh, why);
         fresh_log(a, why, &caps);
@@ -2033,15 +2051,26 @@ static bool backhaul_link_metrics(agent *a, const em_message *m)
  * operable channel at its operated power, a further radio on a channel of its class; a radio whose
  * power the pod does not report (OpenSync leaves it unset when the radio's VIFs disagree) at its
  * advertised maximum EIRP, a bound (pod.operated) */
+static bool station_holds(const em_radio_view *r)
+{
+    /* a station on the radio connected to a parent holds its channel (spec 2.5) */
+    for (size_t i = 0; i < r->nuplinks; i++)
+        if (r->uplinks[i].has_parent)
+            return true;
+    return false;
+}
+
 static void control_radios(agent *a)
 {
     em_control *c = &a->control;
     c->nradios = 0;
     em_control_radio *f = &c->radios[c->nradios++];
     bool front_bound = !a->represented.has_tx_power;
-    *f = (em_control_radio){.op_class = 81, .channel = a->represented.channel,
+    /* on the channel its capabilities report (spec 9: held for a moment between two) */
+    *f = (em_control_radio){.op_class = 81, .channel = a->channel,
                             .tx_power_dbm = front_bound ? a->max_eirp : a->tx_power,
-                            .max_eirp_dbm = a->max_eirp, .measured = true, .bound = front_bound};
+                            .max_eirp_dbm = a->max_eirp, .measured = true, .bound = front_bound,
+                            .held = station_holds(&a->represented)};
     memcpy(f->ruid, a->represented.ruid, 6);
     c->nfurther = 0;
     for (size_t k = 0; k < a->nradio_scopes && c->nradios < 4; k++) {
@@ -2059,7 +2088,8 @@ static void control_radios(agent *a)
         em_control_radio *x = &c->radios[c->nradios++];
         *x = (em_control_radio){.op_class = op_class, .channel = rs->channel,
                                 .tx_power_dbm = bound ? eirp : rs->represented.tx_power,
-                                .max_eirp_dbm = eirp, .measured = op_class != 0, .bound = bound};
+                                .max_eirp_dbm = eirp, .measured = op_class != 0, .bound = bound,
+                                .held = station_holds(&rs->represented)};
         memcpy(x->ruid, rs->represented.ruid, 6);
     }
 }

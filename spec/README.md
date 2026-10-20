@@ -160,12 +160,11 @@ Rules:
   Search at once and then every second, three at most, and fails when no
   Response is admitted within 5 s.
 - The radio's capabilities are fixed for one source. If the fronthaul radio's channel moves
-  under the same source (on the Pis' 2.4 GHz fallback the fronthaul AP follows the station it
-  shares the radio with), or another radio is in its place, that is another pod source
-  (`fronthaul_moved`, `capabilities_changed`): a fresh session with the new capabilities, never
-  a refusal, which would turn a channel move into an outage (box `fronthaul-channel-moves`).
-  The fronthaul's move kept with its reports, as a further radio's is below, comes with §9's
-  2.4 GHz contract, channel 6 only today. Every new connection from
+  under the same source while the session is not provisioned yet, or another radio is in its
+  place, that is another pod source (`fronthaul_moved`, `capabilities_changed`): a fresh session
+  with the new capabilities, never a refusal, which would turn a channel move into an outage
+  (box `fronthaul-moves-not-provisioned`). A provisioned session keeps a fronthaul's move, as a
+  further radio's, with its reports (below). Every new connection from
   the pod to its agent is a new database generation: the pod's OpenSync restarted, the pod
   rebooted or was recreated (maybe with another radio), or its link to the agent dropped and
   came back. Its capabilities are taken again from its first refresh.
@@ -203,14 +202,20 @@ Rules:
   same start is another manager's, and its operation is refused (`OWNERSHIP_CONFLICT`), not forced
   (box `reconnect-config-lost`).
 - A radio's operable channel follows its pod's uplink (§9: a further radio's channel is its
-  station's). When only the radios' operable channels changed, on a kept reconnection or on the
-  same source, a provisioned session is kept, as an EasyMesh agent reports a channel change
-  without onboarding again: the agent takes the new capabilities and, for the radios that
-  moved, sends an unsolicited Channel Preference Report naming each one's new channel its only
+  station's; the fronthaul's is the channel of the station it shares the radio with, as a
+  legacy pod's GTP station or the Pis' 2.4 GHz fallback, wherever a gateway's automatic channel
+  selection puts its 2.4 GHz). When only the radios' operable channels changed, on a kept
+  reconnection or on the same source, a provisioned session is kept, as an EasyMesh agent
+  reports a channel change without onboarding again: the agent takes the new capabilities and,
+  for the radios that moved, sends an unsolicited Channel Preference Report, then an Operating
+  Channel Report. The Channel Preference Report names a moved radio's new channel its only
   operable one (every other channel of its band's classes at preference 0, reason 8: operation
-  would prevent backhaul operation using a shared radio), then an Operating Channel Report. Its
-  M1 had named the old channel; the controller learns the new one from these. Nothing is
-  written: the pod moved the radio and its BSSes (box `second-radio-moves-channel`,
+  would prevent backhaul operation using a shared radio) only while a station on the radio holds
+  its channel (connected to a parent: the pod's Wi-Fi backhaul or its GTP station); a radio with
+  no station on it has its normal preferences, none, as a Channel Preference Query is answered.
+  Its M1 had named the old channel; the controller learns the new
+  one from these. Nothing is written: the pod moved the radio and its BSSes (box
+  `fronthaul-channel-moves`, `fronthaul-channel-moves-unheld`, `second-radio-moves-channel`,
   `reconnect-channel-follows`).
 - One exception: a radio's maximum EIRP. A source starts with the radio's reported
   `Wifi_Radio_State.tx_power`, or 20 dBm when the pod reports none yet. A reported power above
@@ -258,7 +263,8 @@ Rules:
 Everything reported comes from the pod's State tables (§3.3), never from what
 was written to Config:
 - one radio, operating class 81 (2.4 GHz, 20 MHz), where only the current
-  channel is operable;
+  channel is operable (any of 1 to 13: the channel the station on the radio
+  sets, §9);
 - maximum EIRP from `tx_power`;
 - no HT, VHT, HE or EHT capability claims;
 - WPA2-PSK with CCMP-128;
@@ -392,7 +398,7 @@ The 6.6 encoding of WPA2-PSK:
   registrar session (one nonce, one public key) is accepted, as RDK sends it.
 - **Channel selection** is answered within one second. It is accepted
   (response code 0), without moving the pod's radio, when it allows the channel
-  the pod operates on. Preference groups for operating classes the radio does
+  the pod operates on, whichever it is (finding 24). Preference groups for operating classes the radio does
   not advertise are ignored. A request that forbids that channel, or limits the
   power below what the pod transmits, is declined (code 2: it violates the
   preferences and capabilities last reported) and does not replace the stored
@@ -1889,7 +1895,13 @@ path is re-run. Carried with the second-radio work (§9).
   Channel Report (a radio with no channel for a moment keeps the one it was reported on, so a
   move is one change); a session not yet provisioned starts afresh. Nothing is written:
   `b-ap-<band>` moves with its radio, the pod's doing, and EMOSA neither recreates nor rewrites
-  it. A moved fronthaul radio is another pod source: a fresh session (§2.5).
+  it. The fronthaul radio moves the same way with the station it shares the radio with, and is
+  kept and reported the same way (§2.5), on any channel of class 81 (1 to 13), its Operating
+  Channel Report naming 81 and that channel; it too keeps the channel it was reported on while
+  it has none for a moment (its BSS down while the radio changes channel). Finding 24: the Python
+  agent had the fronthaul's operating parameters on channel 6 only, so off it a Channel
+  Selection Request went unanswered and no Operating Channel Report was sent, while the C agent
+  answered (box `channel-selection-off-6`).
   AP metrics (§3.8) per radio: each radio's BSSes carry the utilization of the pod's survey of
   that radio's own channel and their stations' metrics; a radio with no fresh survey is left out
   of the response, nothing filled in. Known gap, to close before V54's end soaks: the pod's

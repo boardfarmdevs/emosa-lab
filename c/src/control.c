@@ -326,8 +326,9 @@ em_reason em_control_moved(em_control *c, const uint8_t (*moved)[6], size_t nmov
     for (size_t k = 0; k < nradios; k++)
         if (!radios[k].measured)
             return EM_NOT_READY; /* "measured operating parameters unavailable" */
-    /* a Channel Preference TLV per moved radio: each class of its band with a channel other than
-     * its current one, those channels at preference 0, reason 8 (channel.moved_preferences) */
+    /* a Channel Preference TLV per moved radio a station on it holds: each class of its band with a
+     * channel other than its current one, those channels at preference 0, reason 8; a radio with
+     * no station on it none, its normal preferences (channel.moved_preferences) */
     uint8_t preference[4][7 + 3 * (3 + 13)];
     em_tlv pt[4], ot[4];
     size_t np = 0;
@@ -335,7 +336,7 @@ em_reason em_control_moved(em_control *c, const uint8_t (*moved)[6], size_t nmov
         bool is_moved = false;
         for (size_t i = 0; i < nmoved; i++)
             is_moved = is_moved || !memcmp(moved[i], radios[k].ruid, 6);
-        if (!is_moved)
+        if (!is_moved || !radios[k].held)
             continue;
         const uint8_t *classes;
         size_t nclasses = advertised(radios[k].op_class, &classes), len = 7;

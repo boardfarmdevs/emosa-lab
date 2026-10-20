@@ -1,9 +1,11 @@
 # SPDX-License-Identifier: Apache-2.0
 """Selected sole-radio channel procedures (EasyMesh 6.1 §§8.1–2, 15.1).
 
-The initial radio profile supports only class 81/channel 6. Compatible requests
-need no actuator change; their acceptance still requires durable preferences and
-fresh observed operating parameters. This is not a generic channel actuator.
+Each radio is operable on its current channel only: the 2.4 GHz fronthaul on
+any channel of class 81, which follows a station sharing the radio (spec 2.5,
+9). Compatible requests need no actuator change; their acceptance still
+requires durable preferences and fresh observed operating parameters. This is
+not a generic channel actuator.
 
 Every well-formed Channel Selection Request is answered within its deadline, as
 §8.2 requires (a controller that gets no response retries and gives the radio
@@ -53,14 +55,16 @@ BAND_CLASSES = ((81,), (115, 124, 125))
 SHARED_RADIO_BACKHAUL = 8
 
 
-def moved_preferences(capabilities, ruids):
+def moved_preferences(capabilities, ruids, held):
     """spec 2.5: the Channel Preference TLVs of an unsolicited Channel Preference Report for the
-    radios ``ruids`` whose channel moved with the pod's uplink in a kept session: each of the
-    radio's classes with a channel it cannot operate on, those channels at preference 0 (every
-    channel but its current one), reason 8."""
+    radios ``ruids`` whose channel moved in a kept session. A radio whose channel a station on it
+    holds (``held``: its station connected to a parent, the pod's Wi-Fi backhaul or its GTP
+    station) has each of its classes with a channel it cannot operate on, those channels at
+    preference 0 (every channel but its current one), reason 8. A radio with no station on it
+    has none: its normal preferences, as a Channel Preference Query is answered."""
     tlvs = []
     for radio in capabilities.radios:
-        if radio.basic.ruid not in ruids:
+        if radio.basic.ruid not in ruids or radio.basic.ruid not in held:
             continue
         groups = [
             (c.operating_class, c.non_operable_channels)

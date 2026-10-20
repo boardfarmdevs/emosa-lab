@@ -830,7 +830,212 @@
    ]
   }
  ],
+ "channel_moves": {
+  "cases": [
+   {
+    "frames": [
+     "020000e000010272f97f0785893a0000800501f400808b001602000000010001510c0102030405060708090a0c0d08000000",
+     "020000e000010272f97f0785893a0000800801f500808f000a02000000010001510b1e000000"
+    ],
+    "moved": [
+     "02:00:00:00:01:00"
+    ],
+    "name": "fronthaul-moved-held",
+    "radios": [
+     {
+      "channel": 11,
+      "class": 81,
+      "held": true,
+      "max_eirp": 30,
+      "ruid": "02:00:00:00:01:00",
+      "tx_power": 30
+     }
+    ]
+   },
+   {
+    "frames": [
+     "020000e000010272f97f0785893a0000800501f40080000000",
+     "020000e000010272f97f0785893a0000800801f500808f000a0200000001000151011e000000"
+    ],
+    "moved": [
+     "02:00:00:00:01:00"
+    ],
+    "name": "fronthaul-moved-unheld",
+    "radios": [
+     {
+      "channel": 1,
+      "class": 81,
+      "held": false,
+      "max_eirp": 30,
+      "ruid": "02:00:00:00:01:00",
+      "tx_power": 30
+     }
+    ]
+   },
+   {
+    "frames": [
+     "020000e000010272f97f0785893a0000800501f400808b001e02000000050003730424282c30087c03999da1087d07999da1a5a9adb108000000",
+     "020000e000010272f97f0785893a0000800801f500808f000a0200000001000151061e8f000a020000000500017d9514000000"
+    ],
+    "moved": [
+     "02:00:00:00:05:00"
+    ],
+    "name": "second-radio-moved-held",
+    "radios": [
+     {
+      "channel": 6,
+      "class": 81,
+      "held": false,
+      "max_eirp": 30,
+      "ruid": "02:00:00:00:01:00",
+      "tx_power": 30
+     },
+     {
+      "channel": 149,
+      "class": 125,
+      "held": true,
+      "max_eirp": 23,
+      "ruid": "02:00:00:00:05:00",
+      "tx_power": 20
+     }
+    ]
+   },
+   {
+    "frames": [
+     "020000e000010272f97f0785893a0000800501f400808b001602000000010001510c02030405060708090a0b0c0d08000000",
+     "020000e000010272f97f0785893a0000800801f500808f000a0200000001000151011e8f000a020000000500017d9514000000"
+    ],
+    "moved": [
+     "02:00:00:00:01:00",
+     "02:00:00:00:05:00"
+    ],
+    "name": "both-moved-fronthaul-held",
+    "radios": [
+     {
+      "channel": 1,
+      "class": 81,
+      "held": true,
+      "max_eirp": 30,
+      "ruid": "02:00:00:00:01:00",
+      "tx_power": 30
+     },
+     {
+      "channel": 149,
+      "class": 125,
+      "held": false,
+      "max_eirp": 23,
+      "ruid": "02:00:00:00:05:00",
+      "tx_power": 20
+     }
+    ]
+   }
+  ],
+  "description": "spec 2.5: a kept session's reports when its radios' operable channels moved: 'radios' are its reported radios after the move (each on its one operable channel, 'held' when a station on it holds its channel), 'moved' the radios that moved; 'frames' the unsolicited Channel Preference Report (MID 500) and the Operating Channel Report (MID 501). A moved radio a station holds names its new channel the only operable one (the others at preference 0, reason 8); one with no station has no Channel Preference TLV, its normal preferences."
+ },
  "description": "spec §2.4, §3.4, §3.7, §3.9: a provisioned agent over the recorded pod rows (stations 02:00:00:00:0a:00, 02:00:00:00:10:00 on 82:00:00:00:01:00, radio 02:00:00:00:01:00 on class 81 channel 6 at the pod's 30 dBm, max EIRP 30). Each step is a controller request frame and the frames the agent sends in answer, in order; the agent's own messages take MIDs from 500 and a Channel Scan Report carries scan_timestamp. 'handed_to_pod' lists the steering mandates the agent carries out (spec §3.7), as decoded from the request; 'channel_policy' is the accepted channel policy's durable record (spec §3.4) without its context, or null when none was accepted. A case with 'probes' gives the pod's last probe request per station (spec §3.9); probe_wall is the agent's clock for their ages.",
+ "fronthaul_on_11": {
+  "cases": [
+   {
+    "channel_policy": null,
+    "handed_to_pod": [],
+    "name": "channel-preference-query-fronthaul-11",
+    "steps": [
+     {
+      "expected": {
+       "frames": [
+        "020000e000010272f97f0785893a0000800500590080000000"
+       ],
+       "result": "channel_preference_report_sent"
+      },
+      "request": "0272f97f0785020000e00001893a0000800400590080000000"
+     }
+    ]
+   },
+   {
+    "channel_policy": {
+     "controller": "020000e00001",
+     "local_al": "0272f97f0785",
+     "mid": 90,
+     "radios": [
+      {
+       "ignored": [],
+       "power_limit_dbm": null,
+       "preferences": [
+        {
+         "channels": [
+          11
+         ],
+         "class": 81,
+         "preference": 14,
+         "reason": 0
+        }
+       ],
+       "ruid": "020000000100"
+      }
+     ],
+     "status": "accepted_no_adjustment"
+    },
+    "handed_to_pod": [],
+    "name": "channel-selection-fronthaul-11",
+    "steps": [
+     {
+      "expected": {
+       "frames": [
+        "020000e000010272f97f0785893a00008007005a00808e000702000000010000000000",
+        "020000e000010272f97f0785893a0000800801f400808f000a02000000010001510b1e000000"
+       ],
+       "result": "channel_selection_accepted"
+      },
+      "request": "0272f97f0785020000e00001893a00008006005a00808b000b0200000001000151010be0000000"
+     }
+    ]
+   },
+   {
+    "channel_policy": null,
+    "handed_to_pod": [],
+    "name": "channel-selection-fronthaul-11-forbidden",
+    "steps": [
+     {
+      "expected": {
+       "frames": [
+        "020000e000010272f97f0785893a00008007005b00808e000702000000010002000000",
+        "020000e000010272f97f0785893a0000800801f400808f000a02000000010001510b1e000000"
+       ],
+       "result": "channel_selection_declined"
+      },
+      "request": "0272f97f0785020000e00001893a00008006005b00808b001602000000010001510c01020304050708090a0b0c0d00000000"
+     }
+    ]
+   },
+   {
+    "channel_policy": null,
+    "handed_to_pod": [],
+    "name": "channel-scan-fronthaul-11",
+    "steps": [
+     {
+      "expected": {
+       "frames": [
+        "020000e000010272f97f0785893a00008000005c0080000000",
+        "020000e000010272f97f0785893a0000801c01f40080a8001918323032362d30392d32355430303a30303a30302e3030305aa70009020000000100510b01000000"
+       ],
+       "result": "channel_scan_not_supported_reported"
+      },
+      "request": "0272f97f0785020000e00001893a0000801b005c0080a60009000102000000010000000000"
+     }
+    ]
+   }
+  ],
+  "description": "spec 9, finding 24: as cases, the fronthaul radio on class 81 channel 11, where the station on its radio took it (a gateway's 2.4 GHz automatic channel selection): 11 its only operable channel, and the channel the agent operates on.",
+  "radios": [
+   {
+    "channel": 11,
+    "class": 81,
+    "max_eirp": 30,
+    "ruid": "02:00:00:00:01:00",
+    "tx_power": 30
+   }
+  ]
+ },
  "multi_radio": {
   "cases": [
    {

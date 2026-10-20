@@ -42,6 +42,9 @@ class ReportSnapshot:
     telemetry_valid_until: float | None = None
     topology_valid_until: float | None = None
     generation: int | None = None  # the pod source's database generation
+    # spec 2.5: the radios whose channel a station on them holds (connected to a parent): a move of
+    # one is reported with a Channel Preference TLV naming its new channel the only operable one
+    held_radios: frozenset = frozenset()
 
 
 class ReportSource:
@@ -86,12 +89,14 @@ class ReportSource:
         telemetry_valid_until=None,
         topology_valid_until=None,
         lineage=None,
+        held_radios=frozenset(),
     ):
         """``lineage``: the agent's judgement of which sources are the same pod source (spec 2.5:
         a reconnection of the same pod with the same capabilities apart from their operable
         channels). With one, the session context is the lineage's, kept across invalidation and
         a new database generation; without one, as before, the connection's (a disconnect, an
-        invalidation or a new generation needs discovery again)."""
+        invalidation or a new generation needs discovery again). ``held_radios``: the RUIDs of
+        the reported radios whose channel a station on them holds (spec 2.5)."""
         try:
             if (
                 (self.binding, self.pod_id, self.inputs_digest) != self._identity
@@ -139,6 +144,8 @@ class ReportSource:
                 r.ruid not in capacities for r in operating_radios
             ):
                 invalid("operating radio inventory does not match capabilities")
+            if type(held_radios) is not frozenset or any(r not in capacities for r in held_radios):
+                invalid("held radios are not reported radios")
             radios = topology.operational.radios
             if set(capacities) != {r.ruid for r in radios} or any(
                 len(r.bsses) > capacities[r.ruid] for r in radios
@@ -174,6 +181,7 @@ class ReportSource:
             telemetry_valid_until,
             topology_valid_until,
             revision[0],
+            held_radios,
         )
         return self.current()
 

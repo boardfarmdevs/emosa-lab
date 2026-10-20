@@ -33,6 +33,9 @@ typedef struct {
      * unset when its VIFs disagree): tx_power_dbm is its advertised maximum EIRP, an upper bound,
      * not a measurement (channel.OperatingRadio.bound, spec 9) */
     bool bound;
+    /* a station on the radio holds its channel (connected to a parent): a move of the radio is
+     * reported with its new channel the only operable one (spec 2.5, ReportSnapshot.held_radios) */
+    bool held;
 } em_control_radio;
 
 /* Starts a mandate on the pod; NULL, or why it did not start (e.g. "busy"). */

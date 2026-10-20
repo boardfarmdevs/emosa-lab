@@ -5808,11 +5808,13 @@ async def radio_b_moves(box, *, cut=0):
     With ``cut``, the pod's link to its agent is cut for that many seconds around it (the station
     lost its parent: OpenSync's CM opens the link again). The agent keeps its session: no Search
     or M1; it reports radio B's new operable channel in a Channel Preference Report (every other
-    channel of its classes at preference 0) and its Operating Channel Report on 149, and after a
-    cut a Topology Notification. Nothing is written: b-ap-50, the fronthaul and the radio's Config
-    are left as they were."""
+    channel of its classes at preference 0: the station holds it) and its Operating Channel Report
+    on 149, and after a cut a Topology Notification. Nothing is written: b-ap-50, the fronthaul
+    and the radio's Config are left as they were."""
     if await serve_radios(box, lambda: both_radios_applied(box)) is None:
         return box.result(passed=False, failed="the two radios were not both configured")
+    await hold_radio(box, "5G", "02:00:00:00:9c:50", "bhaul-sta-50")
+    await asyncio.sleep(2)
     ap = (await box.vif("Wifi_VIF_Config", PARENT_AP_50))[1]
     fronthaul = (await box.vif("Wifi_VIF_Config", COLD_VIF))[1]
     radio = (await radio_config(box, "5G"))[1]
@@ -6324,29 +6326,164 @@ async def reconnect_config_lost(box):
     )
 
 
-async def fronthaul_channel_moves(box):
-    """spec 2.5, the Pis' 2.4 GHz fallback (their fronthaul AP on the radio the station shares,
-    which follows the station's channel): the pod's fronthaul radio moves from 6 to 11 on the
-    same source. Another pod source (fronthaul_moved): a fresh session whose M1 advertises 11
-    the radio's only operable channel, provisioning again; the source is never refused (the
-    fronthaul's move kept with its reports comes with spec 9's 2.4 GHz contract)."""
-    if not (await onboarded(box)).get("applied"):
-        return box.result(passed=False, failed="not onboarded")
-    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
-    continued, moved = kept_reconnections(box), fresh_reconnections(box, "fronthaul_moved")
-    state = next(
-        u for u, r in (await box.rows("Wifi_Radio_State")).items() if r.get("freq_band") == "2.4G"
-    )
+async def hold_radio(box, band, parent, if_name):
+    """A station on the pod's ``band`` radio connected to ``parent``, as wm shows one that joined
+    (its State on the radio): it holds the radio's channel (spec 2.5)."""
+    radios = await box.rows("Wifi_Radio_State")
+    state = next(u for u, r in radios.items() if r.get("freq_band") == band)
+    mac = "06" + radios[state]["mac"][2:]  # another locally administered first octet
     await box.transact(
         [
             {
-                "op": "update",
+                "op": "insert",
+                "table": "Wifi_VIF_State",
+                "uuid-name": "station",
+                "row": {
+                    "if_name": if_name,
+                    "mode": "sta",
+                    "enabled": True,
+                    "mac": mac,
+                    "ssid": "opensync-lab-bhaul",
+                    "parent": parent,
+                },
+            },
+            {
+                "op": "mutate",
                 "table": "Wifi_Radio_State",
                 "where": [["_uuid", "==", ["uuid", state]]],
-                "row": {"channel": 11},
-            }
+                "mutations": [["vif_states", "insert", ["set", [["named-uuid", "station"]]]]],
+            },
         ]
     )
+
+
+async def move_radio(box, band, channel):
+    """The pod's ``band`` radio moved to ``channel`` as a station on it follows its parent: its
+    State channel-less for a moment, then the new one (the pod's doing, not the agent's)."""
+    state = next(
+        u for u, r in (await box.rows("Wifi_Radio_State")).items() if r.get("freq_band") == band
+    )
+    for value in (["set", []], channel):
+        await box.transact(
+            [
+                {
+                    "op": "update",
+                    "table": "Wifi_Radio_State",
+                    "where": [["_uuid", "==", ["uuid", state]]],
+                    "row": {"channel": value},
+                }
+            ]
+        )
+        await asyncio.sleep(2)
+
+
+# the fronthaul on channel 11 or 1: every other channel of class 81 at preference 0
+FRONTHAUL_ON = {ch: {81: [c for c in range(1, 14) if c != ch]} for ch in (1, 11)}
+
+
+async def fronthaul_follows(box, *, held, channels):
+    """spec 2.5, 9 (a gateway's 2.4 GHz automatic channel selection; the Pis' 2.4 GHz fallback):
+    the pod's fronthaul radio follows the station it shares the radio with through ``channels``,
+    its State channel-less for a moment before each. The agent keeps its session (no Search or
+    M1, no fresh source) and reports each move once: an unsolicited Channel Preference Report,
+    the fronthaul's new channel its only operable one while a station on the radio (``held``)
+    holds it, none with no station (its normal preferences), then an Operating Channel Report on
+    81/the channel. Nothing is written: the fronthaul and the radio's Config stay as they were."""
+    state = await onboarded(box)
+    if not state.get("applied"):
+        return box.result(passed=False, failed="not onboarded")
+    ruid = state["ruid"].hex(":")
+    if held:
+        await hold_radio(box, "2.4G", "02:00:00:00:9c:01", "bhaul-sta-24")
+        await asyncio.sleep(2)
+    fronthaul = (await box.vif("Wifi_VIF_Config", "home-ap-24"))[1]
+    radio = (await radio_config(box, "2.4G"))[1]
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    before = len((box.status() or {}).get("operations") or [])
+    starts, moved = recovery_starts(box), fresh_reconnections(box, "fronthaul_moved")
+    seen, reports = [], []
+    for channel in channels:
+        reported, preferences = len(box.sent(0x8008)), len(box.sent(0x8005))
+        await move_radio(box, "2.4G", channel)
+
+        async def done(channel=channel, reported=reported, preferences=preferences):
+            return (ruid, 81, channel) in channel_reports(box, reported) and len(
+                box.sent(0x8005)
+            ) > preferences
+
+        ok = await until_async(done, seconds=30)
+        await asyncio.sleep(3)  # one report per move: none follows
+        mine = [g for r, g in preference_reports(box, preferences) if r == ruid]
+        seen.append(
+            {
+                "channel": channel,
+                "reported": bool(ok),
+                "preference_reports": len(box.sent(0x8005)) - preferences,
+                "preferences": [{str(k): v for k, v in g.items()} for g in mine],
+                "operating": [c for r, _, c in channel_reports(box, reported) if r == ruid],
+            }
+        )
+        reports.append(
+            bool(ok)
+            and len(box.sent(0x8005)) - preferences == 1
+            and mine == ([FRONTHAUL_ON[channel]] if held else [])
+            and [c for r, _, c in channel_reports(box, reported) if r == ruid][-1:] == [channel]
+        )
+    await asyncio.sleep(5)  # no session follows
+    status = box.status() or {}
+    radios = (status.get("pod") or {}).get("radios") or []
+    reported_channels = {r.get("band"): r.get("channel") for r in radios}
+    unchanged = {
+        "fronthaul": (await box.vif("Wifi_VIF_Config", "home-ap-24"))[1] == fronthaul,
+        "radio": (await radio_config(box, "2.4G"))[1] == radio,
+    }
+    sessions = recovery_starts(box) - starts
+    return box.result(
+        passed=all(reports)
+        and sessions == 0
+        and len(box.sent(AUTOCONFIG_SEARCH)) == searches
+        and len(box.sent(AUTOCONFIG_WSC)) == m1s
+        and fresh_reconnections(box, "fronthaul_moved") == moved
+        and len(status.get("operations") or []) == before
+        and all(unchanged.values())
+        and reported_channels.get("2.4G") == channels[-1],
+        moves=seen,
+        sessions=sessions,
+        searches=len(box.sent(AUTOCONFIG_SEARCH)) - searches,
+        m1s=len(box.sent(AUTOCONFIG_WSC)) - m1s,
+        unchanged=unchanged,
+        reported_channels=reported_channels,
+    )
+
+
+async def fronthaul_channel_moves(box):
+    """The gateway's 2.4 GHz moves 6 -> 11 -> 1 under automatic channel selection, the pod's
+    fronthaul radio following the station on it each time: the session kept, each move reported
+    with the new channel the only operable one (fronthaul_follows)."""
+    return await fronthaul_follows(box, held=True, channels=(11, 1))
+
+
+async def fronthaul_channel_moves_unheld(box):
+    """The pod's fronthaul radio moves from 6 to 11 with no station on it: the session kept, the
+    move reported with the radio's normal preferences (no Channel Preference TLV) and its
+    Operating Channel Report (fronthaul_follows)."""
+    return await fronthaul_follows(box, held=False, channels=(11,))
+
+
+async def fronthaul_moves_not_provisioned(box):
+    """spec 2.5: the pod's fronthaul radio moves from 6 to 11 while the agent's first M1 waits for
+    its M2: a session not provisioned is not kept. Another pod source (fronthaul_moved): a fresh
+    session whose M1 advertises 11 the radio's only operable channel, never the source
+    refused."""
+    search = await box.until(lambda: box.controller.latest(AUTOCONFIG_SEARCH))
+    if not search:
+        return box.result(passed=False, failed="no search")
+    box.controller.send(AUTOCONFIG_RESPONSE, RESPONSE_61, mid=search.mid)
+    if not await box.until(lambda: box.controller.latest(AUTOCONFIG_WSC), seconds=20):
+        return box.result(passed=False, failed="no M1")
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    continued, moved = kept_reconnections(box), fresh_reconnections(box, "fronthaul_moved")
+    await move_radio(box, "2.4G", 11)
     mode = await back(box, searches, m1s, continued)
     m1 = next(iter(box.sent(AUTOCONFIG_WSC)[m1s:]), None)
     classes = advertised_classes(m1) if m1 else {}
@@ -6358,6 +6495,54 @@ async def fronthaul_channel_moves(box):
         session=mode,
         fresh_as_fronthaul_moved=counted,
         non_operable_81=classes.get(81),
+    )
+
+
+async def channel_selection_off_6(box):
+    """Finding 24 (spec 3.4, 9): the pod's fronthaul on channel 11, where the station on its radio
+    took it. A Channel Selection Request that allows 11 is accepted, code 0, without moving the
+    radio; one that forbids it (every channel but 6 ruled out, as a controller moving the radio
+    back to 6 sends) is declined, code 2, once. Each is followed by the Operating Channel Report
+    on 81/11. Before the fix the Python agent had no operating parameters off channel 6 and left
+    the request unanswered."""
+    state = await onboarded(box)
+    if not state.get("applied"):
+        return box.result(passed=False, failed="not onboarded")
+    ruid = state["ruid"]
+    await hold_radio(box, "2.4G", "02:00:00:00:9c:01", "bhaul-sta-24")
+    reported = len(box.sent(0x8008))
+    await move_radio(box, "2.4G", 11)
+    if not await box.until(
+        lambda: (ruid.hex(":"), 81, 11) in channel_reports(box, reported), seconds=30
+    ):
+        return box.result(passed=False, failed="the move to 11 not reported")
+    # class 81: 11 at preference 14 (allowed); then every channel but 6 at preference 0 (no power
+    # limit: the channel alone declines it)
+    allows = (Tlv(0x8B, ruid + bytes.fromhex("0151010be0")),)
+    forbids = (Tlv(0x8B, ruid + bytes.fromhex("01510c0102030405070809" + "0a0b0c0d00")),)
+    codes, reports, answers = {}, {}, {}
+    for name, tlvs in (("accepted", allows), ("declined", forbids)):
+        reported, before = len(box.sent(0x8008)), len(box.sent(0x8007))
+        response = await box.ask(0x8006, tlvs, 0x8007)
+        value = tlv_value(response, 0x8E)
+        codes[name] = value[6] if value and len(value) >= 7 else None
+        report = await next_message(box, 0x8008, reported, seconds=10)
+        reports[name] = (tlv_value(report, 0x8F) or b"").hex() or None
+        await asyncio.sleep(2)
+        answers[name] = len(box.sent(0x8007)) - before
+    radio = next(
+        r for r in (await box.rows("Wifi_Radio_State")).values() if r.get("freq_band") == "2.4G"
+    )
+    on_11 = (ruid + bytes((1, 81, 11))).hex()
+    return box.result(
+        passed=codes == {"accepted": 0, "declined": 2}
+        and all(r is not None and r.startswith(on_11) for r in reports.values())
+        and answers == {"accepted": 1, "declined": 1}
+        and radio.get("channel") == 11,
+        codes=codes,
+        operating_channel_reports=reports,
+        answers=answers,
+        channel=radio.get("channel"),
     )
 
 
@@ -9354,6 +9539,9 @@ SCENARIOS = {
     "reconnect-not-provisioned": reconnect_not_provisioned,
     "reconnect-config-lost": reconnect_config_lost,
     "fronthaul-channel-moves": fronthaul_channel_moves,
+    "fronthaul-channel-moves-unheld": fronthaul_channel_moves_unheld,
+    "fronthaul-moves-not-provisioned": fronthaul_moves_not_provisioned,
+    "channel-selection-off-6": channel_selection_off_6,
     "write-lost-unapplied": write_lost_unapplied,
     "restart-during-write": restart_during_write,
     "legacy-onboard": legacy_onboard,

@@ -294,8 +294,7 @@ def test_a_second_radios_channel_change_retakes_its_capabilities_once(tmp_path):
     """Spec 9's channel rule (V54: radio B on 149): the pod's station roams and the second radio
     moves with it, from 36 to 149 by way of no channel. The report source takes the radio's new
     capabilities under the same pod source (holding 36 in between, so the move changes them
-    once); a moved fronthaul radio is still a different device, refused until the source
-    changes."""
+    once); a moved fronthaul radio with no provisioned session is another pod source."""
     from emosa.agent.pod import PodReportSource, further_radios_changed
     from test_pod_profile import RADIO_STATE, RADIO_STATE_5G
 
@@ -331,13 +330,67 @@ def test_a_second_radios_channel_change_retakes_its_capabilities_once(tmp_path):
     assert asyncio.run(report.refresh())
     assert further_radios_changed(first, report.capabilities)
     assert radio_b() == ((125, 149), {124, 125})
-    # spec 2.5: the fronthaul's channel moved is another pod source, a fresh session (a new
-    # lineage), never the source refused
+    # spec 2.5: the fronthaul's channel moved with no provisioned session is another pod source, a
+    # fresh session (a new lineage), never the source refused
     context = report.source.current().context_token
     tables["Wifi_Radio_State"][RADIO_STATE]["channel"] = 11
     assert asyncio.run(report.refresh())
     assert report.reconnections["fresh"] == {"fronthaul_moved": 1}
     assert report.source.current().context_token != context
+
+
+def test_a_fronthaul_move_under_a_provisioned_session_keeps_its_source(tmp_path):
+    """Spec 2.5, 9 (a gateway's 2.4 GHz automatic channel selection): the fronthaul radio follows
+    the station it shares the radio with from 6 to 11, by way of no channel. Under a provisioned
+    session the report source takes the new capabilities under the same pod source (holding 6 in
+    between, so the move changes them once): no fresh session, the fronthaul operable on 11 only,
+    its operating parameters on 81/11 (finding 24: none off channel 6 before), and the radio held
+    by its station, connected to a parent."""
+    from emosa.agent.pod import PodReportSource
+    from test_pod_profile import RADIO_STATE
+
+    fronthaul, _, _ = parent_5g(tmp_path)
+    tables = fronthaul.session.tables
+    report = PodReportSource(fronthaul, BINDING, "pod-1")
+    report.keeps = lambda: True
+
+    def front():
+        """The fronthaul's operable channels, its (class, channel) operated, whether it is held."""
+        snapshot = report.source.current()
+        basic = snapshot.capabilities.radios[0].basic
+        (operable,) = [
+            set(CLASS_CHANNELS[81]) - set(c.non_operable_channels) for c in basic.operating_classes
+        ]
+        operating = [
+            (r.operating_class, r.channel)
+            for r in snapshot.operating_radios
+            if r.ruid == basic.ruid
+        ]
+        return operable, operating, basic.ruid in snapshot.held_radios
+
+    assert asyncio.run(report.refresh())
+    assert front() == ({6}, [(81, 6)], False)
+    context, first = report.source.current().context_token, report.capabilities
+    tables["Wifi_Radio_State"][RADIO_STATE]["channel"] = ["set", []]  # between two channels
+    assert asyncio.run(report.refresh())
+    assert report.capabilities == first and front()[0] == {6}
+    station = str(uuid.uuid4())
+    tables["Wifi_VIF_State"][station] = {
+        "if_name": "bhaul-sta-24",
+        "mode": "sta",
+        "enabled": True,
+        "mac": "02:00:00:00:1a:09",
+        "ssid": "opensync-lab-bhaul",
+        "parent": "02:00:00:00:9c:01",
+    }
+    states = tables["Wifi_Radio_State"][RADIO_STATE]["vif_states"][1]
+    tables["Wifi_Radio_State"][RADIO_STATE]["vif_states"] = ["set", [*states, ["uuid", station]]]
+    tables["Wifi_Radio_State"][RADIO_STATE]["channel"] = 11
+    assert asyncio.run(report.refresh())
+    assert report.capabilities != first
+    assert front() == ({11}, [(81, 11)], True)
+    assert report.reconnections["fresh"] == {}
+    assert report.source.current().context_token == context
 
 
 def test_a_radio_with_no_reported_power_is_operated_at_its_advertised_bound(tmp_path):

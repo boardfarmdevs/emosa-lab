@@ -317,6 +317,10 @@ class PodReportSource:
         self.capabilities = self.inventory = None
         self.capabilities_generation = None  # the pod source the capabilities are from
         self.further_channels = {}  # RUID -> channel of each further radio reported (spec 9)
+        self.fronthaul_channel = None  # the fronthaul radio's channel last reported (spec 9)
+        # spec 2.5: whether the agent's session is provisioned and kept across a move (set by the
+        # agent): a fronthaul radio's channel move then keeps it, as a further radio's does
+        self.keeps = lambda: False
         # spec 2.5: the sources that are one pod source to the session (a reconnection of the
         # same pod with the same capabilities apart from their operable channels, back within
         # RECONNECT_WINDOW); a new one for any other source
@@ -521,13 +525,22 @@ class PodReportSource:
             if radio is None:
                 raise EmosaError(Reason.NOT_READY, "bound radio absent from the view")
             primary, bsses = self._represented(radio, bool(state))
-            # A cold pod has the radio but no BSS yet: advertise the radio on the
-            # channel the profile would create the BSS on, and no BSS.
-            channel = radio.channel if primary else self.backend.channel
             # The capabilities are fixed for one pod source (spec 2.4): a new database
             # generation (the pod recreated, maybe with another radio) is a new source with
             # a new session, and its capabilities are taken again.
             fresh = self.capabilities is None or raw["generation"] != self.capabilities_generation
+            # A cold pod has the radio but no BSS yet: advertise the radio on the channel the
+            # profile would create the BSS on, and no BSS. Spec 9: a fronthaul already reported
+            # whose BSS is not up for a moment (its radio between two channels, as a station it
+            # shares the radio with roams) stays on the channel it was reported on, so that a
+            # move from one channel to another changes its capabilities once.
+            if primary:
+                channel = radio.channel
+            elif not fresh and self.fronthaul_channel is not None:
+                channel = self.fronthaul_channel
+            else:
+                channel = self.backend.channel
+            self.fronthaul_channel = channel
             # spec 9: report the fronthaul radio and each of the profile's additional radios (the
             # second radio of 8.6), each operable only on its own channel.
             bound = bound_radios(
@@ -606,12 +619,21 @@ class PodReportSource:
                         ),
                     )
                     self.capabilities = capabilities
+                elif (
+                    capabilities_identity(capabilities) == capabilities_identity(self.capabilities)
+                    and self.keeps()
+                ):
+                    # spec 2.5, 9: the fronthaul radio's channel moved (the station it shares the
+                    # radio with follows its parent, as under a gateway's automatic channel
+                    # selection): a provisioned session is kept, as for a further radio, its new
+                    # operable channel reported
+                    log.info("the fronthaul radio moved channel: capabilities taken")
+                    self.capabilities = capabilities
                 else:
-                    # spec 2.5: the fronthaul radio's channel moved (its pod's uplink moved it, the
-                    # radio shared with its station) or another radio is in its place: another pod
-                    # source, a fresh session with these capabilities, never a refusal (that would
-                    # make a channel move an outage). Spec 9's 2.4 GHz contract is channel 6 only
-                    # today: the fronthaul's move is not kept with its reports yet.
+                    # spec 2.5: the fronthaul radio's channel moved under a session not provisioned
+                    # yet, or another radio is in its place: another pod source, a fresh session
+                    # with these capabilities, never a refusal (that would make a channel move an
+                    # outage)
                     self._new_lineage(
                         "fronthaul_moved"
                         if capabilities_identity(capabilities)
@@ -740,9 +762,13 @@ class PodReportSource:
                     (OperatingRadio(r.ruid, opclass, ch, r.tx_power),) if r.tx_power <= eirp else ()
                 )
 
-            # Operating parameters (channel procedures, Operating Channel Report) only while
-            # the BSS operates on the one supported channel.
-            operating = operated(radio, 81, channel, max_eirp) if primary and channel == 6 else ()
+            # Operating parameters (channel procedures, Operating Channel Report) while the BSS
+            # operates, on any channel of class 81 (spec 9: the channel its station sets)
+            operating = (
+                operated(radio, 81, channel, max_eirp)
+                if primary and operating_class(radio.band, channel) == 81
+                else ()
+            )
             # spec 9: each further radio on its own observed channel (it follows the pod's
             # station)
             for r, ch, _ in bound[1:]:
@@ -757,6 +783,10 @@ class PodReportSource:
                 lifetime=1.5,  # (t + 2) - t can exceed 2 in floating point
                 operating_radios=operating,
                 lineage=self.lineage,
+                # spec 2.5: the radios whose channel a station on them holds (connected)
+                held_radios=frozenset(
+                    r.ruid for r, _, _ in bound if any(u.parent for u in r.uplinks)
+                ),
             )
             self.identity, self.published_at = (device.serial, device.node_id), started
             self.instance = self._start(rows)
@@ -1455,6 +1485,12 @@ async def serve(config, stop):
                 boot_id=Path("/proc/sys/kernel/random/boot_id").read_text().strip(),
             )
             lifecycle = OnboardingRecovery(report.source, factory)
+            # spec 2.5: a provisioned session, held and kept across a move (onboarding._snapshot)
+            report.keeps = lambda: (
+                lifecycle.session is not None
+                and lifecycle.session.state == "provisioning"
+                and lifecycle.session.reconnect_window is not None
+            )
             while not stop.is_set():
                 refreshed = time.monotonic() >= next_refresh
                 if refreshed:

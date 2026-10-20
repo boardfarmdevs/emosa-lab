@@ -1633,11 +1633,12 @@ def wsc_m2_vectors():
     }
 
 
-def control_agent(raw, stations, *, second_radio=None, second_power=None):
+def control_agent(raw, stations, *, second_radio=None, second_power=None, front_channel=6):
     """A provisioned agent's report source over recorded rows, at time 0. ``second_radio``: the
     channel on which it also reports the pod's 5 GHz radio (spec 9: a GRE parent's or child's
     second radio), with no BSS of EMOSA's on it; ``second_power``: its power as the pod reports it
-    (SECOND_RADIO_POWER), or "unreported": its advertised maximum (23), a bound."""
+    (SECOND_RADIO_POWER), or "unreported": its advertised maximum (23), a bound;
+    ``front_channel``: the fronthaul's channel (spec 9: any of class 81, its station's)."""
     from emosa.wire.channel import OperatingRadio
     from emosa.wire.coordinator import ReportSource
 
@@ -1645,15 +1646,15 @@ def control_agent(raw, stations, *, second_radio=None, second_power=None):
     radio = view.radio(mac(RUID))
     five = view.radio(mac(RUID_50))
     caps = (
-        radios_capabilities(((radio, 6, 5, 30), (five, second_radio, 1, 23)))
+        radios_capabilities(((radio, front_channel, 5, 30), (five, second_radio, 1, 23)))
         if second_radio
-        else radio_capabilities(radio, channel=6, max_bss=5, max_eirp=30)
+        else radio_capabilities(radio, channel=front_channel, max_bss=5, max_eirp=30)
     )
     facts = topology(
         agent_al=mac(AGENT),
         controller_al=mac(CONTROLLER),
         radio=radio,
-        channel=6,
+        channel=front_channel,
         bsses=radio.bsses,
         ages={mac(m): 10 for m in stations},
         extra_radios=((five, (), second_radio),) if second_radio else (),
@@ -1666,7 +1667,7 @@ def control_agent(raw, stations, *, second_radio=None, second_power=None):
         facts,
         observed_at=0.0,
         lifetime=1.5,
-        operating_radios=(OperatingRadio(mac(RUID), 81, 6, radio.tx_power),)
+        operating_radios=(OperatingRadio(mac(RUID), 81, front_channel, radio.tx_power),)
         + (
             (
                 OperatingRadio(
@@ -2179,14 +2180,41 @@ def control_vectors():
         ),
     ]
 
-    def run(sequences, *, second_radio=None, second_power=None):
-        return [run_case(name, frames, second_radio, second_power) for name, frames in sequences]
+    # the fronthaul on channel 11, where the station on its radio took it (spec 9, finding 24):
+    # answered as on 6, the preferences that allow 11 accepted, those that forbid it declined
+    front11 = [
+        one("channel-preference-query-fronthaul-11", 0x8004, 89),
+        one(
+            "channel-selection-fronthaul-11",
+            0x8006,
+            90,
+            Tlv(0x8B, ruid + bytes.fromhex("0151010be0")),
+        ),
+        one(  # every channel but 6 at preference 0, as a controller moving the radio back sends
+            "channel-selection-fronthaul-11-forbidden",
+            0x8006,
+            91,
+            Tlv(0x8B, ruid + bytes.fromhex("01510c01020304050708090a0b0c0d00")),
+        ),
+        one("channel-scan-fronthaul-11", 0x801B, 92, Tlv(0xA6, b"\x00\x01" + ruid + b"\x00")),
+    ]
 
-    def run_case(name, frames, second_radio, second_power=None):
+    def run(sequences, *, second_radio=None, second_power=None, front_channel=6):
+        return [
+            run_case(name, frames, second_radio, second_power, front_channel)
+            for name, frames in sequences
+        ]
+
+    def run_case(name, frames, second_radio, second_power=None, front_channel=6):
         with tempfile.TemporaryDirectory() as directory:
             rows = on_channel(raw, "5G", second_radio) if second_radio else copy.deepcopy(raw)
+            rows = on_channel(rows, "2.4G", front_channel)
             source, _ = control_agent(
-                rows, stations, second_radio=second_radio, second_power=second_power
+                rows,
+                stations,
+                second_radio=second_radio,
+                second_power=second_power,
+                front_channel=front_channel,
             )
             sent, handed = [], []
             mids = MidSequence(499)
@@ -2321,6 +2349,92 @@ def control_vectors():
             ],
             "cases": run(unreported, second_radio=44, second_power="unreported"),
         },
+        "fronthaul_on_11": {
+            "description": "spec 9, finding 24: as cases, the fronthaul radio on class 81 channel "
+            "11, where the station on its radio took it (a gateway's 2.4 GHz automatic channel "
+            "selection): 11 its only operable channel, and the channel the agent operates on.",
+            "radios": [
+                {"ruid": RUID, "class": 81, "channel": 11, "tx_power": radio_power, "max_eirp": 30}
+            ],
+            "cases": run(front11, front_channel=11),
+        },
+        "channel_moves": channel_move_vectors(raw, stations, radio_power),
+    }
+
+
+def channel_move_vectors(raw, stations, radio_power):
+    """spec 2.5: what a kept session sends when its radios' operable channels moved: an
+    unsolicited Channel Preference Report (MID first_mid), then the Operating Channel Report of
+    every radio (first_mid + 1). A moved radio a station on it holds has its new channel the
+    only operable one (every other channel of its classes at preference 0, reason 8); one with
+    no station has its normal preferences, no TLV."""
+    from emosa.wire.channel import moved_preferences
+    from emosa.wire.cmdu import fragment_message
+
+    cases = []
+    for name, front, second, moved, held in (
+        ("fronthaul-moved-held", 11, None, (RUID,), (RUID,)),
+        ("fronthaul-moved-unheld", 1, None, (RUID,), ()),
+        ("second-radio-moved-held", 6, 149, (RUID_50,), (RUID_50,)),
+        ("both-moved-fronthaul-held", 1, 149, (RUID, RUID_50), (RUID,)),
+    ):
+        rows = on_channel(raw, "5G", second) if second else copy.deepcopy(raw)
+        rows = on_channel(rows, "2.4G", front)
+        source, _ = control_agent(rows, stations, second_radio=second, front_channel=front)
+        snapshot = source.current()
+        frames = fragment_message(
+            mac(CONTROLLER),
+            mac(AGENT),
+            0x8005,
+            500,
+            moved_preferences(
+                snapshot.capabilities, {mac(r) for r in moved}, {mac(r) for r in held}
+            ),
+        ) + fragment_message(
+            mac(CONTROLLER),
+            mac(AGENT),
+            0x8008,
+            501,
+            tuple(r.tlv() for r in snapshot.operating_radios),
+        )
+        radios = [
+            {
+                "ruid": RUID,
+                "class": 81,
+                "channel": front,
+                "tx_power": radio_power,
+                "max_eirp": 30,
+                "held": RUID in held,
+            }
+        ]
+        if second:
+            radios.append(
+                {
+                    "ruid": RUID_50,
+                    "class": operating_class("5G", second),
+                    "channel": second,
+                    "tx_power": SECOND_RADIO_POWER,
+                    "max_eirp": 23,
+                    "held": RUID_50 in held,
+                }
+            )
+        cases.append(
+            {
+                "name": name,
+                "radios": radios,
+                "moved": list(moved),
+                "frames": [f.hex() for f in frames],
+            }
+        )
+    return {
+        "description": "spec 2.5: a kept session's reports when its radios' operable channels "
+        "moved: 'radios' are its reported radios after the move (each on its one operable "
+        "channel, 'held' when a station on it holds its channel), 'moved' the radios that "
+        "moved; 'frames' the unsolicited Channel Preference Report (MID 500) and the Operating "
+        "Channel Report (MID 501). A moved radio a station holds names its new channel the only "
+        "operable one (the others at preference 0, reason 8); one with no station has no "
+        "Channel Preference TLV, its normal preferences.",
+        "cases": cases,
     }
 
 

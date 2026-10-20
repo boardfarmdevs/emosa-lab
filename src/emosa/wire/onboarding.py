@@ -337,15 +337,16 @@ class OnboardingSession:
                 if self.state != "provisioning":
                     return
             if self.channel_moves:
-                # spec 2.5: a radio's channel moved in a kept session: its new operable channel
-                # in an unsolicited Channel Preference Report (its M1's capabilities named the
-                # old one); the Operating Channel Report follows from the channel procedures
+                # spec 2.5: a radio's channel moved in a kept session: an unsolicited Channel
+                # Preference Report (its M1's capabilities named the old channel), its new channel
+                # the only operable one while a station on it holds it; the Operating Channel
+                # Report follows from the channel procedures
                 for frame in fragment_message(
                     self.binding.controller_al,
                     self.binding.local_al,
                     0x8005,
                     self.mids.next(),
-                    moved_preferences(self.capabilities, self.channel_moves),
+                    moved_preferences(self.capabilities, self.channel_moves, snapshot.held_radios),
                 ):
                     snapshot.stamp.check(self._stamp(), self.clock())
                     self.send_frame(frame)
