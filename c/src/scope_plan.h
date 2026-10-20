@@ -31,6 +31,9 @@ typedef struct {
         char band[8], ht_mode[17];
         int channel;
     } idle[2];
+    /* channel and ht_mode are the station's that holds the radio (the scope's follow of its move),
+     * not the profile's: the radio written alone, on whatever uplink (RadioPlanIntent.follows) */
+    bool follows;
 } em_plan_intent;
 
 typedef struct {
@@ -48,6 +51,18 @@ typedef struct {
     bool has_last;
     char waiting[128]; /* why nothing is written now, "" when nothing waits */
     bool has_waiting;
+    /* the profile's plan (intent above: the one wanted), and the follow of the station that holds
+     * the radio (RadioPlan._follow): its channel and width, the one it waits to follow (the
+     * hold-down not over), when it last took one, the start it is of, how many times the plan
+     * followed a station */
+    em_plan_intent base;
+    double (*monotonic)(void);
+    bool has_follow, has_wanted, has_followed_at;
+    int follow_channel, wanted_channel;
+    char follow_ht_mode[17], wanted_ht_mode[17];
+    double followed_at;
+    char follow_start[17];
+    unsigned follow_count;
 } em_plan_scope;
 
 /* The intent from the profile: its fronthaul and slots' VIF names, its radio's band, channel and

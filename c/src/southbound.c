@@ -1498,6 +1498,27 @@ em_reason em_radio_submit(const em_profile *p, const char *serial, const char *b
     return r;
 }
 
+/* spec 3.10: a station on the radio (its Wifi_Radio_Config) connected to a parent holds its channel
+ * (pod_profile.station_holds) */
+static bool station_holds(const em_ovs_session *s, const char *radio_uuid)
+{
+    const cJSON *row;
+    cJSON_ArrayForEach(row, table(s, "Wifi_Radio_State"))
+    {
+        const char *ref = ovs_str(row, "radio_config"), *refs[64];
+        if (!ref || strcmp(ref, radio_uuid))
+            continue;
+        size_t n = ovs_uuids(row, "vif_states", refs, 64);
+        for (size_t k = 0; k < n; k++) {
+            const cJSON *vif = cJSON_GetObjectItemCaseSensitive(table(s, "Wifi_VIF_State"), refs[k]);
+            const char *mode = ovs_str(vif, "mode"), *parent = ovs_str(vif, "parent");
+            if (mode && !strcmp(mode, "sta") && ovs_true(vif, "enabled") && parent && *parent)
+                return true;
+        }
+    }
+    return false;
+}
+
 em_reason em_ap_submit(const em_profile *p, const char *serial, bool multi_bss,
                        const char *underlay, em_ovs_session *s, const em_ap_intent *intent,
                        em_secret_resolver resolve, void *resolve_ctx, em_submit_result *out)
@@ -1561,8 +1582,12 @@ em_reason em_ap_submit(const em_profile *p, const char *serial, bool multi_bss,
         PUSH(ins, -1);
         PUSH(vif_configs_mutate(b.radio_uuid, "insert", named("fh")), 1);
         cJSON *upd = op("update", "Wifi_Radio_Config", where_uuid(b.radio_uuid)), *urow = cJSON_CreateObject();
-        cJSON_AddNumberToObject(urow, "channel", p->channel);
-        cJSON_AddStringToObject(urow, "ht_mode", p->ht_mode);
+        /* spec 3.10: the profile's channel only while no station holds the radio (the pod's OpenSync
+         * would pull the radio off the station's channel) */
+        if (!station_holds(s, b.radio_uuid)) {
+            cJSON_AddNumberToObject(urow, "channel", p->channel);
+            cJSON_AddStringToObject(urow, "ht_mode", p->ht_mode);
+        }
         cJSON_AddTrueToObject(urow, "enabled");
         cJSON_AddItemToObject(upd, "row", urow);
         PUSH(upd, 1);

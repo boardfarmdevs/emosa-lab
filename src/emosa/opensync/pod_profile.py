@@ -147,6 +147,20 @@ def parent_rendered(row):
     )
 
 
+def station_holds(decoded, radio_uuid):
+    """spec 3.10: a station on the radio (Wifi_Radio_Config ``radio_uuid``) connected to a parent
+    holds its channel (schema-decoded rows)."""
+    vifs = decoded.get("Wifi_VIF_State", {})
+    return any(
+        (vifs.get(u) or {}).get("mode") == "sta"
+        and (vifs.get(u) or {}).get("enabled") is True
+        and bool((vifs.get(u) or {}).get("parent"))
+        for r in decoded.get("Wifi_Radio_State", {}).values()
+        if r.get("radio_config") == radio_uuid
+        for u in r.get("vif_states") or ()
+    )
+
+
 def slots_on(profile, band):
     """The profile's extra slots whose VIF is on the radio of ``band`` (spec 9): a slot names its
     radio's band in ``slot_bands``, else it is on the fronthaul's radio."""
@@ -984,7 +998,11 @@ class PodBackend(OpenSyncBackend):
                 "op": "update",
                 "table": "Wifi_Radio_Config",
                 "where": where_uuid(radio_uuid),
-                "row": {"channel": self.channel, "ht_mode": self.ht_mode, "enabled": True},
+                # spec 3.10: the profile's channel only while no station holds the radio (the pod's
+                # OpenSync would pull the radio off the station's channel)
+                "row": {"enabled": True}
+                if station_holds(self._decoded(raw), radio_uuid)
+                else {"channel": self.channel, "ht_mode": self.ht_mode, "enabled": True},
             },
         ]
         counts = [None, None, None, None, 1, 1]

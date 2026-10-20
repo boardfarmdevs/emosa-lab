@@ -523,6 +523,10 @@
                 "required": ["band", "channel", "ht_mode"],
                 "additionalProperties": false
               }
+            },
+            "follows": {
+              "description": "channel and ht_mode are the station's that holds the radio (the plan's follow of its move), not the profile's: the radio written alone (absent: the profile's)",
+              "const": true
             }
           },
           "required": [

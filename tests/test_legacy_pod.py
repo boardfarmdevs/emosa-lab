@@ -987,6 +987,105 @@ def test_a_planned_pod_has_nothing_to_write(tmp_path):
     assert all(config.get(k) == v for k, v in intent.target(vault).items())
 
 
+def held_by_gtp(pod, channel=11):
+    """The GTP station on wl1 associated (its State with a parent), the radio on its channel."""
+    pod.tables["Wifi_VIF_State"][GTP_STATE] = {
+        "if_name": "wl1",
+        "mode": "sta",
+        "enabled": True,
+        "mac": "02:00:00:00:41:09",
+        "parent": "92:00:00:00:24:01",
+    }
+    pod.tables.setdefault("Wifi_Radio_State", {})[RADIO_STATE] = {
+        "if_name": "wl1",
+        "radio_config": ["uuid", RADIO],
+        "vif_states": ["set", [["uuid", GTP_STATE]]],
+        "freq_band": "2.4G",
+        "channel": channel,
+        "mac": "02:00:00:00:41:00",
+        "enabled": True,
+    }
+
+
+def test_the_radio_plan_leaves_a_radio_its_station_holds_to_the_station(tmp_path):
+    """spec 3.10 (the bench, 20 October): the GTP station holds wl1 on 11, where the gateway
+    moved it; the plan writes no channel (the pod's OpenSync would pull the radio back to it)."""
+    pod = OperatorPod()
+    held_by_gtp(pod)
+    backend, intent, _ = radio_plan(pod, tmp_path)
+    config = asyncio.run(backend.snapshot()).config
+    assert config["wired"] is True and config["station_channel"] == 11
+    assert config["radio_planned"] is True and config["pending"] is True  # its other changes
+    attempt = {"transaction_id": "t1", "session_generation": 1}
+    assert asyncio.run(backend.submit(intent, attempt)).status == "committed"
+    (ops,) = pod.sent
+    assert not [op for op in ops if op["table"] == "Wifi_Radio_Config"]
+
+
+@pytest.mark.parametrize("wired", [True, False])
+def test_a_followed_stations_channel_is_the_radio_written_alone(tmp_path, wired):
+    """spec 3.10: the plan following the station (follows): the radio's channel and width, that
+    write alone (the plan's own was written once on the start), on whatever uplink."""
+    pod = OperatorPod()
+    held_by_gtp(pod)
+    if not wired:
+        pod.tables["Connection_Manager_Uplink"][UPLINK] = {
+            "if_name": "g-wl1",
+            "if_type": "gre",
+            "is_used": True,
+        }
+    backend, intent, _ = radio_plan(pod, tmp_path)
+    follow = dataclasses.replace(intent, channel=11, ht_mode="HT20", follows=True)
+    assert follow.record()["follows"] is True and "follows" not in intent.record()
+    backend.intent = follow
+    config = asyncio.run(backend.snapshot()).config
+    assert config["pending"] is True and config["radio_planned"] is False
+    attempt = {"transaction_id": "t1", "session_generation": 1}
+    assert asyncio.run(backend.submit(follow, attempt)).status == "committed"
+    (ops,) = pod.sent
+    updates = [(op["table"], op["row"]) for op in ops if op["op"] == "update"]
+    assert updates == [("Wifi_Radio_Config", {"channel": 11, "ht_mode": "HT20"})]
+    pod.tables["Wifi_Radio_Config"][RADIO].update({"channel": 11, "ht_mode": "HT20"})
+    config = asyncio.run(backend.snapshot()).config
+    assert config["pending"] is False and config["radio_planned"] is True
+
+
+def test_the_plan_follows_its_station_once_per_hold_down_with_the_latest_channel(tmp_path):
+    """spec 3.10: the plan takes the station's channel at once, then at most once per
+    FOLLOW_HOLD, the latest channel when the station moved again within it, none when it came
+    back to the Config's; the followed channel kept while no station holds the radio (a gateway's
+    outage); a new start of the pod's OpenSync has the profile's plan again."""
+    from emosa.agent import radio_plan as plan_scope
+    from emosa.store import Store
+
+    pod = OperatorPod()
+    backend, intent, vault = radio_plan(pod, tmp_path)
+    clock = [0.0]
+    plan = plan_scope.RadioPlan(
+        "pod-1", backend, Store(tmp_path / "plan"), vault, run_id="t", monotonic=lambda: clock[0]
+    )
+    backend.instance = "start-1"
+
+    def at(t, station, channel):
+        clock[0] = t
+        plan._follow({"station_channel": station, "station_ht_mode": "HT20", "channel": channel})
+        return (plan.intent.channel, plan.intent.follows, plan.follow_count)
+
+    assert at(0, 11, 6) == (11, True, 1)  # at once
+    assert backend.intent == plan.intent
+    assert at(5, 1, 11) == (11, True, 1)  # within the hold-down: waits
+    assert at(10, 13, 11) == (11, True, 1)
+    assert at(20, 13, 11) == (13, True, 2)  # its end: the latest
+    assert at(30, None, 13) == (13, True, 2)  # the station gone: kept
+    assert at(100, 1, 13) == (1, True, 3)  # back on another channel
+    assert at(105, 13, 1) == (1, True, 3)
+    assert at(110, 1, 1) == (1, True, 3)  # back on the Config's: nothing waits
+    assert at(125, 1, 1) == (1, True, 3)
+    backend.instance = "start-2"  # a new start: its seed's radio
+    assert at(126, None, 1) == (intent.channel, False, 3)
+    assert plan.intent == intent
+
+
 STATS_CLIENT, STATS_SURVEY = (f"00000000-0000-4000-8000-0000000006{n}" for n in ("01", "02"))
 OPERATOR_MQTT = {"broker": "cloud.example.net", "port": "443", "topics": "operator/stats"}
 

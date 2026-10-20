@@ -20,6 +20,7 @@
 #define STATIONS 8 /* the station rows deleted in one write, at most */
 #define REFS 32  /* the credentials or radio references of those, at most */
 #define NEUTRAL_REF "emosa-unclaimed" /* RadioPlanIntent's default neutral_ref */
+#define FOLLOW_HOLD 20.0 /* seconds between two writes of the station's channel (RadioPlan) */
 
 /* radio_plan.CLOUD: AWLAN_Node's columns that point qm at a broker, the operator's cloud on a seed */
 static const char *const CLOUD[] = {"mqtt_headers", "mqtt_settings", "mqtt_topics"};
@@ -117,6 +118,8 @@ static cJSON *record(const em_plan_intent *i)
             cJSON_AddItemToArray(idle, radio);
         }
     }
+    if (i->follows)
+        cJSON_AddBoolToObject(r, "follows", true);
     return r;
 }
 
@@ -156,6 +159,11 @@ static bool from_record(const cJSON *r, em_plan_intent *i)
         if (!cJSON_IsNumber(ch) || !add_idle(i, str(radio, "band"), ch->valueint, str(radio, "ht_mode")))
             return false;
     }
+    /* absent: the profile's channel */
+    const cJSON *follows = cJSON_GetObjectItemCaseSensitive(r, "follows");
+    if (follows && !cJSON_IsBool(follows))
+        return false;
+    i->follows = cJSON_IsTrue(follows);
     return validate(i) == EM_OK;
 }
 
@@ -364,7 +372,30 @@ static cJSON *changes(const em_plan_intent *i, const cJSON *tables, const char *
     bool has_channel = radio && ovs_int(radio, "channel", &channel);
     const char *ht_mode = radio ? ovs_str(radio, "ht_mode") : NULL;
     bool on_plan = has_channel && channel == i->channel && ht_mode && !strcmp(ht_mode, i->ht_mode);
-    if (wired && radio && !on_plan) {
+    /* spec 3.10: a station on the radio connected to a parent (the GTP station, or a Wi-Fi uplink)
+     * holds its channel: the radio follows that station, and the pod's OpenSync pulls it back to
+     * its Config's channel, so the profile's channel is written only while no station holds the
+     * radio (the scope's follow writes the station's) */
+    const cJSON *radio_state = NULL;
+    cJSON_ArrayForEach(r, em_table(tables, "Wifi_Radio_State"))
+    {
+        const char *band = ovs_str(r, "freq_band");
+        if (band && !strcmp(band, i->band) && !radio_state)
+            radio_state = r;
+    }
+    long station_channel = 0;
+    bool held = false;
+    if (radio_state && ovs_int(radio_state, "channel", &station_channel)) {
+        const char *refs[REFS];
+        size_t n = ovs_uuids(radio_state, "vif_states", refs, REFS);
+        for (size_t k = 0; k < n && !held; k++) {
+            const cJSON *vif = cJSON_GetObjectItemCaseSensitive(em_table(tables, "Wifi_VIF_State"), refs[k]);
+            const char *mode = ovs_str(vif, "mode"), *parent = ovs_str(vif, "parent");
+            held = mode && !strcmp(mode, "sta") && ovs_true(vif, "enabled") && parent && *parent;
+        }
+    }
+    const char *station_ht_mode = held ? ovs_str(radio_state, "ht_mode") : NULL;
+    if ((i->follows || (wired && !held)) && radio && !on_plan) {
         c->radio = radio;
         c->radio_uuid = radio_uuid;
     }
@@ -464,7 +495,16 @@ static cJSON *changes(const em_plan_intent *i, const cJSON *tables, const char *
     cJSON_AddItemToObject(v, "channel", has_channel ? cJSON_CreateNumber((double)channel) : cJSON_CreateNull());
     cJSON_AddItemToObject(v, "ht_mode", ht_mode ? cJSON_CreateString(ht_mode) : cJSON_CreateNull());
     cJSON_AddBoolToObject(v, "wired", wired);
-    cJSON_AddBoolToObject(v, "radio_planned", !wired || on_plan);
+    /* the station that holds the radio: its channel and width as wm shows the radio */
+    cJSON_AddItemToObject(v, "station_channel", held ? cJSON_CreateNumber((double)station_channel) : cJSON_CreateNull());
+    cJSON_AddItemToObject(v, "station_ht_mode",
+                          station_ht_mode ? cJSON_CreateString(station_ht_mode) : cJSON_CreateNull());
+    cJSON_AddBoolToObject(v, "follows", i->follows);
+    cJSON_AddBoolToObject(v, "radio_planned", i->follows ? on_plan : !wired || on_plan || held);
+    if (i->follows) { /* the station's channel followed: that write alone */
+        c->nexposed = c->ninets = c->nstats = c->nstations = c->ndark = 0;
+        c->node = NULL;
+    }
     cJSON_AddBoolToObject(v, "pending",
                           c->nexposed || c->ninets || c->radio || c->node || c->nstats || c->nstations || c->ndark);
     return v;
@@ -780,6 +820,8 @@ em_reason em_plan_open(em_plan_scope *s, const char *state_dir, const em_journal
     em_engine_init(&s->engine, s->journal, vault, s->intent.pod_id, (em_backend){MODE, target, snapshot, plan, submit},
                    s, monotonic);
     em_engine_recover(&s->engine);
+    s->base = s->intent;
+    s->monotonic = monotonic;
     return EM_OK;
 }
 
@@ -827,6 +869,48 @@ static void settle(em_plan_scope *s, cJSON *op, const em_snapshot *snap, bool ha
     cJSON_Delete(target);
 }
 
+/* RadioPlan._follow: the plan follows the station that holds the radio (a channel its Config does
+ * not have), at most once per FOLLOW_HOLD, the latest channel when the station moved again within
+ * it; the followed channel kept when the station is gone. A new start of the pod's OpenSync (its
+ * seed's radio) has the profile's plan until a station holds the radio. */
+static void follow(em_plan_scope *s, const cJSON *config)
+{
+    double now = s->monotonic();
+    const char *start = s->has_instance ? s->instance : "";
+    if (strcmp(start, s->follow_start)) {
+        s->has_follow = s->has_wanted = s->has_followed_at = false;
+        (void)em_copy(s->follow_start, sizeof(s->follow_start), start);
+    }
+    const cJSON *station = cJSON_GetObjectItemCaseSensitive(config, "station_channel");
+    if (cJSON_IsNumber(station)) {
+        const char *width = str(config, "station_ht_mode") ? str(config, "station_ht_mode") : str(config, "ht_mode");
+        if (!width || !em_copy(s->wanted_ht_mode, sizeof(s->wanted_ht_mode), width)) /* the pod's text */
+            (void)em_copy(s->wanted_ht_mode, sizeof(s->wanted_ht_mode), s->base.ht_mode);
+        const cJSON *channel = cJSON_GetObjectItemCaseSensitive(config, "channel");
+        s->has_wanted = !cJSON_IsNumber(channel) || channel->valueint != station->valueint;
+        s->wanted_channel = station->valueint;
+    }
+    bool free_to_change = !s->has_followed_at || now - s->followed_at >= FOLLOW_HOLD;
+    bool same = s->has_follow && s->follow_channel == s->wanted_channel &&
+                !strcmp(s->follow_ht_mode, s->wanted_ht_mode);
+    if (s->has_wanted && !same && free_to_change) {
+        s->has_follow = s->has_followed_at = true;
+        s->has_wanted = false;
+        s->follow_channel = s->wanted_channel;
+        (void)em_copy(s->follow_ht_mode, sizeof(s->follow_ht_mode), s->wanted_ht_mode);
+        s->followed_at = now;
+        s->follow_count++;
+        em_log(EM_LOG_INFO, "emosa.agent.radio_plan", "the radio's station moved it to channel %d: the radio plan follows it",
+               s->follow_channel);
+    }
+    s->intent = s->base;
+    if (s->has_follow) {
+        s->intent.channel = s->follow_channel;
+        (void)em_copy(s->intent.ht_mode, sizeof(s->intent.ht_mode), s->follow_ht_mode);
+        s->intent.follows = true;
+    }
+}
+
 void em_plan_tick(em_plan_scope *s)
 {
     em_snapshot snap = {0};
@@ -839,6 +923,8 @@ void em_plan_tick(em_plan_scope *s)
         em_snapshot_clear(&snap);
         return;
     }
+    if (snap.ready)
+        follow(s, snap.config);
     /* RadioPlan._wanted */
     op = em_journal_latest(s->journal);
     cJSON *owned = em_journal_ownership(s->journal, s->intent.pod_id);
@@ -914,6 +1000,17 @@ cJSON *em_plan_status(em_plan_scope *s)
         const cJSON *v = cJSON_GetObjectItemCaseSensitive(config, keys[k]);
         cJSON_AddItemToObject(o, keys[k], v ? cJSON_Duplicate(v, 1) : cJSON_CreateNull());
     }
+    /* spec 3.10: the station that holds the radio (its channel), the plan's follow of it */
+    const cJSON *station = cJSON_GetObjectItemCaseSensitive(config, "station_channel");
+    cJSON_AddItemToObject(o, "station_channel", station ? cJSON_Duplicate(station, 1) : cJSON_CreateNull());
+    if (s->has_follow) {
+        cJSON *f = cJSON_AddObjectToObject(o, "follow");
+        cJSON_AddNumberToObject(f, "channel", s->follow_channel);
+        cJSON_AddStringToObject(f, "ht_mode", s->follow_ht_mode);
+    } else {
+        cJSON_AddNullToObject(o, "follow");
+    }
+    cJSON_AddNumberToObject(o, "follows", s->follow_count);
     cJSON_AddItemToObject(o, "waiting", s->has_waiting ? cJSON_CreateString(s->waiting) : cJSON_CreateNull());
     if (op) {
         cJSON *x = cJSON_AddObjectToObject(o, "operation");

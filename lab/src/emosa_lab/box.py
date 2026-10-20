@@ -8115,6 +8115,172 @@ async def neutralized(box, names):
     )
 
 
+class LegacyRadioWm:
+    """The legacy pod's OpenSync as the bench showed it (20 October), for wl1 and its GTP station:
+    the station follows the gateway's channel (its CSA, or its join), and the radio with it; the
+    pod's wm then pulls a radio off its Config's channel back to that channel after PULL seconds,
+    dropping the station, which joins again REJOIN seconds later. ``gateway``: the gateway's
+    channel (None: the gateway out, the station not joining). Counts the pulls (flips) and records
+    the Config's channels as the agent writes them."""
+
+    PULL, REJOIN = 6, 2
+
+    def __init__(self, box, gateway=6):
+        self.box, self.gateway = box, gateway
+        self.flips, self.configs, self.stop = 0, [], False
+        self.flip_times, self.config_times = [], []
+        self.rejoin_at = None
+
+    async def rows(self):
+        radios = await self.box.rows("Wifi_Radio_Config")
+        config = next((u, r) for u, r in radios.items() if r.get("if_name") == "wl1")
+        states = await self.box.rows("Wifi_Radio_State")
+        state = next((u, r) for u, r in states.items() if r.get("if_name") == "wl1")
+        station = await self.box.vif("Wifi_VIF_State", "wl1")
+        return config, state, station
+
+    async def update(self, table, uuid, row):
+        await self.box.transact(
+            [
+                {
+                    "op": "update",
+                    "table": table,
+                    "where": [["_uuid", "==", ["uuid", uuid]]],
+                    "row": row,
+                }
+            ]
+        )
+
+    async def run(self):
+        mismatch = None
+        while not self.stop:
+            (_, config), (state_uuid, state), (station_uuid, station) = await self.rows()
+            wanted, shown = config.get("channel"), state.get("channel")
+            now = time.monotonic()
+            if not self.configs or self.configs[-1] != wanted:
+                self.configs.append(wanted)
+                self.config_times.append(now)
+            joined = bool(
+                station and station.get("parent") and isinstance(station.get("parent"), str)
+            )
+            if not joined and self.gateway is not None and station_uuid:
+                if self.rejoin_at is None:
+                    self.rejoin_at = now + self.REJOIN
+                elif (
+                    now >= self.rejoin_at
+                ):  # it joins the GTP's BSS again, on the gateway's channel
+                    await self.update("Wifi_VIF_State", station_uuid, {"parent": GTP_BSSID})
+                    await self.update("Wifi_Radio_State", state_uuid, {"channel": self.gateway})
+                    self.rejoin_at = None
+            elif joined and self.gateway is None:  # the gateway out: the station has no parent
+                await self.update("Wifi_VIF_State", station_uuid, {"parent": ["set", []]})
+            elif joined and shown != self.gateway:  # the gateway's CSA: the station and its radio
+                await self.update("Wifi_Radio_State", state_uuid, {"channel": self.gateway})
+            elif joined and wanted != shown:  # wm pulls the radio back to its Config's channel
+                mismatch = mismatch or now
+                if now - mismatch >= self.PULL:
+                    await self.update("Wifi_Radio_State", state_uuid, {"channel": wanted})
+                    await self.update("Wifi_VIF_State", station_uuid, {"parent": ["set", []]})
+                    self.flips += 1
+                    self.flip_times.append(now)
+                    mismatch = None
+            if wanted == shown or not joined:
+                mismatch = None
+            await asyncio.sleep(0.5)
+
+
+async def legacy_radio_follows(box, steps):
+    """spec 3.10 (the bench, 20 October: a wired legacy pod's wl1 followed its GTP station to the
+    gateway's new channel, then its OpenSync pulled it back to the channel the radio plan had
+    written in its Config, again and again, each time a fresh session): the radio plan follows
+    the station that holds the radio, writing its channel alone, at most once per FOLLOW_HOLD
+    (the latest when it moved again within it), and keeps it while the station is gone. ``steps``:
+    (seconds, gateway channel or None for an outage) each. The agent's Config writes of wl1's
+    channel, the box wm's pulls (flips) after the first write, the sessions and fresh sources."""
+    ap, failure = await gre_parent_up(box, LEGACY_PARENT)
+    if failure:
+        return failure
+    if not await radio_plan_applied(box):
+        return box.result(passed=False, failed="no radio plan")
+    await until_async(lambda: gtp_station_written(box), seconds=30)
+    if not await associate_station(box):
+        return box.result(passed=False, failed="no GTP station")
+    await asyncio.sleep(3)
+    starts, moved = recovery_starts(box), fresh_reconnections(box, "fronthaul_moved")
+    wm = LegacyRadioWm(box)
+    task = asyncio.create_task(wm.run())
+    flips = []
+    try:
+        for seconds, channel in steps:
+            wm.gateway = channel
+            before = wm.flips
+            await asyncio.sleep(seconds)
+            flips.append(wm.flips - before)
+    finally:
+        wm.stop = True
+        await task
+    plan = (box.status() or {}).get("radio_plan") or {}
+    last = wm.config_times[-1] if len(wm.config_times) > 1 else None
+    return {
+        "writes": wm.configs[1:],  # the plan's channel first, then each write of the agent's
+        "flips": flips,
+        "flips_after_last_write": sum(1 for t in wm.flip_times if last is not None and t > last),
+        "sessions": recovery_starts(box) - starts,
+        "fresh": fresh_reconnections(box, "fronthaul_moved") - moved,
+        "follows": plan.get("follows"),
+        "follow": plan.get("follow"),
+    }
+
+
+async def legacy_radio_follows_moves(box):
+    """The gateway's 2.4 GHz 6 -> 11 -> 1, each move apart: one write per move, at once (before
+    the pod's wm pulls the radio back), no flip, no fresh session."""
+    seen = await legacy_radio_follows(box, ((25, 11), (25, 1)))
+    if "writes" not in seen:
+        return seen
+    return box.result(
+        passed=seen["writes"] == [11, 1]
+        and seen["flips"] == [0, 0]
+        and seen["sessions"] == 0
+        and seen["fresh"] == 0,
+        **seen,
+    )
+
+
+async def legacy_radio_follows_quick_moves(box):
+    """The gateway's 2.4 GHz 6 -> 11, then 1 and 13 within the hold-down: the first move written
+    at once, the two within it one write on 13 when it ends (none on 1), no fresh session, no
+    flip after that write (the pod's wm pulls the radio back until it, the station's own)."""
+    seen = await legacy_radio_follows(box, ((5, 11), (5, 1), (25, 13)))
+    if "writes" not in seen:
+        return seen
+    return box.result(
+        passed=seen["writes"] == [11, 13]
+        and seen["flips"][0] == 0
+        and seen["flips_after_last_write"] == 0
+        and seen["sessions"] == 0
+        and seen["fresh"] == 0
+        and (seen["follow"] or {}).get("channel") == 13,
+        **seen,
+    )
+
+
+async def legacy_radio_follows_outage(box):
+    """The gateway's 2.4 GHz on 11, then out for 70 s, back on 1: the followed 11 kept while the
+    station has no parent (no write of the profile's 6), one write of 1 once the station joins
+    again, no flip, no fresh session."""
+    seen = await legacy_radio_follows(box, ((25, 11), (70, None), (20, 1)))
+    if "writes" not in seen:
+        return seen
+    return box.result(
+        passed=seen["writes"] == [11, 1]
+        and seen["flips"] == [0, 0, 0]
+        and seen["sessions"] == 0
+        and seen["fresh"] == 0,
+        **seen,
+    )
+
+
 async def legacy_radio_plan(box):
     """spec 3.10, the radio plan (radio_plan emosa): a wired legacy pod as its vendor's seed has
     it, the operator's APs on wl0 (wl0.1 with its own address and DHCP server, wl0.2 in br-home)
@@ -9569,6 +9735,9 @@ SCENARIOS = {
     "legacy-gtp-station": legacy_gtp_station,
     "legacy-gtp-station-present": legacy_ethernet_lost,
     "legacy-radio-plan": legacy_radio_plan,
+    "legacy-radio-follows-moves": legacy_radio_follows_moves,
+    "legacy-radio-follows-quick-moves": legacy_radio_follows_quick_moves,
+    "legacy-radio-follows-outage": legacy_radio_follows_outage,
     "legacy-reseed-reclaim": legacy_reseed_reclaim,
     "legacy-reseed-reclaim-5g": legacy_reseed_reclaim,
     "legacy-reseed-reclaim-late": legacy_reseed_reclaim_late,
@@ -9876,6 +10045,9 @@ OPTIONS["legacy-radio-plan"] = {
     **OPTIONS["legacy-gtp-station"],
     "ethernet_first": "operator",
 }
+# spec 3.10, the radio plan following the GTP station on wl1: the radio plan's pod
+for _name in ("moves", "quick-moves", "outage"):
+    OPTIONS[f"legacy-radio-follows-{_name}"] = OPTIONS["legacy-radio-plan"]
 # spec 3.10, a re-seed: the radio plan's pod, its seed restored with the same UUIDs
 OPTIONS["legacy-reseed-reclaim"] = OPTIONS["legacy-radio-plan"]
 OPTIONS["legacy-reseed-reclaim-5g"] = {**OPTIONS["legacy-radio-plan"], "profile": LEGACY_PROFILE_5G}

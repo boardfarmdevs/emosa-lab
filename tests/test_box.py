@@ -974,6 +974,27 @@ def test_a_legacy_pods_radio_plan_is_emosas_once_per_start(agent, tmp_path):
     assert result["passed"], result
 
 
+def test_a_legacy_pods_radio_plan_follows_its_gtp_station_one_write_per_move(agent, tmp_path):
+    # spec 3.10 (the bench, 20 October): wl1 pulled back to its Config's channel flipped for ten
+    # minutes; the plan writes the station's channel, once per move, before wm pulls the radio
+    result = box("legacy-radio-follows-moves", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+
+
+def test_a_legacy_pods_radio_plan_writes_the_latest_channel_once_its_hold_down_ends(
+    agent, tmp_path
+):
+    result = box("legacy-radio-follows-quick-moves", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+
+
+def test_a_legacy_pods_radio_plan_keeps_the_followed_channel_through_a_gateway_outage(
+    agent, tmp_path
+):
+    result = box("legacy-radio-follows-outage", agent, tmp_path / "box", timeout=360)
+    assert result["passed"], result
+
+
 def test_a_reseeded_legacy_pod_is_claimed_again_without_a_conflict(agent, tmp_path):
     # spec 3.10: its seed's radio rows keep their UUIDs; the agent's fresh session is a new start
     result = box("legacy-reseed-reclaim", agent, tmp_path / "box", timeout=360)

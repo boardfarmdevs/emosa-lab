@@ -238,6 +238,33 @@ def test_cold_pod_fronthaul_is_created_only_from_the_intent(tmp_path):
     assert "tx_chainmask" not in json.dumps(ops)
 
 
+def test_a_cold_fronthaul_on_a_radio_its_station_holds_leaves_the_channel_to_it(tmp_path):
+    """spec 3.10: a station on the radio connected to a parent holds its channel (the radio
+    follows it, and the pod's OpenSync pulls the radio back to its Config's channel): the create
+    turns the radio on and writes no channel or ht_mode."""
+    vault = SecretStore(tmp_path / "secrets")
+    vault.write_simulated("new", "EmosaMesh2026!")
+    raw = cold()
+    station = "00000000-0000-4000-8000-0000000000f1"
+    raw["Wifi_VIF_State"][station] = {
+        "if_name": "bhaul-sta-24",
+        "mode": "sta",
+        "enabled": True,
+        "mac": "02:00:00:00:1a:09",
+        "parent": "02:00:00:00:9c:01",
+    }
+    raw["Wifi_Radio_State"][RADIO_STATE]["vif_states"] = ["set", [["uuid", station]]]
+    raw["Wifi_Radio_State"][RADIO_STATE]["channel"] = 11
+    pod = PodBackend("pod-1", Session(raw), vault, serial=SERIAL)
+    asyncio.run(pod.snapshot())
+    asyncio.run(pod.context())
+    result = asyncio.run(pod.submit(intent(), {"transaction_id": "t1", "session_generation": 1}))
+    assert result.status == "committed"
+    _, ops = pod.session.sent
+    (radio,) = [op for op in ops if op["op"] == "update" and op["table"] == "Wifi_Radio_Config"]
+    assert radio["row"] == {"enabled": True}
+
+
 EXTRA = "00000000-0000-4000-8000-000000000006"
 RDK_SET = (  # RDK unified-wifi-mesh's M2 set, besides its private fronthaul
     ("fronthaul", "iot_ssid"),

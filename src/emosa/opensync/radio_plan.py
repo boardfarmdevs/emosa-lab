@@ -77,6 +77,9 @@ class RadioPlanIntent:
     gtp_ssid: str | None = None
     # the radios the profile neither binds nor places: ({"band", "channel", "ht_mode"}, ...)
     idle_radios: tuple = ()
+    # spec 3.10: channel and ht_mode are the station's that holds the radio (the agent's follow of
+    # its move), not the profile's: the radio written alone, on whatever uplink
+    follows: bool = False
 
     def record(self):
         return {
@@ -88,6 +91,7 @@ class RadioPlanIntent:
             "neutral_ref": self.neutral_ref,
             **({"gtp_ssid": self.gtp_ssid} if self.gtp_ssid else {}),
             **({"idle_radios": [dict(r) for r in self.idle_radios]} if self.idle_radios else {}),
+            **({"follows": True} if self.follows else {}),
         }
 
     def validate(self):
@@ -97,6 +101,8 @@ class RadioPlanIntent:
             raise EmosaError(Reason.INVALID_INPUT, "the profile's VIF names are required")
         if not isinstance(self.channel, int) or not isinstance(self.ht_mode, str):
             raise EmosaError(Reason.INVALID_INPUT, "the profile's channel and ht_mode are required")
+        if type(self.follows) is not bool:
+            raise EmosaError(Reason.INVALID_INPUT, "follows is true or false")
         if self.gtp_ssid is not None and (
             not isinstance(self.gtp_ssid, str) or not 1 <= len(self.gtp_ssid) <= 32
         ):
@@ -239,6 +245,25 @@ class RadioPlanBackend:
             intent.channel,
             intent.ht_mode,
         )
+        # spec 3.10: a station on the radio connected to a parent (the GTP station, or a Wi-Fi
+        # uplink) holds its channel: the radio follows that station, and the pod's OpenSync pulls
+        # it back to its Config's channel, so the profile's channel is written only while no
+        # station holds the radio (the agent's follow writes the station's)
+        vif_states = decoded.get("Wifi_VIF_State", {})
+        radio_state = next(
+            (
+                r
+                for r in decoded.get("Wifi_Radio_State", {}).values()
+                if r.get("freq_band") == intent.band
+            ),
+            {},
+        )
+        held = isinstance(radio_state.get("channel"), int) and any(
+            (vif_states.get(u) or {}).get("mode") == "sta"
+            and (vif_states.get(u) or {}).get("enabled") is True
+            and bool((vif_states.get(u) or {}).get("parent"))
+            for u in radio_state.get("vif_states") or ()
+        )
         # while wired: every station row not on the GTP's SSID, with what goes with it
         vifs = decoded.get("Wifi_VIF_Config", {})
         credentials = decoded.get("Wifi_Credential_Config", {})
@@ -267,15 +292,18 @@ class RadioPlanBackend:
                 for v in r.get("vif_configs") or []
             )
         )
+        writes_radio = intent.follows or (wired and not held)
         changes = (
             [(u, n) for n, u in exposed],
             [(u, n) for n, u in inets],
-            radio if wired and radio[0] is not None and not on_plan else None,
+            radio if writes_radio and radio[0] is not None and not on_plan else None,
             cloud if any(cloud.values()) else None,
             stats,
             [u for _, u in foreign] or None,
             [(u, decoded["Wifi_Radio_Config"][u], d) for _, u, d in dark],
         )
+        if intent.follows:  # the station's channel followed: that write alone
+            changes = ([], [], changes[2], None, [], None, [])
         configured = {
             "unclaimed": sorted(names),
             "unclaimed_enabled": sorted(configs | states),
@@ -288,7 +316,11 @@ class RadioPlanBackend:
             "channel": radio[1].get("channel"),
             "ht_mode": radio[1].get("ht_mode"),
             "wired": wired,
-            "radio_planned": not wired or on_plan,
+            # the station that holds the radio: its channel and width as wm shows the radio
+            "station_channel": radio_state.get("channel") if held else None,
+            "station_ht_mode": radio_state.get("ht_mode") if held else None,
+            "follows": intent.follows,
+            "radio_planned": on_plan if intent.follows else (not wired or on_plan or held),
             "pending": any(changes),
         }
         return changes, configured

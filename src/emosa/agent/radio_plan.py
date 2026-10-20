@@ -7,9 +7,22 @@ unclaimed AP's Inet row on, the wired pod's fronthaul radio off the profile's ch
 itself is left on). Not repeated on that start, even when a row is changed again: the next start
 writes it again, and so does a changed plan on the same start (going back to an earlier one
 included).
+
+The fronthaul radio follows a station on it that holds its channel (the GTP station, or a Wi-Fi
+uplink): the pod's OpenSync enforces its Config's channel, so a radio its station moved (a
+gateway's channel change) is pulled back, the station dropped, and again, each a fresh session
+(the bench, 20 October: 32 per pod in ten minutes). The plan then has the station's channel and
+width (``follows``): that write alone, one per move, at most one per FOLLOW_HOLD seconds, so a
+flip cannot become a write loop; the station's channel changing again within it is written once
+it ends (its latest channel, when the Config does not have it). The followed channel stays when
+the station is gone (a gateway that comes back from an outage on another channel brings it back
+on that one): the profile's channel is the plan's only on a start where no station has held the
+radio yet.
 """
 
+import dataclasses
 import logging
+import time
 
 from emosa.errors import EmosaError, Reason
 from emosa.model import ACTIVE, State
@@ -21,16 +34,55 @@ from emosa.store import start_write
 log = logging.getLogger("emosa.agent.radio_plan")
 DEADLINE = 30  # wm shows an AP off as soon as it has taken the row
 SOURCE = "radio-plan-policy"
+FOLLOW_HOLD = 20  # seconds between two writes of the station's channel
 
 
 class RadioPlan:
-    def __init__(self, pod_id, backend, store, vault, *, run_id, clock=None):
+    def __init__(
+        self, pod_id, backend, store, vault, *, run_id, clock=None, monotonic=time.monotonic
+    ):
         self.pod_id, self.backend, self.store, self.run_id = pod_id, backend, store, run_id
-        self.intent = backend.intent
+        self.base = self.intent = backend.intent  # the profile's plan; self.intent the one wanted
         self.engine = Engine(store, vault, {pod_id: backend}, clock, intent_type=RadioPlanIntent)
         self.engine.recover()
         self.waiting = None
         self.key = None  # the wanted write's idempotency key (start_write)
+        self.monotonic = monotonic
+        # the station's (channel, ht_mode) the plan follows, or None; the one it waits to follow
+        # (the hold-down not over); when it last took one; the start it is of; how many times the
+        # plan followed a station
+        self.follow = self.wanted = self.followed_at = self.follow_start = None
+        self.follow_count = 0
+
+    def _follow(self, config):
+        """spec 3.10: the plan follows the station that holds the radio (a channel its Config does
+        not have), at most once per FOLLOW_HOLD, the latest channel when the station moved again
+        within it; the followed channel kept when the station is gone. A new start of the pod's
+        OpenSync (its seed's radio) has the profile's plan until a station holds the radio."""
+        now = self.monotonic()
+        if self.backend.instance != self.follow_start:
+            self.follow = self.wanted = self.followed_at = None
+            self.follow_start = self.backend.instance
+        station = config.get("station_channel")
+        if station is not None:
+            width = config.get("station_ht_mode") or config.get("ht_mode") or self.base.ht_mode
+            self.wanted = (station, width) if station != config.get("channel") else None
+        free = self.followed_at is None or now - self.followed_at >= FOLLOW_HOLD
+        if self.wanted is not None and self.wanted != self.follow and free:
+            self.follow, self.followed_at, self.wanted = self.wanted, now, None
+            self.follow_count += 1
+            log.info(
+                "the radio's station moved it to channel %d: the radio plan follows it",
+                self.follow[0],
+            )
+        self.intent = (
+            dataclasses.replace(
+                self.base, channel=self.follow[0], ht_mode=self.follow[1], follows=True
+            )
+            if self.follow
+            else self.base
+        )
+        self.backend.intent = self.intent
 
     def latest(self):
         ops = self.store.operations()
@@ -98,6 +150,8 @@ class RadioPlan:
         op = self.latest()
         if op is not None:
             self._settle(op, snap)
+        if snap is not None and snap.ready:
+            self._follow(snap.config)
         if snap is None or not self._wanted(self.latest(), snap):
             return
         op = self.engine.request(
@@ -128,6 +182,12 @@ class RadioPlan:
             "dark_radios": config.get("dark_radios"),
             "channel": config.get("channel"),
             "wired": config.get("wired"),
+            # spec 3.10: the station that holds the radio (its channel), the plan's follow of it
+            "station_channel": config.get("station_channel"),
+            "follow": None
+            if self.follow is None
+            else {"channel": self.follow[0], "ht_mode": self.follow[1]},
+            "follows": self.follow_count,
             "waiting": self.waiting,
             "operation": None
             if op is None

@@ -740,8 +740,8 @@ is everything above. For a legacy pod, all of this specification applies, except
     repeated on that start.
   - **While wired:** `cm` keeps its Ethernet port as the uplink in use, and builds no GRE until
     the port goes. The station joins the GTP's BSS beside it, then carries the uplink. The
-    radio's channel is then the GTP BSS's, which must be the legacy profile's (channel 6 on
-    2.4 GHz).
+    radio's channel is then the GTP BSS's, wherever the gateway puts it (its automatic channel
+    selection): the radio follows the station, and the radio plan follows the radio (below).
   - **The operator's credentials** stay, unlinked: `wm` uses none of them.
   - **Not persisted.** A reboot brings back the vendor's seed, with the operator's redirector,
     and no write of EMOSA's survives it. Bringing the pod back to the fleet after a reboot is
@@ -809,10 +809,27 @@ is everything above. For a legacy pod, all of this specification applies, except
     row `wait`ed on as it is, and logged. The GTP station is then written on the free `wl1`. A
     pod on its Wi-Fi uplink keeps its stations (one may be its uplink). The status shows the
     stations left to delete (`foreign_stations`).
-  - **The fronthaul radio's channel.** The profile's `radio.channel` and `ht_mode` are written
-    on the fronthaul's radio while the uplink in use is not its station (the pod wired). On its
-    Wi-Fi uplink, `wm` moves the radio to its upstream's channel, which a legacy profile then
-    shares (the GTP BSS on channel 6).
+  - **The fronthaul radio's channel.** A station on the radio connected to a parent (the GTP
+    station, or the pod's Wi-Fi uplink) holds its channel: the radio follows the station (a
+    gateway's channel switch, or its join), and the pod's OpenSync pulls a radio off its
+    Config's channel back to that channel, dropping the station, which joins again on the
+    gateway's, over and over (the bench, 20 October: ten minutes of it, 32 fresh sessions per
+    pod). So the profile's `radio.channel` and `ht_mode` are written on the fronthaul's radio
+    only while the pod is wired and no station has held the radio on that start of its
+    OpenSync. Once one has, the plan follows the station: its channel, and its width from
+    `Wifi_Radio_State` (`follows`), written alone, one write per move of the station, at most
+    one in 20 s; a station moved again within those 20 s has its latest channel written when
+    they end, when the Config does not have it already. Written, not cleared: on the 2.4.3
+    seed a radio with no channel in its Config did not beacon until one was set (14 October),
+    and the vendor healthcheck reboots a pod whose enabled AP does not beacon. The followed
+    channel stays when the station is gone (a gateway's outage), never the profile's again on
+    that start: a gateway under automatic selection may come back on another channel, and the
+    station looks for it on every channel. Nothing else of the plan is written again (one
+    write per start). The session is kept and the move reported (§2.5, §9). The status shows
+    the radio's station channel and the plan's follow (`radio_plan.station_channel`,
+    `follow`, `follows`). A fronthaul created cold on a radio a station holds leaves the
+    radio's channel and `ht_mode` alone, on any pod. Box `legacy-radio-follows-moves`,
+    `legacy-radio-follows-quick-moves`, `legacy-radio-follows-outage`.
   - **Every enabled AP beacons.** The vendor healthcheck fails an enabled AP that does not beacon
     (14 October: "wl0.2 is not beaconing" until the operator's cloud set the 5 GHz radio). A
     seed's radio has no channel in its Config until its cloud sets one; on a hooked boot no cloud
