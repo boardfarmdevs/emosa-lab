@@ -32,8 +32,8 @@ flowchart LR
     B[(MQTT broker)]
     subgraph emosa[EMOSA]
       F[emosa-fleet]
-      A1[emosa-agent@pod-1]
-      A2[emosa-agent@pod-N]
+      A1["emosa-agent@pod-1"]
+      A2["emosa-agent@pod-N"]
       G[emosa-gtp]
     end
   end
