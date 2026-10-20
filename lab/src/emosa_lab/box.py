@@ -2872,10 +2872,13 @@ async def gre_child_kept(box):
     controller's move onto a fleet GRE parent is kept for the pod's later starts. The pod's
     OpenSync starts again (a new database: back on its bootstrap, the move gone). On the new start
     the agent re-applies the move without a new steer, the same 3-address GRE join pinned to the
-    parent AP, and it is applied once cm uses the gretap there: no hold, no second answer."""
+    parent AP (its agent naming that AP up, spec 8.3), and it is applied once cm uses the gretap
+    there: no hold, no second answer."""
     moved = await gre_child_moved(box)
     if moved is None:
         return box.result(passed=False, failed="the move onto the GRE parent did not complete")
+    parent_rebooting(box, home=True, parent=True)  # the parent's agent: its APs up
+    await asyncio.sleep(2.5)  # the agent's peer directory (1 s cache) reads it
     target = kept_target(box) or {}
     answers = len(box.sent(0x801A))
     searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
@@ -3028,8 +3031,9 @@ async def gre_child_kept_parent_rebooting(box):
 
 async def gre_child_kept_parent_never_back(box):
     """Spec 8.3: the kept GRE parent's pod does not come back. The agent waits for its
-    parent AP at most parent_wait_cap (20 s here), then gives the target up as a failed one is:
-    no hold and, a GRE child having no configured upstream, nothing written."""
+    parent AP at most parent_wait_cap (20 s here), then parks the target (kept, taken up again
+    once that AP is up): no hold and, a GRE child having no configured upstream, nothing
+    written."""
     restarted = await kept_child_restarted(box, home=False, parent=False)
     if restarted is None:
         return box.result(passed=False, failed="the move onto the GRE parent did not complete")
@@ -3037,7 +3041,9 @@ async def gre_child_kept_parent_never_back(box):
     waited = await box.until(
         lambda: uplink_status(box).get("waiting") == PARENT_WAITING, seconds=60
     )
-    dropped = await box.until(lambda: kept_target(box) is None, seconds=60)
+    dropped = await box.until(
+        lambda: (kept_target(box) or {}).get("parked") == {"armed": True}, seconds=60
+    )
     await asyncio.sleep(5)  # nothing more is written
     status = uplink_status(box)
     written = (await gre_pins(box)) - before
@@ -3062,8 +3068,9 @@ async def gre_child_kept_parent_up_not_joined(box):
     """Spec 8.3: the kept GRE parent's AP is up, but the child's station cannot join it
     (its pod's fallback station keeps its uplink working, as on the Pis). A try with the parent
     up that is not applied within its 90 s is undone as before, and the kept target tried again
-    after kept_backoff (5 s here); after kept_tries (2 here) such failures it is given up: no
-    hold, the station's own configuration back, nothing more written."""
+    after kept_backoff (5 s here); after kept_tries (2 here) such failures it is parked, its AP
+    up (taken up again only once that AP was down): no hold, the station's own configuration
+    back, nothing more written."""
     restarted = await kept_child_restarted(box, home=True, parent=True, fallback=True)
     if restarted is None:
         return box.result(passed=False, failed="the move onto the GRE parent did not complete")
@@ -3083,7 +3090,10 @@ async def gre_child_kept_parent_up_not_joined(box):
     )
     retry = (uplink_status(box).get("kept") or {}).get("tries") if counted else None
     second = await until_async(pinned, seconds=60)
-    dropped = await box.until(lambda: kept_target(box) is None, seconds=SWITCH_DEADLINE + 60)
+    dropped = await box.until(
+        lambda: (kept_target(box) or {}).get("parked") == {"armed": False},
+        seconds=SWITCH_DEADLINE + 60,
+    )
     undone_again = await until_async(unpinned, seconds=30)
     await asyncio.sleep(10)  # nothing more is written
     status = uplink_status(box)
@@ -3107,6 +3117,254 @@ async def gre_child_kept_parent_up_not_joined(box):
         second_undone=bool(undone_again),
         held=status.get("held"),
         waiting=status.get("waiting"),
+    )
+
+
+# spec 8.3 (a gateway reboot, 19 October): a GRE child's kept target onto another fleet pod's
+# backhaul BSS (a Multi-AP move, as pi2's onto pod 2's wl1.1), that pod's agent in the box as its
+# status gives it
+KEPT_TARGET_POD = "RPIPOD0KEPTTARGET"
+
+
+def target_pod(box, up):
+    """The kept target's pod's agent: ``up`` the state it names TARGET_PARENT in (True, False),
+    None for an agent that names no AP yet (just started again, no aps.json, its pod re-seeding),
+    or "absent" for one that has not written its first status."""
+    if up == "absent":
+        (box.run_root / KEPT_TARGET_POD / "status.json").unlink(missing_ok=True)
+        return
+    peer_status(box, KEPT_TARGET_POD, al=PARENT_AL, ap_up={} if up is None else {TARGET_PARENT: up})
+
+
+async def steered_onto_fleet_target(box):
+    """On its GTP bootstrap, steered onto TARGET_PARENT, another fleet pod's backhaul BSS whose
+    agent names that AP up (a Multi-AP move), and on it: True once the controller has its
+    answer."""
+    if not (await onboarded(box)).get("applied"):
+        return False
+    await box.until(lambda: uplink_status(box).get("bootstrap"), seconds=30)
+    target_pod(box, True)
+    await asyncio.sleep(2.5)  # the agent's peer directory (1 s cache) reads it
+    answered = len(box.sent(0x801A))
+    mid = box.controller.send(0x8019, (backhaul_steering_request(BACKHAUL_STATION, TARGET_PARENT),))
+    await box.until(lambda: box.controller.reply(ACK, mid), seconds=5)
+    await until_async(lambda: pinned(box, TARGET_PARENT), seconds=30)
+    await four_address(box, TARGET_PARENT)
+    onto = await next_message(box, 0x801A, answered, seconds=60)
+    return onto is not None and steering_answer(onto) == (BACKHAUL_STATION, TARGET_PARENT, 0)
+
+
+async def fleet_rebooted(box, before=None):
+    """Every agent and the pod started again together (a gateway reboot): the agent killed,
+    ``before()`` (the other agents' state as they start again), the pod's OpenSync on its
+    bootstrap, the agent started again: its session again ("fresh"), or None."""
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    continued = kept_reconnections(box)
+    box.process.kill()
+    box.process.wait(10)
+    if before is not None:
+        before()
+    await box.new_pod_database()
+    box.restart_agent()
+    return await back(box, searches, m1s, continued)
+
+
+def uplink_operation(box):
+    return uplink_status(box).get("operation") or {}
+
+
+async def applied_on(box, bssid, after):
+    """A switch other than ``after`` (an operation_id) applied with the pod on ``bssid``."""
+
+    def applied():
+        status, operation = uplink_status(box), uplink_operation(box)
+        return (
+            operation.get("operation_id") != after
+            and operation.get("state") == "OBSERVED_APPLIED"
+            and str(status.get("parent") or "").lower() == bssid
+        )
+
+    return await box.until(applied, seconds=60)
+
+
+async def kept_target_fleet_restart(box):
+    """Spec 8.3 (a gateway reboot, 19 October): a GRE child steered onto another fleet pod's
+    backhaul BSS (a Multi-AP move, that pod's agent naming the AP up): the target kept, marked a
+    fleet pod's. Then every agent and both pods start again together: the target's pod re-seeds
+    and its agent, with no aps.json, names no AP until the AP is back after its pod's M2. The
+    child's agent makes no switch onto the target meanwhile, past a switch's deadline, and keeps
+    it (no agent saying is no proof it left the fleet); once that agent names the AP up the target
+    is switched to without a steer, and applied. Before the fix the switch was made at once,
+    failed at its deadline and the target was forgotten."""
+    if not await steered_onto_fleet_target(box):
+        return box.result(passed=False, failed="the move onto the fleet target did not complete")
+    marked = (kept_target(box) or {}).get("fleet") is True
+    again = await fleet_rebooted(box, lambda: target_pod(box, None))
+    started = time.monotonic()
+    waited = await box.until(
+        lambda: uplink_status(box).get("waiting") == PARENT_WAITING, seconds=60
+    )
+    await asyncio.sleep(max(0.0, SWITCH_DEADLINE + 10 - (time.monotonic() - started)))
+    status = uplink_status(box)
+    kept = kept_target(box) or {}
+    held_back = (
+        not await pinned(box, TARGET_PARENT)
+        and status.get("waiting") == PARENT_WAITING
+        and (status.get("kept") or {}).get("waiting_for_parent") == TARGET_PARENT
+        and kept.get("target") == TARGET_PARENT
+        and "parked" not in kept
+    )
+    last = uplink_operation(box).get("operation_id")
+    target_pod(box, True)  # its AP back after its pod's M2
+    switched = await until_async(lambda: pinned(box, TARGET_PARENT), seconds=30)
+    await four_address(box, TARGET_PARENT)
+    done = await applied_on(box, TARGET_PARENT, last)
+    return box.result(
+        passed=marked
+        and again == "fresh"
+        and bool(waited)
+        and held_back
+        and bool(switched)
+        and bool(done)
+        and not uplink_status(box).get("held"),
+        marked_a_fleet_target=marked,
+        provisioned_again=again,
+        waited_for_parent=bool(waited),
+        nothing_written_past_the_deadline=held_back,
+        kept=kept,
+        switched_once_named_up=bool(switched),
+        applied=bool(done),
+        waiting=status.get("waiting"),
+    )
+
+
+async def kept_target_unmarked_named_late(box):
+    """Spec 8.3, the first start of an image with this rule: the kept target an earlier agent kept
+    without saying whether it is a fleet pod's (target.json without "fleet"). Every agent starts
+    again; the target's pod's agent has written no status yet, so the child tries the target. Its
+    pod's agent then names the AP down (from its aps.json): when that try fails it is a fleet
+    pod's after all, the try counts none and the target waits for its AP; once named up it is
+    switched to again, and applied."""
+    if not await steered_onto_fleet_target(box):
+        return box.result(passed=False, failed="the move onto the fleet target did not complete")
+    path = box.directory / "state" / box.serial / "uplink" / "target.json"
+
+    def as_earlier_agent():
+        target_pod(box, "absent")
+        kept = json.loads(path.read_text())
+        kept.pop("fleet", None)
+        path.write_text(json.dumps(kept))
+
+    again = await fleet_rebooted(box, as_earlier_agent)
+    tried = await until_async(lambda: pinned(box, TARGET_PARENT), seconds=60)
+    target_pod(box, False)  # its agent's first status: the AP named, down
+
+    def timed_out():
+        # the journal's: a GRE child's undo follows at once and is the status's operation then
+        return any(
+            str((r.get("intent") or {}).get("bssid") or "").lower() == TARGET_PARENT
+            and r.get("state") == "TIMED_OUT"
+            for r in journal_records(box, "uplink") or []
+        )
+
+    failed = await box.until(timed_out, seconds=SWITCH_DEADLINE + 60)
+    waited = await box.until(
+        lambda: uplink_status(box).get("waiting") == PARENT_WAITING, seconds=60
+    )
+    status = uplink_status(box)
+    kept = kept_target(box) or {}
+    counted_none = (status.get("kept") or {}).get("tries") == 0 and kept.get("fleet") is True
+    last = uplink_operation(box).get("operation_id")
+    target_pod(box, True)
+    switched = await until_async(lambda: pinned(box, TARGET_PARENT), seconds=30)
+    await four_address(box, TARGET_PARENT)
+    done = await applied_on(box, TARGET_PARENT, last)
+    return box.result(
+        passed=again == "fresh"
+        and bool(tried)
+        and bool(failed)
+        and bool(waited)
+        and counted_none
+        and kept.get("target") == TARGET_PARENT
+        and bool(switched)
+        and bool(done),
+        provisioned_again=again,
+        tried_unknown=bool(tried),
+        try_failed=bool(failed),
+        waited_for_parent=bool(waited),
+        counted_none_marked=counted_none,
+        kept=kept,
+        switched_once_named_up=bool(switched),
+        applied=bool(done),
+    )
+
+
+async def kept_target_parked_rearmed(box):
+    """Spec 8.3: the kept fleet target's AP is up but the child cannot join it: after its tries
+    (kept_tries 1 here) the target is given up and parked, not forgotten (target.json keeps it),
+    nothing tried while that AP stays up. An EMOSA restart keeps it parked and tries nothing.
+    Its AP goes down and up again: the target is taken up again (rearms 1), its tries anew,
+    switched to without a steer and applied; reached, it is kept as any target, rearms back to 0."""
+    if not await steered_onto_fleet_target(box):
+        return box.result(passed=False, failed="the move onto the fleet target did not complete")
+    again = await fleet_rebooted(box)  # its AP stays up throughout
+    tried = await until_async(lambda: pinned(box, TARGET_PARENT), seconds=60)
+    parked = await box.until(
+        lambda: ((kept_target(box) or {}).get("parked") == {"armed": False}) and kept_target(box),
+        seconds=SWITCH_DEADLINE + 60,
+    )
+    await box.until(lambda: uplink_status(box).get("waiting") is not None, seconds=30)
+    await asyncio.sleep(10)
+    operations = len(journal_records(box, "uplink") or [])  # its switches so far
+    still = (uplink_status(box).get("kept") or {}).get("parked") == TARGET_PARENT
+    # EMOSA starts again (the pod not): parked still, nothing tried
+    box.process.kill()
+    box.process.wait(10)
+    box.restart_agent()
+    restarted = await box.until(
+        lambda: (uplink_status(box).get("kept") or {}).get("parked") == TARGET_PARENT, seconds=60
+    )
+    await asyncio.sleep(10)
+    quiet = (
+        len(journal_records(box, "uplink") or []) == operations
+        and (uplink_status(box).get("kept") or {}).get("parked") == TARGET_PARENT
+    )
+    last = uplink_operation(box).get("operation_id")
+    target_pod(box, False)
+    await asyncio.sleep(2.5)  # seen down: armed
+    target_pod(box, True)  # up again
+    rearmed = await box.until(
+        lambda: (uplink_status(box).get("kept") or {}).get("rearms") == 1, seconds=30
+    )
+    switched = await until_async(lambda: pinned(box, TARGET_PARENT), seconds=30)
+    await four_address(box, TARGET_PARENT)
+    done = await applied_on(box, TARGET_PARENT, last)
+    kept = kept_target(box) or {}
+    status = uplink_status(box)
+    return box.result(
+        passed=again == "fresh"
+        and bool(tried)
+        and bool(parked)
+        and still
+        and bool(restarted)
+        and quiet
+        and bool(rearmed)
+        and bool(switched)
+        and bool(done)
+        and kept.get("target") == TARGET_PARENT
+        and "parked" not in kept
+        and (status.get("kept") or {}).get("rearms") == 0
+        and not status.get("held"),
+        provisioned_again=again,
+        tried=bool(tried),
+        parked=parked,
+        parked_while_up=still,
+        parked_after_restart=bool(restarted),
+        nothing_tried_while_parked=quiet,
+        taken_up_again=bool(rearmed),
+        switched=bool(switched),
+        applied=bool(done),
+        kept=kept,
     )
 
 
@@ -3520,10 +3778,18 @@ async def credential_rows(box):
 async def pi_onto_pi_parent(box):
     """A Pi-shaped GRE child (pi_shaped) onboarded on its GTP over bhaul-sta-50, both fleet
     parents known, moved onto the 6.6 pod's parent on 5 GHz by a steer naming bhaul-sta-50: the
-    same station leaves the GTP, so cm takes its gretap there at once. The answer, or None."""
+    same station leaves the GTP, so cm takes its gretap there at once. The 6.6 pod's agent lists
+    its GRE parent AP up, as a current agent does: a kept target there is not waited for (spec
+    8.3). The answer, or None."""
     if not (await onboarded(box)).get("applied"):
         return None
-    peer_status(box, "RPIPOD0MIXEDPARENT", al=PI_PARENT_AL, gre_parent_ap=PI_PARENT_5G)
+    peer_status(
+        box,
+        "RPIPOD0MIXEDPARENT",
+        al=PI_PARENT_AL,
+        gre_parent_ap=PI_PARENT_5G,
+        ap_up={PI_PARENT_5G: True},
+    )
     peer_status(box, "BCMPOD0MIXEDPARENT", al=LEGACY_PARENT_AL, gre_parent_ap=LEGACY_PARENT_AP)
     await box.until(lambda: uplink_status(box).get("bootstrap"), seconds=30)
     # the controller names the backhaul STA the agent reports: bhaul-sta-50 on the GTP
@@ -3894,107 +4160,85 @@ async def agent_stops_cleanly(box):
 
 async def gre_child_kept_gone(box):
     """Spec 8.3 "Moved" for a GRE child (8.6), V54's fault row "pi1 reboots": the kept GRE
-    parent is gone when the child's pod starts again. The agent re-applies the move; the station
-    cannot join (no cm gretap on the parent), so the pod's OpenSync starts again on its bootstrap,
-    as its router checks fail. The switch is not applied within its 90 s: the agent drops the
-    target without a hold and, a GRE child having no configured upstream, writes nothing more:
-    the pod stays on its bootstrap until the controller steers it again."""
+    parent is gone when the child's pod starts again, its agent naming none of its APs. A GRE
+    parent is a fleet pod's, so no agent saying is no proof that it left: the agent makes no
+    switch onto it, as for a parent whose AP is down, at most parent_wait_cap (20 s here); then the
+    target is parked, not forgotten, and, a GRE child having no configured upstream, nothing is
+    written: the pod stays on its bootstrap until the controller steers it again or the parent's
+    agent names its AP up."""
     moved = await gre_child_moved(box)
     if moved is None:
         return box.result(passed=False, failed="the move onto the GRE parent did not complete")
     searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
     continued = kept_reconnections(box)
+    before = await gre_pins(box)
     await box.new_pod_database()  # the child's restart, the parent gone meanwhile
     first = await back(box, searches, m1s, continued)  # a restart: a fresh session
-    # its configuration observed on this start before the next (restart-during-write is the race)
-    await box.until(lambda: operation_states(box)[-1:] == [("OBSERVED_APPLIED", None)], seconds=30)
-    tried = await until_async(lambda: gre_pinned(box), seconds=60)
-    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
-    continued = kept_reconnections(box)
-    await box.new_pod_database()  # cm's router checks fail: OpenSync again, on its bootstrap
-    again = first == "fresh" and await back(box, searches, m1s, continued) == "fresh"
-
-    def timed_out():
-        return (uplink_status(box).get("operation") or {}).get("state") == "TIMED_OUT"
-
-    failed = await box.until(timed_out, seconds=SWITCH_DEADLINE + 60)
-    await asyncio.sleep(10)
+    waited = await box.until(
+        lambda: uplink_status(box).get("waiting") == PARENT_WAITING, seconds=60
+    )
+    parked = await box.until(
+        lambda: (kept_target(box) or {}).get("parked") == {"armed": True}, seconds=60
+    )
+    await asyncio.sleep(5)  # nothing more is written
     status = uplink_status(box)
-    rewritten = await gre_pinned(box)
+    written = (await gre_pins(box)) - before
     return box.result(
-        passed=bool(tried)
-        and bool(again)
-        and bool(failed)
+        passed=first == "fresh"
+        and bool(waited)
+        and bool(parked)
+        and not written
         and not status.get("held")
-        and kept_target(box) is None
-        and not rewritten,
-        tried_kept_target=bool(tried),
-        provisioned_again=again,
-        kept_switch_timed_out=bool(failed),
+        and str((kept_target(box) or {}).get("target") or "").lower() == GRE_PARENT_AP
+        and (status.get("kept") or {}).get("parked") == GRE_PARENT_AP,
+        provisioned_again=first,
+        waited_for_parent=bool(waited),
+        target_parked=bool(parked),
+        written=sorted(written),
         held=status.get("held"),
-        target_dropped=kept_target(box) is None,
-        written_again=rewritten,
         waiting=status.get("waiting"),
     )
 
 
 async def gre_child_kept_gone_up(box):
     """Spec 8.3 "Moved" for a GRE child (8.6), "pi1 reboots" as the Pis met it (13 October): the
-    kept GRE parent is gone when the child's pod starts again, but the pod keeps a working uplink
-    (on the Pis, pod-bh-fallback's 2.4 GHz station), so its OpenSync does not start again. The
-    agent re-applies the move and the station cannot join. The switch is not applied within its
-    90 s: the agent drops the target without a hold and, a GRE child having no configured upstream,
-    undoes its own write as the revert to the bootstrap does: the station's columns back as the pod
-    had them on this start, EMOSA's credential deleted. The fallback station stays as the pod set
-    it, and nothing more is written."""
+    kept GRE parent is gone when the child's pod starts again, its agent naming none of its APs,
+    and the pod keeps a working uplink (on the Pis, pod-bh-fallback's 2.4 GHz station), so its
+    OpenSync does not start again. The agent makes no switch onto the parent (no agent saying is
+    no proof that it left), at most parent_wait_cap (20 s here), then parks the target: nothing
+    written, the station as the pod has it, the fallback station as the pod set it."""
     moved = await gre_child_moved(box)
     if moved is None:
         return box.result(passed=False, failed="the move onto the GRE parent did not complete")
     searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
     continued = kept_reconnections(box)
+    before = await gre_pins(box)
     await box.new_pod_database()  # the child's restart, the parent gone meanwhile
     fallback = await fallback_station(box)
-    # its OpenSync started again: a fresh session (spec 2.5), the undo as before
+    # its OpenSync started again: a fresh session (spec 2.5)
     session = await back(box, searches, m1s, continued)
-    tried = await until_async(lambda: gre_pinned(box), seconds=60)
-    # the kept switch not applied within its deadline: the target dropped (the undo, if any,
-    # follows at once and becomes the latest operation)
-    failed = await box.until(lambda: kept_target(box) is None, seconds=SWITCH_DEADLINE + 60)
-
-    async def undone():
-        return not await gre_pinned(box)
-
-    unpinned = await until_async(undone, seconds=30)
+    waited = await box.until(
+        lambda: uplink_status(box).get("waiting") == PARENT_WAITING, seconds=60
+    )
+    parked = await box.until(
+        lambda: (kept_target(box) or {}).get("parked") == {"armed": True}, seconds=60
+    )
     await asyncio.sleep(5)  # nothing more is written
     status = uplink_status(box)
-    _, station = await box.vif("Wifi_VIF_Config", "bhaul-sta-24")
+    written = (await gre_pins(box)) - before
     _, kept_fallback = await box.vif("Wifi_VIF_Config", "bhaul-sta-50")
-    columns = ("ssid", "credential_configs")
-    # the pod's own configuration back: its SSID (not the move's "" marker), and only the pod's
-    # own credentials linked, none pinned to a BSSID
-    credentials = await box.rows("Wifi_Credential_Config")
-    restored = bool(station.get("ssid")) and all(
-        u in credentials and not isinstance(credentials[u].get("bssid"), str)
-        for u in uuids(station.get("credential_configs"))
-    )
     return box.result(
         passed=session == "fresh"
-        and bool(tried)
-        and bool(failed)
-        and bool(unpinned)
-        and restored
-        and not await gre_pinned(box)
+        and bool(waited)
+        and bool(parked)
+        and not written
         and not status.get("held")
-        and kept_target(box) is None
         and {k: kept_fallback.get(k) for k in fallback} == fallback,
         session=session,
-        tried_kept_target=bool(tried),
-        kept_switch_timed_out=bool(failed),
-        credential_removed=bool(unpinned),
-        station_restored=restored,
-        station=[station.get(k) for k in columns],
+        waited_for_parent=bool(waited),
+        target_parked=bool(parked),
+        written=sorted(written),
         held=status.get("held"),
-        target_dropped=kept_target(box) is None,
         fallback_untouched={k: kept_fallback.get(k) for k in fallback} == fallback,
         waiting=status.get("waiting"),
     )
@@ -9051,6 +9295,9 @@ SCENARIOS = {
     "backhaul-steering": backhaul_steering,
     "revert-by-record": revert_by_record,
     "restart-during-move": restart_during_move,
+    "kept-target-fleet-restart": kept_target_fleet_restart,
+    "kept-target-unmarked-named-late": kept_target_unmarked_named_late,
+    "kept-target-parked-rearmed": kept_target_parked_rearmed,
     "fallback-during-move": fallback_during_move,
     "gre-child-kept": gre_child_kept,
     "gre-child-kept-parent-rebooting": gre_child_kept_parent_rebooting,
@@ -9205,13 +9452,27 @@ OPTIONS = {  # the box each scenario needs beyond the default
         }
         for name in (
             "gre-child-kept",
-            "gre-child-kept-gone",
-            "gre-child-kept-gone-up",
             "gre-child-kept-parent-rebooting",
             "mixed-gre-child-onto-legacy-parent",
         )
     },
-    # spec 8.3: a kept GRE parent's pod that does not come back, or whose AP the child cannot join
+    # spec 8.3: a kept GRE parent's pod that does not come back (or whose agent names no AP), or
+    # whose AP the child cannot join
+    **{
+        name: {
+            "backhaul": True,
+            "bootstrap": True,
+            "uplink": {
+                "mode": "gre",
+                "station": "bhaul-sta-24",
+                "credentials": "config",
+                "ssid": "emosa-lab-bh",
+                "secret_ref": "backhaul",
+                "parent_wait_cap": 20,
+            },
+        }
+        for name in ("gre-child-kept-gone", "gre-child-kept-gone-up")
+    },
     "gre-child-kept-parent-never-back": {
         "backhaul": True,
         "bootstrap": True,
@@ -9349,6 +9610,13 @@ OPTIONS = {  # the box each scenario needs beyond the default
 # spec 2.5's reconnections: the uplink move as restart-during-move's, radio B's move as
 # second-radio-moves-channel's
 OPTIONS["reconnect-moved-uplink"] = OPTIONS["restart-during-move"]
+# spec 8.3: a GRE child's kept target onto another fleet pod's backhaul BSS (a Multi-AP move)
+OPTIONS["kept-target-fleet-restart"] = OPTIONS["restart-during-move"]
+OPTIONS["kept-target-unmarked-named-late"] = OPTIONS["restart-during-move"]
+OPTIONS["kept-target-parked-rearmed"] = {
+    **OPTIONS["restart-during-move"],
+    "uplink": {**OPTIONS["restart-during-move"]["uplink"], "kept_tries": 1},
+}
 OPTIONS["reconnect-channel-follows"] = OPTIONS["second-radio-moves-channel"]
 # spec 3.10: a legacy pod, and each generation's pod under the other's profile
 OPTIONS["legacy-onboard"] = {"legacy": True}

@@ -24,6 +24,9 @@
 #define EM_UPLINK_KEPT_TRIES 3
 #define EM_UPLINK_KEPT_BACKOFF 120
 #define EM_UPLINK_PARENT_WAIT_CAP 1800
+/* such a target given up is parked, not forgotten: taken up again (its tries anew) each time its
+ * pod's AP is up again, at most this many times (spec 8.3) */
+#define EM_UPLINK_KEPT_REARMS 3
 #define EM_UPLINK_PARENT_WAITING "kept target waiting for its parent"
 
 typedef struct {
@@ -49,8 +52,8 @@ typedef struct {
     double hold_backoff, hold_backoff_cap;
     double (*wall)(void);
     /* a kept target on another fleet pod (0: EM_UPLINK_KEPT_TRIES, EM_UPLINK_KEPT_BACKOFF,
-     * EM_UPLINK_PARENT_WAIT_CAP) */
-    double kept_tries_max, kept_backoff, parent_wait_cap;
+     * EM_UPLINK_PARENT_WAIT_CAP, EM_UPLINK_KEPT_REARMS) */
+    double kept_tries_max, kept_backoff, parent_wait_cap, kept_rearms_max;
     /* credentials: fixed (configuration) or the backhaul BSS of an applied M2 set: the AP scope's
      * first, then each further radio's scope (spec 9: a pod whose fronthaul radio maps no backhaul
      * BSS has it only in its 5 GHz radio's set) */
@@ -103,6 +106,12 @@ typedef struct {
     bool has_kept_retry, has_parent_wait;
     char retry_target[18], retry_station[33], retry_mode[10], wait_bssid[18];
     double retry_at, wait_since;
+    /* spec 8.3, kept in target.json: whether the kept target is a fleet pod's AP (a fleet agent named
+     * it, or it is a GRE parent's), so that no agent saying is no proof it left; the target given up
+     * and parked (armed once its parent's AP was seen not up), and how often it was taken up again */
+    bool kept_fleet, has_parked, parked_armed;
+    char parked_target[18], parked_station[33], parked_mode[10];
+    unsigned kept_rearms;
     /* spec 8.6: the BSS the station was on before any EMOSA move (its bootstrap upstream, cm's own
      * association), recorded once and persisted, so a steer back to it is a revert */
     char bootstrap_bssid[18], bootstrap_ssid[65];

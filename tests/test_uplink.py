@@ -768,11 +768,18 @@ def test_a_kept_upstream_not_reached_falls_back_to_the_configured_one_without_a_
 
 
 def test_a_gre_childs_failed_kept_switch_is_undone_while_its_pod_stays_up(tmp_path):
-    """Spec 8.3 "Moved", 8.6 (13 October): a GRE child's kept parent is gone on its next start,
-    and the pod stays up on its fallback station (cm's uplink elsewhere, OpenSync not restarted).
-    After the switch's deadline the agent undoes its own write - the station's snapshot back, its
-    credential deleted - confirmed once the credential is off the station; then nothing more."""
-    switch, pod, clock, store = rig(tmp_path, bssid=None, parents=lambda: frozenset({GRE_PARENT}))
+    """Spec 8.3 "Moved", 8.6 (13 October): a GRE child's kept parent cannot be joined on its next
+    start, its AP up (its one try, kept_tries 1), and the pod stays up on its fallback station
+    (cm's uplink elsewhere, OpenSync not restarted). After the switch's deadline the agent undoes
+    its own write - the station's snapshot back, its credential deleted - confirmed once the
+    credential is off the station; the target parked, then nothing more."""
+    switch, pod, clock, store = rig(
+        tmp_path,
+        bssid=None,
+        parents=lambda: frozenset({GRE_PARENT}),
+        parent_ap=lambda bssid: True,
+        kept_tries=1,
+    )
     asyncio.run(switch.tick())  # the bootstrap recorded
     assert switch.steer(GRE_PARENT) is None
     asyncio.run(switch.tick())
@@ -786,8 +793,9 @@ def test_a_gre_childs_failed_kept_switch_is_undone_while_its_pod_stays_up(tmp_pa
     fallback = {"if_name": "g-bhaul-sta-24", "if_type": "gre", "is_used": True}
     pod.tables["Connection_Manager_Uplink"] = {UPLINK: fallback}
     clock.advance(DEADLINE + 1)
-    asyncio.run(switch.tick())  # the kept switch times out: the target dropped, no hold
-    assert not switch.held() and not (store.directory / "target.json").exists()
+    asyncio.run(switch.tick())  # the kept switch times out: the target parked, no hold
+    kept = json.loads((store.directory / "target.json").read_text())
+    assert not switch.held() and kept["parked"] == {"armed": False}
     undo = pod.sent[-1]
     assert ("delete", "Wifi_Credential_Config") in [(o["op"], o.get("table")) for o in undo]
     update = next(o for o in undo if o["op"] == "update" and o["table"] == "Wifi_VIF_Config")
@@ -892,10 +900,11 @@ def test_a_kept_target_waits_for_its_parents_ap_then_is_switched_to_without_a_st
     assert status["kept"]["waiting_for_parent"] is None and not switch.held()
 
 
-def test_a_kept_target_failed_with_its_parent_up_is_tried_again_then_given_up(tmp_path):
+def test_a_kept_target_failed_with_its_parent_up_is_tried_again_then_parked(tmp_path):
     """Spec 8.3: a switch to the kept target made with its pod's AP up that is not applied is tried
     again after a backoff (2 then 4 minutes), the pod on its bootstrap meanwhile (no switch to the
-    configured upstream); after the third such failure the target is given up as before."""
+    configured upstream); after the third such failure the target is given up and parked: the
+    configured upstream switched to, the target kept for when its pod's AP is up again."""
     up = {NEXT: True}
     switch, pod, clock, store = kept_on_parent(tmp_path, up)
     pod.restart("00000000-0000-4000-8000-0000000000a2")
@@ -920,17 +929,21 @@ def test_a_kept_target_failed_with_its_parent_up_is_tried_again_then_given_up(tm
         asyncio.run(switch.tick())  # tried again: a switch of its own on the same start
         assert len(pod.sent) == sent + 1 and pod.sent[-1][2]["row"]["bssid"] == NEXT
     clock.advance(DEADLINE + 1)
-    asyncio.run(switch.tick())  # the third failure: given up
-    assert not switch.held() and not (store.directory / "target.json").exists()
-    assert switch.status()["bssid"] == PARENT and switch.status()["kept"]["tries"] == 0
+    asyncio.run(switch.tick())  # the third failure: given up, parked
+    kept = json.loads((store.directory / "target.json").read_text())
+    assert (kept["target"], kept["parked"], kept["fleet"]) == (NEXT, {"armed": False}, True)
+    status = switch.status()
+    assert not switch.held() and status["bssid"] == PARENT and status["kept"]["tries"] == 0
+    assert status["kept"]["parked"] == NEXT and status["kept"]["rearms"] == 0
     pod.revert()
     asyncio.run(switch.tick())
     assert pod.sent[-1][2]["row"]["bssid"] == PARENT  # then the configured upstream
 
 
-def test_a_kept_target_whose_parent_does_not_come_back_is_given_up_at_the_cap(tmp_path):
+def test_a_kept_target_whose_parent_does_not_come_back_is_parked_at_the_cap(tmp_path):
     """Spec 8.3: the wait for the kept target's pod is bounded (parent_wait_cap, 30 minutes by
-    default): then the target is given up and the configured upstream switched to."""
+    default): then the target is given up and parked and the configured upstream switched to;
+    once its pod's AP is up the target is taken up again."""
     up = {NEXT: True}
     switch, pod, clock, store = kept_on_parent(tmp_path, up, parent_wait_cap=600)
     up[NEXT] = False
@@ -942,23 +955,140 @@ def test_a_kept_target_whose_parent_does_not_come_back_is_given_up_at_the_cap(tm
     assert len(pod.sent) == sent and switch.status()["waiting"] == PARENT_WAITING
     clock.advance(1)
     asyncio.run(switch.tick())
-    assert not (store.directory / "target.json").exists() and switch.status()["bssid"] == PARENT
+    kept = json.loads((store.directory / "target.json").read_text())
+    assert (kept["target"], kept["parked"]) == (NEXT, {"armed": True})
+    assert switch.status()["bssid"] == PARENT
     asyncio.run(switch.tick())
     assert len(pod.sent) == sent + 1 and pod.sent[-1][2]["row"]["bssid"] == PARENT
+    pod.adopt()
+    asyncio.run(switch.tick())
+    assert switch.latest().state == State.OBSERVED_APPLIED  # on the configured upstream
+    up[NEXT] = True  # its AP back at last
+    asyncio.run(switch.tick())
+    assert pod.sent[-1][2]["row"]["bssid"] == NEXT and switch.status()["kept"]["rearms"] == 1
 
 
-def test_a_kept_target_whose_parent_left_the_fleet_is_tried_once_as_before(tmp_path):
-    """Spec 8.3: a kept target no fleet agent speaks for (its pod removed, or an agent that does not
-    publish its APs) keeps the earlier rule: one switch, given up when not applied."""
-    up = {NEXT: True}
+def test_a_kept_target_no_fleet_agent_ever_named_is_tried_once_as_before(tmp_path):
+    """Spec 8.3: a kept target no fleet agent has named (not a fleet pod's, or an agent that does
+    not publish its APs) keeps the earlier rule: one switch, forgotten when not applied."""
+    up = {}
     switch, pod, clock, store = kept_on_parent(tmp_path, up)
-    del up[NEXT]  # its pod's agent gone from the fleet
+    assert "fleet" not in json.loads((store.directory / "target.json").read_text())
     pod.restart("00000000-0000-4000-8000-0000000000a2")
     asyncio.run(switch.tick())
     assert pod.sent[-1][2]["row"]["bssid"] == NEXT
     clock.advance(DEADLINE + 1)
     asyncio.run(switch.tick())
     assert not (store.directory / "target.json").exists() and switch.status()["bssid"] == PARENT
+
+
+def restarted(switch, tmp_path, pod, clock, up, **options):
+    """EMOSA started again on the same state directory (its uplink journal and target.json)."""
+    switch.store.close()  # the earlier process gone
+    vault = SecretStore(tmp_path / "secrets")
+    backend = UplinkBackend("pod-1", pod, vault, serial=SERIAL, station=STATION)
+    return UplinkSwitch(
+        "pod-1",
+        backend,
+        Store(tmp_path / "uplink"),
+        vault,
+        lambda: ("emosa-mesh-bh", "backhaul"),
+        bssid=PARENT,
+        run_id="pod-1",
+        clock=clock,
+        wall=clock.monotonic,
+        parent_ap=lambda bssid: up.get(bssid),
+        **options,
+    )
+
+
+def test_a_fleet_kept_target_no_agent_names_yet_waits_as_if_down(tmp_path):
+    """Spec 8.3 (a gateway reboot, 19 October): the kept target is a fleet pod's (its agent named it
+    when kept). Its pod and every agent start again together, that agent naming no AP yet (no
+    aps.json, its pod re-seeding): no agent saying is no proof it left, so the switch waits as
+    for an AP down; once it is named up the target is switched to."""
+    up = {NEXT: True}
+    switch, pod, clock, store = kept_on_parent(tmp_path, up)
+    assert json.loads((store.directory / "target.json").read_text())["fleet"] is True
+    up.clear()  # its agent started again: it names nothing yet
+    pod.restart("00000000-0000-4000-8000-0000000000a2")
+    again = restarted(switch, tmp_path, pod, clock, up)
+    sent = len(pod.sent)
+    asyncio.run(again.tick())
+    clock.advance(DEADLINE + 60)
+    asyncio.run(again.tick())
+    status = again.status()
+    assert len(pod.sent) == sent and status["waiting"] == PARENT_WAITING
+    assert status["kept"]["waiting_for_parent"] == NEXT and status["kept"]["fleet"] is True
+    up[NEXT] = True  # its AP back after its pod's M2
+    asyncio.run(again.tick())
+    assert len(pod.sent) == sent + 1 and pod.sent[-1][2]["row"]["bssid"] == NEXT
+
+
+def test_an_unmarked_kept_target_its_agent_names_by_the_failure_counts_none_and_waits(tmp_path):
+    """Spec 8.3: a kept target an earlier agent kept without saying whether it is a fleet pod's
+    (target.json without "fleet") is tried while no agent names it; by the time that try fails its
+    pod's agent names the AP down (from its aps.json): it is a fleet pod's after all, the try
+    counts none and the target waits for its AP."""
+    up = {}
+    switch, pod, clock, store = kept_on_parent(tmp_path, up)
+    pod.restart("00000000-0000-4000-8000-0000000000a2")
+    asyncio.run(switch.tick())
+    assert pod.sent[-1][2]["row"]["bssid"] == NEXT  # tried: nothing known of it
+    up[NEXT] = False  # its pod's agent's first status
+    clock.advance(DEADLINE + 1)
+    asyncio.run(switch.tick())
+    status = switch.status()
+    assert status["kept"]["tries"] == 0 and status["kept"]["fleet"] is True
+    kept = json.loads((store.directory / "target.json").read_text())
+    assert (kept["target"], kept["fleet"]) == (NEXT, True)
+    pod.revert()
+    sent = len(pod.sent)
+    asyncio.run(switch.tick())
+    asyncio.run(switch.tick())
+    assert len(pod.sent) == sent and switch.status()["waiting"] == PARENT_WAITING
+    up[NEXT] = True
+    asyncio.run(switch.tick())
+    assert len(pod.sent) == sent + 1 and pod.sent[-1][2]["row"]["bssid"] == NEXT
+
+
+def test_a_parked_target_survives_a_restart_and_is_taken_up_again_at_most_kept_rearms(tmp_path):
+    """Spec 8.3: a parked target (its tries used with its AP up) is taken up again only once its
+    pod's AP is up after it was not, each time with its tries anew, at most kept_rearms times; an
+    EMOSA restart keeps it parked, takes it up no sooner, and counts on. Then it is forgotten."""
+    up = {NEXT: True}
+    options = {"kept_tries": 1, "kept_rearms": 2}
+    switch, pod, clock, store = kept_on_parent(tmp_path, up, **options)
+    pod.restart("00000000-0000-4000-8000-0000000000a2")
+    asyncio.run(switch.tick())
+    clock.advance(DEADLINE + 1)
+    asyncio.run(switch.tick())  # its one try failed with its AP up: parked
+    assert switch.status()["kept"]["parked"] == NEXT
+    for rearm in (1, 2):
+        pod.revert()
+        asyncio.run(switch.tick())  # the configured upstream
+        pod.adopt()
+        asyncio.run(switch.tick())
+        sent = len(pod.sent)
+        asyncio.run(switch.tick())
+        assert len(pod.sent) == sent  # its AP up all along: no reason to take it up again
+        switch = restarted(switch, tmp_path, pod, clock, up, **options)  # EMOSA starts again
+        asyncio.run(switch.tick())
+        status = switch.status()
+        assert len(pod.sent) == sent and status["kept"]["parked"] == NEXT
+        assert status["kept"]["rearms"] == rearm - 1
+        up[NEXT] = False
+        asyncio.run(switch.tick())
+        up[NEXT] = True  # its AP up again
+        asyncio.run(switch.tick())
+        assert len(pod.sent) == sent + 1 and pod.sent[-1][2]["row"]["bssid"] == NEXT
+        assert switch.status()["kept"]["rearms"] == rearm
+        kept = json.loads((store.directory / "target.json").read_text())
+        assert kept["rearms"] == rearm and "parked" not in kept
+        clock.advance(DEADLINE + 1)
+        asyncio.run(switch.tick())  # failed again with its AP up
+    assert not (store.directory / "target.json").exists()  # taken up twice: forgotten
+    assert switch.status()["kept"]["parked"] is None and switch.status()["bssid"] == PARENT
 
 
 def test_a_kept_try_its_parent_went_down_during_counts_none_and_waits_again(tmp_path):

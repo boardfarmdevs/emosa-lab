@@ -69,6 +69,9 @@ HOLD_BACKOFF, HOLD_BACKOFF_CAP = 600, 9600
 # pod's AP up before it is given up, the wait after a failed one (doubled after each), and how long
 # it waits for that AP at most; seconds of wall time
 KEPT_TRIES, KEPT_BACKOFF, PARENT_WAIT_CAP = 3, 120, 1800
+# such a target given up is parked, not forgotten: tried again (its tries anew) each time its
+# pod's AP is up again, at most this many times (spec 8.3)
+KEPT_REARMS = 3
 PARENT_WAITING = "kept target waiting for its parent"
 OWNERSHIP_HOLD = "the station's configuration was changed by another manager"
 
@@ -94,6 +97,7 @@ class UplinkSwitch:
         kept_tries=KEPT_TRIES,
         kept_backoff=KEPT_BACKOFF,
         parent_wait_cap=PARENT_WAIT_CAP,
+        kept_rearms=KEPT_REARMS,
     ):
         """``credentials()`` -> (ssid, secret_ref) of the EasyMesh backhaul, or None.
 
@@ -108,11 +112,16 @@ class UplinkSwitch:
         self.hold_backoff, self.hold_backoff_cap = hold_backoff, hold_backoff_cap
         self.parent_ap = parent_ap or (lambda bssid: None)
         self.kept_tries_max, self.kept_backoff = kept_tries, kept_backoff
-        self.parent_wait_cap = parent_wait_cap
+        self.parent_wait_cap, self.kept_rearms_max = parent_wait_cap, kept_rearms
         # the kept target's switches that failed with its parent's AP up (kept in target.json),
         # its retry after a failed one ({"target", "station", "mode", "retry_at"}), and its wait
         # for its parent's AP ({"bssid", "since"})
         self.kept_tries, self.kept_retry, self.parent_wait = 0, None, None
+        # spec 8.3, kept in target.json: whether the kept target is a fleet pod's AP (a fleet agent
+        # named it, or it is a GRE parent's), so that no agent saying is no proof it left; the
+        # target given up and parked ({"target", "station", "mode", "armed"}: armed once its
+        # parent's AP was seen not up), and how many times it was taken up again
+        self.kept_fleet, self.parked, self.kept_rearms = False, None, 0
         self.wall = wall or time.time
         self.pod_id, self.backend, self.store = pod_id, backend, store
         self.credentials, self.bssid, self.run_id = credentials, bssid, run_id
@@ -153,12 +162,26 @@ class UplinkSwitch:
         try:
             kept = json.loads(self.target_path.read_text())
             if kept.get("configured") == bssid and kept.get("target"):
-                self.bssid, self.moves = kept["target"], int(kept.get("moves", 1))
-                self.kept_tries = int(kept.get("tries", 0))
-                self.mode = GRE if kept.get("mode") == GRE else MULTI_AP
-                if kept.get("station") in backend.bound:
-                    self.station = kept["station"]
-        except (OSError, ValueError, AttributeError):
+                self.moves = int(kept.get("moves", 1))
+                self.kept_fleet = kept.get("fleet") is True
+                self.kept_rearms = int(kept.get("rearms", 0))
+                mode = GRE if kept.get("mode") == GRE else MULTI_AP
+                station = kept["station"] if kept.get("station") in backend.bound else self.station
+                parked = kept.get("parked")
+                if isinstance(parked, dict):
+                    # given up: the uplink on its configured upstream until the parent's AP is
+                    # up again; an EMOSA restart takes it up no sooner
+                    armed = parked.get("armed") is True
+                    self.parked = {
+                        "target": kept["target"],
+                        "station": station,
+                        "mode": mode,
+                        "armed": armed,
+                    }
+                else:
+                    self.bssid, self.mode, self.station = kept["target"], mode, station
+                    self.kept_tries = int(kept.get("tries", 0))
+        except (OSError, ValueError, AttributeError, TypeError):
             pass
 
     def latest(self):
@@ -336,8 +359,9 @@ class UplinkSwitch:
                 op.application_evidence, op.reason = evidence, None
                 self._save(op, {"observation": self.backend.facts})
                 log.info("uplink on the EasyMesh backhaul: %s", self.backend.facts)
-                if self.kept_tries and op.intent.get("bssid") == self.bssid:
-                    self._kept_reset()  # spec 8.3: the kept target reached
+                reached = op.intent.get("bssid") == self.bssid != self.configured
+                if (self.kept_tries or self.kept_rearms) and reached:
+                    self._kept_reset()  # spec 8.3: the kept target reached (not while parked)
                     self._keep_target()
                 if self._retry() is not None:
                     self.hold_path.unlink(missing_ok=True)
@@ -369,8 +393,8 @@ class UplinkSwitch:
                 self.hold(op, f"switch {op.state.lower()}: {op.reason}")
 
     def _keep_target(self):
-        # a kept target waiting to be tried again is still the one kept
-        retry = self.kept_retry or {}
+        # a kept target waiting to be tried again, or parked, is still the one kept
+        retry = self.kept_retry or self.parked or {}
         target = retry.get("target", self.bssid)
         station, mode = retry.get("station", self.station), retry.get("mode", self.mode)
         if target == self.configured and station == self.configured_station:
@@ -385,6 +409,12 @@ class UplinkSwitch:
             }
             if self.kept_tries:
                 kept["tries"] = self.kept_tries
+            if self.kept_fleet:
+                kept["fleet"] = True
+            if self.kept_rearms:
+                kept["rearms"] = self.kept_rearms
+            if self.parked is not None:
+                kept["parked"] = {"armed": self.parked["armed"]}
             self.target_path.write_text(json.dumps(kept))
 
     def _record_bootstrap(self):
@@ -440,7 +470,8 @@ class UplinkSwitch:
         # spec 8.3: a target on another fleet pod is given up only after ``kept_tries`` switches
         # made with that pod's AP up failed; a switch its AP went down during counts none, and
         # the target waits for it again. Meanwhile the pod is back on its bootstrap as below.
-        up = self.parent_ap(bssid)
+        # Whether it is a fleet pod's is asked again now: its agent may have spoken since the try.
+        up = self._parent_up(bssid, self.mode)
         if up is not None and (not up or self.kept_tries + 1 < self.kept_tries_max):
             if up:
                 self.kept_tries += 1
@@ -456,18 +487,28 @@ class UplinkSwitch:
                 " (%d of %d tries failed)",
                 bssid,
                 reason,
-                "up" if up else "down",
+                "up" if up else "down or not named yet",
                 wait,
                 self.kept_tries,
                 self.kept_tries_max,
             )
-        else:
-            self.kept_tries, self.kept_retry = 0, None
+        elif up is None:  # no fleet agent has ever named it: the one-try rule
+            self._kept_reset()
+            self.kept_fleet = False
             log.warning(
-                "kept backhaul target %s not reached (%s): back to the configured %s",
+                "kept backhaul target %s not reached (%s), no fleet agent names its AP: forgotten,"
+                " back to the configured %s",
                 bssid,
                 reason,
                 self.configured,
+            )
+        else:
+            self._park(
+                bssid,
+                self.station,
+                self.mode,
+                False,  # its AP up all along: taken up again only once it was down
+                f"{reason}; {self.kept_tries + 1} of {self.kept_tries_max} tries failed",
             )
         self.bssid, self.station = self.configured, self.configured_station
         self.mode = MULTI_AP  # the configured upstream's kind (a GRE child's configured is None)
@@ -479,8 +520,96 @@ class UplinkSwitch:
 
     def _kept_reset(self):
         """A new upstream (the controller's move, a kept target applied or given up): no tries
-        counted, no retry or wait for a parent pending."""
+        counted, no retry, wait for a parent, parked target or re-arm pending."""
         self.kept_tries, self.kept_retry, self.parent_wait = 0, None, None
+        self.parked, self.kept_rearms = None, 0
+
+    def _fleet(self, bssid, mode):
+        """Spec 8.3: the kept target ``bssid`` is a fleet pod's AP: a fleet agent names it (in its
+        ap_up), it is a GRE parent of the fleet, or the move onto it is a GRE one. Once known it
+        is remembered (target.json): an agent that has not said yet (its pod and agents starting
+        again together) is no proof that it left."""
+        if not self.kept_fleet and (
+            mode == GRE or bssid in self.parents() or self.parent_ap(bssid) is not None
+        ):
+            self.kept_fleet = True
+        return self.kept_fleet
+
+    def _parent_up(self, bssid, mode):
+        """Whether the kept target's AP is up (``parent_ap``), not saying counted as down for a
+        fleet pod's: True, False, or None for a target no fleet agent has named."""
+        up = self.parent_ap(bssid)
+        return False if up is None and self._fleet(bssid, mode) else up
+
+    def _park(self, bssid, station, mode, armed, why):
+        """Spec 8.3: a fleet pod's kept target given up is parked, not forgotten: the uplink back
+        on its configured upstream, the target kept (target.json) and taken up again with its
+        tries anew once its parent's AP is up after it was not (``armed``: seen not up already),
+        at most ``kept_rearms`` times; then it is forgotten."""
+        rearms = self.kept_rearms
+        self._kept_reset()
+        if rearms >= self.kept_rearms_max:
+            self.kept_fleet = False
+            log.warning(
+                "kept backhaul target %s given up (%s), taken up again %d times already:"
+                " forgotten, back to the configured %s",
+                bssid,
+                why,
+                rearms,
+                self.configured,
+            )
+            return
+        self.kept_rearms = rearms
+        self.parked = {"target": bssid, "station": station, "mode": mode, "armed": armed}
+        log.warning(
+            "kept backhaul target %s given up (%s): parked until its parent's AP is up again"
+            " (taken up again %d of %d times so far), back to the configured %s",
+            bssid,
+            why,
+            rearms,
+            self.kept_rearms_max,
+            self.configured,
+        )
+
+    def _note_fleet(self):
+        """While a target is kept, a fleet agent naming it marks it a fleet pod's (target.json)."""
+        kept = self.kept_retry or self.parked or {}
+        target, mode = kept.get("target", self.bssid), kept.get("mode", self.mode)
+        fresh = target is not None and target != self.configured and not self.kept_fleet
+        if fresh and self._fleet(target, mode):
+            self._keep_target()
+
+    def _parked_again(self):
+        """Spec 8.3: a parked target is taken up again, its tries anew, once its parent's AP is
+        reported up after it was not (an AP up throughout is no reason): a switch of its own,
+        after any undo of the failed one. Each time counts towards ``kept_rearms``."""
+        parked = self.parked
+        if parked is None or self._reenable is not None:
+            return
+        if self.bssid is None and self.fallback_after is not None:
+            return
+        op = self.latest()
+        if op is not None and op.state in ACTIVE:
+            return
+        if self.parent_ap(parked["target"]) is not True:
+            if not parked["armed"]:
+                parked["armed"] = True
+                self._keep_target()
+            return
+        if not parked["armed"]:
+            return
+        self.kept_rearms += 1
+        self.bssid, self.station, self.mode = parked["target"], parked["station"], parked["mode"]
+        self.parked = None
+        self.moves += 1
+        self._keep_target()
+        log.info(
+            "parked kept backhaul target %s: its parent's AP is up again: switching to it (taken"
+            " up again %d of %d times)",
+            self.bssid,
+            self.kept_rearms,
+            self.kept_rearms_max,
+        )
 
     def _kept_again(self):
         """Spec 8.3: a failed kept target's retry is due after its backoff, the stations taken off
@@ -507,9 +636,10 @@ class UplinkSwitch:
         )
 
     def _waits_for_parent(self, intent):
-        """Spec 8.3: a switch to a kept target whose AP another fleet pod has down is not made: it
-        waits for that AP (no deadline running), at most ``parent_wait_cap``; then the target
-        is given up as a failed one is. True while it waits (``self.waiting`` says so)."""
+        """Spec 8.3: a switch to a kept target whose AP another fleet pod has down (or, a fleet
+        pod's, whose AP no fleet agent names yet) is not made: it waits for that AP (no deadline
+        running), at most ``parent_wait_cap``; then the target is parked as a failed one is. True
+        while it waits (``self.waiting`` says so)."""
         bssid = intent.bssid
         move = self.move
         if (
@@ -517,7 +647,7 @@ class UplinkSwitch:
             or bssid is None
             or bssid == self.configured
             or (move is not None and move["result"] is None and move["target"] == bssid)
-            or self.parent_ap(bssid) is not False
+            or self._parent_up(bssid, intent.mode) is not False
         ):
             self.parent_wait = None  # the controller's move, or a parent up or not in the fleet
             return False
@@ -528,13 +658,13 @@ class UplinkSwitch:
         if now - self.parent_wait["since"] < self.parent_wait_cap:
             self.waiting = PARENT_WAITING
             return True
-        log.warning(
-            "kept backhaul target %s: its parent's AP not up in %d s: back to the configured %s",
+        self._park(
             bssid,
-            self.parent_wait_cap,
-            self.configured,
+            intent.station,
+            intent.mode,
+            True,  # not up: taken up again as soon as it is
+            f"its parent's AP not up in {self.parent_wait_cap} s",
         )
-        self._kept_reset()
         self.bssid, self.station = self.configured, self.configured_station
         self.mode = MULTI_AP
         self.moves += 1
@@ -593,6 +723,7 @@ class UplinkSwitch:
             self.mode, self.bssid = BOOTSTRAP, self.configured
             self.moves += 1
             self._kept_reset()
+            self.kept_fleet = False
             self._keep_target()
             log.info("backhaul revert requested: %s -> bootstrap %s", previous, bssid)
             return None
@@ -619,9 +750,11 @@ class UplinkSwitch:
             "result": None,
         }
         self._kept_reset()
+        self.kept_fleet = False
         if (bssid, station, mode) != (previous, previous_station, previous_mode):
             self.bssid, self.station, self.mode = bssid, station, mode
             self.moves += 1
+        self._fleet(bssid, mode)  # a fleet pod's AP, if its agent names it now
         self._keep_target()
         log.info(
             "backhaul move requested: %s (%s) -> %s (%s)",
@@ -946,7 +1079,9 @@ class UplinkSwitch:
         await self._enable_own()
         await self._undo_without_snapshot()
         self._follow_cm(self.latest())
+        self._note_fleet()
         self._kept_again()
+        self._parked_again()
         intent = self._wanted(self.latest(), snap)
         if intent is None:
             return
@@ -984,7 +1119,8 @@ class UplinkSwitch:
             "held": self.held(),
             "waiting": self.waiting,
             # spec 8.3: the kept target's failed tries with its parent's AP up, its retry, and its
-            # wait for that AP (wall-clock seconds)
+            # wait for that AP (wall-clock seconds); whether it is a fleet pod's, and the target
+            # given up and parked until its parent's AP is up again, and how often taken up again
             "kept": {
                 "tries": self.kept_tries,
                 "tries_max": self.kept_tries_max,
@@ -992,6 +1128,10 @@ class UplinkSwitch:
                 "retry_target": (self.kept_retry or {}).get("target"),
                 "waiting_for_parent": (self.parent_wait or {}).get("bssid"),
                 "waiting_since": (self.parent_wait or {}).get("since"),
+                "fleet": self.kept_fleet,
+                "parked": (self.parked or {}).get("target"),
+                "rearms": self.kept_rearms,
+                "rearms_max": self.kept_rearms_max,
             },
             "operation": None
             if op is None

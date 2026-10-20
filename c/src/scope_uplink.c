@@ -547,10 +547,10 @@ static void keep_target(em_uplink_scope *u)
 {
     char path[700];
     target_path(u, path, sizeof(path));
-    /* a kept target waiting to be tried again is still the one kept */
-    const char *to = u->has_kept_retry ? u->retry_target : u->bssid;
-    const char *station = u->has_kept_retry ? u->retry_station : u->wanted;
-    const char *mode = u->has_kept_retry ? u->retry_mode : u->mode;
+    /* a kept target waiting to be tried again, or parked, is still the one kept */
+    const char *to = u->has_kept_retry ? u->retry_target : u->has_parked ? u->parked_target : u->bssid;
+    const char *station = u->has_kept_retry ? u->retry_station : u->has_parked ? u->parked_station : u->wanted;
+    const char *mode = u->has_kept_retry ? u->retry_mode : u->has_parked ? u->parked_mode : u->mode;
     if (!strcmp(to, u->configured) && !strcmp(station, u->configured_station)) {
         unlink(path);
         return;
@@ -563,6 +563,12 @@ static void keep_target(em_uplink_scope *u)
     cJSON_AddNumberToObject(o, "moves", u->moves);
     if (u->kept_tries)
         cJSON_AddNumberToObject(o, "tries", u->kept_tries);
+    if (u->kept_fleet)
+        cJSON_AddTrueToObject(o, "fleet");
+    if (u->kept_rearms)
+        cJSON_AddNumberToObject(o, "rearms", u->kept_rearms);
+    if (u->has_parked)
+        cJSON_AddBoolToObject(cJSON_AddObjectToObject(o, "parked"), "armed", u->parked_armed);
     char *text = em_json_dumps(o, EM_JSON_DEFAULT, false);
     cJSON_Delete(o);
     if (!em_write_file(path, text, true))
@@ -636,17 +642,33 @@ em_reason em_uplink_open(em_uplink_scope *u, const char *state_dir, const em_jou
         uint8_t mac[6];
         /* a file on the disk: a target that is not a MAC is not a target */
         if (configured && !strcmp(configured, u->configured) && to && em_parse_mac(to, mac)) {
-            EM_FORMAT_FIXED(u->bssid, sizeof(u->bssid), "%s", to);
             const char *kept_mode = str(kept, "mode"); /* a move to a GRE parent (spec 8.6) */
-            if (kept_mode && !strcmp(kept_mode, "gre"))
-                EM_FORMAT_FIXED(u->mode, sizeof(u->mode), "gre");
+            const char *mode = kept_mode && !strcmp(kept_mode, "gre") ? "gre" : "multi-ap";
             const cJSON *moves = cJSON_GetObjectItemCaseSensitive(kept, "moves");
             u->moves = cJSON_IsNumber(moves) ? (unsigned)moves->valueint : 1;
-            const cJSON *tries = cJSON_GetObjectItemCaseSensitive(kept, "tries");
-            u->kept_tries = cJSON_IsNumber(tries) && tries->valueint > 0 ? (unsigned)tries->valueint : 0;
+            u->kept_fleet = cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(kept, "fleet"));
+            const cJSON *rearms = cJSON_GetObjectItemCaseSensitive(kept, "rearms");
+            u->kept_rearms = cJSON_IsNumber(rearms) && rearms->valueint > 0 ? (unsigned)rearms->valueint : 0;
             const char *station = str(kept, "station");
-            if (bound(u, station))
-                EM_FORMAT_FIXED(u->wanted, sizeof(u->wanted), "%s", station); /* a bound if_name */
+            const char *on = bound(u, station) ? station : u->wanted; /* a bound if_name */
+            const cJSON *parked = cJSON_GetObjectItemCaseSensitive(kept, "parked");
+            if (cJSON_IsObject(parked)) {
+                /* given up: the uplink on its configured upstream until the parent's AP is up
+                 * again; an EMOSA restart takes it up no sooner */
+                u->has_parked = true;
+                u->parked_armed = cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(parked, "armed"));
+                EM_FORMAT_FIXED(u->parked_target, sizeof(u->parked_target), "%s", to);
+                EM_FORMAT_FIXED(u->parked_station, sizeof(u->parked_station), "%s", on);
+                EM_FORMAT_FIXED(u->parked_mode, sizeof(u->parked_mode), "%s", mode);
+            } else {
+                EM_FORMAT_FIXED(u->bssid, sizeof(u->bssid), "%s", to);
+                EM_FORMAT_FIXED(u->mode, sizeof(u->mode), "%s", mode);
+                const cJSON *tries = cJSON_GetObjectItemCaseSensitive(kept, "tries");
+                u->kept_tries = cJSON_IsNumber(tries) && tries->valueint > 0 ? (unsigned)tries->valueint : 0;
+                char chosen[33];
+                EM_FORMAT_FIXED(chosen, sizeof(chosen), "%s", on);
+                EM_FORMAT_FIXED(u->wanted, sizeof(u->wanted), "%s", chosen);
+            }
         }
         cJSON_Delete(kept);
     }
@@ -842,11 +864,12 @@ static bool move_failed(em_uplink_scope *u, const cJSON *op, const char *reason)
  * pod is off the failed switch, no hold (a switch to the configured upstream holds). Kept, the target held the
  * pod on option 2 for good once its BSS was gone (rdk-1004, 5 Oct 2026). */
 /* a new upstream (the controller's move, a kept target applied or given up): no tries counted,
- * no retry or wait for a parent pending */
+ * no retry, wait for a parent, parked target or re-arm pending */
 static void kept_reset(em_uplink_scope *u)
 {
     u->kept_tries = 0;
-    u->has_kept_retry = u->has_parent_wait = false;
+    u->has_kept_retry = u->has_parent_wait = u->has_parked = false;
+    u->kept_rearms = 0;
 }
 
 static int ap_state(const em_uplink_scope *u, const char *bssid)
@@ -860,6 +883,65 @@ static unsigned kept_tries_max(const em_uplink_scope *u)
     return u->kept_tries_max > 0 ? (unsigned)u->kept_tries_max : EM_UPLINK_KEPT_TRIES;
 }
 
+static unsigned kept_rearms_max(const em_uplink_scope *u)
+{
+    return u->kept_rearms_max > 0 ? (unsigned)u->kept_rearms_max : EM_UPLINK_KEPT_REARMS;
+}
+
+/* UplinkSwitch._fleet (spec 8.3): the kept target bssid is a fleet pod's AP: a fleet agent names it
+ * (in its ap_up), it is a GRE parent of the fleet, or the move onto it is a GRE one. Once known it
+ * is remembered (target.json): an agent that has not said yet (its pod and agents starting again
+ * together) is no proof that it left. */
+static bool fleet_target(em_uplink_scope *u, const char *bssid, const char *mode)
+{
+    uint8_t mac[6];
+    if (!u->kept_fleet && bssid &&
+        ((mode && !strcmp(mode, "gre")) ||
+         (u->is_parent && em_parse_mac(bssid, mac) && u->is_parent(u->is_parent_ctx, mac)) || ap_state(u, bssid) >= 0))
+        u->kept_fleet = true;
+    return u->kept_fleet;
+}
+
+/* UplinkSwitch._parent_up: whether the kept target's AP is up (ap_state), not saying counted as down
+ * for a fleet pod's: 1, 0, or -1 for a target no fleet agent has named */
+static int parent_up(em_uplink_scope *u, const char *bssid, const char *mode)
+{
+    int up = ap_state(u, bssid);
+    return up < 0 && fleet_target(u, bssid, mode) ? 0 : up;
+}
+
+/* UplinkSwitch._park (spec 8.3): a fleet pod's kept target given up is parked, not forgotten: the
+ * uplink back on its configured upstream, the target kept (target.json) and taken up again with its
+ * tries anew once its parent's AP is up after it was not (armed: seen not up already), at most
+ * kept_rearms_max times; then it is forgotten. */
+static void park(em_uplink_scope *u, const char *bssid, const char *station, const char *mode, bool armed,
+                 const char *why)
+{
+    unsigned rearms = u->kept_rearms;
+    char target[18], on[33];
+    const char *kind = mode && !strcmp(mode, "gre") ? "gre" : "multi-ap";
+    /* the intent's, from the journal: one that does not fit is no target to keep */
+    bool fits = em_copy(target, sizeof(target), bssid) && em_copy(on, sizeof(on), station ? station : "");
+    kept_reset(u);
+    if (!fits || rearms >= kept_rearms_max(u)) {
+        u->kept_fleet = false;
+        em_log(EM_LOG_WARNING, "emosa.agent.uplink",
+               "kept backhaul target %s given up (%s), taken up again %u times already: forgotten, back to the configured %s",
+               target, why, rearms, u->configured);
+        return;
+    }
+    u->kept_rearms = rearms;
+    u->has_parked = true;
+    u->parked_armed = armed;
+    EM_FORMAT_FIXED(u->parked_target, sizeof(u->parked_target), "%s", target);
+    EM_FORMAT_FIXED(u->parked_station, sizeof(u->parked_station), "%s", on);
+    EM_FORMAT_FIXED(u->parked_mode, sizeof(u->parked_mode), "%s", kind);
+    em_log(EM_LOG_WARNING, "emosa.agent.uplink",
+           "kept backhaul target %s given up (%s): parked until its parent's AP is up again (taken up again %u of %u "
+           "times so far), back to the configured %s",
+           target, why, rearms, kept_rearms_max(u), u->configured);
+}
+
 static bool kept_failed(em_uplink_scope *u, const cJSON *op, const char *reason)
 {
     const char *bssid = str(cJSON_GetObjectItemCaseSensitive(op, "intent"), "bssid");
@@ -867,8 +949,9 @@ static bool kept_failed(em_uplink_scope *u, const cJSON *op, const char *reason)
         return false;
     /* spec 8.3: a target on another fleet pod is given up only after kept_tries_max switches made
      * with that pod's AP up failed; a switch its AP went down during counts none, and the target
-     * waits for it again. Meanwhile the pod is back on its bootstrap as below. */
-    int up = ap_state(u, bssid);
+     * waits for it again. Meanwhile the pod is back on its bootstrap as below. Whether it is a fleet
+     * pod's is asked again now: its agent may have spoken since the try. */
+    int up = parent_up(u, bssid, u->mode);
     if (up >= 0 && (!up || u->kept_tries + 1 < kept_tries_max(u))) {
         if (up)
             u->kept_tries++;
@@ -881,12 +964,17 @@ static bool kept_failed(em_uplink_scope *u, const cJSON *op, const char *reason)
         u->retry_at = wall(u) + wait;
         em_log(EM_LOG_WARNING, "emosa.agent.uplink",
                "kept backhaul target %s not reached (%s), its parent's AP %s: tried again in %d s (%u of %u tries failed)",
-               bssid, reason, up ? "up" : "down", (int)wait, u->kept_tries, kept_tries_max(u));
-    } else {
-        u->kept_tries = 0;
-        u->has_kept_retry = false;
-        em_log(EM_LOG_WARNING, "emosa.agent.uplink", "kept backhaul target %s not reached (%s): back to the configured %s",
+               bssid, reason, up ? "up" : "down or not named yet", (int)wait, u->kept_tries, kept_tries_max(u));
+    } else if (up < 0) { /* no fleet agent has ever named it: the one-try rule */
+        kept_reset(u);
+        u->kept_fleet = false;
+        em_log(EM_LOG_WARNING, "emosa.agent.uplink",
+               "kept backhaul target %s not reached (%s), no fleet agent names its AP: forgotten, back to the configured %s",
                bssid, reason, u->configured);
+    } else {
+        char why[200];
+        (void)em_format(why, sizeof(why), "%s; %u of %u tries failed", reason, u->kept_tries + 1, kept_tries_max(u));
+        park(u, bssid, u->wanted, u->mode, false, why); /* its AP up all along: taken up again only once it was down */
     }
     EM_FORMAT_FIXED(u->bssid, sizeof(u->bssid), "%s", u->configured);
     EM_FORMAT_FIXED(u->wanted, sizeof(u->wanted), "%s", u->configured_station);
@@ -1034,8 +1122,8 @@ static void settle(em_uplink_scope *u, cJSON *op, const em_snapshot *snap, bool 
             em_log(EM_LOG_INFO, "emosa.agent.uplink", "uplink on the EasyMesh backhaul: %s parent %s", u->facts.kind,
                     u->facts.parent);
             const char *to = str(cJSON_GetObjectItemCaseSensitive(op, "intent"), "bssid");
-            if (u->kept_tries && to && !strcmp(to, u->bssid)) {
-                kept_reset(u); /* spec 8.3: the kept target reached */
+            if ((u->kept_tries || u->kept_rearms) && to && !strcmp(to, u->bssid) && strcmp(to, u->configured)) {
+                kept_reset(u); /* spec 8.3: the kept target reached (not while parked) */
                 keep_target(u);
             }
             if (retry_attempt(u)) {
@@ -1271,15 +1359,59 @@ static void kept_again(em_uplink_scope *u)
            u->bssid, u->kept_tries, kept_tries_max(u));
 }
 
-/* spec 8.3: a switch to a kept target whose AP another fleet pod has down is not made: it waits for
- * that AP (no deadline running), at most parent_wait_cap; then the target is given up as a failed
- * one is. True while it waits (the waiting text says so). */
+/* UplinkSwitch._note_fleet: while a target is kept, a fleet agent naming it marks it a fleet pod's
+ * (target.json) */
+static void note_fleet(em_uplink_scope *u)
+{
+    const char *target = u->has_kept_retry ? u->retry_target : u->has_parked ? u->parked_target : u->bssid;
+    const char *mode = u->has_kept_retry ? u->retry_mode : u->has_parked ? u->parked_mode : u->mode;
+    if (target[0] && strcmp(target, u->configured) && !u->kept_fleet && fleet_target(u, target, mode))
+        keep_target(u);
+}
+
+/* UplinkSwitch._parked_again (spec 8.3): a parked target is taken up again, its tries anew, once its
+ * parent's AP is reported up after it was not (an AP up throughout is no reason): a switch of its
+ * own, after any undo of the failed one. Each time counts towards kept_rearms_max. */
+static void parked_again(em_uplink_scope *u)
+{
+    if (!u->has_parked || u->nreenable || (!u->bssid[0] && u->fallback_after))
+        return;
+    cJSON *op = em_journal_latest(u->journal);
+    bool active = op && em_state_active(em_state_of(op));
+    cJSON_Delete(op);
+    if (active)
+        return;
+    if (ap_state(u, u->parked_target) != 1) {
+        if (!u->parked_armed) {
+            u->parked_armed = true;
+            keep_target(u);
+        }
+        return;
+    }
+    if (!u->parked_armed)
+        return;
+    u->kept_rearms++;
+    EM_FORMAT_FIXED(u->bssid, sizeof(u->bssid), "%s", u->parked_target);
+    EM_FORMAT_FIXED(u->wanted, sizeof(u->wanted), "%s", u->parked_station);
+    EM_FORMAT_FIXED(u->mode, sizeof(u->mode), "%s", u->parked_mode);
+    u->has_parked = false;
+    u->moves++;
+    keep_target(u);
+    em_log(EM_LOG_INFO, "emosa.agent.uplink",
+           "parked kept backhaul target %s: its parent's AP is up again: switching to it (taken up again %u of %u times)",
+           u->bssid, u->kept_rearms, kept_rearms_max(u));
+}
+
+/* spec 8.3: a switch to a kept target whose AP another fleet pod has down (or, a fleet pod's, whose
+ * AP no fleet agent names yet) is not made: it waits for that AP (no deadline running), at most
+ * parent_wait_cap; then the target is parked as a failed one is. True while it waits (the waiting
+ * text says so). */
 static bool waits_for_parent(em_uplink_scope *u, const cJSON *intent)
 {
     const char *bssid = str(intent, "bssid"), *imode = str(intent, "mode");
     bool moving = u->has_move && !u->move.done && bssid && !strcmp(u->move.target, bssid);
     if ((imode && !strcmp(imode, "bootstrap")) || !bssid || !bssid[0] || !strcmp(bssid, u->configured) || moving ||
-        ap_state(u, bssid) != 0) {
+        parent_up(u, bssid, imode) != 0) {
         u->has_parent_wait = false; /* the controller's move, or a parent up or not in the fleet */
         return false;
     }
@@ -1294,9 +1426,9 @@ static bool waits_for_parent(em_uplink_scope *u, const cJSON *intent)
         wait_for(u, EM_UPLINK_PARENT_WAITING);
         return true;
     }
-    em_log(EM_LOG_WARNING, "emosa.agent.uplink", "kept backhaul target %s: its parent's AP not up in %d s: back to the configured %s",
-           bssid, (int)cap, u->configured);
-    kept_reset(u);
+    char why[64];
+    EM_FORMAT_FIXED(why, sizeof(why), "its parent's AP not up in %d s", (int)cap);
+    park(u, bssid, str(intent, "station"), imode, true, why); /* not up: taken up again as soon as it is */
     EM_FORMAT_FIXED(u->bssid, sizeof(u->bssid), "%s", u->configured);
     EM_FORMAT_FIXED(u->wanted, sizeof(u->wanted), "%s", u->configured_station);
     EM_FORMAT_FIXED(u->mode, sizeof(u->mode), "multi-ap");
@@ -1705,7 +1837,9 @@ void em_uplink_tick(em_uplink_scope *u)
     enable_own(u);
     undo_without_snapshot(u);
     follow_cm(u);
+    note_fleet(u);
     kept_again(u);
+    parked_again(u);
     op = em_journal_latest(u->journal);
     cJSON *intent = wanted(u, op, &snap);
     cJSON_Delete(op);
@@ -1833,6 +1967,7 @@ const char *em_uplink_steer(em_uplink_scope *u, const char *bssid, const char *b
         EM_FORMAT_FIXED(u->bssid, sizeof(u->bssid), "%s", u->configured);
         u->moves++;
         kept_reset(u);
+        u->kept_fleet = false;
         keep_target(u);
         em_log(EM_LOG_INFO, "emosa.agent.uplink", "backhaul revert requested: %s -> bootstrap %s",
                u->move.previous, target_bssid);
@@ -1867,12 +2002,14 @@ const char *em_uplink_steer(em_uplink_scope *u, const char *bssid, const char *b
     EM_FORMAT_FIXED(u->move.mode, sizeof(u->move.mode), "%s", mode);
     EM_FORMAT_FIXED(u->move.previous_mode, sizeof(u->move.previous_mode), "%s", u->mode);
     kept_reset(u);
+    u->kept_fleet = false;
     if (strcmp(target_bssid, u->bssid) || strcmp(chosen, u->wanted) || strcmp(mode, u->mode)) {
         EM_FORMAT_FIXED(u->bssid, sizeof(u->bssid), "%s", target_bssid);
         EM_FORMAT_FIXED(u->wanted, sizeof(u->wanted), "%s", chosen);
         EM_FORMAT_FIXED(u->mode, sizeof(u->mode), "%s", mode);
         u->moves++;
     }
+    (void)fleet_target(u, target_bssid, mode); /* a fleet pod's AP, if its agent names it now */
     keep_target(u);
     em_log(EM_LOG_INFO, "emosa.agent.uplink", "backhaul move requested: %s (%s) -> %s (%s)", u->move.previous,
            u->move.previous_station, target_bssid, chosen);
@@ -1945,7 +2082,8 @@ cJSON *em_uplink_status(em_uplink_scope *u)
     cJSON_AddItemToObject(o, "held", owned ? owned : cJSON_CreateNull());
     cJSON_AddItemToObject(o, "waiting", u->has_waiting ? cJSON_CreateString(u->waiting) : cJSON_CreateNull());
     /* spec 8.3: the kept target's failed tries with its parent's AP up, its retry, and its wait for
-     * that AP (wall-clock seconds) */
+     * that AP (wall-clock seconds); whether it is a fleet pod's, and the target given up and parked
+     * until its parent's AP is up again, and how often taken up again */
     cJSON *kept = cJSON_AddObjectToObject(o, "kept");
     cJSON_AddNumberToObject(kept, "tries", u->kept_tries);
     cJSON_AddNumberToObject(kept, "tries_max", kept_tries_max(u));
@@ -1953,6 +2091,10 @@ cJSON *em_uplink_status(em_uplink_scope *u)
     cJSON_AddItemToObject(kept, "retry_target", u->has_kept_retry ? cJSON_CreateString(u->retry_target) : cJSON_CreateNull());
     cJSON_AddItemToObject(kept, "waiting_for_parent", u->has_parent_wait ? cJSON_CreateString(u->wait_bssid) : cJSON_CreateNull());
     cJSON_AddItemToObject(kept, "waiting_since", u->has_parent_wait ? cJSON_CreateNumber(u->wait_since) : cJSON_CreateNull());
+    cJSON_AddBoolToObject(kept, "fleet", u->kept_fleet);
+    cJSON_AddItemToObject(kept, "parked", u->has_parked ? cJSON_CreateString(u->parked_target) : cJSON_CreateNull());
+    cJSON_AddNumberToObject(kept, "rearms", u->kept_rearms);
+    cJSON_AddNumberToObject(kept, "rearms_max", kept_rearms_max(u));
     cJSON *op = em_journal_latest(u->journal);
     if (op) {
         cJSON *x = cJSON_AddObjectToObject(o, "operation");

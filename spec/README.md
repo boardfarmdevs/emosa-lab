@@ -1376,11 +1376,23 @@ The agent makes the switch itself when its configuration has
   reason to switch. Once it is up, the switch is made with its deadline. A switch made with the
   AP up that is not applied is undone as above (the pod on its bootstrap meanwhile, no switch to
   the configured upstream) and made again after `kept_backoff` (2 minutes, doubled after each);
-  the target is dropped only after `kept_tries` (3) such failures. A switch the AP went down
+  the target is given up only after `kept_tries` (3) such failures. A switch the AP went down
   during counts none, and the target waits again. The wait is bounded by `parent_wait_cap`
-  (30 minutes); a target no fleet agent speaks for (its pod gone from the fleet, or an agent
-  without `ap_up`) keeps the rule above: one switch, dropped when it fails. A new move of the
-  controller's, or the kept target applied, clears the tries. Both agents.
+  (30 minutes). A kept target is a fleet pod's once a fleet agent has named its AP in `ap_up`
+  (when kept, while kept, or when a switch to it fails), or it is a GRE parent's, or the move
+  onto it is a GRE one; `target.json` remembers it (`fleet`). No agent naming such a target's AP
+  is no proof it left (19 October: on a gateway reboot every agent starts again at once, and a
+  parent whose `aps.json` was not written yet, re-seeding, named its AP only after its M2): it
+  counts as the AP down, so the switch waits and a failed one counts none. Only a target no fleet
+  agent has ever named keeps the rule above: one switch, forgotten when it fails. A fleet pod's
+  target given up (its tries used, or the wait capped) is parked, not forgotten: the uplink back
+  on its configured upstream, `target.json` keeping the target, and it is taken up again, its
+  tries anew, once its parent's AP is reported up after it was not (an AP up throughout is no
+  reason), at most `kept_rearms` (3) times; then it is forgotten. The parked state and the count
+  are kept across EMOSA's restarts, which take a parked target up no sooner. Each give-up's log
+  says which case it was (no fleet agent names it, its tries failed, its parent not back) and
+  whether the target is parked or forgotten. A new move of the controller's, or the kept target
+  applied, clears the tries and the count. Both agents.
 - **A GRE move onto another station: make-before-break.** A GRE move's switch (§8.6) writes only
   its own station; `cm` keeps a working uplink in use and moves among equal ones only at its
   periodic pass (two minutes on the Pis' `cm2`, 17 October), so with the old station still up the

@@ -318,12 +318,12 @@ def test_a_gre_childs_move_is_reapplied_after_its_pod_restarts(agent, tmp_path):
     assert result["passed"], result
 
 
-def test_a_gre_childs_kept_parent_gone_is_dropped_without_a_hold(agent, tmp_path):
+def test_a_gre_childs_kept_parent_no_agent_names_waits_then_is_parked(agent, tmp_path):
     result = box("gre-child-kept-gone", agent, tmp_path / "box", timeout=420)
     assert result["passed"], result
 
 
-def test_a_gre_child_left_up_after_its_kept_parent_failed_is_undone(agent, tmp_path):
+def test_a_gre_child_left_up_whose_kept_parent_no_agent_names_is_parked(agent, tmp_path):
     result = box("gre-child-kept-gone-up", agent, tmp_path / "box", timeout=420)
     assert result["passed"], result
 
@@ -343,13 +343,29 @@ def test_a_gre_childs_kept_target_waits_for_its_rebooting_parents_ap(agent, tmp_
     assert result["passed"], result
 
 
-def test_a_gre_childs_kept_parent_not_back_is_given_up_at_the_cap(agent, tmp_path):
+def test_a_gre_childs_kept_parent_not_back_is_parked_at_the_cap(agent, tmp_path):
     result = box("gre-child-kept-parent-never-back", agent, tmp_path / "box", timeout=300)
     assert result["passed"], result
 
 
-def test_a_gre_childs_kept_parent_up_not_joined_is_tried_again_then_given_up(agent, tmp_path):
+def test_a_gre_childs_kept_parent_up_not_joined_is_tried_again_then_parked(agent, tmp_path):
     result = box("gre-child-kept-parent-up-not-joined", agent, tmp_path / "box", timeout=600)
+    assert result["passed"], result
+
+
+def test_a_fleet_kept_target_waits_through_a_fleet_restart_until_named_up(agent, tmp_path):
+    # spec 8.3 (a gateway reboot, 19 October): no agent naming a fleet pod's AP is no proof it left
+    result = box("kept-target-fleet-restart", agent, tmp_path / "box", timeout=480)
+    assert result["passed"], result
+
+
+def test_an_unmarked_kept_target_named_by_its_failure_counts_none_and_waits(agent, tmp_path):
+    result = box("kept-target-unmarked-named-late", agent, tmp_path / "box", timeout=480)
+    assert result["passed"], result
+
+
+def test_a_parked_kept_target_is_taken_up_again_once_its_ap_is_back(agent, tmp_path):
+    result = box("kept-target-parked-rearmed", agent, tmp_path / "box", timeout=480)
     assert result["passed"], result
 
 

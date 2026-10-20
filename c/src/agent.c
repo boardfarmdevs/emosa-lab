@@ -2966,9 +2966,11 @@ static bool configure(agent *a, const char *path, const char *profiles)
         const cJSON *tries = cJSON_GetObjectItemCaseSensitive(uplink, "kept_tries");
         const cJSON *kept_backoff = cJSON_GetObjectItemCaseSensitive(uplink, "kept_backoff");
         const cJSON *wait_cap = cJSON_GetObjectItemCaseSensitive(uplink, "parent_wait_cap");
+        const cJSON *rearms = cJSON_GetObjectItemCaseSensitive(uplink, "kept_rearms");
         a->uplink.kept_tries_max = cJSON_IsNumber(tries) ? tries->valuedouble : 0;
         a->uplink.kept_backoff = cJSON_IsNumber(kept_backoff) ? kept_backoff->valuedouble : 0;
         a->uplink.parent_wait_cap = cJSON_IsNumber(wait_cap) ? wait_cap->valuedouble : 0;
+        a->uplink.kept_rearms_max = cJSON_IsNumber(rearms) ? rearms->valuedouble : 0;
         const char *bssid = cfg_str(uplink, "bssid");
         uint8_t mac[6];
         if (!a->uplink.station) {

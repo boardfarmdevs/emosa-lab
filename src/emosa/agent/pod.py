@@ -57,6 +57,7 @@ from emosa.agent.uplink import (
     HOLD_BACKOFF,
     HOLD_BACKOFF_CAP,
     KEPT_BACKOFF,
+    KEPT_REARMS,
     KEPT_TRIES,
     PARENT_WAIT_CAP,
     UplinkSwitch,
@@ -1027,6 +1028,7 @@ async def serve(config, stop):
             kept_tries=uplink_config.get("kept_tries", KEPT_TRIES),
             kept_backoff=uplink_config.get("kept_backoff", KEPT_BACKOFF),
             parent_wait_cap=uplink_config.get("parent_wait_cap", PARENT_WAIT_CAP),
+            kept_rearms=uplink_config.get("kept_rearms", KEPT_REARMS),
         )
     wired = None
     if uplink_config["mode"] == WIRED:  # a wired pod: its uplink port into br-home (spec §8.4)
