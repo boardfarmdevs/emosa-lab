@@ -1121,6 +1121,17 @@ static void uplink_vectors(const char *dir)
         if (!cJSON_Compare(got, cJSON_GetObjectItemCaseSensitive(expected, "uplink"), 1))
             fail("uplink", name, "uplink state differs");
         cJSON_Delete(got);
+        /* cm's uplink in use and whether it is an Ethernet port, by the interface (27 October) */
+        em_uplink_in_use used;
+        em_uplink_in_use_of(tables, &used);
+        got = em_uplink_in_use_json(&used);
+        checks++;
+        if (!cJSON_Compare(got, cJSON_GetObjectItemCaseSensitive(expected, "uplink_in_use"), 1))
+            fail("uplink", name, "uplink in use differs");
+        cJSON_Delete(got);
+        checks++;
+        if (em_uplink_wired(tables) != cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(expected, "wired")))
+            fail("uplink", name, "wired differs");
         em_device_view *view = malloc(sizeof(*view));
         em_backhaul link;
         const cJSON *want = cJSON_GetObjectItemCaseSensitive(expected, "backhaul");

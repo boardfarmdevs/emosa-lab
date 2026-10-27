@@ -66,7 +66,11 @@ MONITOR = {
     "Wifi_VIF_State": ["wds", "parent", "bridge"],
     "Wifi_Credential_Config": ["ssid", "security", "onboard_type", "priority", "enabled", "bssid"],
     "Connection_Manager_Uplink": ["if_name", "if_type", "is_used", "has_L2", "has_L3"],
+    # what the uplink in use is (gre_over): its own Inet rows, whatever cm typed it
+    "Wifi_Inet_Config": ["if_name", "if_type", "gre_ifname"],
+    "Wifi_Inet_State": ["if_name", "if_type", "gre_ifname"],
 }
+INET_TABLES = ("Wifi_Inet_State", "Wifi_Inet_Config")
 
 
 @dataclass(frozen=True)
@@ -281,23 +285,87 @@ def credential_key(row):
     return security.get("key") if security.get("encryption") == "WPA-PSK" else None
 
 
+def station_names(decoded):
+    """The pod's stations: every ``mode=sta`` row of ``Wifi_VIF_State``, by name."""
+    return {
+        r.get("if_name")
+        for r in decoded.get("Wifi_VIF_State", {}).values()
+        if r.get("mode") == "sta" and r.get("if_name")
+    }
+
+
+def gre_over(decoded, if_name):
+    """The station the GRE interface ``if_name`` runs over, or None (spec 8.6).
+
+    cm types the uplink rows it makes from the platform's interfaces (2.x's cm2 copies
+    ``Wifi_Master_State.if_type``), and a legacy pod's platform may type its gretap ``eth``
+    (27 October). So the interface's own Inet rows decide: one that names a station as its
+    ``gre_ifname``, whatever its ``if_type``. Failing those, cm's name for a station's own
+    gretap, ``g-<station>``.
+    """
+    if not if_name:
+        return None
+    stations = station_names(decoded)
+    for table in INET_TABLES:
+        for r in decoded.get(table, {}).values():
+            if r.get("if_name") == if_name and r.get("gre_ifname") in stations:
+                return r.get("gre_ifname")
+    if if_name.startswith("g-") and if_name[2:] in stations:
+        return if_name[2:]
+    return None
+
+
+def uplink_in_use(decoded):
+    """cm's uplink in use, from its one ``is_used`` row: its ``if_name`` and ``if_type`` as cm has
+    them, the station a GRE runs over (gre_over), and its Inet rows' ``if_type``s (State first);
+    every value None when no single row is in use."""
+    used = [
+        r for r in decoded.get("Connection_Manager_Uplink", {}).values() if r.get("is_used") is True
+    ]
+    name = used[0].get("if_name") if len(used) == 1 else None
+    inet = [
+        r.get("if_type")
+        for table in INET_TABLES
+        for r in decoded.get(table, {}).values()
+        if name and r.get("if_name") == name
+    ]
+    return {
+        "if_name": name,
+        "if_type": used[0].get("if_type") if len(used) == 1 else None,
+        "over": gre_over(decoded, name),
+        "inet_types": sorted({t for t in inet if t}),
+    }
+
+
+def uplink_wired(decoded):
+    """The pod's uplink is an Ethernet port (spec 8.4): cm's one uplink in use typed ``eth``,
+    neither a station nor a GRE over one, and the port's own Inet row typed ``eth`` too. When in
+    doubt not wired (27 October): a pod whose GRE over Wi-Fi cm types ``eth`` is never taken for a
+    wired one, and what EMOSA does only on a wired pod (the radio plan's profile channel, its
+    deletion of stations off the GTP) stays undone."""
+    used = uplink_in_use(decoded)
+    return (
+        used["if_type"] == "eth"
+        and used["over"] is None
+        and used["if_name"] not in station_names(decoded)
+        and "eth" in used["inet_types"]
+    )
+
+
 def uplink_state(decoded, station):
     """How the pod reaches its gateway, from ``cm``'s and ``owm``'s State.
 
     ``kind`` is ``multi-ap`` only when ``station`` is a connected Multi-AP
     backhaul STA (4-address) and ``cm`` uses it, and nothing else, as its uplink;
-    otherwise the ``if_type`` of the uplink ``cm`` uses (``gre``, ``eth``), or None,
-    and None when that uplink is another station's own gretap (cm names it
-    ``g-<station>``): with two stations up, one's GRE uplink is not the other's.
+    ``gre`` when cm uses a GRE over ``station`` (gre_over: by its Inet rows or cm's
+    ``g-<station>``, whatever cm typed it); None when that GRE runs over another
+    station: with two stations up, one's GRE uplink is not the other's; otherwise
+    the ``if_type`` of the uplink ``cm`` uses (``gre``, ``eth``), or None. ``over``
+    is the station the GRE in use runs over.
     """
     used = [
         r for r in decoded.get("Connection_Manager_Uplink", {}).values() if r.get("is_used") is True
     ]
-    stations = {
-        r.get("if_name")
-        for r in decoded.get("Wifi_VIF_State", {}).values()
-        if r.get("mode") == "sta" and r.get("if_name")
-    }
     states = [
         r
         for r in decoded.get("Wifi_VIF_State", {}).values()
@@ -310,16 +378,17 @@ def uplink_state(decoded, station):
         and state.get("wds") is True
     )
     in_use = used[0].get("if_name") if len(used) == 1 else None
-    others = {f"g-{name}" for name in stations if name != station}
+    over = gre_over(decoded, in_use)
     if wds_sta and in_use == station:
         kind = MULTI_AP
-    elif in_use in others:
-        kind = None  # cm uses another station's own gretap
+    elif over is not None:
+        kind = GRE if over == station else None  # None: cm uses another station's GRE
     else:
         kind = used[0].get("if_type") if len(used) == 1 else None
     return {
         "kind": kind,
         "in_use": in_use,
+        "over": over,
         "station": station,
         "ssid": state.get("ssid") or None,
         "parent": lower_mac(state.get("parent")),

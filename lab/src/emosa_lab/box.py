@@ -536,8 +536,17 @@ class Box:
         previous=False,
         start_refused=False,
         node_config_full=False,
+        gretap_eth=False,
+        moved_station=False,
     ):
         self.agent, self.directory, self.binary = agent, directory, binary
+        # moved_station (legacy): wl1 as a GRE child's station after its move, on the fleet's
+        # backhaul SSID and the parent's AP (moved_station())
+        self.moved_station = moved_station
+        # gretap_eth (legacy): the pod's GRE over wl1 as a 2.x platform may present it (27 October):
+        # cm's uplink row g-wl1 typed eth (cm2 copies Wifi_Master_State's type), its Inet Config
+        # row typed gre with gre_ifname wl1 (as cm2 writes it), its Inet State typed eth
+        self.gretap_eth = gretap_eth
         # previous: the pod configured by the previous release's agent (previous_release()), on
         # its own bundled profiles and schemas, until upgraded() starts this one on its state
         self.previous = previous
@@ -733,6 +742,10 @@ class Box:
                         }
                     ]
                 )
+            if self.gretap_eth:
+                await session.transact(gretap_eth())
+            if self.moved_station:
+                await session.transact(moved_station())
             if self.ethernet_first:
                 await session.transact(ethernet_first(self.ethernet_first))
             if self.pi_shaped:
@@ -7299,6 +7312,116 @@ async def legacy_gre_move(box):
     )
 
 
+# what the status names as cm's uplink in use on the gretap_eth pod (27 October)
+GRETAP_ETH_IN_USE = {
+    "if_name": "g-wl1",
+    "if_type": "eth",
+    "over": "wl1",
+    "inet_types": ["eth", "gre"],
+}
+
+
+def in_use_status(box):
+    return ((box.status() or {}).get("pod") or {}).get("uplink_in_use")
+
+
+async def legacy_backhaul_view(box):
+    """spec 3.10, 8.6: a legacy pod on its GRE over wl1 as a 2.x platform may present it
+    (gretap_eth: cm's g-wl1 typed eth, its Inet Config row a gre over wl1). The agent reports wl1
+    as the pod's Wi-Fi backhaul: the status's pod.backhaul (wl1 on the GTP's BSS), and the
+    Topology Response's Device Information naming wl1's parent. The status names the uplink in
+    use (g-wl1, typed eth, over wl1), and the radio plan does not take the pod for wired."""
+    state = await onboarded(box)
+    if not state.get("applied"):
+        return box.result(passed=False, failed=state.get("failed", "not applied"))
+    backhaul = await box.until(
+        lambda: ((box.status() or {}).get("pod") or {}).get("backhaul"), seconds=20
+    )
+    topology = await box.ask(TOPOLOGY_QUERY, (Tlv(0xB3, b"\x01"),), TOPOLOGY_RESPONSE)
+    parent = station_parent(topology)
+    in_use = in_use_status(box)
+    wired = ((box.status() or {}).get("radio_plan") or {}).get("wired")
+    return box.result(
+        passed=(backhaul or {}).get("station") == "wl1"
+        and (backhaul or {}).get("parent") == GTP_BSSID
+        and parent == GTP_BSSID
+        and in_use == GRETAP_ETH_IN_USE
+        and wired is False,
+        backhaul=backhaul,
+        topology_parent=parent,
+        uplink_in_use=in_use,
+        wired=wired,
+    )
+
+
+def moved_station():
+    """wl1 as a legacy GRE child's station after its move (legacy-gre-move): in credential-list
+    mode, its one credential on the fleet's backhaul SSID (onboard_type gre), its parent the
+    fleet GRE parent's AP, associated there; one transaction."""
+    return [
+        {
+            "op": "insert",
+            "table": "Wifi_Credential_Config",
+            "uuid-name": "bh",
+            "row": {
+                "ssid": "emosa-lab-bh",
+                "onboard_type": "gre",
+                "security": ["map", [["encryption", "WPA-PSK"], ["key", REGISTRAR_BACKHAUL_KEY]]],
+            },
+        },
+        {
+            "op": "update",
+            "table": "Wifi_VIF_Config",
+            "where": [["if_name", "==", "wl1"]],
+            "row": {
+                "ssid": "",
+                "credential_configs": ["set", [["named-uuid", "bh"]]],
+                "parent": GRE_PARENT_AP,
+            },
+        },
+        {
+            "op": "update",
+            "table": "Wifi_VIF_State",
+            "where": [["if_name", "==", "wl1"]],
+            "row": {"ssid": "emosa-lab-bh", "parent": GRE_PARENT_AP},
+        },
+    ]
+
+
+async def legacy_radio_plan_wifi(box):
+    """spec 3.10: the radio plan on a legacy pod on Wi-Fi, a GRE child after its move
+    (moved_station: wl1 on the fleet's backhaul SSID, on the parent's AP) under the GRE a 2.x
+    platform types eth (gretap_eth), the site's GTP configured. The pod is not wired: the plan
+    deletes no station (only a wired pod's stations off the GTP's SSID go), so wl1 and its
+    credential stay, and the status shows wired false, no foreign station and the uplink in use
+    as the GRE over wl1."""
+    first = await radio_plan_applied(box)
+    if not first:
+        return box.result(
+            passed=False, failed="no radio plan", radio_plan=(box.status() or {}).get("radio_plan")
+        )
+    await asyncio.sleep(3)  # anything the plan's write took is gone from the rows by now
+    _, station = await box.vif("Wifi_VIF_Config", "wl1")
+    credentials = await box.rows("Wifi_Credential_Config")
+    linked = [
+        credentials[u] for u in uuids((station or {}).get("credential_configs")) if u in credentials
+    ]
+    plan = (box.status() or {}).get("radio_plan") or {}
+    in_use = in_use_status(box)
+    return box.result(
+        passed=station is not None
+        and [c.get("ssid") for c in linked] == ["emosa-lab-bh"]
+        and plan.get("wired") is False
+        and not plan.get("foreign_stations")
+        and in_use == GRETAP_ETH_IN_USE,
+        station={k: (station or {}).get(k) for k in ("ssid", "parent", "enabled")},
+        credentials=[c.get("ssid") for c in linked],
+        wired=plan.get("wired"),
+        foreign_stations=plan.get("foreign_stations"),
+        uplink_in_use=in_use,
+    )
+
+
 GTP_BSSID = "02:00:00:00:1b:02"  # the legacy fixture's station parent: the GTP's BSS
 GTP_SSID, GTP_KEY = "emosa-lab-gtp", "OnlySimulationGtp2026!"
 
@@ -7531,6 +7654,38 @@ def operator_aps():
     return operations
 
 
+def gretap_eth():
+    """The legacy pod's GRE over wl1 as a 2.x platform may present it (27 October), one transaction:
+    cm's uplink row g-wl1 (when there is one) typed eth, as cm2 copies Wifi_Master_State's type
+    from the platform; g-wl1's Inet Config row typed gre with gre_ifname wl1, as cm2 writes it;
+    its Inet State row typed eth, as the platform reports the gretap."""
+    return [
+        {
+            "op": "update",
+            "table": "Connection_Manager_Uplink",
+            "where": [["if_name", "==", "g-wl1"]],
+            "row": {"if_type": "eth"},
+        },
+        {
+            "op": "insert",
+            "table": "Wifi_Inet_Config",
+            "row": {
+                "if_name": "g-wl1",
+                "if_type": "gre",
+                "gre_ifname": "wl1",
+                "enabled": True,
+                "network": True,
+                "ip_assign_scheme": "none",
+            },
+        },
+        {
+            "op": "insert",
+            "table": "Wifi_Inet_State",
+            "row": {"if_name": "g-wl1", "if_type": "eth", "enabled": True, "network": True},
+        },
+    ]
+
+
 def ethernet_first(kind):
     """The legacy pod as the first one was admitted on the router (13 October), one transaction:
     cm on eth0 and no GRE (2.x cm builds none while the Ethernet link is used), and OpenSync's
@@ -7553,6 +7708,19 @@ def ethernet_first(kind):
                 "is_used": True,
                 "has_L2": True,
                 "has_L3": True,
+            },
+        },
+        # the port's own Inet row, as a wired 2.4.3 pod has it (13 October's rows): what tells
+        # an Ethernet port from a GRE cm typed eth (27 October)
+        {
+            "op": "insert",
+            "table": "Wifi_Inet_Config",
+            "row": {
+                "if_name": "eth0",
+                "if_type": "eth",
+                "enabled": True,
+                "network": True,
+                "ip_assign_scheme": "none",
             },
         },
     ]
@@ -7698,7 +7866,8 @@ async def lose_ethernet(box):
                 "table": "Connection_Manager_Uplink",
                 "row": {
                     "if_name": "g-wl1",
-                    "if_type": "gre",
+                    # gretap_eth: typed as a 2.x platform may (27 October), its Inet rows in place
+                    "if_type": "eth" if box.gretap_eth else "gre",
                     "is_used": True,
                     "has_L2": True,
                     "has_L3": True,
@@ -9755,9 +9924,13 @@ SCENARIOS = {
     "legacy-wired": legacy_wired,
     "legacy-wired-half-pair": legacy_wired_half_pair,
     "legacy-gre-move": legacy_gre_move,
+    "legacy-gre-move-gretap-eth": legacy_gre_move,
+    "legacy-backhaul-view": legacy_backhaul_view,
+    "legacy-radio-plan-wifi": legacy_radio_plan_wifi,
     "legacy-5g-fronthaul": legacy_5g_fronthaul,
     "legacy-ethernet-lost": legacy_ethernet_lost,
     "legacy-ethernet-lost-gre": legacy_ethernet_lost,
+    "legacy-ethernet-lost-gre-gretap-eth": legacy_ethernet_lost,
     "legacy-gtp-station": legacy_gtp_station,
     "legacy-gtp-station-present": legacy_ethernet_lost,
     "legacy-radio-plan": legacy_radio_plan,
@@ -10055,6 +10228,11 @@ OPTIONS["legacy-ethernet-lost-gre"] = {
     "backhaul": True,
     "uplink": {"mode": "gre", "station": "wl1"},
 }
+# 27 October: the same with the GRE cm builds typed eth, as a 2.x platform may present it
+OPTIONS["legacy-ethernet-lost-gre-gretap-eth"] = {
+    **OPTIONS["legacy-ethernet-lost-gre"],
+    "gretap_eth": True,
+}
 # spec 3.10, the GTP station: written on the seed; a station already there left alone
 GTP_STATION = {"ssid": GTP_SSID, "secret_ref": "gtp"}
 OPTIONS["legacy-gtp-station"] = {
@@ -10123,6 +10301,18 @@ OPTIONS["legacy-gre-move"] = {
 }
 # spec 3.10, 5: the start marker refused (Node_Config full), on the seed-stations pod
 OPTIONS["legacy-start-marker-refused"] = {**OPTIONS["legacy-seed-stations"], "start_refused": True}
+# 27 October: a legacy pod's GRE over Wi-Fi typed eth (gretap_eth): the move on it, its backhaul
+# view, and the radio plan on a moved GRE child with the site's GTP
+OPTIONS["legacy-gre-move-gretap-eth"] = {**OPTIONS["legacy-gre-move"], "gretap_eth": True}
+OPTIONS["legacy-backhaul-view"] = {"legacy": True, "gretap_eth": True}
+OPTIONS["legacy-radio-plan-wifi"] = {
+    "legacy": True,
+    "multi_bss": True,
+    "underlay": LEGACY_UNDERLAY,
+    "gretap_eth": True,
+    "moved_station": True,
+    "gtp_station": GTP_STATION,
+}
 # the previous release's agent configures each GRE parent kind, then this one takes it over
 OPTIONS["upgrade-legacy-parent"] = {**OPTIONS["legacy-parent"], "previous": True}
 OPTIONS["upgrade-pi-parent"] = {**OPTIONS["gre-parent-child"], "previous": True}

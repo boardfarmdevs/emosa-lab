@@ -7,22 +7,23 @@ operator left them. With ``radio_plan: emosa`` the plan is EMOSA's, written once
 pod's OpenSync in one guarded transaction: the Inet row of every ``mode=ap`` VIF the profile does
 not name (its fronthaul and its slots) off, which takes its address and DHCP server away and
 leaves its link to ``wm`` (OpenSync's inet_vif), and, while the pod is wired (its uplink in use an
-Ethernet port), the fronthaul radio on the profile's channel and ``ht_mode``. An AP is never
-disabled: the 2.4.3 pods' vendor healthcheck reboots a pod whose AP stops beaconing (14
-October). Each such AP is neutralized instead: hidden, out of any bridge, on EMOSA's own
-passphrase (a per-pod ``emosa-`` secret, never logged), so the operator's credentials admit no
-one and it still beacons. A VIF the profile names is never touched. A converted
-pod talks only to EMOSA: the seed's own way to its operator's cloud, ``AWLAN_Node``'s MQTT
-settings, headers and topics (qm's broker), emptied, and its ``Wifi_Stats_Config`` rows (the
-statistics it samples for that broker) removed, in the same write. While the pod is wired and the
-site has a GTP (``uplink.bootstrap``), every station row not on the GTP's SSID (its own or a
-linked credential's: EMOSA's GTP station, or one a start-up hook wrote) is deleted in that write
-too, with its Inet row, its credentials and its radio's reference: the seed's onboarding stations,
-which can associate to nothing on a converted site and fail the vendor healthcheck. Every enabled
-AP beacons: a radio the profile neither binds nor places (its ``idle_radios``) that carries an
-enabled AP while its ``Wifi_Radio_State`` shows it off or with no channel is turned on, at the
-profile's channel and width for it, in that write too (a seed's 5 GHz radio has no channel until
-its operator's cloud sets one; one that beacons is never moved).
+Ethernet port, by the interface: ``uplink_wired``), the fronthaul radio on the profile's channel
+and ``ht_mode``. An AP is never disabled: the 2.4.3 pods' vendor healthcheck reboots a pod
+whose AP stops beaconing (14 October). Each such AP is neutralized instead: hidden, out of any
+bridge, on EMOSA's own passphrase (a per-pod ``emosa-`` secret, never logged), so the
+operator's credentials admit no one and it still beacons. A VIF the profile names is never
+touched. A converted pod talks only to EMOSA: the seed's own way to its operator's cloud,
+``AWLAN_Node``'s MQTT settings, headers and topics (qm's broker), emptied, and its
+``Wifi_Stats_Config`` rows (the statistics it samples for that broker) removed, in the same
+write. While the pod is wired and the site has a GTP (``uplink.bootstrap``), every station row
+not on the GTP's SSID (its own or a linked credential's: EMOSA's GTP station, or one a start-up
+hook wrote) is deleted in that write too, with its Inet row, its credentials and its radio's
+reference: the seed's onboarding stations, which can associate to nothing on a converted site and
+fail the vendor healthcheck. Every enabled AP beacons: a radio the profile neither binds nor
+places (its ``idle_radios``) that carries an enabled AP while its ``Wifi_Radio_State`` shows it
+off or with no channel is turned on, at the profile's channel and width for it, in that write too
+(a seed's 5 GHz radio has no channel until its operator's cloud sets one; one that beacons is
+never moved).
 Applied when, on the same start, those APs are neutral, their Inet rows off, the operator's cloud
 cleared, no such station left, no such radio dark and the radio on the profile's channel (or the
 pod not wired, its radio then its upstream's, which ``wm`` follows).
@@ -37,7 +38,7 @@ from emosa.errors import EmosaError, Reason
 from emosa.model import Observation
 from emosa.opensync.mapping import check_results, failed_check, where_uuid
 from emosa.opensync.stations import deletion
-from emosa.opensync.uplink import credential_key, start_instance
+from emosa.opensync.uplink import INET_TABLES, credential_key, start_instance, uplink_wired
 
 MODE = "opensync-2.0-radio-plan"
 NEUTRAL_REF = "emosa-unclaimed"
@@ -57,6 +58,10 @@ MONITOR = {
     "AWLAN_Node": list(CLOUD),
     "Wifi_Stats_Config": ["stats_type", "radio_type"],
 }
+for _table in INET_TABLES:  # what the uplink in use is (uplink_wired)
+    MONITOR[_table] = list(
+        dict.fromkeys([*MONITOR.get(_table, []), "if_name", "if_type", "gre_ifname"])
+    )
 
 
 @dataclass(frozen=True)
@@ -235,12 +240,8 @@ class RadioPlanBackend:
             if r.get("freq_band") == intent.band
         ]
         radio = radios[0] if len(radios) == 1 else (None, {})
-        used = [
-            r
-            for r in decoded.get("Connection_Manager_Uplink", {}).values()
-            if r.get("is_used") is True
-        ]
-        wired = len(used) == 1 and used[0].get("if_type") == "eth"
+        # an Ethernet port, decided by the interface (27 October): a GRE over Wi-Fi typed eth isn't
+        wired = uplink_wired(decoded)
         on_plan = (radio[1].get("channel"), radio[1].get("ht_mode")) == (
             intent.channel,
             intent.ht_mode,

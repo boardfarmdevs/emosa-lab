@@ -300,6 +300,7 @@ typedef struct {
     bool bh_live;
     em_backhaul backhaul;       /* the pod's EasyMesh backhaul, when it is one */
     bool has_backhaul;
+    em_uplink_in_use uplink_in_use; /* cm's uplink in use as of the last refresh (27 October) */
     /* spec 3.10: the connected pod's schema is not the profile's generation: nothing read or written */
     bool pod_refused;
     /* the pod's radios with a backhaul station, the one in use first: the Backhaul STA
@@ -1057,14 +1058,15 @@ static bool refresh(agent *a)
     /* a wireless backhaul station: a Multi-AP (4-address) uplink, or a 3-address station under a
      * GRE tunnel (a GRE child, or the bootstrap/GTP path). The medium is 802.11 either way, so the
      * pod reports it as its Wi-Fi backhaul (spec 8.6). Under a GRE tunnel the station whose own
-     * gretap cm uses (cm's g-<station>) comes first: after a GRE move the previous station may
-     * still be associated (until make-before-break), and it is not the pod's backhaul. */
+     * gretap cm uses (its Inet rows', or cm's g-<station>) comes first: after a GRE move the
+     * previous station may still be associated (until make-before-break), and it is not the
+     * pod's backhaul. */
+    em_uplink_in_use_of(tables, &a->uplink_in_use);
     for (int strict = 1; strict >= 0 && !a->has_backhaul; strict--) {
         for (size_t i = 0; i < nnames && !a->has_backhaul; i++) {
             em_uplink_state state;
             em_uplink_state_of(tables, names[i], &state);
-            char gretap[40];
-            bool own = em_format(gretap, sizeof(gretap), "g-%s", names[i]) && !strcmp(state.in_use, gretap);
+            bool own = !strcmp(state.over, names[i]);
             if ((!strcmp(state.kind, "multi-ap") || (!strcmp(state.kind, "gre") && (own || !strict))) &&
                 em_view_backhaul(view, names[i], &a->backhaul)) {
                 a->has_backhaul = true;
@@ -2634,6 +2636,8 @@ static cJSON *pod_facts(agent *a)
     } else {
         cJSON_AddNullToObject(o, "backhaul");
     }
+    /* cm's uplink in use as the pod has it, in every uplink mode (27 October) */
+    cJSON_AddItemToObject(o, "uplink_in_use", em_uplink_in_use_json(&a->uplink_in_use));
     cJSON *neighbors = cJSON_AddArrayToObject(o, "backhaul_neighbors");
     for (size_t i = 0; i < a->nlinks; i++) {
         cJSON *x = cJSON_CreateObject();
@@ -3277,7 +3281,7 @@ int main(int argc, char **argv)
         /* a GRE parent's children and tunnels (spec 8.6), their columns only */
         "DHCP_leased_IP:hwaddr,inet_addr",
         /* (with each interface as nm reports it, its link running or not: spec 3.10, phy_netdev) */
-        "Wifi_Inet_State:if_name,inet_addr,if_type,enabled,network",
+        "Wifi_Inet_State:if_name,inet_addr,if_type,enabled,network,gre_ifname",
         "Wifi_Master_State:if_name,if_type,port_state,network_state",
         /* and, read only, whether an AP's bridge port carries its stations (spec 3.10, BRIDGE_MONITOR):
          * the bridge's fail mode and OpenSync's OpenFlow rules, each Interface as Open vSwitch opened it */

@@ -664,6 +664,84 @@ static void lower_copy(char *dst, size_t cap, const char *src)
     dst[i] = 0;
 }
 
+/* a mode=sta row of Wifi_VIF_State named name (uplink.station_names) */
+static bool is_station(const cJSON *tables, const char *name)
+{
+    const cJSON *row;
+    cJSON_ArrayForEach(row, cJSON_GetObjectItemCaseSensitive(tables, "Wifi_VIF_State"))
+    {
+        const char *n = ovs_str(row, "if_name"), *mode = ovs_str(row, "mode");
+        if (name && n && mode && !strcmp(mode, "sta") && !strcmp(n, name))
+            return true;
+    }
+    return false;
+}
+
+static const char *const INET_TABLES[] = {"Wifi_Inet_State", "Wifi_Inet_Config"};
+
+const char *em_gre_over(const cJSON *tables, const char *if_name)
+{
+    if (!if_name || !*if_name)
+        return NULL;
+    for (size_t t = 0; t < sizeof(INET_TABLES) / sizeof(*INET_TABLES); t++) {
+        const cJSON *row;
+        cJSON_ArrayForEach(row, cJSON_GetObjectItemCaseSensitive(tables, INET_TABLES[t]))
+        {
+            const char *n = ovs_str(row, "if_name"), *gre = ovs_str(row, "gre_ifname");
+            if (n && !strcmp(n, if_name) && is_station(tables, gre))
+                return gre;
+        }
+    }
+    if (!strncmp(if_name, "g-", 2) && is_station(tables, if_name + 2))
+        return if_name + 2;
+    return NULL;
+}
+
+void em_uplink_in_use_of(const cJSON *tables, em_uplink_in_use *out)
+{
+    memset(out, 0, sizeof(*out));
+    const cJSON *row, *used = NULL;
+    int nused = 0;
+    cJSON_ArrayForEach(row, cJSON_GetObjectItemCaseSensitive(tables, "Connection_Manager_Uplink"))
+    {
+        if (ovs_true(row, "is_used")) {
+            nused++;
+            used = row;
+        }
+    }
+    if (nused != 1)
+        return;
+    const char *name = ovs_str(used, "if_name");
+    copy_str(out->if_name, sizeof(out->if_name), name);
+    copy_str(out->if_type, sizeof(out->if_type), ovs_str(used, "if_type"));
+    copy_str(out->over, sizeof(out->over), em_gre_over(tables, name));
+    for (size_t t = 0; name && t < sizeof(INET_TABLES) / sizeof(*INET_TABLES); t++)
+        cJSON_ArrayForEach(row, cJSON_GetObjectItemCaseSensitive(tables, INET_TABLES[t]))
+        {
+            const char *n = ovs_str(row, "if_name"), *type = ovs_str(row, "if_type");
+            if (!n || strcmp(n, name) || !type || !*type)
+                continue;
+            size_t at = 0; /* sorted, each once */
+            while (at < out->ninet && strcmp(out->inet_types[at], type) < 0)
+                at++;
+            if ((at < out->ninet && !strcmp(out->inet_types[at], type)) || out->ninet == EM_INET_TYPES)
+                continue;
+            memmove(out->inet_types[at + 1], out->inet_types[at], (out->ninet - at) * sizeof(out->inet_types[0]));
+            copy_str(out->inet_types[at], sizeof(out->inet_types[at]), type);
+            out->ninet++;
+        }
+}
+
+bool em_uplink_wired(const cJSON *tables)
+{
+    em_uplink_in_use u;
+    em_uplink_in_use_of(tables, &u);
+    bool eth_inet = false;
+    for (size_t i = 0; i < u.ninet; i++)
+        eth_inet = eth_inet || !strcmp(u.inet_types[i], "eth");
+    return !strcmp(u.if_type, "eth") && !*u.over && !is_station(tables, u.if_name) && eth_inet;
+}
+
 void em_uplink_state_of(const cJSON *tables, const char *station, em_uplink_state *out)
 {
     memset(out, 0, sizeof(*out));
@@ -690,20 +768,18 @@ void em_uplink_state_of(const cJSON *tables, const char *station, em_uplink_stat
     bool wds_sta = state && ovs_true(state, "enabled") && multi_ap &&
                    !strcmp(multi_ap, "backhaul_sta") && ovs_true(state, "wds");
     const char *in_use = nused == 1 ? ovs_str(used, "if_name") : NULL;
-    /* cm on another station's own gretap (g-<station>): with two stations up, one's GRE uplink is
-     * not the other's (uplink.uplink_state) */
-    bool others = false;
-    if (in_use && !strncmp(in_use, "g-", 2) && strcmp(in_use + 2, station))
-        cJSON_ArrayForEach(row, cJSON_GetObjectItemCaseSensitive(tables, "Wifi_VIF_State"))
-        {
-            const char *name = ovs_str(row, "if_name"), *mode = ovs_str(row, "mode");
-            others = others || (name && mode && !strcmp(mode, "sta") && !strcmp(name, in_use + 2));
-        }
+    /* a GRE in use over a station, whatever cm typed it (27 October): this station's, or another's,
+     * and with two stations up one's GRE uplink is not the other's (uplink.uplink_state) */
+    const char *over = em_gre_over(tables, in_use);
     if (wds_sta && in_use && !strcmp(in_use, station))
         strcpy(out->kind, "multi-ap");
-    else if (!others && nused == 1 && ovs_str(used, "if_type"))
+    else if (over) {
+        if (!strcmp(over, station))
+            strcpy(out->kind, "gre");
+    } else if (nused == 1 && ovs_str(used, "if_type"))
         copy_str(out->kind, sizeof(out->kind), ovs_str(used, "if_type"));
     copy_str(out->in_use, sizeof(out->in_use), in_use);
+    copy_str(out->over, sizeof(out->over), over);
     copy_str(out->station, sizeof(out->station), station);
     if (state) {
         copy_str(out->ssid, sizeof(out->ssid), ovs_str(state, "ssid"));
@@ -790,9 +866,22 @@ cJSON *em_uplink_state_json(const em_uplink_state *u)
     cJSON *o = cJSON_CreateObject();
     add_or_null(o, "kind", u->kind);
     add_or_null(o, "in_use", u->in_use);
+    add_or_null(o, "over", u->over);
     cJSON_AddStringToObject(o, "station", u->station);
     add_or_null(o, "ssid", u->ssid);
     add_or_null(o, "parent", u->parent);
     add_or_null(o, "mac", u->mac);
+    return o;
+}
+
+cJSON *em_uplink_in_use_json(const em_uplink_in_use *u)
+{
+    cJSON *o = cJSON_CreateObject();
+    add_or_null(o, "if_name", u->if_name);
+    add_or_null(o, "if_type", u->if_type);
+    add_or_null(o, "over", u->over);
+    cJSON *types = cJSON_AddArrayToObject(o, "inet_types");
+    for (size_t i = 0; i < u->ninet; i++)
+        cJSON_AddItemToArray(types, cJSON_CreateString(u->inet_types[i]));
     return o;
 }

@@ -37,6 +37,12 @@
                 {"type": "object", "required": ["station", "mac", "parent", "band", "channel"], "properties": {"station": {"type": "string"}, "mac": {"type": "string"}, "parent": {"type": "string"}, "band": {"type": "string"}, "channel": {"type": "integer"}}}
               ]
             },
+            "uplink_in_use": {
+              "description": "cm's uplink in use as the pod has it, in every uplink mode (27 October): its Connection_Manager_Uplink row's if_name and if_type, the station a GRE in use runs over (by its Inet rows' gre_ifname, or cm's g-<station>), and that interface's Inet rows' if_types; every value null (inet_types empty) without one row in use.",
+              "type": "object",
+              "required": ["if_name", "if_type", "over", "inet_types"],
+              "properties": {"if_name": {"type": ["string", "null"]}, "if_type": {"type": ["string", "null"]}, "over": {"type": ["string", "null"]}, "inet_types": {"type": "array", "items": {"type": "string"}}}
+            },
             "ovsdb_generation": {"type": "integer"},
             "ovsdb_revision": {"type": "integer"}
           }

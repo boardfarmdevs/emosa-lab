@@ -517,6 +517,7 @@ def test_bridge_ports_is_a_legacy_pods_only(tmp_path):
 # spec 8.4 on a legacy pod: the Ethernet uplink bridged by OpenSync's patch pair
 UPLINK, WAN, HOME = (f"00000000-0000-4000-8000-0000000002{n}" for n in ("01", "02", "03"))
 PW, PH = "00000000-0000-4000-8000-000000000211", "00000000-0000-4000-8000-000000000212"
+ETH_INET = "00000000-0000-4000-8000-000000000221"  # eth0's own Inet row, as 13 Oct's rows have it
 
 
 class WiredPod:
@@ -530,6 +531,8 @@ class WiredPod:
             "Connection_Manager_Uplink": {
                 UPLINK: {"if_name": "eth0", "if_type": "eth", "is_used": True}
             },
+            # an Ethernet port is told from a GRE cm typed eth by its own Inet row (27 October)
+            "Wifi_Inet_Config": {ETH_INET: {"if_name": "eth0", "if_type": "eth", "enabled": True}},
             "Port": {u: port_rows[u] for u in ports},
             "Bridge": {
                 WAN: {"name": "br-wan", "ports": ["set", [["uuid", PW]] if PW in ports else []]},
@@ -680,8 +683,10 @@ class SeededPod(WiredPod):
     def __init__(self, inet=True):
         super().__init__()
         if inet:
-            self.tables["Wifi_Inet_Config"] = {
-                GTP_INET: {"if_name": "wl1", "if_type": "vif", "enabled": False}
+            self.tables["Wifi_Inet_Config"][GTP_INET] = {
+                "if_name": "wl1",
+                "if_type": "vif",
+                "enabled": False,
             }
 
     async def transact(self, operations, transaction_id=None, generation=None, **_):
@@ -1249,6 +1254,78 @@ def test_stations_are_left_alone_unwired_or_without_a_gtp(tmp_path):
     }
     backend, _ = plan_with_gtp(pod, tmp_path)
     assert asyncio.run(backend.snapshot()).config["foreign_stations"] == []
+
+
+GRE_INET = "00000000-0000-4000-8000-000000000222"
+
+
+def on_gre_typed_eth(pod, gre_ifname="wl1"):
+    """cm on its GRE over wl1 as a 2.x platform may present it (27 October): g-wl1 typed eth, its
+    Inet Config row typed gre with gre_ifname wl1."""
+    pod.tables["Connection_Manager_Uplink"][UPLINK] = {
+        "if_name": "g-wl1",
+        "if_type": "eth",
+        "is_used": True,
+    }
+    pod.tables["Wifi_Inet_Config"][GRE_INET] = {
+        "if_name": "g-wl1",
+        "if_type": "gre",
+        "gre_ifname": gre_ifname,
+        "enabled": True,
+    }
+    return pod
+
+
+def test_a_gre_cm_types_eth_is_no_wired_uplink(tmp_path):
+    # 27 October: the station off the GTP's SSID (here the seed's on wl0) is not deleted and the
+    # profile's channel not written, on a pod whose GRE over Wi-Fi cm types eth
+    pod = on_gre_typed_eth(with_seed_station(OperatorPod()))
+    held_by_gtp(pod)
+    backend, _ = plan_with_gtp(pod, tmp_path)
+    config = asyncio.run(backend.snapshot()).config
+    assert config["wired"] is False and config["foreign_stations"] == []
+    # the same rows under another name: the Inet row's gre_ifname alone tells it
+    pod.tables["Connection_Manager_Uplink"][UPLINK]["if_name"] = "gretap0"
+    pod.tables["Wifi_Inet_Config"][GRE_INET]["if_name"] = "gretap0"
+    backend, _ = plan_with_gtp(pod, tmp_path)
+    assert asyncio.run(backend.snapshot()).config["wired"] is False
+
+
+def test_an_eth_uplink_without_its_inet_row_is_not_taken_for_wired(tmp_path):
+    # 27 October: when in doubt not wired; and an eth uplink with its own Inet row is
+    pod = with_seed_station(OperatorPod())
+    del pod.tables["Wifi_Inet_Config"][ETH_INET]
+    backend, _ = plan_with_gtp(pod, tmp_path)
+    config = asyncio.run(backend.snapshot()).config
+    assert config["wired"] is False and config["foreign_stations"] == []
+    pod.tables["Wifi_Inet_Config"][ETH_INET] = {"if_name": "eth0", "if_type": "eth"}
+    backend, _ = plan_with_gtp(pod, tmp_path)
+    assert asyncio.run(backend.snapshot()).config["wired"] is True
+
+
+def test_the_uplink_in_use_is_named_by_its_interface():
+    from emosa.opensync.uplink import GRE, uplink_in_use, uplink_state, uplink_wired
+
+    pod = on_gre_typed_eth(OperatorPod())
+    held_by_gtp(pod)
+    rows = pod.tables
+    assert uplink_in_use(rows) == {
+        "if_name": "g-wl1",
+        "if_type": "eth",
+        "over": "wl1",
+        "inet_types": ["gre"],
+    }
+    state = uplink_state(rows, "wl1")
+    assert state["kind"] == GRE and state["over"] == "wl1" and not uplink_wired(rows)
+    # a GRE over another station is not this one's
+    on_gre_typed_eth(pod, gre_ifname="wl0")
+    pod.tables["Wifi_VIF_State"]["00000000-0000-4000-8000-000000000499"] = {
+        "if_name": "wl0",
+        "mode": "sta",
+        "enabled": True,
+    }
+    assert uplink_state(rows, "wl1")["kind"] is None
+    assert uplink_state(rows, "wl0")["kind"] == GRE
 
 
 IDLE_5G = {"band": "5G", "channel": 36, "ht_mode": "HT20"}

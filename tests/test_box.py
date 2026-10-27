@@ -930,6 +930,21 @@ def test_a_legacy_gre_child_losing_its_ethernet_keeps_the_gtp_as_its_bootstrap(a
     assert result["passed"], result
 
 
+@pytest.mark.parametrize(
+    "scenario",
+    [
+        # 27 October: a 2.x platform's GRE over Wi-Fi typed eth
+        "legacy-backhaul-view",
+        "legacy-radio-plan-wifi",
+        "legacy-gre-move-gretap-eth",
+        "legacy-ethernet-lost-gre-gretap-eth",
+    ],
+)
+def test_a_legacy_pods_gre_typed_eth_is_its_wifi_uplink(scenario, agent, tmp_path):
+    result = box(scenario, agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+
+
 def test_a_seeded_legacy_pods_gtp_station_is_written_and_carries_its_uplink(agent, tmp_path):
     # spec 3.10, the GTP station: no 2.x core makes one; written once, then the Ethernet lost
     result = box("legacy-gtp-station", agent, tmp_path / "box", timeout=240)

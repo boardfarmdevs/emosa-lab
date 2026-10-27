@@ -742,6 +742,18 @@ is everything above. For a legacy pod, all of this specification applies, except
     the port goes. The station joins the GTP's BSS beside it, then carries the uplink. The
     radio's channel is then the GTP BSS's, wherever the gateway puts it (its automatic channel
     selection): the radio follows the station, and the radio plan follows the radio (below).
+  - **Wired, by the interface (27 October).** A 2.x `cm` copies an uplink row's `if_type` from
+    `Wifi_Master_State`, which the platform fills, so a platform may type its gretap `eth`. EMOSA
+    therefore decides by the interface, in both agents: the uplink in use is a GRE over a station
+    when an Inet row of that name (`Wifi_Inet_State`, then `Wifi_Inet_Config`) names a station as
+    its `gre_ifname`, whatever its `if_type`, or else when it is the station's own `g-<station>`;
+    it is wired only when its row is typed `eth`, it is neither a station nor a GRE over one, and
+    its own Inet row is typed `eth`. When in doubt it is not wired: what EMOSA does only on a wired
+    pod (the radio plan's profile channel and its deletion of stations off the GTP's SSID) is left
+    undone, and a pod on Wi-Fi keeps its station. The status names the uplink in use in every
+    uplink mode (`pod.uplink_in_use`: its row's `if_name` and `if_type`, the station a GRE runs
+    over, its Inet rows' `if_type`s). Box `legacy-backhaul-view`, `legacy-radio-plan-wifi` and the
+    legacy GRE scenarios' `-gretap-eth` variants.
   - **The operator's credentials** stay, unlinked: `wm` uses none of them.
   - **Not persisted.** A reboot brings back the vendor's seed, with the operator's redirector,
     and no write of EMOSA's survives it. Bringing the pod back to the fleet after a reboot is
@@ -1730,7 +1742,8 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
   bootstrap/GTP path), as an 802.11 backhaul neighbour with its MAC, band and parent BSSID, never
   claimed as a Multi-AP (4-address) bSTA (§8.5's reporting, now for a GRE child too); the controller
   then models the device's backhaul link as Wireless LAN. Under a GRE tunnel the station reported is
-  the one whose own gretap cm uses (cm names it `g-<station>`): until a GRE move's make-before-break
+  the one whose own gretap cm uses (by the gretap's Inet rows' `gre_ifname`, or cm's name for it,
+  `g-<station>`, whatever cm typed its uplink row: §3.10's wired rule): until a GRE move's make-before-break
   takes it off (§8.3), the station it moved from may still be associated to its old parent, and reporting that one
   would give the controller the old parent and make it name the old station in its next steer, which
   EMOSA refuses (box `mixed-gre-child-onto-legacy-parent`, 16 October). Only when no station's own

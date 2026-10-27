@@ -39,7 +39,13 @@ from emosa.opensync.pod_profile import PodBackend, RadioBackend
 from emosa.opensync.profiles import DEFAULT
 from emosa.opensync.profiles import load as load_profile
 from emosa.opensync.schema import Schema, reference_path
-from emosa.opensync.uplink import UplinkBackend, UplinkIntent, uplink_state
+from emosa.opensync.uplink import (
+    UplinkBackend,
+    UplinkIntent,
+    uplink_in_use,
+    uplink_state,
+    uplink_wired,
+)
 from emosa.operations import TRANSITIONS
 from emosa.secrets import SecretStore
 from emosa.wire.autoconfiguration import EASYMESH_61, R1, PeerBinding
@@ -706,6 +712,9 @@ def uplink_state_case(name, raw, station, stations=None):
         "stations": stations,
         "expected": {
             "uplink": {k: v for k, v in state.items() if k != "state"},
+            # cm's uplink in use and whether it is an Ethernet port, by the interface (27 October)
+            "uplink_in_use": uplink_in_use(rows),
+            "wired": uplink_wired(rows),
             "backhaul": None,
             "backhaul_sta_capability_tlvs": [
                 {"type": "0xcb", "value": (ruid + (b"\x80" + sta if sta else b"\x00")).hex()}
@@ -771,15 +780,60 @@ def uplink_switch_case(name, raw, station, ssid, bssid, stations=()):
     }
 
 
+RETYPED_SERIAL = "EMOSAPOD00000000F2"  # the retyped rows' pod
+
+
+def retyped(raw, *, in_use=None, if_type=None, inet=()):
+    """``raw`` with cm's uplink in use renamed (``in_use``) or typed (``if_type``) and Inet rows
+    added ((table, if_name, if_type, gre_ifname or None) each): the ways a platform may present
+    a GRE over Wi-Fi or an Ethernet port (27 October), on recorded rows under a neutral pod
+    identity."""
+    raw = copy.deepcopy(raw)
+    for node in raw["AWLAN_Node"].values():
+        node.update({"id": RETYPED_SERIAL, "serial_number": RETYPED_SERIAL})
+        node["firmware_version"] = "6.6.1.0-0-g1dad64-retyped"
+    for row in raw["Connection_Manager_Uplink"].values():
+        if row.get("is_used") is True:
+            row.update({k: v for k, v in (("if_name", in_use), ("if_type", if_type)) if v})
+    for n, (table, name, kind, gre) in enumerate(inet):
+        raw.setdefault(table, {})[f"6c0a1c10-0000-4000-8000-0000000002{n:02d}"] = {
+            "if_name": name,
+            "if_type": kind,
+            "gre_ifname": gre if gre else ["set", []],
+        }
+    return raw
+
+
 def uplink_vectors():
     gre = json.loads(UPLINK_ROWS["gre"].read_text())["tables"]
     multi_ap = json.loads(UPLINK_ROWS["multi-ap"].read_text())["tables"]
     # the pod's backhaul station on each band (the default profile's)
     stations = load_profile(DEFAULT).uplink_stations
     names = [name for _, name in stations]
+    gretap = "g-bhaul-sta-50"
+    typed_eth = retyped(
+        gre,
+        if_type="eth",
+        inet=(
+            ("Wifi_Inet_Config", gretap, "gre", "bhaul-sta-50"),
+            ("Wifi_Inet_State", gretap, "eth", None),
+        ),
+    )
+    renamed = retyped(
+        gre,
+        in_use="gretap0",
+        if_type="eth",
+        inet=(("Wifi_Inet_State", "gretap0", "eth", "bhaul-sta-50"),),
+    )
+    wired = retyped(
+        gre, in_use="eth0", if_type="eth", inet=(("Wifi_Inet_Config", "eth0", "eth", None),)
+    )
+    unknown_eth = retyped(gre, in_use="eth0", if_type="eth")
     return {
         "description": "spec §8.3: data plane option 1. The pod's uplink as cm and owm report it "
-        "(recorded rows), the backhaul the agent then reports (1905 TLVs, 'value' in hex "
+        "(recorded rows, and those rows as a platform may type a GRE over Wi-Fi or an Ethernet "
+        "port: the uplink in use and whether it is wired, by the interface), the backhaul "
+        "the agent then reports (1905 TLVs, 'value' in hex "
         "without type and length), the Backhaul STA Capability Report's TLVs (every radio "
         "with a backhaul station, the one in use first), and the exact OVSDB transaction of "
         "the switch (the target's station enabled, the pod's other backhaul stations disabled).",
@@ -787,6 +841,14 @@ def uplink_vectors():
             uplink_state_case("bootstrap-gre", gre, "bhaul-sta-50", names),
             uplink_state_case("multi-ap-backhaul", multi_ap, "bhaul-sta-24", names),
             uplink_state_case("multi-ap-other-station", multi_ap, "bhaul-sta-50", names),
+            # 27 October: a GRE over Wi-Fi that cm types eth (as a 2.x platform may) is that
+            # station's GRE, by its Inet rows; under another name, by its gre_ifname alone
+            uplink_state_case("gre-typed-eth", typed_eth, "bhaul-sta-50", names),
+            uplink_state_case("gre-typed-eth-other-station", typed_eth, "bhaul-sta-24", names),
+            uplink_state_case("gre-typed-eth-renamed", renamed, "bhaul-sta-50", names),
+            # an Ethernet port is wired only with its own Inet row typed eth: else in doubt, not
+            uplink_state_case("wired-eth", wired, "bhaul-sta-50", names),
+            uplink_state_case("wired-eth-no-inet", unknown_eth, "bhaul-sta-50", names),
         ],
         "switch": [
             uplink_switch_case(

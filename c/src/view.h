@@ -159,10 +159,26 @@ em_reason em_topology_radios_tlvs(const uint8_t agent_al[6], const uint8_t contr
 
 /* How the pod reaches its gateway, from cm's and owm's State (spec §8.3). */
 typedef struct {
-    char kind[16]; /* "multi-ap", cm's if_type ("gre", "eth", ...), or "" for none */
-    char in_use[33], station[33], ssid[65], parent[18], mac[18]; /* "" for none */
+    char kind[16]; /* "multi-ap", "gre" over this station, cm's if_type ("gre", "eth", ...), or "" */
+    char in_use[33], over[33], station[33], ssid[65], parent[18], mac[18]; /* "" for none */
 } em_uplink_state;
 
+/* cm's uplink in use (uplink.uplink_in_use): its row's if_name and if_type, the station a GRE runs
+ * over, its Inet rows' if_types (State and Config, sorted, each once); "" and none without one */
+#define EM_INET_TYPES 4
+typedef struct {
+    char if_name[33], if_type[16], over[33];
+    char inet_types[EM_INET_TYPES][16];
+    size_t ninet;
+} em_uplink_in_use;
+
+/* uplink.gre_over: the station the GRE interface if_name runs over, by its Inet rows' gre_ifname
+ * whatever their if_type (27 October), else cm's g-<station>; NULL for none. Points into tables. */
+const char *em_gre_over(const cJSON *tables, const char *if_name);
+void em_uplink_in_use_of(const cJSON *tables, em_uplink_in_use *out);
+cJSON *em_uplink_in_use_json(const em_uplink_in_use *u);
+/* uplink.uplink_wired: an Ethernet port by the interface, when in doubt not (27 October) */
+bool em_uplink_wired(const cJSON *tables);
 void em_uplink_state_of(const cJSON *tables, const char *station, em_uplink_state *out);
 cJSON *em_uplink_state_json(const em_uplink_state *u);
 

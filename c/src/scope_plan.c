@@ -10,6 +10,7 @@
 #include "log.h"
 #include "ovs.h"
 #include "scope.h"
+#include "view.h"
 
 #define MODE "opensync-2.0-radio-plan"
 #define PROVENANCE "opensync-wm:Wifi_VIF_State+Wifi_Radio_Config"
@@ -356,18 +357,8 @@ static cJSON *changes(const em_plan_intent *i, const cJSON *tables, const char *
     }
     if (radios != 1)
         radio = NULL;
-    /* wired: exactly one uplink in use, an Ethernet port */
-    size_t used = 0;
-    bool eth = false;
-    cJSON_ArrayForEach(r, em_table(tables, "Connection_Manager_Uplink"))
-    {
-        if (ovs_true(r, "is_used")) {
-            used++;
-            const char *type = ovs_str(r, "if_type");
-            eth = type && !strcmp(type, "eth");
-        }
-    }
-    bool wired = used == 1 && eth;
+    /* wired: an Ethernet port, decided by the interface (27 October): a GRE over Wi-Fi typed eth isn't */
+    bool wired = em_uplink_wired(tables);
     long channel = 0;
     bool has_channel = radio && ovs_int(radio, "channel", &channel);
     const char *ht_mode = radio ? ovs_str(radio, "ht_mode") : NULL;

@@ -115,6 +115,7 @@ from emosa.opensync.uplink import (
     start_marker_error,
     start_marker_ops,
     start_marker_used,
+    uplink_in_use,
     uplink_state,
     use_start_marker,
 )
@@ -648,13 +649,13 @@ class PodReportSource:
             # a wireless backhaul station: a Multi-AP (4-address) uplink, or a 3-address station
             # under a GRE tunnel (a GRE child, or the bootstrap/GTP path). The medium is 802.11
             # either way, so the pod reports it as its Wi-Fi backhaul (spec 8.6). Under a GRE
-            # tunnel the station whose own gretap cm uses (cm's g-<station>) comes first: after a
-            # GRE move the previous station may still be associated (until make-before-break),
-            # and it is not the pod's backhaul.
+            # tunnel the station whose own gretap cm uses (its Inet rows', or cm's g-<station>)
+            # comes first: after a GRE move the previous station may still be associated (until
+            # make-before-break), and it is not the pod's backhaul.
             for strict in (True, False):
                 for station in self.stations:
                     state = uplink_state(rows, station)
-                    own = state["in_use"] == f"g-{station}"
+                    own = state["over"] == station
                     if state["kind"] == MULTI_AP or (state["kind"] == GRE and (own or not strict)):
                         uplink = backhaul(device, station)
                         if uplink is not None:
@@ -739,6 +740,9 @@ class PodReportSource:
                     "band": uplink.band,
                     "channel": uplink.channel,
                 },
+                # cm's uplink in use as the pod has it, in every uplink mode (27 October): its row's
+                # if_name and if_type, the station a GRE runs over, its Inet rows' if_types
+                "uplink_in_use": uplink_in_use(rows),
                 "backhaul_neighbors": [
                     {"interface": local.hex(":"), "al": al.hex(":")} for local, al in self.links
                 ],
