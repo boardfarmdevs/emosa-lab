@@ -1291,6 +1291,19 @@ def test_a_gre_cm_types_eth_is_no_wired_uplink(tmp_path):
     assert asyncio.run(backend.snapshot()).config["wired"] is False
 
 
+def test_a_gre_whose_station_has_no_state_row_yet_is_not_wired(tmp_path):
+    # a start or a VAP made again: g-wl1 typed eth, its Inet Config gre over wl1, Inet State eth,
+    # and wl1 not in Wifi_VIF_State yet: still a GRE, so no profile channel and no deletion
+    pod = on_gre_typed_eth(with_seed_station(OperatorPod()))
+    pod.tables["Wifi_Inet_State"] = {GRE_INET: {"if_name": "g-wl1", "if_type": "eth"}}
+    pod.tables["Wifi_VIF_State"] = {
+        u: r for u, r in pod.tables.get("Wifi_VIF_State", {}).items() if r.get("if_name") != "wl1"
+    }
+    backend, _ = plan_with_gtp(pod, tmp_path)
+    config = asyncio.run(backend.snapshot()).config
+    assert config["wired"] is False and config["foreign_stations"] == []
+
+
 def test_an_eth_uplink_without_its_inet_row_is_not_taken_for_wired(tmp_path):
     # 27 October: when in doubt not wired; and an eth uplink with its own Inet row is
     pod = with_seed_station(OperatorPod())

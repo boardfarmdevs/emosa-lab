@@ -829,6 +829,17 @@ def uplink_vectors():
         gre, in_use="eth0", if_type="eth", inet=(("Wifi_Inet_Config", "eth0", "eth", None),)
     )
     unknown_eth = retyped(gre, in_use="eth0", if_type="eth")
+    # a GRE typed eth whose station has no State row yet (a start, a VAP made again): its Inet
+    # Config row still says gre over that station, so it is no Ethernet port
+    stationless = retyped(
+        gre,
+        in_use="gretap0",
+        if_type="eth",
+        inet=(
+            ("Wifi_Inet_Config", "gretap0", "gre", "bhaul-sta-60"),
+            ("Wifi_Inet_State", "gretap0", "eth", None),
+        ),
+    )
     return {
         "description": "spec §8.3: data plane option 1. The pod's uplink as cm and owm report it "
         "(recorded rows, and those rows as a platform may type a GRE over Wi-Fi or an Ethernet "
@@ -849,6 +860,7 @@ def uplink_vectors():
             # an Ethernet port is wired only with its own Inet row typed eth: else in doubt, not
             uplink_state_case("wired-eth", wired, "bhaul-sta-50", names),
             uplink_state_case("wired-eth-no-inet", unknown_eth, "bhaul-sta-50", names),
+            uplink_state_case("gre-typed-eth-station-absent", stationless, "bhaul-sta-50", names),
         ],
         "switch": [
             uplink_switch_case(

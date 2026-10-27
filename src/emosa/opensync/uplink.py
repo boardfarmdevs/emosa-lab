@@ -339,14 +339,24 @@ def uplink_in_use(decoded):
 
 def uplink_wired(decoded):
     """The pod's uplink is an Ethernet port (spec 8.4): cm's one uplink in use typed ``eth``,
-    neither a station nor a GRE over one, and the port's own Inet row typed ``eth`` too. When in
+    neither a station nor a GRE over one, no Inet row of its name typed ``gre`` or naming a
+    ``gre_ifname`` (a GRE whose station has no State row yet), and the port's own Inet row typed
+    ``eth``. When in
     doubt not wired (27 October): a pod whose GRE over Wi-Fi cm types ``eth`` is never taken for a
     wired one, and what EMOSA does only on a wired pod (the radio plan's profile channel, its
     deletion of stations off the GTP) stays undone."""
     used = uplink_in_use(decoded)
+    # a GRE whose station has no State row yet (a start, a VAP made again) is still a GRE: no Inet
+    # row of its name may say gre or name a gre_ifname
+    tunnel = bool(used["if_name"]) and any(
+        r.get("if_name") == used["if_name"] and (r.get("if_type") == "gre" or r.get("gre_ifname"))
+        for table in INET_TABLES
+        for r in decoded.get(table, {}).values()
+    )
     return (
         used["if_type"] == "eth"
         and used["over"] is None
+        and not tunnel
         and used["if_name"] not in station_names(decoded)
         and "eth" in used["inet_types"]
     )

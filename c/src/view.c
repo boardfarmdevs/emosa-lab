@@ -739,7 +739,19 @@ bool em_uplink_wired(const cJSON *tables)
     bool eth_inet = false;
     for (size_t i = 0; i < u.ninet; i++)
         eth_inet = eth_inet || !strcmp(u.inet_types[i], "eth");
-    return !strcmp(u.if_type, "eth") && !*u.over && !is_station(tables, u.if_name) && eth_inet;
+    /* a GRE whose station has no State row yet (a start, a VAP made again) is still a GRE: no
+     * Inet row of its name may say gre or name a gre_ifname (uplink.uplink_wired) */
+    bool tunnel = false;
+    for (size_t t = 0; *u.if_name && t < sizeof(INET_TABLES) / sizeof(*INET_TABLES); t++) {
+        const cJSON *row;
+        cJSON_ArrayForEach(row, cJSON_GetObjectItemCaseSensitive(tables, INET_TABLES[t]))
+        {
+            const char *n = ovs_str(row, "if_name"), *type = ovs_str(row, "if_type");
+            const char *gre = ovs_str(row, "gre_ifname");
+            tunnel = tunnel || (n && !strcmp(n, u.if_name) && ((type && !strcmp(type, "gre")) || (gre && *gre)));
+        }
+    }
+    return !strcmp(u.if_type, "eth") && !*u.over && !tunnel && !is_station(tables, u.if_name) && eth_inet;
 }
 
 void em_uplink_state_of(const cJSON *tables, const char *station, em_uplink_state *out)
