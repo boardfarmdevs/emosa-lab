@@ -1,5 +1,5 @@
 {
- "description": "spec §4: the fleet over whole sessions, as emosa.agent.fleet handles them. A step: fleet_config (the fleet (re)started with this configuration on the same files; it starts the agents its registry has, in the registry's order: each [pod, configuration changed]), arrival (a pod at the front port: the result of the fleet's AWLAN_Node select, and the wall clock; with port, a pod that dialled that agent port: spec 4, re-admission), lose_registry (the registry file removed, as a factory reset loses it), mkdir (a directory under the session's), forget (a serial, archived with suffix 20261003T120000), forget_elsewhere (the same, by another fleet process on the same files while this one serves). Per arrival: handover (the agent started or restarted, then the update sent), refused (not admitted, or no free port: nothing written to the pod) or invalid (an unusable identity: the same). files: the registry and the agent configurations as the fleet left them, byte for byte, and the archived state directories. {root} stands for the session's own directory.",
+ "description": "spec §4: the fleet over whole sessions, as emosa.agent.fleet handles them. A step: fleet_config (the fleet (re)started with this configuration on the same files; it starts the agents its registry has, in the registry's order: each [pod, configuration changed]), arrival (a pod at the front port: the result of the fleet's AWLAN_Node select, and the wall clock; with port, a pod that dialled that agent port: spec 4, re-admission), lose_registry (the registry file removed, as a factory reset loses it), fleet_secret (a value written to the fleet's store, fleet-secrets under the session's), agent_secret (one placed by hand in a pod's agent store), mkdir (a directory under the session's), forget (a serial, archived with suffix 20261003T120000), forget_elsewhere (the same, by another fleet process on the same files while this one serves). Per arrival: handover (the agent started or restarted, then the update sent), refused (not admitted, or no free port: nothing written to the pod) or invalid (an unusable identity: the same). files: the registry and the agent configurations as the fleet left them, byte for byte, and the archived state directories; in a session with secrets also each agent store's references and values, those marked the fleet's copy (the markers' values are each store's own), and the missing and stale records. {root} stands for the session's own directory.",
  "root": "{root}",
  "sessions": [
   {
@@ -2158,6 +2158,273 @@
      },
      "now": 1759500001.25,
      "port": 6652
+    }
+   ]
+  },
+  {
+   "files": {
+    "archives": [],
+    "configs": {
+     "EMOSAPOD000000A0A1": "{\n  \"pod_id\": \"EMOSAPOD000000A0A1\",\n  \"serial\": \"EMOSAPOD000000A0A1\",\n  \"ovsdb\": \"ptcp:6651:127.0.0.1\",\n  \"interface\": \"em1\",\n  \"al_mac\": \"02:a2:54:8d:a4:06\",\n  \"controller_al\": \"02:00:00:e0:00:01\",\n  \"message_set\": \"easymesh-6.1\",\n  \"multi_bss\": false,\n  \"m2_session\": \"distinct\",\n  \"profile\": \"opensync-lab-hwsim-6.6.1-v1\",\n  \"uplink\": {\n    \"bootstrap\": {\n      \"secret_ref\": \"gtp\",\n      \"ssid\": \"gtp-ssid\"\n    },\n    \"mode\": \"off\"\n  },\n  \"telemetry\": {\n    \"mode\": \"off\"\n  },\n  \"state_dir\": \"{root}/state/EMOSAPOD000000A0A1\",\n  \"run_id\": \"EMOSAPOD000000A0A1\"\n}\n",
+     "EMOSAPOD000000A0B2": "{\n  \"pod_id\": \"EMOSAPOD000000A0B2\",\n  \"serial\": \"EMOSAPOD000000A0B2\",\n  \"ovsdb\": \"ptcp:6652:127.0.0.1\",\n  \"interface\": \"em2\",\n  \"al_mac\": \"02:01:42:35:35:88\",\n  \"controller_al\": \"02:00:00:e0:00:01\",\n  \"message_set\": \"easymesh-6.1\",\n  \"multi_bss\": false,\n  \"m2_session\": \"distinct\",\n  \"profile\": \"opensync-lab-hwsim-6.6.1-v1\",\n  \"uplink\": {\n    \"bootstrap\": {\n      \"secret_ref\": \"gtp\",\n      \"ssid\": \"gtp-ssid\"\n    },\n    \"mode\": \"off\"\n  },\n  \"telemetry\": {\n    \"mode\": \"off\"\n  },\n  \"state_dir\": \"{root}/state/EMOSAPOD000000A0B2\",\n  \"run_id\": \"EMOSAPOD000000A0B2\"\n}\n",
+     "EMOSAPOD000000A0C3": "{\n  \"pod_id\": \"EMOSAPOD000000A0C3\",\n  \"serial\": \"EMOSAPOD000000A0C3\",\n  \"ovsdb\": \"ptcp:6653:127.0.0.1\",\n  \"interface\": \"em3\",\n  \"al_mac\": \"02:4e:8c:a3:0e:07\",\n  \"controller_al\": \"02:00:00:e0:00:01\",\n  \"message_set\": \"easymesh-6.1\",\n  \"multi_bss\": false,\n  \"m2_session\": \"distinct\",\n  \"profile\": \"opensync-lab-hwsim-6.6.1-v1\",\n  \"uplink\": {\n    \"bootstrap\": {\n      \"secret_ref\": \"gtp\",\n      \"ssid\": \"gtp-ssid\"\n    },\n    \"mode\": \"off\"\n  },\n  \"telemetry\": {\n    \"mode\": \"off\"\n  },\n  \"state_dir\": \"{root}/state/EMOSAPOD000000A0C3\",\n  \"run_id\": \"EMOSAPOD000000A0C3\"\n}\n"
+    },
+    "marked": {
+     "EMOSAPOD000000A0A1": [
+      "gtp"
+     ],
+     "EMOSAPOD000000A0B2": [],
+     "EMOSAPOD000000A0C3": [
+      "gtp"
+     ]
+    },
+    "records": {
+     "missing": null,
+     "stale": "{\n  \"EMOSAPOD000000A0B2\": [\n    \"gtp\"\n  ]\n}\n"
+    },
+    "registry": "{\n  \"EMOSAPOD000000A0A1\": {\n    \"al_mac\": \"02:a2:54:8d:a4:06\",\n    \"firmware\": null,\n    \"first_seen\": 1759500000.25,\n    \"handovers\": 1,\n    \"interface\": \"em1\",\n    \"last_seen\": 1759500000.25,\n    \"model\": \"HWSIM_POD\",\n    \"node_id\": \"EMOSAPOD000000A0A1\",\n    \"pod_id\": \"EMOSAPOD000000A0A1\",\n    \"port\": 6651\n  },\n  \"EMOSAPOD000000A0B2\": {\n    \"al_mac\": \"02:01:42:35:35:88\",\n    \"firmware\": null,\n    \"first_seen\": 1759500000.5,\n    \"handovers\": 1,\n    \"interface\": \"em2\",\n    \"last_seen\": 1759500000.5,\n    \"model\": \"HWSIM_POD\",\n    \"node_id\": \"EMOSAPOD000000A0B2\",\n    \"pod_id\": \"EMOSAPOD000000A0B2\",\n    \"port\": 6652\n  },\n  \"EMOSAPOD000000A0C3\": {\n    \"al_mac\": \"02:4e:8c:a3:0e:07\",\n    \"firmware\": null,\n    \"first_seen\": 1759500000.75,\n    \"handovers\": 1,\n    \"interface\": \"em3\",\n    \"last_seen\": 1759500000.75,\n    \"model\": \"HWSIM_POD\",\n    \"node_id\": \"EMOSAPOD000000A0C3\",\n    \"pod_id\": \"EMOSAPOD000000A0C3\",\n    \"port\": 6653\n  }\n}\n",
+    "secrets": {
+     "EMOSAPOD000000A0A1": {
+      "gtp": "SyntheticKeyTwo2"
+     },
+     "EMOSAPOD000000A0B2": {
+      "gtp": "HandPlacedKey22"
+     },
+     "EMOSAPOD000000A0C3": {
+      "gtp": "SyntheticKeyTwo2"
+     }
+    }
+   },
+   "name": "fleet-secrets-follow-a-changed-key",
+   "steps": [
+    {
+     "fleet_secret": {
+      "ref": "gtp",
+      "value": "SyntheticKeyOne1"
+     }
+    },
+    {
+     "expected": {
+      "started": []
+     },
+     "fleet_config": {
+      "advertise": "10.101.0.1",
+      "config_dir": "{root}/etc",
+      "controller_al": "02:00:00:e0:00:01",
+      "listen": "ptcp:6650:127.0.0.1",
+      "message_set": "easymesh-6.1",
+      "pods": {
+       "EMOSAPOD000000A0A1": {
+        "uplink": {
+         "bootstrap": {
+          "secret_ref": "gtp",
+          "ssid": "gtp-ssid"
+         },
+         "mode": "off"
+        }
+       },
+       "EMOSAPOD000000A0B2": {
+        "uplink": {
+         "bootstrap": {
+          "secret_ref": "gtp",
+          "ssid": "gtp-ssid"
+         },
+         "mode": "off"
+        }
+       },
+       "EMOSAPOD000000A0C3": {
+        "uplink": {
+         "bootstrap": {
+          "secret_ref": "gtp",
+          "ssid": "gtp-ssid"
+         },
+         "mode": "off"
+        }
+       }
+      },
+      "ports": [
+       6651,
+       6653
+      ],
+      "secrets": "{root}/fleet-secrets",
+      "state_root": "{root}/state"
+     }
+    },
+    {
+     "arrival": [
+      {
+       "rows": [
+        {
+         "id": "EMOSAPOD000000A0A1",
+         "model": "HWSIM_POD",
+         "serial_number": "EMOSAPOD000000A0A1"
+        }
+       ]
+      }
+     ],
+     "expected": {
+      "outcome": "handover",
+      "start": [
+       "EMOSAPOD000000A0A1",
+       false
+      ],
+      "update": [
+       "Open_vSwitch",
+       {
+        "op": "update",
+        "row": {
+         "manager_addr": "tcp:10.101.0.1:6651"
+        },
+        "table": "AWLAN_Node",
+        "where": []
+       }
+      ]
+     },
+     "now": 1759500000.25
+    },
+    {
+     "agent_secret": {
+      "pod": "EMOSAPOD000000A0B2",
+      "ref": "gtp",
+      "value": "HandPlacedKey22"
+     }
+    },
+    {
+     "arrival": [
+      {
+       "rows": [
+        {
+         "id": "EMOSAPOD000000A0B2",
+         "model": "HWSIM_POD",
+         "serial_number": "EMOSAPOD000000A0B2"
+        }
+       ]
+      }
+     ],
+     "expected": {
+      "outcome": "handover",
+      "start": [
+       "EMOSAPOD000000A0B2",
+       false
+      ],
+      "update": [
+       "Open_vSwitch",
+       {
+        "op": "update",
+        "row": {
+         "manager_addr": "tcp:10.101.0.1:6652"
+        },
+        "table": "AWLAN_Node",
+        "where": []
+       }
+      ]
+     },
+     "now": 1759500000.5
+    },
+    {
+     "agent_secret": {
+      "pod": "EMOSAPOD000000A0C3",
+      "ref": "gtp",
+      "value": "SyntheticKeyOne1"
+     }
+    },
+    {
+     "arrival": [
+      {
+       "rows": [
+        {
+         "id": "EMOSAPOD000000A0C3",
+         "model": "HWSIM_POD",
+         "serial_number": "EMOSAPOD000000A0C3"
+        }
+       ]
+      }
+     ],
+     "expected": {
+      "outcome": "handover",
+      "start": [
+       "EMOSAPOD000000A0C3",
+       false
+      ],
+      "update": [
+       "Open_vSwitch",
+       {
+        "op": "update",
+        "row": {
+         "manager_addr": "tcp:10.101.0.1:6653"
+        },
+        "table": "AWLAN_Node",
+        "where": []
+       }
+      ]
+     },
+     "now": 1759500000.75
+    },
+    {
+     "fleet_secret": {
+      "ref": "gtp",
+      "value": "SyntheticKeyTwo2"
+     }
+    },
+    {
+     "expected": {
+      "started": [
+       [
+        "EMOSAPOD000000A0A1",
+        true
+       ],
+       [
+        "EMOSAPOD000000A0B2",
+        false
+       ],
+       [
+        "EMOSAPOD000000A0C3",
+        true
+       ]
+      ]
+     },
+     "fleet_config": {
+      "advertise": "10.101.0.1",
+      "config_dir": "{root}/etc",
+      "controller_al": "02:00:00:e0:00:01",
+      "listen": "ptcp:6650:127.0.0.1",
+      "message_set": "easymesh-6.1",
+      "pods": {
+       "EMOSAPOD000000A0A1": {
+        "uplink": {
+         "bootstrap": {
+          "secret_ref": "gtp",
+          "ssid": "gtp-ssid"
+         },
+         "mode": "off"
+        }
+       },
+       "EMOSAPOD000000A0B2": {
+        "uplink": {
+         "bootstrap": {
+          "secret_ref": "gtp",
+          "ssid": "gtp-ssid"
+         },
+         "mode": "off"
+        }
+       },
+       "EMOSAPOD000000A0C3": {
+        "uplink": {
+         "bootstrap": {
+          "secret_ref": "gtp",
+          "ssid": "gtp-ssid"
+         },
+         "mode": "off"
+        }
+       }
+      },
+      "ports": [
+       6651,
+       6653
+      ],
+      "secrets": "{root}/fleet-secrets",
+      "state_root": "{root}/state"
+     }
     }
    ]
   },

@@ -931,13 +931,13 @@ em_fleet_outcome em_fleet_identify_at(em_fleet *f, const cJSON *select_result, i
     free(registry);
     char path[600];
     cJSON *agent = em_agent_config(e, f->config);
-    if (agent)
-        em_fleet_provision_secrets(f, agent);
+    bool replaced = agent && em_fleet_provision_secrets(f, agent);
     cJSON_Delete(agent);
     char *config = em_agent_config_text(e, f->config);
     bool written = saved && config &&
                    em_format(path, sizeof(path), "%s/%s.json", f->config_dir, e->pod_id) &&
                    write_if_changed(path, config, &out->changed);
+    out->changed = out->changed || replaced; /* a secret replaced: its agent restarts */
     free(config);
     cJSON *update = written ? em_manager_update(e, f->config) : NULL;
     if (!update) {
@@ -972,12 +972,12 @@ size_t em_fleet_start_registered(em_fleet *f, void (*start)(void *ctx, const cha
         char path[600];
         bool changed = false;
         cJSON *agent = em_agent_config(e, f->config);
-        if (agent)
-            em_fleet_provision_secrets(f, agent);
+        bool replaced = agent && em_fleet_provision_secrets(f, agent);
         cJSON_Delete(agent);
         char *config = em_agent_config_text(e, f->config);
         bool written = config && em_format(path, sizeof(path), "%s/%s.json", f->config_dir, e->pod_id) &&
                        write_if_changed(path, config, &changed);
+        changed = changed || replaced; /* a secret replaced: its agent restarts */
         free(config);
         if (written)
             start(ctx, e->pod_id, changed);
@@ -998,13 +998,39 @@ bool em_fleet_update_ok(const cJSON *result)
 
 static int by_ref(const void *a, const void *b) { return strcmp(*(const char *const *)a, *(const char *const *)b); }
 
-/* Fleet.note_missing_secrets' record (spec 4): STATE_ROOT/fleet-secrets.missing.json, each pod and
- * its secret references with no source, the pod's replaced (dropped when it has none), the file
- * removed when no pod has any; owner-only, as the reference writes it. */
-static void note_missing(const em_fleet *f, const char *pod, const char *const *missing, size_t n)
+#define MISSING_SECRETS "fleet-secrets.missing.json" /* references with no source */
+#define STALE_SECRETS "fleet-secrets.stale.json"     /* an agent's own copies the fleet's differs from */
+
+/* data as dir/name, replacing what is there (Fleet's replace_private): a temporary private file
+ * written and flushed, renamed over it, the directory flushed */
+static bool replace_file(const char *dir, const char *name, const char *data, size_t len)
+{
+    char path[700], tmp[720];
+    if (!em_format(path, sizeof(path), "%s/%s", dir, name) || !em_format(tmp, sizeof(tmp), "%s/.tmp-%s", dir, name))
+        return false;
+    int fd = open(tmp, O_WRONLY | O_CREAT | O_TRUNC | O_NOFOLLOW | O_CLOEXEC, 0600);
+    if (fd < 0)
+        return false;
+    bool ok = write(fd, data, len) == (ssize_t)len && !fsync(fd);
+    ok = !close(fd) && ok && !rename(tmp, path);
+    int d = ok ? open(dir, O_RDONLY | O_DIRECTORY | O_CLOEXEC) : -1;
+    if (d >= 0) {
+        ok = !fsync(d);
+        close(d);
+    }
+    if (!ok)
+        (void)unlink(tmp);
+    return ok;
+}
+
+/* Fleet._record_secrets' records (spec 4) under the state root: each pod and its secret references
+ * (sorted), the pod's replaced (dropped when it has none), the file removed when no pod has any;
+ * owner-only, as the reference writes them */
+static void note_record(const em_fleet *f, const char *file, const char *pod, const char *const *missing,
+                        size_t n)
 {
     char path[600];
-    if (!f->state_root || !em_format(path, sizeof(path), "%s/fleet-secrets.missing.json", f->state_root))
+    if (!f->state_root || !em_format(path, sizeof(path), "%s/%s", f->state_root, file))
         return;
     char *text = em_read_file(path, 1024 * 1024, NULL);
     cJSON *kept = text ? cJSON_Parse(text) : NULL;
@@ -1033,7 +1059,7 @@ static void note_missing(const em_fleet *f, const char *pod, const char *const *
     cJSON_Delete(kept);
 }
 
-void em_fleet_provision_secrets(const em_fleet *f, const cJSON *agent_config)
+bool em_fleet_provision_secrets(const em_fleet *f, const cJSON *agent_config)
 {
     const char *source = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(f->config, "secrets"));
     const char *pod = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(agent_config, "pod_id"));
@@ -1048,41 +1074,77 @@ void em_fleet_provision_secrets(const em_fleet *f, const cJSON *agent_config)
         if (refs[i])
             refs[n++] = refs[i];
     if (!pod || !state)
-        return;
+        return false;
     em_sort(refs, n, sizeof(*refs), by_ref);
     if (n == 2 && !strcmp(refs[0], refs[1]))
         n = 1;
     char dir[600];
     em_vault fleet = {0}, own = {0};
-    const char *missing[2];
-    size_t nmissing = 0;
+    const char *missing[2], *stale[2];
+    size_t nmissing = 0, nstale = 0;
+    bool replaced = false;
     /* the agent's state directory may not exist before its first start; the fleet's store is
      * optional: without one, a reference the agent's store lacks has no source */
     if (n && ((mkdir(state, 0700) && errno != EEXIST) || !em_format(dir, sizeof(dir), "%s/secrets", state) ||
               (source && em_vault_open(&fleet, source) != EM_OK) || em_vault_open(&own, dir) != EM_OK))
-        return;
+        return false;
     for (size_t i = 0; i < n; i++) {
-        size_t len = 0;
-        uint8_t *have = own.backend.read(&own, refs[i], &len);
-        if (have) { /* the agent's own: never replaced */
-            OPENSSL_cleanse(have, len);
-            free(have);
-            continue;
-        }
-        uint8_t *value = source ? fleet.backend.read(&fleet, refs[i], &len) : NULL;
-        if (!value) {
+        size_t have_len = 0, value_len = 0, mark_len = 0;
+        uint8_t *have = own.backend.read(&own, refs[i], &have_len);
+        uint8_t *value = source ? fleet.backend.read(&fleet, refs[i], &value_len) : NULL;
+        char name[110], mine[65] = "", theirs[65] = "";
+        EM_FORMAT_FIXED(name, sizeof(name), ".%s.from-fleet", refs[i]); /* a reference: at most 96 */
+        em_secret_event event = EM_SECRET_PROVISIONED;
+        bool noted = true;
+        if (!have && !value) {
             missing[nmissing++] = refs[i];
-            if (f->secret_note)
-                f->secret_note(pod, refs[i], false);
-            continue;
+            event = EM_SECRET_MISSING;
+        } else if (!have) {
+            /* made meanwhile: that one stands, judged at the next bind */
+            noted = own.backend.create(&own, refs[i], value, value_len);
+            em_hmac_hex(own.key, sizeof(own.key), value, value_len, theirs);
+            noted = noted && replace_file(dir, name, theirs, strlen(theirs));
+        } else if (!value) {
+            noted = false; /* nothing to compare it with: the agent's copy stands */
+        } else {
+            uint8_t *mark = own.backend.read(&own, name, &mark_len);
+            em_hmac_hex(own.key, sizeof(own.key), have, have_len, mine);
+            bool marked = mark && mark_len == strlen(mine) && !CRYPTO_memcmp(mark, mine, mark_len);
+            if (mark) {
+                OPENSSL_cleanse(mark, mark_len);
+                free(mark);
+            }
+            if (have_len == value_len && !CRYPTO_memcmp(have, value, have_len)) {
+                /* equal: marked the fleet's, an agent provisioned before markers included */
+                event = EM_SECRET_ADOPTED;
+                noted = !marked && replace_file(dir, name, mine, strlen(mine));
+            } else if (marked) { /* the fleet's copy, its source changed */
+                em_hmac_hex(own.key, sizeof(own.key), value, value_len, theirs);
+                event = EM_SECRET_REPLACED;
+                noted = replace_file(dir, refs[i], (const char *)value, value_len) &&
+                        replace_file(dir, name, theirs, strlen(theirs));
+                replaced = replaced || noted;
+            } else { /* its own, placed or changed by hand: never replaced */
+                stale[nstale++] = refs[i];
+                event = EM_SECRET_STALE;
+            }
+            OPENSSL_cleanse(mine, sizeof(mine));
         }
-        (void)own.backend.create(&own, refs[i], value, len); /* made meanwhile: that one stands */
-        OPENSSL_cleanse(value, len);
-        free(value);
-        if (f->secret_note)
-            f->secret_note(pod, refs[i], true);
+        OPENSSL_cleanse(theirs, sizeof(theirs));
+        if (have) {
+            OPENSSL_cleanse(have, have_len);
+            free(have);
+        }
+        if (value) {
+            OPENSSL_cleanse(value, value_len);
+            free(value);
+        }
+        if (noted && f->secret_note)
+            f->secret_note(pod, refs[i], event);
     }
-    note_missing(f, pod, missing, nmissing);
+    note_record(f, MISSING_SECRETS, pod, missing, nmissing);
+    note_record(f, STALE_SECRETS, pod, stale, nstale);
+    return replaced;
 }
 
 cJSON *em_fleet_forget(em_fleet *f, const char *serial, const char *stamp,

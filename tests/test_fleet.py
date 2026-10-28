@@ -619,3 +619,51 @@ def test_a_secret_with_no_source_fails_loudly_and_is_recorded_until_it_has_one(t
     assert not record.exists()
     assert (tmp_path / "state" / "POD2" / "secrets" / "gtp").read_text() == "FleetGtpPassphrase1"
     assert "FleetGtpPassphrase1" not in caplog.text
+
+
+@pytest.mark.unit
+def test_a_changed_fleet_secret_replaces_the_fleets_own_copies_and_restarts_them(tmp_path, caplog):
+    """spec 4: a copy the fleet provisioned (its marker matching) follows the fleet's changed
+    value, and its agent restarts; one with no marker that equals the fleet's value is marked
+    then (an agent provisioned before markers) and follows the change too; one placed by hand
+    that differs is kept, warned about and recorded as stale. No value, marker or HMAC logged."""
+    caplog.set_level("INFO", logger="emosa.fleet")
+    store = tmp_path / "fleet-secrets"
+    fleet_secret(store, "gtp", "SyntheticKeyOne1")
+    started = []
+    bootstrap = {"uplink": {"mode": "off", "bootstrap": {"ssid": "g", "secret_ref": "gtp"}}}
+    pods = ("POD1", "POD2", "POD3")
+    fleet = make_fleet(tmp_path, started, secrets=str(store), pods=dict.fromkeys(pods, bootstrap))
+    entries = {
+        p: {"pod_id": p, "port": 6650 + i, "interface": f"em{i}", "al_mac": derive_al(p)}
+        for i, p in enumerate(pods, start=1)
+    }
+
+    def own(pod):
+        return tmp_path / "state" / pod / "secrets"
+
+    fleet.bind(entries["POD1"])  # provisioned, marked
+    fleet_secret(own("POD2"), "gtp", "HandPlacedKey22")  # its own, by hand
+    fleet.bind(entries["POD2"])
+    fleet_secret(own("POD3"), "gtp", "SyntheticKeyOne1")  # equal, from before markers
+    fleet.bind(entries["POD3"])
+    stale = tmp_path / "state" / "fleet-secrets.stale.json"
+    assert json.loads(stale.read_text()) == {"POD2": ["gtp"]}
+    assert [(own(p) / ".gtp.from-fleet").exists() for p in pods] == [True, False, True]
+    del started[:]
+    fleet_secret(store, "gtp", "SyntheticKeyTwo2")  # the onboarding key changed
+    for pod in pods:
+        fleet.bind(entries[pod])
+    values = [(own(p) / "gtp").read_text() for p in pods]
+    assert values == ["SyntheticKeyTwo2", "HandPlacedKey22", "SyntheticKeyTwo2"]
+    assert all((own(p) / "gtp").stat().st_mode & 0o777 == 0o600 for p in pods)
+    assert started == [("POD1", True), ("POD2", False), ("POD3", True)]
+    assert json.loads(stale.read_text()) == {"POD2": ["gtp"]}
+    assert "replaced from the fleet's store" in caplog.text
+    markers = [(own(p) / ".gtp.from-fleet").read_text() for p in ("POD1", "POD3")]
+    for secret in ("SyntheticKeyOne1", "SyntheticKeyTwo2", "HandPlacedKey22", *markers):
+        assert secret not in caplog.text and secret not in stale.read_text()
+    # by hand, the agent's copy set to the fleet's again: marked, and the record goes
+    fleet_secret(own("POD2"), "gtp", "SyntheticKeyTwo2")
+    fleet.bind(entries["POD2"])
+    assert not stale.exists() and (own("POD2") / ".gtp.from-fleet").exists()

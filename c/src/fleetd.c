@@ -181,14 +181,30 @@ static void stop_agent(void *ctx, const char *pod_id)
 
 /* a secret reference provisioned into an agent's store from the fleet's, or missing from both
  * (Fleet.provision_secrets): the reference, never the value */
-static void secret_note(const char *pod_id, const char *ref, bool provisioned)
+static void secret_note(const char *pod_id, const char *ref, em_secret_event event)
 {
-    if (provisioned)
+    switch (event) {
+    case EM_SECRET_PROVISIONED:
         LOG("pod %s: secret %s provisioned from the fleet's store", pod_id, ref);
-    else /* spec 4: loudly, recorded under the state root (em_fleet_provision_secrets) */
+        break;
+    case EM_SECRET_MISSING: /* spec 4: loudly, recorded under the state root (em_fleet_provision_secrets) */
         FAIL("pod %s: secret %s in neither its store nor the fleet's: whatever needs it (its uplink, its GTP "
              "station) cannot come up until it has one (the fleet's secrets)",
              pod_id, ref);
+        break;
+    case EM_SECRET_REPLACED: /* the reason its agent restarts next */
+        LOG("pod %s: secret %s replaced from the fleet's store (its source changed): its agent restarts", pod_id,
+            ref);
+        break;
+    case EM_SECRET_ADOPTED:
+        LOG("pod %s: secret %s equals the fleet's: marked its copy", pod_id, ref);
+        break;
+    case EM_SECRET_STALE:
+        WARN("pod %s: secret %s differs from the fleet's store and is its own (placed or changed by hand): kept, "
+             "never replaced",
+             pod_id, ref);
+        break;
+    }
 }
 
 /* at the fleet's start, an agent of the registry: enabled, then started (restarted when

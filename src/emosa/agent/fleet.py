@@ -33,6 +33,7 @@ import ctypes
 import ctypes.util
 import errno
 import hashlib
+import hmac
 import http.server
 import ipaddress
 import json
@@ -69,6 +70,7 @@ TIMEOUT = 5  # seconds for one pod's whole identify-and-hand-over exchange
 ADOPT_CHECK = 1  # seconds between the serving loop's looks at the free agent ports (re-admission)
 ADOPT_MAX = 128  # free agent ports listened on at most (the C fleet's and the forwarder's 128)
 MISSING_SECRETS = "fleet-secrets.missing.json"  # under the state root: references with no source
+STALE_SECRETS = "fleet-secrets.stale.json"  # under the state root: hand copies that differ
 RELEASE_WAIT = 2  # seconds a handler waits for the loop to stop listening on an agent port
 AGENT_DEFAULTS = {
     "message_set": "easymesh-6.1",
@@ -556,6 +558,40 @@ def passive(name):
     return ovs.stream.PassiveStream.open(name)
 
 
+def marker_name(ref):
+    """The file beside an agent's copy that marks it the fleet's (spec 4): a leading dot, so
+    never a reference's name."""
+    return f".{ref}.from-fleet"
+
+
+def marker(own, value):
+    """The marker of a value in an agent's store: its HMAC-SHA256 under that store's own
+    fingerprint key, hex."""
+    return hmac.new(own.key(), value, hashlib.sha256).hexdigest().encode()
+
+
+def replace_private(directory, name, value):
+    """value as directory/name, replacing what is there: a temporary private file written and
+    flushed, renamed over it, the directory flushed (an agent's copy the fleet changes, spec 4)."""
+    directory = Path(directory)
+    path, tmp = directory / name, directory / f".tmp-{name}"
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600)
+    try:
+        with os.fdopen(fd, "wb") as stream:
+            stream.write(value)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(tmp, path)
+        parent = os.open(directory, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            os.fsync(parent)
+        finally:
+            os.close(parent)
+    except BaseException:
+        tmp.unlink(missing_ok=True)
+        raise
+
+
 def write_private(path, text):
     """text to path through path.tmp and a rename, owner-only."""
     tmp = path.with_suffix(".tmp")
@@ -787,26 +823,42 @@ class Fleet:
 
     def bind(self, entry):
         """The entry's agent configuration written when new or changed, and its agent
-        started, or restarted when the configuration changed (spec §4 step 4). Whether it
-        changed."""
+        started, or restarted when the configuration changed or a secret of its was replaced
+        (spec §4 step 4). Whether it is restarted."""
         path = self.config_dir / f"{entry['pod_id']}.json"
         config = agent_config(entry, self.config)
-        self.note_missing_secrets(entry["pod_id"], self.provision_secrets(config))
+        missing, stale, replaced = self.provision_secrets(config)
+        self.note_missing_secrets(entry["pod_id"], missing)
+        self.note_stale_secrets(entry["pod_id"], stale)
         text = json.dumps(config, indent=2) + "\n"
         changed = path.exists() and path.read_text() != text
         if not path.exists() or changed:
             tmp = path.with_suffix(".tmp")
             tmp.write_text(text)
             os.replace(tmp, path)
-        self.starter(entry["pod_id"], changed)
-        return changed
+        if replaced:  # its vault takes a reference's value as fixed for a run (spec 6)
+            log.info(
+                "pod %s: its agent restarts: secret %s replaced from the fleet's store",
+                entry["pod_id"],
+                ", ".join(replaced),
+            )
+        self.starter(entry["pod_id"], changed or bool(replaced))
+        return changed or bool(replaced)
 
     def provision_secrets(self, config):
         """spec §4: each secret reference the agent configuration names (its uplink's, its GTP
-        station's) that the agent's own store lacks, copied from the fleet's store (``secrets``):
-        created, never replaced, durable, mode 0600. The references with no source, in neither
-        store (the agent's alone when the fleet has none), as after a factory reset that lost the
-        agent's store: returned, for bind's log and record; the agent then says what it misses."""
+        station's) kept in line with the fleet's store (``secrets``). One the agent's own store
+        lacks is copied from the fleet's: created, durable, mode 0600, with its marker (the
+        HMAC of the value under the agent store's own fingerprint key, beside it in the 0700
+        store: the copy is the fleet's while it matches it). One the fleet provisioned that
+        still matches its marker is replaced when the fleet's value changed (a changed
+        onboarding key): written atomically, its marker updated, and the agent restarted (bind).
+        One with no marker that equals the fleet's value is marked then (an agent provisioned
+        before markers). Any other copy (placed or changed by hand) is never replaced.
+        (missing, stale, replaced): the references with no source, in neither store (the
+        agent's alone when the fleet has none, as after a factory reset that lost the agent's
+        store); those whose own copy, not the fleet's, differs from the fleet's value; and those
+        replaced. No value, marker or HMAC is ever logged."""
         uplink = config.get("uplink") or {}
         refs = sorted(
             {
@@ -819,27 +871,50 @@ class Fleet:
             }
         )
         if not refs:
-            return []
+            return [], [], []
         fleet = FileSecrets(Path(self.config["secrets"])) if self.config.get("secrets") else None
         own = FileSecrets(Path(config["state_dir"]) / "secrets")
-        missing = []
+        pod = config["pod_id"]
+        missing, stale, replaced = [], [], []
         for ref in refs:
-            try:
-                own.read(ref)
-                continue  # the agent's own: never replaced
-            except EmosaError:
-                pass
-            try:
-                if fleet is None:
-                    raise EmosaError(Reason.NOT_FOUND, "no fleet store")
-                value = fleet.read(ref)
-            except EmosaError:
-                missing.append(ref)
+            source = have = None
+            with contextlib.suppress(EmosaError):
+                source = fleet.read(ref) if fleet is not None else None
+            with contextlib.suppress(EmosaError):
+                have = own.read(ref)
+            if have is None:
+                if source is None:
+                    missing.append(ref)
+                    continue
+                try:
+                    own.create(ref, source)
+                except FileExistsError:
+                    continue  # made meanwhile: that one stands, judged at the next bind
+                replace_private(own.directory, marker_name(ref), marker(own, source))
+                log.info("pod %s: secret %s provisioned from the fleet's store", pod, ref)
                 continue
-            with contextlib.suppress(FileExistsError):
-                own.create(ref, value)
-            log.info("pod %s: secret %s provisioned from the fleet's store", config["pod_id"], ref)
-        return missing
+            if source is None:
+                continue  # nothing to compare it with: the agent's copy stands
+            mark = None
+            with contextlib.suppress(EmosaError):
+                mark = own.read(marker_name(ref))
+            if hmac.compare_digest(have, source):
+                if mark is None or not hmac.compare_digest(mark, marker(own, have)):
+                    replace_private(own.directory, marker_name(ref), marker(own, have))
+                    log.info("pod %s: secret %s equals the fleet's: marked its copy", pod, ref)
+                continue
+            if mark is not None and hmac.compare_digest(mark, marker(own, have)):
+                replace_private(own.directory, ref, source)
+                replace_private(own.directory, marker_name(ref), marker(own, source))
+                replaced.append(ref)
+                log.info(
+                    "pod %s: secret %s replaced from the fleet's store (its source changed)",
+                    pod,
+                    ref,
+                )
+                continue
+            stale.append(ref)
+        return missing, stale, replaced
 
     def note_missing_secrets(self, pod_id, missing):
         """spec §4: a secret reference with no source fails loudly, without taking any pod off
@@ -853,14 +928,34 @@ class Fleet:
                 pod_id,
                 ref,
             )
-        record = Path(self.config["state_root"]) / MISSING_SECRETS
+        self._record_secrets(MISSING_SECRETS, pod_id, missing)
+
+    def note_stale_secrets(self, pod_id, stale):
+        """spec §4: an agent's own copy (placed or changed by hand, never replaced) that differs
+        from the fleet's value: a warning by reference only each time the pod's agent is bound,
+        and kept under the state root (fleet-secrets.stale.json, as the missing record) while it
+        differs."""
+        for ref in stale:
+            log.warning(
+                "pod %s: secret %s differs from the fleet's store and is its own (placed or"
+                " changed by hand): kept, never replaced",
+                pod_id,
+                ref,
+            )
+        self._record_secrets(STALE_SECRETS, pod_id, stale)
+
+    def _record_secrets(self, name, pod_id, refs):
+        """A record of secret references under the state root: each pod and its references
+        (sorted), the pod's replaced, dropped when it has none, the file removed when no pod
+        has any; owner-only."""
+        record = Path(self.config["state_root"]) / name
         with self.secrets_lock:
             try:
                 kept = json.loads(record.read_text())
             except (OSError, ValueError):
                 kept = {}
-            if missing:
-                kept[pod_id] = sorted(missing)
+            if refs:
+                kept[pod_id] = sorted(refs)
             else:
                 kept.pop(pod_id, None)
             if kept:

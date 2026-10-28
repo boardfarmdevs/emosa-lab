@@ -882,6 +882,35 @@ FLEET_ROOT = "{root}"  # a session's directory: each implementation substitutes 
 FLEET_STAMP = "20261003T120000"  # forget's archive suffix, as time.strftime would give it
 
 
+def write_test_secret(directory, ref, value):
+    """A secret as a store keeps it (a 0700 directory, a 0600 file): a session's fleet store, or
+    an agent's own copy placed by hand. Synthetic values only."""
+    directory.mkdir(mode=0o700, parents=True, exist_ok=True)
+    directory.chmod(0o700)
+    path = directory / ref
+    path.write_text(value)
+    path.chmod(0o600)
+
+
+def secret_files(state):
+    """A session's secrets as the fleet left them: each agent store's references and values, the
+    references marked the fleet's copy (a marker's value is its store's own: not compared), and
+    the missing and stale records (None when absent)."""
+    stores, marked = {}, {}
+    for directory in sorted(state.glob("*/secrets")):
+        pod = directory.parent.name
+        stores[pod] = {
+            p.name: p.read_text() for p in sorted(directory.iterdir()) if not p.name.startswith(".")
+        }
+        markers = directory.glob(".*.from-fleet")
+        marked[pod] = sorted(p.name[1 : -len(".from-fleet")] for p in markers)
+    records = {}
+    for kind in ("missing", "stale"):
+        path = state / f"fleet-secrets.{kind}.json"
+        records[kind] = path.read_text() if path.exists() else None
+    return {"secrets": stores, "marked": marked, "records": records}
+
+
 def fleet_session_vectors():
     import emosa.agent.fleet as fleet_module
 
@@ -934,6 +963,13 @@ def fleet_session_vectors():
         "message_set": EASYMESH_61,
     }
     gre = {**base, "ports": [6651, 6654], "gtp_underlay": "169.254.1.0/24"}  # GRE parents (8.6)
+    # keys in sorted order, as own's below: the configuration file keeps the order it is given
+    bootstrap = {"uplink": {"bootstrap": {"secret_ref": "gtp", "ssid": "gtp-ssid"}, "mode": "off"}}
+    secret_config = {  # the fleet's store, and pods whose GTP station takes its secret
+        **base,
+        "secrets": f"{FLEET_ROOT}/fleet-secrets",
+        "pods": dict.fromkeys((readmit_a, readmit_b, readmit_c), bootstrap),
+    }
     own = {
         SERIAL: {
             "profile": DEFAULT,
@@ -1109,6 +1145,21 @@ def fleet_session_vectors():
             {"arrival": [{"rows": [node(readmit_c)]}], "port": 6653, "now": 1759500000.75},
             {"arrival": [{"rows": [node(readmit_b)]}], "port": 6652, "now": 1759500001.25},
         ],
+        # spec 4, the fleet's secrets: a copy the fleet provisioned (marked) follows a changed
+        # value in the fleet's store, and its agent restarts; one with no marker equal to the
+        # fleet's value is marked then (an agent provisioned before markers) and follows too; one
+        # placed by hand that differs is kept and recorded as stale. Synthetic values only
+        "fleet-secrets-follow-a-changed-key": [
+            {"fleet_secret": {"ref": "gtp", "value": "SyntheticKeyOne1"}},
+            {"fleet_config": secret_config},
+            {"arrival": [{"rows": [node(readmit_a)]}], "now": 1759500000.25},
+            {"agent_secret": {"pod": readmit_b, "ref": "gtp", "value": "HandPlacedKey22"}},
+            {"arrival": [{"rows": [node(readmit_b)]}], "now": 1759500000.5},
+            {"agent_secret": {"pod": readmit_c, "ref": "gtp", "value": "SyntheticKeyOne1"}},
+            {"arrival": [{"rows": [node(readmit_c)]}], "now": 1759500000.75},
+            {"fleet_secret": {"ref": "gtp", "value": "SyntheticKeyTwo2"}},
+            {"fleet_config": secret_config},
+        ],
         # a port another pod's entry holds, or one outside the range, is not adopted; a pod
         # with an entry that dials another agent port is handed over to its own
         "agent-ports-taken-or-dialled-by-a-registered-pod": [
@@ -1160,6 +1211,14 @@ def fleet_session_vectors():
                     (Path(root) / step["mkdir"]).mkdir(parents=True)
                 elif "lose_registry" in step:
                     (Path(fleet.config["state_root"]) / "fleet.json").unlink()
+                elif "fleet_secret" in step or "agent_secret" in step:
+                    secret = step.get("fleet_secret") or step["agent_secret"]
+                    where = Path(root) / (
+                        "fleet-secrets"
+                        if "fleet_secret" in step
+                        else f"state/{secret['pod']}/secrets"
+                    )
+                    write_test_secret(where, secret["ref"], secret["value"])
                 elif "arrival" in step:
                     updates = []
 
@@ -1199,20 +1258,16 @@ def fleet_session_vectors():
                 recorded.append(done)
             state = Path(fleet.config["state_root"])
             configs = Path(fleet.config["config_dir"])
-            out.append(
-                {
-                    "name": name,
-                    "steps": recorded,
-                    "files": {
-                        "registry": placeholder((state / "fleet.json").read_text()),
-                        "configs": {
-                            p.stem: placeholder(p.read_text())
-                            for p in sorted(configs.glob("*.json"))
-                        },
-                        "archives": sorted(p.name for p in state.glob("*.released-*")),
-                    },
-                }
-            )
+            files = {
+                "registry": placeholder((state / "fleet.json").read_text()),
+                "configs": {
+                    p.stem: placeholder(p.read_text()) for p in sorted(configs.glob("*.json"))
+                },
+                "archives": sorted(p.name for p in state.glob("*.released-*")),
+            }
+            if any("fleet_secret" in s or "agent_secret" in s for s in steps):
+                files.update(secret_files(state))
+            out.append({"name": name, "steps": recorded, "files": files})
     return {
         "description": "spec §4: the fleet over whole sessions, as emosa.agent.fleet handles "
         "them. A step: fleet_config (the fleet (re)started with this configuration on the same "
@@ -1221,14 +1276,19 @@ def fleet_session_vectors():
         "AWLAN_Node "
         "select, and the wall clock; with port, a pod that dialled that agent port: spec 4, "
         "re-admission), lose_registry (the registry file removed, as a factory reset loses "
-        "it), mkdir (a directory under the session's), forget (a "
+        "it), fleet_secret (a value written to the fleet's store, fleet-secrets under the "
+        "session's), agent_secret (one placed by hand in a pod's agent store), mkdir (a "
+        "directory under the session's), forget (a "
         "serial, archived with suffix " + FLEET_STAMP + "), forget_elsewhere (the same, by "
         "another fleet process on the same files while this one serves). Per arrival: "
         "handover (the agent started or restarted, then the update sent), refused (not "
         "admitted, or no free port: nothing written to the pod) or invalid (an unusable "
         "identity: the same). files: the "
         "registry and the agent configurations as the fleet left them, byte for byte, and "
-        "the archived state directories. " + FLEET_ROOT + " stands for the session's own "
+        "the archived state directories; in a session with secrets also each agent store's "
+        "references and values, those marked the fleet's copy (the markers' values are each "
+        "store's own), and the missing and stale records. " + FLEET_ROOT + " stands for the "
+        "session's own "
         "directory.",
         "root": FLEET_ROOT,
         "stamp": FLEET_STAMP,

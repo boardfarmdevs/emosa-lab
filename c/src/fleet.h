@@ -120,20 +120,36 @@ cJSON *em_manager_update(const em_fleet_entry *e, const cJSON *fleet);
 
 /* -- a fleet: its configuration and files ------------------------------------------ */
 
+/* What became of a secret reference when the fleet wrote an agent's configuration (spec 4). */
+typedef enum {
+    EM_SECRET_PROVISIONED, /* copied from the fleet's store, marked */
+    EM_SECRET_MISSING,     /* in neither store */
+    EM_SECRET_REPLACED,    /* the fleet's copy, replaced: the fleet's value changed */
+    EM_SECRET_ADOPTED,     /* a copy equal to the fleet's, marked the fleet's */
+    EM_SECRET_STALE,       /* the agent's own (placed or changed by hand), not the fleet's value */
+} em_secret_event;
+
 typedef struct {
     cJSON *config; /* owned; validated by the caller (fleet-config schema) */
     const char *database, *state_root, *config_dir;
     em_registry registry;
     char registry_path[512];
-    /* told of each secret reference provisioned (or missing) when an agent configuration is
-     * written (Fleet.provision_secrets' log lines); NULL: not told */
-    void (*secret_note)(const char *pod_id, const char *ref, bool provisioned);
+    /* told of what became of each secret reference when an agent configuration is written
+     * (Fleet.provision_secrets' log lines); NULL: not told */
+    void (*secret_note)(const char *pod_id, const char *ref, em_secret_event event);
 } em_fleet;
 
 /* Fleet.provision_secrets (spec 4): each secret reference the agent configuration names (its
- * uplink's, its GTP station's) that the agent's store lacks, copied from the fleet's store (the
- * configuration's secrets): created, never replaced, durable; the value never leaves the stores. */
-void em_fleet_provision_secrets(const em_fleet *f, const cJSON *agent_config);
+ * uplink's, its GTP station's) in line with the fleet's store (the configuration's secrets). One
+ * the agent's store lacks is copied from the fleet's (created, durable) with its marker beside it
+ * (the HMAC of the value under the agent store's fingerprint key): the copy is the fleet's while
+ * it matches it. The fleet's copy is replaced when the fleet's value changed (atomically, its
+ * marker updated); a copy with no marker equal to the fleet's is marked then; any other (placed
+ * or changed by hand) is never replaced, and recorded as stale (fleet-secrets.stale.json). One
+ * with no source is recorded as missing (fleet-secrets.missing.json). No value, marker or HMAC
+ * leaves the stores. Whether one was replaced (its agent must restart: its vault takes a
+ * reference's value as fixed for a run). */
+bool em_fleet_provision_secrets(const em_fleet *f, const cJSON *agent_config);
 
 /* Takes config. False (*why) when the registry file exists but cannot be read. */
 bool em_fleet_open(em_fleet *f, cJSON *config, char *why, size_t size);

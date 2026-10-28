@@ -1026,9 +1026,19 @@ don't block it.
 backend of §6) a secret a site shares among its pods is kept once per gateway: the GTP BSS's
 passphrase (a legacy pod's `uplink.bootstrap.secret_ref`, §3.10) or a backhaul credential
 (`uplink.secret_ref`). Whenever the fleet writes an agent's configuration (step 4, and at its
-start), each reference the configuration names that the agent's own store lacks is copied from
-the fleet's: created (mode 0600, the agent's `secrets` directory 0700), never replacing one the
-agent has, durable. A reference with no source, in neither store (the agent's alone when the
+start), each reference the configuration names is kept in line with the fleet's store. One the
+agent's own store lacks is copied from the fleet's: created (mode 0600, the agent's `secrets`
+directory 0700), durable, with its marker beside it (`.<ref>.from-fleet`: the HMAC-SHA256 of the
+value under that store's own fingerprint key); the copy is the fleet's while it matches its
+marker. When the fleet's value changes (a changed onboarding key, which an image may write into
+the fleet's store at boot), the fleet's copy is replaced: written atomically (a temporary file
+flushed and renamed), its marker updated, and the agent restarted, the replacement logged as the
+reason (its vault takes a reference's value as fixed for a run). A copy with no marker that
+equals the fleet's value is marked then (an agent provisioned before markers), so it follows a
+later change. Any other copy, placed or changed by hand, is never replaced: while it differs
+from the fleet's value it is logged as a warning by reference each time the configuration is
+written and recorded under the state root (`fleet-secrets.stale.json`, as the missing record
+below). No value, marker or HMAC is ever logged or recorded. A reference with no source, in neither store (the agent's alone when the
 fleet has none, as after a factory reset that lost the agents' state), fails loudly without
 taking any pod off EMOSA: it is logged as an error by reference, each time the fleet writes that
 agent's configuration, and recorded under the state root (`fleet-secrets.missing.json`: each pod

@@ -783,11 +783,14 @@ static void fleet_underlays(void)
 }
 
 static unsigned notes_provisioned, notes_missing;
-static void note(const char *pod, const char *ref, bool provisioned)
+static void note(const char *pod, const char *ref, em_secret_event event)
 {
     (void)pod;
     (void)ref;
-    provisioned ? notes_provisioned++ : notes_missing++;
+    if (event == EM_SECRET_PROVISIONED)
+        notes_provisioned++;
+    else if (event == EM_SECRET_MISSING)
+        notes_missing++;
 }
 
 static bool secret_file(const char *dir, const char *ref, const char *value)

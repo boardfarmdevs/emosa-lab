@@ -1514,6 +1514,98 @@ static void record_start(void *ctx, const char *pod_id, bool changed)
     cJSON_AddItemToArray((cJSON *)ctx, start);
 }
 
+/* a secret as a store keeps it (a 0700 directory, a 0600 file): the fleet_secret and agent_secret
+ * steps; synthetic values only */
+static void write_test_secret(const char *dir, const char *ref, const char *value)
+{
+    char path[1400];
+    em_mkdirs(dir, 0700);
+    (void)chmod(dir, 0700);
+    snprintf(path, sizeof(path), "%s/%s", dir, ref);
+    FILE *f = fopen(path, "w");
+    if (!f)
+        return;
+    (void)fputs(value, f);
+    (void)fclose(f);
+    (void)chmod(path, 0600);
+}
+
+/* the entries of a store directory: those not starting with a dot (references), or the markers
+ * (.REF.from-fleet) */
+static int store_entries(const char *dir, bool markers)
+{
+    DIR *d = opendir(dir);
+    int n = 0;
+    const struct dirent *e;
+    while (d && (e = readdir(d))) {
+        size_t len = strlen(e->d_name);
+        bool marker = e->d_name[0] == '.' && len > 12 && !strcmp(e->d_name + len - 11, ".from-fleet");
+        if (markers ? marker : e->d_name[0] != '.')
+            n++;
+    }
+    if (d)
+        closedir(d);
+    return n;
+}
+
+/* a session's secrets as the fleet left them (secret_files in the generator): each agent store's
+ * references and values, the references marked the fleet's copy, and the missing and stale
+ * records; false with what differs in why */
+static bool secret_files_match(const char *state_root, const cJSON *files, char *why, size_t size)
+{
+    const cJSON *pod, *ref;
+    char dir[1200], path[1400];
+    cJSON_ArrayForEach(pod, cJSON_GetObjectItemCaseSensitive(files, "secrets"))
+    {
+        snprintf(dir, sizeof(dir), "%s/%s/secrets", state_root, pod->string);
+        if (store_entries(dir, false) != cJSON_GetArraySize(pod)) {
+            (void)snprintf(why, size, "%s: other references in its store", pod->string);
+            return false;
+        }
+        cJSON_ArrayForEach(ref, pod)
+        {
+            snprintf(path, sizeof(path), "%s/%s", dir, ref->string);
+            char *got = slurp(path);
+            bool same = got && !strcmp(got, ref->valuestring);
+            free(got);
+            if (!same) {
+                (void)snprintf(why, size, "%s: secret %s differs", pod->string, ref->string);
+                return false;
+            }
+        }
+    }
+    cJSON_ArrayForEach(pod, cJSON_GetObjectItemCaseSensitive(files, "marked"))
+    {
+        snprintf(dir, sizeof(dir), "%s/%s/secrets", state_root, pod->string);
+        if (store_entries(dir, true) != cJSON_GetArraySize(pod)) {
+            (void)snprintf(why, size, "%s: other markers", pod->string);
+            return false;
+        }
+        cJSON_ArrayForEach(ref, pod)
+        {
+            snprintf(path, sizeof(path), "%s/.%s.from-fleet", dir, ref->valuestring);
+            if (access(path, F_OK)) {
+                (void)snprintf(why, size, "%s: %s not marked", pod->string, ref->valuestring);
+                return false;
+            }
+        }
+    }
+    static const char *const kinds[] = {"missing", "stale"};
+    const cJSON *records = cJSON_GetObjectItemCaseSensitive(files, "records");
+    for (size_t i = 0; i < 2; i++) {
+        const cJSON *want = cJSON_GetObjectItemCaseSensitive(records, kinds[i]);
+        snprintf(path, sizeof(path), "%s/fleet-secrets.%s.json", state_root, kinds[i]);
+        char *got = slurp(path);
+        bool same = cJSON_IsString(want) ? got && !strcmp(got, want->valuestring) : !got;
+        free(got);
+        if (!same) {
+            (void)snprintf(why, size, "the %s record differs", kinds[i]);
+            return false;
+        }
+    }
+    return true;
+}
+
 static void fleet_session_vectors(const char *dir)
 {
     cJSON *doc = load(dir, "fleet-sessions.json");
@@ -1568,6 +1660,17 @@ static void fleet_session_vectors(const char *dir)
                 char path[2048];
                 snprintf(path, sizeof(path), "%s/%s", full, str(step, "mkdir"));
                 em_mkdirs(path, 0755);
+            } else if (cJSON_GetObjectItemCaseSensitive(step, "fleet_secret") ||
+                       cJSON_GetObjectItemCaseSensitive(step, "agent_secret")) {
+                const cJSON *s = cJSON_GetObjectItemCaseSensitive(step, "fleet_secret");
+                char store[1200];
+                if (s) {
+                    snprintf(store, sizeof(store), "%s/fleet-secrets", full);
+                } else {
+                    s = cJSON_GetObjectItemCaseSensitive(step, "agent_secret");
+                    snprintf(store, sizeof(store), "%s/state/%s/secrets", full, str(s, "pod"));
+                }
+                write_test_secret(store, str(s, "ref"), str(s, "value"));
             } else if (cJSON_GetObjectItemCaseSensitive(step, "lose_registry")) {
                 /* a factory reset: the registry file gone */
                 char path[2048];
@@ -1654,6 +1757,12 @@ static void fleet_session_vectors(const char *dir)
                 checks++;
                 if (stat(path, &st) || !S_ISDIR(st.st_mode))
                     fail("fleet-sessions", name, archive->valuestring);
+            }
+            if (cJSON_GetObjectItemCaseSensitive(files, "secrets")) { /* a session with secrets */
+                char why[300] = "";
+                checks++;
+                if (!secret_files_match(fleet.state_root, files, why, sizeof(why)))
+                    fail("fleet-sessions", name, why);
             }
             em_fleet_close(&fleet);
         }
