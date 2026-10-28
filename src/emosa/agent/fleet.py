@@ -1033,17 +1033,26 @@ def main():
     parser.add_argument("serial", nargs="?")
     args = parser.parse_args()
     logs.configure()
+
+    def refuse_supervised(config):
+        # spec §4: the agents as the fleet's own children are the C fleet's; refused before the
+        # fleet writes anything (served_config keeps the configuration it serves)
+        if isinstance(config, dict) and config.get("agents") == "supervised":
+            parser.error(
+                '"agents": "supervised" is emosa-fleet-c\'s; this fleet runs systemd units'
+            )
+
     if args.command == "serve":  # a configuration that is not valid: the last valid one (spec 4)
         try:
             config = json.loads(args.config.read_text())
         except ValueError:
             config = None
+        refuse_supervised(config)
         config = served_config(config, args.config)
     else:
         config = json.loads(args.config.read_text())
-    if config.get("agents") == "supervised" and args.command != "list":
-        # spec §4: the agents as the fleet's own children are the C fleet's
-        parser.error('"agents": "supervised" is emosa-fleet-c\'s; this fleet runs systemd units')
+    if args.command != "list":  # the one served, the last valid one included
+        refuse_supervised(config)
     Path(config["state_root"]).mkdir(mode=0o700, parents=True, exist_ok=True)
     Path(config["config_dir"]).mkdir(parents=True, exist_ok=True)
     fleet = Fleet(config)

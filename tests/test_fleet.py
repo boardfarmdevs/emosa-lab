@@ -341,6 +341,7 @@ def test_a_connecting_ovsdb_server_is_identified_and_handed_over(tmp_path):
     asyncio.run(scenario())
 
 
+@pytest.mark.unit
 @pytest.mark.parametrize("command", ["serve", "forget"])
 def test_the_reference_refuses_supervised_agents(tmp_path, monkeypatch, capsys, command):
     """spec §4: the agents as the fleet's children are the C fleet's; the reference
@@ -364,6 +365,7 @@ def fleet_secret(directory, ref, value):
     path.chmod(0o600)
 
 
+@pytest.mark.unit
 def test_an_agents_secret_is_provisioned_from_the_fleets_store(tmp_path):
     # spec §4: the GTP passphrase kept once per gateway (the fleet's secrets), copied into the
     # agent's store when its configuration names it, so a forgotten or new pod needs no hand
@@ -387,6 +389,7 @@ def test_an_agents_secret_is_provisioned_from_the_fleets_store(tmp_path):
     assert (tmp_path / "fleet-secrets" / "gtp").read_text() == "FleetGtpPassphrase1"
 
 
+@pytest.mark.unit
 def test_an_agents_own_secret_is_never_replaced_and_a_missing_one_is_only_logged(tmp_path, caplog):
     fleet_secret(tmp_path / "fleet-secrets", "gtp", "FleetGtpPassphrase1")
     fleet_secret(tmp_path / "state" / "POD2" / "secrets", "gtp", "AgentsOwnPassphrase")
