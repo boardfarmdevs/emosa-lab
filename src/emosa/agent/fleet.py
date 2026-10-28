@@ -68,6 +68,7 @@ IDENTITY = ["id", "serial_number", "model", "firmware_version"]
 TIMEOUT = 5  # seconds for one pod's whole identify-and-hand-over exchange
 ADOPT_CHECK = 1  # seconds between the serving loop's looks at the free agent ports (re-admission)
 ADOPT_MAX = 128  # free agent ports listened on at most (the C fleet's and the forwarder's 128)
+MISSING_SECRETS = "fleet-secrets.missing.json"  # under the state root: references with no source
 RELEASE_WAIT = 2  # seconds a handler waits for the loop to stop listening on an agent port
 AGENT_DEFAULTS = {
     "message_set": "easymesh-6.1",
@@ -631,6 +632,7 @@ class Fleet:
         self.adoption_lock = threading.Lock()
         self.releases = {}  # port -> Event, set once the loop closed its listener
         self.adopt_failed = set()  # ports it could not listen on, logged once
+        self.secrets_lock = threading.Lock()  # the record of secrets with no source
 
     def admission(self, serial, model, firmware):
         """How the fleet admits a pod (spec 4 step 2), for its log: "all" (admit is *), "serial"
@@ -789,7 +791,7 @@ class Fleet:
         changed."""
         path = self.config_dir / f"{entry['pod_id']}.json"
         config = agent_config(entry, self.config)
-        self.provision_secrets(config)
+        self.note_missing_secrets(entry["pod_id"], self.provision_secrets(config))
         text = json.dumps(config, indent=2) + "\n"
         changed = path.exists() and path.read_text() != text
         if not path.exists() or changed:
@@ -802,10 +804,9 @@ class Fleet:
     def provision_secrets(self, config):
         """spec §4: each secret reference the agent configuration names (its uplink's, its GTP
         station's) that the agent's own store lacks, copied from the fleet's store (``secrets``):
-        created, never replaced, durable, mode 0600. One the fleet's store lacks too is logged
-        by reference only; the agent then says what it misses."""
-        if not self.config.get("secrets"):
-            return
+        created, never replaced, durable, mode 0600. The references with no source, in neither
+        store (the agent's alone when the fleet has none), as after a factory reset that lost the
+        agent's store: returned, for bind's log and record; the agent then says what it misses."""
         uplink = config.get("uplink") or {}
         refs = sorted(
             {
@@ -818,9 +819,10 @@ class Fleet:
             }
         )
         if not refs:
-            return
-        fleet = FileSecrets(Path(self.config["secrets"]))
+            return []
+        fleet = FileSecrets(Path(self.config["secrets"])) if self.config.get("secrets") else None
         own = FileSecrets(Path(config["state_dir"]) / "secrets")
+        missing = []
         for ref in refs:
             try:
                 own.read(ref)
@@ -828,15 +830,43 @@ class Fleet:
             except EmosaError:
                 pass
             try:
+                if fleet is None:
+                    raise EmosaError(Reason.NOT_FOUND, "no fleet store")
                 value = fleet.read(ref)
             except EmosaError:
-                log.warning(
-                    "pod %s: secret %s in neither its store nor the fleet's", config["pod_id"], ref
-                )
+                missing.append(ref)
                 continue
             with contextlib.suppress(FileExistsError):
                 own.create(ref, value)
             log.info("pod %s: secret %s provisioned from the fleet's store", config["pod_id"], ref)
+        return missing
+
+    def note_missing_secrets(self, pod_id, missing):
+        """spec §4: a secret reference with no source fails loudly, without taking any pod off
+        EMOSA: an error logged by reference only (never a value) each time the pod's agent is
+        bound, and kept under the state root (fleet-secrets.missing.json: each pod and its
+        references with no source) until it has one. The agent starts all the same."""
+        for ref in missing:
+            log.error(
+                "pod %s: secret %s in neither its store nor the fleet's: whatever needs it (its"
+                " uplink, its GTP station) cannot come up until it has one (the fleet's secrets)",
+                pod_id,
+                ref,
+            )
+        record = Path(self.config["state_root"]) / MISSING_SECRETS
+        with self.secrets_lock:
+            try:
+                kept = json.loads(record.read_text())
+            except (OSError, ValueError):
+                kept = {}
+            if missing:
+                kept[pod_id] = sorted(missing)
+            else:
+                kept.pop(pod_id, None)
+            if kept:
+                write_private(record, json.dumps(kept, indent=2, sort_keys=True) + "\n")
+            else:
+                record.unlink(missing_ok=True)
 
     def start_registered(self):
         """At the fleet's start, every admitted pod's agent in the registry, as step 4

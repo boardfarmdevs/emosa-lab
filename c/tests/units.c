@@ -844,6 +844,29 @@ static void fleet_secrets(const char *scratch)
     em_fleet_provision_secrets(&f, agent);
     snprintf(path, sizeof(path), "%s/missing", own_dir);
     CHECK(access(path, F_OK) != 0 && notes_missing == 1, "one the fleet lacks too: told, nothing made");
+    /* spec 4: one with no source recorded under the state root, owner-only, until it has one; with
+     * no fleet store, one the agent's store lacks has none (a factory reset lost it) */
+    char root[512], record[600];
+    snprintf(root, sizeof(root), "%s/root", scratch);
+    (void)mkdir(root, 0700);
+    snprintf(record, sizeof(record), "%s/fleet-secrets.missing.json", root);
+    f.state_root = root;
+    em_fleet_provision_secrets(&f, agent);
+    char *kept = em_read_file(record, 4096, &len);
+    CHECK(kept && !strcmp(kept, "{\n  \"POD2\": [\n    \"missing\"\n  ]\n}\n") && stat(record, &st) == 0 &&
+              (st.st_mode & 0777) == 0600,
+          "one with no source recorded, as the reference writes it, private");
+    free(kept);
+    CHECK(secret_file(fleet_dir, "missing", "NowItHasOne3"), "its source");
+    em_fleet_provision_secrets(&f, agent);
+    CHECK(access(record, F_OK) != 0, "the record gone once it has one");
+    cJSON_DeleteItemFromObjectCaseSensitive(config, "secrets");
+    cJSON_ReplaceItemInObjectCaseSensitive(cJSON_GetObjectItemCaseSensitive(uplink, "bootstrap"), "secret_ref",
+                                           cJSON_CreateString("gone"));
+    em_fleet_provision_secrets(&f, agent);
+    kept = em_read_file(record, 4096, &len);
+    CHECK(kept && strstr(kept, "\"gone\"") != NULL, "no fleet store: the one the agent's lacks recorded");
+    free(kept);
     cJSON_Delete(agent);
     cJSON_Delete(config);
 }

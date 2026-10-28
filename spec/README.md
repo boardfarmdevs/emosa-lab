@@ -1027,9 +1027,14 @@ passphrase (a legacy pod's `uplink.bootstrap.secret_ref`, §3.10) or a backhaul 
 (`uplink.secret_ref`). Whenever the fleet writes an agent's configuration (step 4, and at its
 start), each reference the configuration names that the agent's own store lacks is copied from
 the fleet's: created (mode 0600, the agent's `secrets` directory 0700), never replacing one the
-agent has, durable. One missing from the fleet's store too is logged by reference; the agent
-then says what it lacks. The value is never logged. So a pod forgotten and admitted again, or
-a new one, needs no secret placed by hand. Both fleets.
+agent has, durable. A reference with no source, in neither store (the agent's alone when the
+fleet has none, as after a factory reset that lost the agents' state), fails loudly without
+taking any pod off EMOSA: it is logged as an error by reference, each time the fleet writes that
+agent's configuration, and recorded under the state root (`fleet-secrets.missing.json`: each pod
+and its references with no source, owner-only) until it has one; the agent starts all the same
+and says what it lacks. The value is never logged. So a pod forgotten and admitted again, or a
+new one, needs no secret placed by hand, and an image that keeps a shared secret elsewhere (the
+gateway's own pod-backhaul key, say) fills the fleet's store from it at boot. Both fleets.
 
 **The pods' modules.** A pod may run software of its own that EMOSA manages through OpenSync's
 `Node_Config` and `Node_State` (a start-up hook kept on a converted pod's flash, say: its

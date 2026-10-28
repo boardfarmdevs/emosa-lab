@@ -998,6 +998,41 @@ bool em_fleet_update_ok(const cJSON *result)
 
 static int by_ref(const void *a, const void *b) { return strcmp(*(const char *const *)a, *(const char *const *)b); }
 
+/* Fleet.note_missing_secrets' record (spec 4): STATE_ROOT/fleet-secrets.missing.json, each pod and
+ * its secret references with no source, the pod's replaced (dropped when it has none), the file
+ * removed when no pod has any; owner-only, as the reference writes it. */
+static void note_missing(const em_fleet *f, const char *pod, const char *const *missing, size_t n)
+{
+    char path[600];
+    if (!f->state_root || !em_format(path, sizeof(path), "%s/fleet-secrets.missing.json", f->state_root))
+        return;
+    char *text = em_read_file(path, 1024 * 1024, NULL);
+    cJSON *kept = text ? cJSON_Parse(text) : NULL;
+    free(text);
+    if (!cJSON_IsObject(kept)) {
+        cJSON_Delete(kept);
+        kept = cJSON_CreateObject();
+    }
+    cJSON_DeleteItemFromObjectCaseSensitive(kept, pod);
+    if (n) {
+        cJSON *refs = cJSON_CreateArray();
+        for (size_t i = 0; i < n; i++)
+            cJSON_AddItemToArray(refs, cJSON_CreateString(missing[i]));
+        cJSON_AddItemToObject(kept, pod, refs);
+    }
+    if (cJSON_GetArraySize(kept)) {
+        char *dump = em_json_dumps(kept, EM_JSON_INDENT2, true), *line = NULL;
+        size_t size = dump ? strlen(dump) + 2 : 0;
+        if (dump && (line = malloc(size)) && em_format(line, size, "%s\n", dump) && em_write_file(path, line, true))
+            (void)chmod(path, 0600);
+        free(line);
+        free(dump);
+    } else {
+        (void)unlink(path);
+    }
+    cJSON_Delete(kept);
+}
+
 void em_fleet_provision_secrets(const em_fleet *f, const cJSON *agent_config)
 {
     const char *source = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(f->config, "secrets"));
@@ -1012,16 +1047,19 @@ void em_fleet_provision_secrets(const em_fleet *f, const cJSON *agent_config)
     for (size_t i = 0; i < 2; i++)
         if (refs[i])
             refs[n++] = refs[i];
-    if (!source || !pod || !state || !n)
+    if (!pod || !state)
         return;
     em_sort(refs, n, sizeof(*refs), by_ref);
     if (n == 2 && !strcmp(refs[0], refs[1]))
         n = 1;
     char dir[600];
-    em_vault fleet, own;
-    /* the agent's state directory may not exist before its first start */
-    if ((mkdir(state, 0700) && errno != EEXIST) || !em_format(dir, sizeof(dir), "%s/secrets", state) ||
-        em_vault_open(&fleet, source) != EM_OK || em_vault_open(&own, dir) != EM_OK)
+    em_vault fleet = {0}, own = {0};
+    const char *missing[2];
+    size_t nmissing = 0;
+    /* the agent's state directory may not exist before its first start; the fleet's store is
+     * optional: without one, a reference the agent's store lacks has no source */
+    if (n && ((mkdir(state, 0700) && errno != EEXIST) || !em_format(dir, sizeof(dir), "%s/secrets", state) ||
+              (source && em_vault_open(&fleet, source) != EM_OK) || em_vault_open(&own, dir) != EM_OK))
         return;
     for (size_t i = 0; i < n; i++) {
         size_t len = 0;
@@ -1031,8 +1069,9 @@ void em_fleet_provision_secrets(const em_fleet *f, const cJSON *agent_config)
             free(have);
             continue;
         }
-        uint8_t *value = fleet.backend.read(&fleet, refs[i], &len);
+        uint8_t *value = source ? fleet.backend.read(&fleet, refs[i], &len) : NULL;
         if (!value) {
+            missing[nmissing++] = refs[i];
             if (f->secret_note)
                 f->secret_note(pod, refs[i], false);
             continue;
@@ -1043,6 +1082,7 @@ void em_fleet_provision_secrets(const em_fleet *f, const cJSON *agent_config)
         if (f->secret_note)
             f->secret_note(pod, refs[i], true);
     }
+    note_missing(f, pod, missing, nmissing);
 }
 
 cJSON *em_fleet_forget(em_fleet *f, const char *serial, const char *stamp,

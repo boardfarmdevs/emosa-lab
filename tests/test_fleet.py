@@ -593,3 +593,26 @@ def test_a_fleet_with_gre_parents_reads_the_underlay_a_pod_has_with_its_identity
     plain._call = call
     plain.handle(None, "peer")
     assert asked == [["AWLAN_Node"]]
+
+
+@pytest.mark.unit
+def test_a_secret_with_no_source_fails_loudly_and_is_recorded_until_it_has_one(tmp_path, caplog):
+    """A factory reset lost the agent's store, and the fleet has none: the reference is logged as
+    an error and recorded under the state root, the agent started all the same; once the fleet's
+    store has it (as an image may fill it at boot), it is provisioned and the record goes."""
+    started = []
+    bootstrap = {"uplink": {"mode": "off", "bootstrap": {"ssid": "g", "secret_ref": "gtp"}}}
+    fleet = make_fleet(tmp_path, started, pods={"POD2": bootstrap})
+    entry = {"pod_id": "POD2", "port": 6652, "interface": "em2", "al_mac": derive_al("POD2")}
+    record = tmp_path / "state" / "fleet-secrets.missing.json"
+    fleet.bind(entry)
+    assert json.loads(record.read_text()) == {"POD2": ["gtp"]}
+    assert record.stat().st_mode & 0o777 == 0o600
+    assert any(r.levelname == "ERROR" and "gtp" in r.getMessage() for r in caplog.records)
+    assert started == [("POD2", False)]
+    fleet_secret(tmp_path / "fleet-secrets", "gtp", "FleetGtpPassphrase1")
+    fleet.config["secrets"] = str(tmp_path / "fleet-secrets")
+    fleet.bind(entry)
+    assert not record.exists()
+    assert (tmp_path / "state" / "POD2" / "secrets" / "gtp").read_text() == "FleetGtpPassphrase1"
+    assert "FleetGtpPassphrase1" not in caplog.text

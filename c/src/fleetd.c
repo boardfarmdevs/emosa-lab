@@ -185,8 +185,10 @@ static void secret_note(const char *pod_id, const char *ref, bool provisioned)
 {
     if (provisioned)
         LOG("pod %s: secret %s provisioned from the fleet's store", pod_id, ref);
-    else
-        WARN("pod %s: secret %s in neither its store nor the fleet's", pod_id, ref);
+    else /* spec 4: loudly, recorded under the state root (em_fleet_provision_secrets) */
+        FAIL("pod %s: secret %s in neither its store nor the fleet's: whatever needs it (its uplink, its GTP "
+             "station) cannot come up until it has one (the fleet's secrets)",
+             pod_id, ref);
 }
 
 /* at the fleet's start, an agent of the registry: enabled, then started (restarted when
