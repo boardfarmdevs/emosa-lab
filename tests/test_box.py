@@ -569,6 +569,15 @@ def test_after_a_factory_reset_the_pod_is_readmitted_on_the_agent_port_it_dials(
     assert all(result["same"].values()) and result["units_after_start"][:2] == ["enable", "start"]
 
 
+def test_after_a_factory_reset_three_pods_back_in_another_order_keep_their_entries(agent, tmp_path):
+    if agent == "c":
+        adapter(agent, "emosa-fleet-c")
+    result = box("fleet-readmit-pods", agent, tmp_path / "box", timeout=300)
+    assert result["passed"], result
+    expected = dict(zip(reversed(result["order"]), [6651, 6652, 6653], strict=True))
+    assert result["entries"] == expected, result
+
+
 def test_pods_the_fleet_must_not_take_are_left_unchanged(agent, tmp_path):
     if agent == "c":
         adapter(agent, "emosa-fleet-c")

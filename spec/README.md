@@ -973,8 +973,9 @@ the underlay's .1 with netmask 255.255.255.0, a 169.254.N.0/24), when the rows n
 entry uses it and it is clear of the GTP underlay: its children's tunnels stay up. One taken, or
 over the GTP underlay, is allocated as before. Both fleets (conformance `fleet-sessions`:
 `readmitted-on-the-ports-they-dial-after-a-lost-registry`,
-`agent-ports-taken-or-dialled-by-a-registered-pod`,
-`gre-parents-keep-their-underlays-after-a-lost-registry`).
+`agent-ports-taken-or-dialled-by-a-registered-pod`, `agent-ports-admit-as-the-front-port`,
+`gre-parents-keep-their-underlays-after-a-lost-registry`; box `fleet-readmit`,
+`fleet-readmit-pods`).
 
 A serving fleet keeps each valid configuration it starts on as the last valid one
 (`fleet-config.valid.json` under its `state_root`). One that fails its checks (its

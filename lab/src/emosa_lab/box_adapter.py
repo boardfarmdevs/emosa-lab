@@ -28,6 +28,7 @@ import urllib.request
 from email.utils import parsedate_to_datetime
 from pathlib import Path
 
+from emosa.opensync.session import OvsSession
 from emosa_lab.box import (
     AUTOCONFIG_SEARCH,
     AUTOCONFIG_WSC,
@@ -39,8 +40,10 @@ from emosa_lab.box import (
     kept_reconnections,
     onboarded,
     provision,
+    recorded_pod,
     wait_for_port,
 )
+from emosa_lab.simulation.database import SimDatabase
 
 FLEET_PORT = 6650
 FLEET_PORTS = [6651, 6652]
@@ -484,6 +487,158 @@ async def fleet_readmit(box):
         new_process=bool(started) and started != pid,
         provisioning_again=again,
     )
+
+
+READMIT_PODS = ("EMOSAPOD000000B0B2", "EMOSAPOD000000B0C3")  # fleet-readmit-pods' other two
+COLLIDING_POD = "EMOSAPOD000000B0D4"  # one that dials another pod's agent port
+
+
+async def extra_pod(box, serial, index):
+    """Another pod in the box: the recorded pod's rows under another serial, its database
+    started, and a veth pair for its agent (em<index>, the fleet's interface for its port, to
+    ctl<index>, where no controller listens: only the box's own pod is provisioned)."""
+    for command in (
+        ["ip", "link", "add", f"em{index}", "type", "veth", "peer", "name", f"ctl{index}"],
+        ["ip", "link", "set", f"em{index}", "up"],
+        ["ip", "link", "set", f"ctl{index}", "up"],
+    ):
+        subprocess.run(command, check=True)
+    _, operations = recorded_pod(box.pod_rows, replace={box.serial: serial}, drop=box.drop)
+    db = SimDatabase(schema=box.schema, generation=box.db.generation)
+    await db.start()
+    session = OvsSession(db.endpoint, schema_generation=db.generation)
+    try:
+        await session.transact(operations)
+    finally:
+        await session.close()
+    return db
+
+
+async def pod_manager_addr(db):
+    session = OvsSession(db.endpoint, schema_generation=db.generation)
+    select = {"op": "select", "table": "AWLAN_Node", "where": [], "columns": ["manager_addr"]}
+    try:
+        rows = (await session.transact([select]))[0]["rows"]
+    finally:
+        await session.close()
+    return rows[0].get("manager_addr") if rows else None
+
+
+async def hand_over_pod(db, seconds=20):
+    """FleetBox.hand_over for another pod: handed to the fleet's front port, then dialing the
+    agent port the fleet gave it. That address, or None when it was not handed over."""
+    session = OvsSession(db.endpoint, schema_generation=db.generation)
+    update = {"op": "update", "table": "AWLAN_Node", "where": [], "row": {}}
+    update["row"]["manager_addr"] = FLEET_ADDRESS
+    try:
+        await session.transact([update])
+    finally:
+        await session.close()
+    await dial(db, FLEET_ADDRESS)
+    deadline, address = time.monotonic() + seconds, None
+    while time.monotonic() < deadline and address is None:
+        given = await pod_manager_addr(db)
+        address = given if given and given != FLEET_ADDRESS else None
+        if address is None:
+            await asyncio.sleep(0.2)
+    await dial(db, FLEET_ADDRESS, connect=False)
+    if address:
+        await dial(db, address)
+    return address
+
+
+def agent_serves(box, serial):
+    """Whether the pod's agent reads its pod (spec 6 status: the pod's facts, its own serial)."""
+    path = Path(box.fleet_config["state_root"]) / serial / "status.json"
+    try:
+        status = json.loads(path.read_text())
+    except (OSError, ValueError):
+        return False
+    return (
+        bool(status.get("report_source_available"))
+        and (status.get("pod") or {}).get("serial") == serial
+    )
+
+
+async def fleet_readmit_pods(box):
+    """spec 4, re-admission, three pods: handed over in order (the agent ports 1, 2, 3), then a
+    factory reset (the fleet and every agent stopped, the registry and the agents' state gone,
+    each pod's link down), the fleet started again, and the pods back in the other order. Each
+    is re-admitted on the port it dials: the same port, interface and AL MAC as before, its agent
+    started and reading it; the box's own pod provisioned again. Then a fourth pod dials the
+    second pod's port: the agent there acts on no other pod, the fleet makes no entry for it and
+    leaves it unchanged, and the second pod is still its agent's."""
+    first = await onboarded(box)
+    pods, dbs = {box.serial: (box.db, AGENT_ADDRESS)}, []
+    colliding = None
+    try:
+        for index, serial in enumerate(READMIT_PODS, start=2):
+            db = await extra_pod(box, serial, index)
+            dbs.append(db)
+            pods[serial] = (db, await hand_over_pod(db))
+        handed = all(address for _, address in pods.values())
+        before = box.registry()
+        searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+        # the factory reset
+        box.stop_fleet()
+        for db, address in pods.values():
+            if address:
+                await dial(db, address, connect=False)
+        for serial in pods:
+            agent = AgentProcess(box.units / f"{serial}.pid")
+            if agent.pid():
+                agent.terminate()
+                agent.wait(15)
+            (box.units / f"{serial}.pid").unlink(missing_ok=True)
+        state = Path(box.fleet_config["state_root"])
+        (state / "fleet.json").unlink(missing_ok=True)
+        for serial in pods:
+            shutil.rmtree(state / serial, ignore_errors=True)
+        await box.restart_fleet()
+        # back in the other order, each once the one before it is in the registry again
+        order = list(reversed(list(pods)))
+        for serial in order:
+            db, address = pods[serial]
+            if address:
+                await dial(db, address)
+            await box.until(lambda s=serial: s in box.registry(), seconds=20)
+        started = {s: await box.until(lambda s=s: agent_serves(box, s), seconds=30) for s in pods}
+        again = await provision(box, searches, m1s)
+        after = box.registry()
+        # a fourth pod on the second pod's port
+        second = READMIT_PODS[0]
+        colliding = await extra_pod(box, COLLIDING_POD, 4)
+        await dial(colliding, pods[second][1])
+        await asyncio.sleep(6)
+        left = await pod_manager_addr(colliding)
+        await dial(colliding, pods[second][1], connect=False)
+        still = await box.until(lambda: agent_serves(box, second), seconds=30)
+        keys = ("port", "interface", "al_mac")
+        same = {
+            s: {k: (after.get(s) or {}).get(k) == (before.get(s) or {}).get(k) for k in keys}
+            for s in pods
+        }
+        checks = {
+            "onboarded": bool(first.get("applied")),
+            "handed_over": handed,
+            "ports_in_order": [(before.get(s) or {}).get("port") for s in pods]
+            == [6651, 6652, 6653],
+            "same_entries": all(all(v.values()) for v in same.values()),
+            "agents_serve_their_pods": all(started.values()),
+            "provisioned_again": again,
+            "colliding_left_unchanged": not left and COLLIDING_POD not in box.registry(),
+            "second_pod_still_served": bool(still),
+        }
+        return box.result(
+            passed=all(checks.values()),
+            checks=checks,
+            order=order,
+            same=same,
+            entries={s: (after.get(s) or {}).get("port") for s in pods},
+        )
+    finally:
+        for db in [*dbs, *([colliding] if colliding else [])]:
+            await db.close()
 
 
 async def fleet_config_truncated(box):
@@ -1056,6 +1211,7 @@ SCENARIOS = {
     "fleet-return": fleet_return,
     "fleet-upgrade": fleet_upgrade,
     "fleet-readmit": fleet_readmit,
+    "fleet-readmit-pods": fleet_readmit_pods,
     "fleet-refusals": fleet_refusals,
     "fleet-admit-by-model": fleet_admit_by_model,
     "fleet-takeover": fleet_takeover,
@@ -1066,6 +1222,7 @@ SCENARIOS = {
     "fleet-config-truncated": fleet_config_truncated,
 }
 OPTIONS = {
+    "fleet-readmit-pods": {"fleet": {"ports": [6651, 6653]}},
     "fleet-refusals": {"fleet": {"admit": [OTHER_POD]}, "handover_seconds": 6},
     "fleet-admit-by-model": {
         "legacy": True,
