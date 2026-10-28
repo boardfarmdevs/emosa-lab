@@ -572,7 +572,9 @@ def marker(own, value):
 
 def replace_private(directory, name, value):
     """value as directory/name, replacing what is there: a temporary private file written and
-    flushed, renamed over it, the directory flushed (an agent's copy the fleet changes, spec 4)."""
+    flushed, renamed over it, the directory flushed (an agent's copy the fleet changes, spec 4).
+    The files backend's layout (FileSecrets, the only store the fleet opens for an agent):
+    an agent store on a platform backend would need that backend's own replace instead."""
     directory = Path(directory)
     path, tmp = directory / name, directory / f".tmp-{name}"
     fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600)

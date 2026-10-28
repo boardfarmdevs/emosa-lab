@@ -1002,7 +1002,10 @@ static int by_ref(const void *a, const void *b) { return strcmp(*(const char *co
 #define STALE_SECRETS "fleet-secrets.stale.json"     /* an agent's own copies the fleet's differs from */
 
 /* data as dir/name, replacing what is there (Fleet's replace_private): a temporary private file
- * written and flushed, renamed over it, the directory flushed */
+ * written and flushed, renamed over it, the directory flushed. The files backend's layout: the
+ * fleet opens an agent's store with em_vault_open, the files backend, so it writes there itself
+ * (backends create, never replace); an agent store on a platform backend would need that
+ * backend's own replace instead. */
 static bool replace_file(const char *dir, const char *name, const char *data, size_t len)
 {
     char path[700], tmp[720];
