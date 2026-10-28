@@ -1098,6 +1098,17 @@ def fleet_session_vectors():
                 "now": 1759500011.25,
             },
         ],
+        # an agent port admits as the front port does (spec 4 step 2): a pod the allow-list does
+        # not name, or any with admit none, dialling a free agent port is refused, left unchanged,
+        # no entry made; re-admission is never a way around admission
+        "agent-ports-admit-as-the-front-port": [
+            {"fleet_config": {**base, "admit": [readmit_a]}},
+            {"arrival": [{"rows": [node(readmit_b)]}], "port": 6652, "now": 1759500000.25},
+            {"arrival": [{"rows": [node(readmit_a)]}], "port": 6651, "now": 1759500000.5},
+            {"fleet_config": {**base, "admit": []}},
+            {"arrival": [{"rows": [node(readmit_c)]}], "port": 6653, "now": 1759500000.75},
+            {"arrival": [{"rows": [node(readmit_b)]}], "port": 6652, "now": 1759500001.25},
+        ],
         # a port another pod's entry holds, or one outside the range, is not adopted; a pod
         # with an entry that dials another agent port is handed over to its own
         "agent-ports-taken-or-dialled-by-a-registered-pod": [

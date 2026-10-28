@@ -2022,6 +2022,149 @@
    "files": {
     "archives": [],
     "configs": {
+     "EMOSAPOD000000A0A1": "{\n  \"pod_id\": \"EMOSAPOD000000A0A1\",\n  \"serial\": \"EMOSAPOD000000A0A1\",\n  \"ovsdb\": \"ptcp:6651:127.0.0.1\",\n  \"interface\": \"em1\",\n  \"al_mac\": \"02:a2:54:8d:a4:06\",\n  \"controller_al\": \"02:00:00:e0:00:01\",\n  \"message_set\": \"easymesh-6.1\",\n  \"multi_bss\": false,\n  \"m2_session\": \"distinct\",\n  \"profile\": \"opensync-lab-hwsim-6.6.1-v1\",\n  \"uplink\": {\n    \"mode\": \"off\"\n  },\n  \"telemetry\": {\n    \"mode\": \"off\"\n  },\n  \"state_dir\": \"{root}/state/EMOSAPOD000000A0A1\",\n  \"run_id\": \"EMOSAPOD000000A0A1\"\n}\n"
+    },
+    "registry": "{\n  \"EMOSAPOD000000A0A1\": {\n    \"al_mac\": \"02:a2:54:8d:a4:06\",\n    \"firmware\": null,\n    \"first_seen\": 1759500000.5,\n    \"handovers\": 1,\n    \"interface\": \"em1\",\n    \"last_seen\": 1759500000.5,\n    \"model\": \"HWSIM_POD\",\n    \"node_id\": \"EMOSAPOD000000A0A1\",\n    \"pod_id\": \"EMOSAPOD000000A0A1\",\n    \"port\": 6651\n  }\n}\n"
+   },
+   "name": "agent-ports-admit-as-the-front-port",
+   "steps": [
+    {
+     "expected": {
+      "started": []
+     },
+     "fleet_config": {
+      "admit": [
+       "EMOSAPOD000000A0A1"
+      ],
+      "advertise": "10.101.0.1",
+      "config_dir": "{root}/etc",
+      "controller_al": "02:00:00:e0:00:01",
+      "listen": "ptcp:6650:127.0.0.1",
+      "message_set": "easymesh-6.1",
+      "ports": [
+       6651,
+       6653
+      ],
+      "state_root": "{root}/state"
+     }
+    },
+    {
+     "arrival": [
+      {
+       "rows": [
+        {
+         "id": "EMOSAPOD000000A0B2",
+         "model": "HWSIM_POD",
+         "serial_number": "EMOSAPOD000000A0B2"
+        }
+       ]
+      }
+     ],
+     "expected": {
+      "outcome": "refused",
+      "start": null,
+      "update": null
+     },
+     "now": 1759500000.25,
+     "port": 6652
+    },
+    {
+     "arrival": [
+      {
+       "rows": [
+        {
+         "id": "EMOSAPOD000000A0A1",
+         "model": "HWSIM_POD",
+         "serial_number": "EMOSAPOD000000A0A1"
+        }
+       ]
+      }
+     ],
+     "expected": {
+      "outcome": "handover",
+      "start": [
+       "EMOSAPOD000000A0A1",
+       false
+      ],
+      "update": [
+       "Open_vSwitch",
+       {
+        "op": "update",
+        "row": {
+         "manager_addr": "tcp:10.101.0.1:6651"
+        },
+        "table": "AWLAN_Node",
+        "where": []
+       }
+      ]
+     },
+     "now": 1759500000.5,
+     "port": 6651
+    },
+    {
+     "expected": {
+      "started": []
+     },
+     "fleet_config": {
+      "admit": [],
+      "advertise": "10.101.0.1",
+      "config_dir": "{root}/etc",
+      "controller_al": "02:00:00:e0:00:01",
+      "listen": "ptcp:6650:127.0.0.1",
+      "message_set": "easymesh-6.1",
+      "ports": [
+       6651,
+       6653
+      ],
+      "state_root": "{root}/state"
+     }
+    },
+    {
+     "arrival": [
+      {
+       "rows": [
+        {
+         "id": "EMOSAPOD000000A0C3",
+         "model": "HWSIM_POD",
+         "serial_number": "EMOSAPOD000000A0C3"
+        }
+       ]
+      }
+     ],
+     "expected": {
+      "outcome": "refused",
+      "start": null,
+      "update": null
+     },
+     "now": 1759500000.75,
+     "port": 6653
+    },
+    {
+     "arrival": [
+      {
+       "rows": [
+        {
+         "id": "EMOSAPOD000000A0B2",
+         "model": "HWSIM_POD",
+         "serial_number": "EMOSAPOD000000A0B2"
+        }
+       ]
+      }
+     ],
+     "expected": {
+      "outcome": "refused",
+      "start": null,
+      "update": null
+     },
+     "now": 1759500001.25,
+     "port": 6652
+    }
+   ]
+  },
+  {
+   "files": {
+    "archives": [],
+    "configs": {
      "EMOSAPOD000000A0A1": "{\n  \"pod_id\": \"EMOSAPOD000000A0A1\",\n  \"serial\": \"EMOSAPOD000000A0A1\",\n  \"ovsdb\": \"ptcp:6652:127.0.0.1\",\n  \"interface\": \"em2\",\n  \"al_mac\": \"02:a2:54:8d:a4:06\",\n  \"controller_al\": \"02:00:00:e0:00:01\",\n  \"message_set\": \"easymesh-6.1\",\n  \"multi_bss\": false,\n  \"m2_session\": \"distinct\",\n  \"profile\": \"opensync-lab-hwsim-6.6.1-v1\",\n  \"uplink\": {\n    \"mode\": \"off\"\n  },\n  \"telemetry\": {\n    \"mode\": \"off\"\n  },\n  \"state_dir\": \"{root}/state/EMOSAPOD000000A0A1\",\n  \"run_id\": \"EMOSAPOD000000A0A1\"\n}\n",
      "EMOSAPOD000000A0B2": "{\n  \"pod_id\": \"EMOSAPOD000000A0B2\",\n  \"serial\": \"EMOSAPOD000000A0B2\",\n  \"ovsdb\": \"ptcp:6651:127.0.0.1\",\n  \"interface\": \"em1\",\n  \"al_mac\": \"02:01:42:35:35:88\",\n  \"controller_al\": \"02:00:00:e0:00:01\",\n  \"message_set\": \"easymesh-6.1\",\n  \"multi_bss\": false,\n  \"m2_session\": \"distinct\",\n  \"profile\": \"opensync-lab-hwsim-6.6.1-v1\",\n  \"uplink\": {\n    \"mode\": \"off\"\n  },\n  \"telemetry\": {\n    \"mode\": \"off\"\n  },\n  \"state_dir\": \"{root}/state/EMOSAPOD000000A0B2\",\n  \"run_id\": \"EMOSAPOD000000A0B2\"\n}\n"
     },
