@@ -966,9 +966,15 @@ pod gets its port, interface and AL MAC back, whatever order the pods come back 
 same agent identity reaches the controller. A pod with an entry is handed over to its own port,
 whichever it dialled. A pod on a port another pod's entry holds is refused and left unchanged:
 that pod's agent is behind the port, and it acts on no other pod (§3.1). Before an agent starts
-on a port (step 4, after either way in), the fleet stops listening on it. Both fleets
-(conformance `fleet-sessions`: `readmitted-on-the-ports-they-dial-after-a-lost-registry`,
-`agent-ports-taken-or-dialled-by-a-registered-pod`).
+on a port (step 4, after either way in), the fleet stops listening on it. With the site's
+GTP underlay (§8.6) the fleet's step 1 also selects the pod's `Wifi_Inet_Config` rows, and a
+GRE parent seen for the first time keeps the underlay its parent AP's row already has (static,
+the underlay's .1 with netmask 255.255.255.0, a 169.254.N.0/24), when the rows name one, no
+entry uses it and it is clear of the GTP underlay: its children's tunnels stay up. One taken, or
+over the GTP underlay, is allocated as before. Both fleets (conformance `fleet-sessions`:
+`readmitted-on-the-ports-they-dial-after-a-lost-registry`,
+`agent-ports-taken-or-dialled-by-a-registered-pod`,
+`gre-parents-keep-their-underlays-after-a-lost-registry`).
 
 A serving fleet keeps each valid configuration it starts on as the last valid one
 (`fleet-config.valid.json` under its `state_root`). One that fails its checks (its
@@ -1682,7 +1688,8 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
   (`Wifi_Inet_Config`: `ip_assign_scheme=static`, `netmask=255.255.255.0`, `NAT=false`,
   `mtu=1600`, `dhcpd` `start .10`, `stop .250`, `lease_time 12h`; the profile's
   `gre_parent.inet` over the columns that are not the underlay's). `N` is the parent's, assigned
-  by the fleet registry (§4): unique in the fleet, kept across the pod's restarts, and never one
+  by the fleet registry (§4): unique in the fleet, kept across the pod's restarts (and on first
+  sight the one the pod's AP already has, when free: §4, re-admission), and never one
   whose `/24` overlaps the site's own GTP underlay, which the fleet's configuration gives per
   site (`169.254.1.0/24` in the RDK lab; a router's GTP may use another, such as
   `169.254.2.0/25`). The registry refuses a value that overlaps it. OpenSync 6.6 `cm` on a child takes the `.1` as its tunnel remote and

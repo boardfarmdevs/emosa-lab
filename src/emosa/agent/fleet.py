@@ -101,6 +101,30 @@ def free_underlay(gtp_underlay, used):
     return None
 
 
+LINK_LOCAL = ipaddress.ip_network("169.254.0.0/16")
+INET_COLUMNS = ["if_name", "inet_addr", "netmask", "ip_assign_scheme"]
+
+
+def held_underlay(rows):
+    """The underlay a pod's GRE parent AP already has (spec 8.6: its Inet row static, the
+    underlay's .1 with netmask 255.255.255.0, a 169.254.N.0/24, N 1 to 254), when its rows name
+    exactly one; None otherwise. On first sight the fleet keeps it (spec 4, re-admission)."""
+    held = set()
+    for row in rows or ():
+        address, netmask = row.get("inet_addr"), row.get("netmask")
+        if row.get("ip_assign_scheme") != "static" or netmask != "255.255.255.0":
+            continue
+        try:
+            address = ipaddress.ip_address(address)
+        except (TypeError, ValueError):
+            continue  # unset (an empty set) or not an address
+        net = ipaddress.ip_network(f"{address}/24", strict=False)
+        n = int(net.network_address) >> 8 & 0xFF
+        if address == net.network_address + 1 and net.subnet_of(LINK_LOCAL) and 1 <= n <= 254:
+            held.add(str(net))
+    return held.pop() if len(held) == 1 else None
+
+
 class Registry:
     """serial -> virtual agent; a JSON file rewritten atomically on every change. The file
     is the state: it is read again before each change, so a forget run by another process
@@ -118,17 +142,21 @@ class Registry:
         self.lock = threading.Lock()
         self._load()
 
-    def _underlay(self, entry):
+    def _underlay(self, entry, held=None):
         gtp = ipaddress.ip_network(self.gtp_underlay, strict=False)
         mine = entry.get("underlay")
         if mine is not None and not ipaddress.ip_network(mine).overlaps(gtp):
             return mine
         used = {a["underlay"] for a in self.agents.values() if a is not entry and "underlay" in a}
+        # the one the pod's GRE parent already has (held_underlay), when no entry uses it and it
+        # is clear of the GTP: its children's tunnels stay up (spec 4, re-admission)
+        if held is not None and held not in used and not ipaddress.ip_network(held).overlaps(gtp):
+            return held
         return free_underlay(self.gtp_underlay, used)
 
-    def _place(self, entry):
+    def _place(self, entry, held=None):
         """The entry's underlay brought in line with the GTP underlay; whether it changed."""
-        underlay = self._underlay(entry)
+        underlay = self._underlay(entry, held)
         if underlay is None:
             log.warning("%s: no 169.254.N.0/24 left for its GRE parent underlay", entry["pod_id"])
         if underlay == entry.get("underlay"):
@@ -175,7 +203,7 @@ class Registry:
         self.agents[serial] = entry
         return entry
 
-    def _seen(self, entry, identity):
+    def _seen(self, entry, identity, held=None):
         entry.update(
             node_id=identity.get("id"),
             model=identity.get("model"),
@@ -184,7 +212,7 @@ class Registry:
             handovers=entry["handovers"] + 1,
         )
         if self.gtp_underlay is not None:
-            self._place(entry)
+            self._place(entry, held)
         self._save()
         return dict(entry)
 
@@ -195,8 +223,9 @@ class Registry:
             used = {a["port"] for a in self.agents.values()}
         return [p for p in self.ports if p not in used]
 
-    def assign(self, identity):
-        """The pod's agent entry, allocated on first sight; None when full."""
+    def assign(self, identity, held=None):
+        """The pod's agent entry, allocated on first sight; None when full. ``held``: the
+        underlay its GRE parent already has (held_underlay), kept on first sight when free."""
         serial = identity["serial_number"]
         with self.lock:
             self._load()
@@ -207,9 +236,9 @@ class Registry:
                 if port is None:
                     return None
                 entry = self._create(serial, port)
-            return self._seen(entry, identity)
+            return self._seen(entry, identity, held)
 
-    def adopt(self, identity, port):
+    def adopt(self, identity, port, held=None):
         """A pod that dialled agent port ``port`` (spec 4, re-admission): ("adopted", its entry
         made on that port) when it has none and no entry holds the port, as after a lost registry
         (a factory reset); ("registered", its entry) when it has one, wherever it is; ("taken",
@@ -219,10 +248,10 @@ class Registry:
             self._load()
             entry = self.agents.get(serial)
             if entry is not None:
-                return "registered", self._seen(entry, identity)
+                return "registered", self._seen(entry, identity, held)
             if port not in self.ports or any(a["port"] == port for a in self.agents.values()):
                 return "taken", None
-            return "adopted", self._seen(self._create(serial, port), identity)
+            return "adopted", self._seen(self._create(serial, port), identity, held)
 
     def forget(self, serial):
         with self.lock:
@@ -651,7 +680,15 @@ class Fleet:
         deadline = time.monotonic() + TIMEOUT
         db = self.config.get("database", "Open_vSwitch")
         select = {"op": "select", "table": "AWLAN_Node", "where": [], "columns": IDENTITY}
-        rows = self._call(conn, "transact", [db, select], deadline)[0].get("rows", [])
+        ops = [db, select]
+        if self.config.get("gtp_underlay") is not None:  # GRE parents: the underlay it has
+            ops.append(
+                {"op": "select", "table": "Wifi_Inet_Config", "where": [], "columns": INET_COLUMNS}
+            )
+        results = self._call(conn, "transact", ops, deadline)
+        rows = results[0].get("rows", [])
+        inet = results[1] if len(results) > 1 and isinstance(results[1], dict) else {}
+        held = held_underlay(inet.get("rows"))
         if len(rows) != 1:
             raise ValueError(f"{peer}: expected one AWLAN_Node row, got {len(rows)}")
         identity = {k: rows[0].get(k) for k in IDENTITY}
@@ -665,9 +702,9 @@ class Fleet:
         placed = "front port"
         with self.adoption_lock:  # the loop opens listeners on the free ports under it too
             if port is None:
-                entry = self.registry.assign(identity)
+                entry = self.registry.assign(identity, held)
             else:
-                placed, entry = self.registry.adopt(identity, port)
+                placed, entry = self.registry.adopt(identity, port, held)
         if entry is None and port is None:
             log.warning("pod %s (%s): no free agent port, left unchanged", serial, peer)
             return None

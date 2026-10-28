@@ -57,7 +57,17 @@ typedef enum {
  * own entry when it has one (EM_FLEET_REGISTERED); NULL when another pod's entry holds the port or
  * the port is not in the range. The pointer is valid until the next assignment. */
 em_fleet_entry *em_registry_adopt(em_registry *r, const char *serial, const char *node_id, const char *model,
-                                  const char *firmware, int port, double now, em_fleet_placed *placed);
+                                  const char *firmware, int port, double now, const char *held,
+                                  em_fleet_placed *placed);
+/* em_registry_assign with `held`: the underlay the pod's GRE parent already has (em_held_underlay;
+ * NULL: none), kept on first sight when no other entry uses it and it is clear of the GTP underlay
+ * (spec 4, re-admission). em_registry_adopt takes it too. */
+em_fleet_entry *em_registry_assign_held(em_registry *r, const char *serial, const char *node_id,
+                                        const char *model, const char *firmware, double now, const char *held);
+/* fleet.held_underlay: the underlay a pod's GRE parent AP already has, from its Wifi_Inet_Config
+ * rows (spec 8.6: static, the underlay's .1 with netmask 255.255.255.0, a 169.254.N.0/24, N 1 to
+ * 254), when they name exactly one; false otherwise. */
+bool em_held_underlay(const cJSON *rows, char out[20]);
 /* Whether `port` is in the range and no entry holds it. */
 bool em_registry_port_free(const em_registry *r, int port);
 /* The lowest 169.254.N.0/24 (N 1 to 254) overlapping neither gtp nor one of the entries'

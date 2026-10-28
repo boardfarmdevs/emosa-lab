@@ -902,6 +902,17 @@ def fleet_session_vectors():
     readmit_a = "EMOSAPOD000000A0A1"
     readmit_b = "EMOSAPOD000000A0B2"
     readmit_c = "EMOSAPOD000000A0C3"
+    readmit_d = "EMOSAPOD000000A0D4"
+
+    def inet(name, address):
+        """A GRE parent AP's Inet row (spec 8.6): the underlay's .1."""
+        return {
+            "if_name": name,
+            "inet_addr": address,
+            "netmask": "255.255.255.0",
+            "ip_assign_scheme": "static",
+        }
+
     legacy_5g = "bcm-pod-2.4.3-gre-5g-v1"
     plain = "HWSIMPOD00000003"  # a 6.6 pod of a model the models do not name
     models = [
@@ -922,6 +933,7 @@ def fleet_session_vectors():
         "config_dir": f"{FLEET_ROOT}/etc",
         "message_set": EASYMESH_61,
     }
+    gre = {**base, "ports": [6651, 6654], "gtp_underlay": "169.254.1.0/24"}  # GRE parents (8.6)
     own = {
         SERIAL: {
             "profile": DEFAULT,
@@ -1054,6 +1066,37 @@ def fleet_session_vectors():
             {"arrival": [{"rows": [node(readmit_c)]}], "port": 6653, "now": 1759500010.25},
             {"arrival": [{"rows": [node(readmit_a)]}], "port": 6651, "now": 1759500010.5},
             {"arrival": [{"rows": [node(readmit_b)]}], "port": 6652, "now": 1759500010.75},
+        ],
+        # with the site's GTP underlay, a GRE parent seen for the first time keeps the underlay
+        # its parent AP's Inet row has, when no entry uses it and it is clear of the GTP: after
+        # a lost registry each keeps its own whatever order they come back in (by arrival order,
+        # the first back would take the lowest); one taken, or over the GTP, is allocated
+        "gre-parents-keep-their-underlays-after-a-lost-registry": [
+            {"fleet_config": gre},
+            {"arrival": [{"rows": [node(readmit_a)]}], "now": 1759500000.25},
+            {"arrival": [{"rows": [node(readmit_b)]}], "now": 1759500000.5},
+            {"arrival": [{"rows": [node(readmit_c)]}], "now": 1759500000.75},
+            {"lose_registry": True},
+            {"fleet_config": gre},
+            {
+                "arrival": [{"rows": [node(readmit_c)]}, {"rows": [inet("wl1.1", "169.254.4.1")]}],
+                "port": 6653,
+                "now": 1759500010.25,
+            },
+            {
+                "arrival": [{"rows": [node(readmit_a)]}, {"rows": [inet("wl1.1", "169.254.2.1")]}],
+                "port": 6651,
+                "now": 1759500010.5,
+            },
+            {
+                "arrival": [{"rows": [node(readmit_b)]}, {"rows": [inet("wl1.1", "169.254.1.1")]}],
+                "port": 6652,
+                "now": 1759500010.75,
+            },
+            {
+                "arrival": [{"rows": [node(readmit_d)]}, {"rows": [inet("wl0.1", "169.254.2.1")]}],
+                "now": 1759500011.25,
+            },
         ],
         # a port another pod's entry holds, or one outside the range, is not adopted; a pod
         # with an entry that dials another agent port is handed over to its own

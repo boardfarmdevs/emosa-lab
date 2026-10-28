@@ -144,16 +144,24 @@ bool em_free_underlay(const em_registry *r, const char *gtp, const em_fleet_entr
 
 /* the entry's underlay brought in line with the registry's GTP underlay: kept while it does
  * not overlap it, else the lowest free one ("" when none is left); whether it changed */
-static bool place(em_registry *r, em_fleet_entry *e)
+static bool place(em_registry *r, em_fleet_entry *e, const char *held)
 {
-    uint32_t g, mine;
-    int glen, mlen;
+    uint32_t g, mine, h;
+    int glen, mlen, hlen;
     if (!parse_network(r->gtp_underlay, &g, &glen))
         return false;
     if (e->underlay[0] && parse_network(e->underlay, &mine, &mlen) && !overlaps(mine, mlen, g, glen))
         return false;
     char underlay[20] = "";
-    (void)em_free_underlay(r, r->gtp_underlay, e, underlay);
+    /* the one the pod's GRE parent already has (em_held_underlay), when no other entry uses it and
+     * it is clear of the GTP: its children's tunnels stay up (spec 4, re-admission) */
+    bool keep = held && held[0] && parse_network(held, &h, &hlen) && !overlaps(h, hlen, g, glen);
+    for (size_t i = 0; keep && i < r->count; i++)
+        keep = &r->entries[i] == e || strcmp(r->entries[i].underlay, held) != 0;
+    if (keep)
+        EM_FORMAT_FIXED(underlay, sizeof(underlay), "%s", held); /* parsed: at most 18 */
+    else
+        (void)em_free_underlay(r, r->gtp_underlay, e, underlay);
     bool changed = strcmp(underlay, e->underlay) != 0;
     memcpy(e->underlay, underlay, sizeof(underlay));
     return changed;
@@ -163,7 +171,7 @@ bool em_registry_settle(em_registry *r)
 {
     bool changed = false;
     for (size_t i = 0; r->gtp_underlay[0] && i < r->count; i++)
-        changed = place(r, &r->entries[i]) || changed;
+        changed = place(r, &r->entries[i], NULL) || changed;
     return changed;
 }
 
@@ -212,18 +220,24 @@ static em_fleet_entry *create(em_registry *r, const char *serial, int port, doub
 }
 
 static em_fleet_entry *seen(em_registry *r, em_fleet_entry *e, const char *node_id, const char *model,
-                            const char *firmware, double now)
+                            const char *firmware, double now, const char *held)
 {
     set_identity(e, node_id, model, firmware);
     e->last_seen = now;
     e->handovers++;
     if (r->gtp_underlay[0])
-        (void)place(r, e);
+        (void)place(r, e, held);
     return e;
 }
 
 em_fleet_entry *em_registry_assign(em_registry *r, const char *serial, const char *node_id,
                                    const char *model, const char *firmware, double now)
+{
+    return em_registry_assign_held(r, serial, node_id, model, firmware, now, NULL);
+}
+
+em_fleet_entry *em_registry_assign_held(em_registry *r, const char *serial, const char *node_id,
+                                        const char *model, const char *firmware, double now, const char *held)
 {
     em_fleet_entry *e = find(r, serial);
     if (!e) {
@@ -234,17 +248,18 @@ em_fleet_entry *em_registry_assign(em_registry *r, const char *serial, const cha
         if (!port || !(e = create(r, serial, port, now)))
             return NULL;
     }
-    return seen(r, e, node_id, model, firmware, now);
+    return seen(r, e, node_id, model, firmware, now, held);
 }
 
 em_fleet_entry *em_registry_adopt(em_registry *r, const char *serial, const char *node_id, const char *model,
-                                  const char *firmware, int port, double now, em_fleet_placed *placed)
+                                  const char *firmware, int port, double now, const char *held,
+                                  em_fleet_placed *placed)
 {
     em_fleet_entry *e = find(r, serial);
     *placed = e ? EM_FLEET_REGISTERED : EM_FLEET_ADOPTED;
     if (!e && (!em_registry_port_free(r, port) || !(e = create(r, serial, port, now))))
         return NULL;
-    return seen(r, e, node_id, model, firmware, now);
+    return seen(r, e, node_id, model, firmware, now, held);
 }
 
 bool em_registry_forget(em_registry *r, const char *serial, em_fleet_entry *out)
@@ -744,6 +759,15 @@ cJSON *em_fleet_select(const em_fleet *f)
     cJSON_AddItemToObject(op, "where", cJSON_CreateArray());
     cJSON_AddItemToObject(op, "columns", cJSON_CreateStringArray(IDENTITY, 4));
     cJSON_AddItemToArray(params, op);
+    if (f->registry.gtp_underlay[0]) { /* GRE parents: the underlay it has (em_held_underlay) */
+        static const char *const inet[] = {"if_name", "inet_addr", "netmask", "ip_assign_scheme"};
+        cJSON *rows = cJSON_CreateObject();
+        cJSON_AddStringToObject(rows, "op", "select");
+        cJSON_AddStringToObject(rows, "table", "Wifi_Inet_Config");
+        cJSON_AddItemToObject(rows, "where", cJSON_CreateArray());
+        cJSON_AddItemToObject(rows, "columns", cJSON_CreateStringArray(inet, 4));
+        cJSON_AddItemToArray(params, rows);
+    }
     return params;
 }
 
@@ -788,6 +812,33 @@ static const char *admitted(const cJSON *config, const char *serial, const char 
 static const char *row_text(const cJSON *row, const char *key)
 {
     return cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(row, key));
+}
+
+bool em_held_underlay(const cJSON *rows, char out[20])
+{
+    char held[20] = "";
+    bool several = false;
+    const cJSON *row, *list = cJSON_IsArray(rows) ? rows : NULL; /* the macro takes a plain name */
+    cJSON_ArrayForEach(row, list)
+    {
+        const char *scheme = row_text(row, "ip_assign_scheme"), *netmask = row_text(row, "netmask");
+        const char *address = row_text(row, "inet_addr"); /* NULL when unset (an empty set) */
+        struct in_addr in;
+        if (!scheme || strcmp(scheme, "static") || !netmask || strcmp(netmask, "255.255.255.0") || !address ||
+            inet_pton(AF_INET, address, &in) != 1)
+            continue;
+        uint32_t a = ntohl(in.s_addr), n = a >> 8 & 0xffu;
+        if ((a & 0xffff0000u) != 0xa9fe0000u || (a & 0xffu) != 1 || n < 1 || n > 254)
+            continue;
+        char candidate[20];
+        EM_FORMAT_FIXED(candidate, sizeof(candidate), "169.254.%u.0/24", (unsigned)n);
+        several = several || (held[0] && strcmp(held, candidate));
+        memcpy(held, candidate, sizeof(candidate));
+    }
+    if (several || !held[0])
+        return false;
+    memcpy(out, held, sizeof(held));
+    return true;
 }
 
 /* text as written atomically (durable: a handover must survive a power loss) when it
@@ -851,10 +902,14 @@ em_fleet_outcome em_fleet_identify_at(em_fleet *f, const cJSON *select_result, i
         EM_FORMAT_FIXED(out->why, sizeof(out->why), "pod %s: the fleet registry is unreadable", serial);
         return EM_FLEET_FAILED;
     }
+    /* with GRE parents, the second result: the pod's Inet rows (em_fleet_select) */
+    char held[20] = "";
+    const cJSON *inet = cJSON_GetArrayItem(select_result, 1);
+    bool holds = em_held_underlay(cJSON_GetObjectItemCaseSensitive(cJSON_IsObject(inet) ? inet : NULL, "rows"), held);
     em_fleet_entry *e;
     if (port) {
         e = em_registry_adopt(&f->registry, serial, row_text(row, "id"), row_text(row, "model"),
-                              row_text(row, "firmware_version"), port, now, &out->placed);
+                              row_text(row, "firmware_version"), port, now, holds ? held : NULL, &out->placed);
         if (!e) {
             EM_FORMAT_FIXED(out->why, sizeof(out->why), "pod %s on agent port %d, another pod's: left unchanged",
                             serial, port);
@@ -862,8 +917,8 @@ em_fleet_outcome em_fleet_identify_at(em_fleet *f, const cJSON *select_result, i
         }
     } else {
         out->placed = EM_FLEET_FRONT;
-        e = em_registry_assign(&f->registry, serial, row_text(row, "id"), row_text(row, "model"),
-                               row_text(row, "firmware_version"), now);
+        e = em_registry_assign_held(&f->registry, serial, row_text(row, "id"), row_text(row, "model"),
+                                    row_text(row, "firmware_version"), now, holds ? held : NULL);
         if (!e) {
             EM_FORMAT_FIXED(out->why, sizeof(out->why), "pod %s: no free agent port, left unchanged", serial);
             return EM_FLEET_REFUSED;

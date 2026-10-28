@@ -15,6 +15,7 @@ from emosa.agent.fleet import (
     agent_config,
     derive_al,
     free_underlay,
+    held_underlay,
     recognised,
 )
 from emosa.opensync.session import OvsSession
@@ -531,3 +532,64 @@ def test_a_serving_fleet_listens_on_the_free_agent_ports_and_readmits_a_pod_ther
     finally:
         fleet.stop.set()
         thread.join(5)
+
+
+def inet_row(name, address, netmask="255.255.255.0", scheme="static"):
+    return {"if_name": name, "inet_addr": address, "netmask": netmask, "ip_assign_scheme": scheme}
+
+
+@pytest.mark.unit
+def test_a_held_underlay_is_one_static_dot_one_on_a_link_local_slash_24():
+    assert held_underlay([inet_row("wl1.1", "169.254.5.1")]) == "169.254.5.0/24"
+    # the same on two of its parent APs is still one
+    two_aps = [inet_row("wl1.1", "169.254.5.1"), inet_row("wl0.1", "169.254.5.1")]
+    assert held_underlay(two_aps) == "169.254.5.0/24"
+    two_underlays = [inet_row("wl1.1", "169.254.5.1"), inet_row("wl0.1", "169.254.6.1")]
+    assert held_underlay(two_underlays) is None
+    assert held_underlay([inet_row("wl1.1", "169.254.5.2")]) is None
+    assert held_underlay([inet_row("wl1.1", "169.254.5.1", netmask="255.255.255.128")]) is None
+    assert held_underlay([inet_row("wl1.1", "169.254.5.1", scheme="dhcp")]) is None
+    assert held_underlay([inet_row("br-home", "192.168.1.1")]) is None
+    assert held_underlay([inet_row("wl1.1", "169.254.0.1")]) is None  # N is 1 to 254
+    unset = {"if_name": "wl1.1", "inet_addr": ["set", []], "netmask": ["set", []]}
+    assert held_underlay([{**unset, "ip_assign_scheme": "static"}]) is None
+    assert held_underlay(None) is None
+
+
+@pytest.mark.unit
+def test_on_first_sight_a_gre_parent_keeps_its_underlay_when_free_and_clear_of_the_gtp(tmp_path):
+    registry = Registry(tmp_path / "fleet.json", range(6651, 6655), gtp_underlay="169.254.1.0/24")
+    assert registry.assign({"serial_number": "A"}, "169.254.7.0/24")["underlay"] == "169.254.7.0/24"
+    # A's already, or over the GTP underlay: allocated as before, the lowest free
+    assert registry.assign({"serial_number": "B"}, "169.254.7.0/24")["underlay"] == "169.254.2.0/24"
+    assert registry.assign({"serial_number": "C"}, "169.254.1.0/24")["underlay"] == "169.254.3.0/24"
+    # a pod with an underlay keeps its own, whatever its rows say
+    assert registry.assign({"serial_number": "A"}, "169.254.9.0/24")["underlay"] == "169.254.7.0/24"
+    placed, d = registry.adopt({"serial_number": "D"}, 6654, "169.254.9.0/24")
+    assert placed == "adopted" and d["underlay"] == "169.254.9.0/24"
+
+
+@pytest.mark.unit
+def test_a_fleet_with_gre_parents_reads_the_underlay_a_pod_has_with_its_identity(tmp_path):
+    started, asked = [], []
+    fleet = make_fleet(tmp_path, started, gtp_underlay="169.254.1.0/24")
+
+    def call(conn, method, params, deadline):
+        if params[1]["op"] == "select":
+            asked.append([op["table"] for op in params[1:]])
+            pod = {"id": "node", "serial_number": "POD1", "model": "m"}
+            return [{"rows": [pod]}, {"rows": [inet_row("wl1.1", "169.254.12.1")]}]
+        return [{"count": 1}]
+
+    fleet._call = call
+    entry = fleet.handle(None, "peer", 6652)
+    assert asked == [["AWLAN_Node", "Wifi_Inet_Config"]]
+    assert entry["port"] == 6652 and entry["underlay"] == "169.254.12.0/24"
+    assert json.loads((tmp_path / "etc/POD1.json").read_text())["underlay"] == "169.254.12.0/24"
+    # without a GTP underlay the fleet asks for the identity only, as before
+    (tmp_path / "plain").mkdir()
+    plain = make_fleet(tmp_path / "plain", started)
+    asked.clear()
+    plain._call = call
+    plain.handle(None, "peer")
+    assert asked == [["AWLAN_Node"]]
