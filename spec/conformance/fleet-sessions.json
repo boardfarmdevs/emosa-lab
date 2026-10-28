@@ -1,5 +1,5 @@
 {
- "description": "spec §4: the fleet over whole sessions, as emosa.agent.fleet handles them. A step: fleet_config (the fleet (re)started with this configuration on the same files; it starts the agents its registry has, in the registry's order: each [pod, configuration changed]), arrival (a pod at the front port: the result of the fleet's AWLAN_Node select, and the wall clock), mkdir (a directory under the session's), forget (a serial, archived with suffix 20261003T120000), forget_elsewhere (the same, by another fleet process on the same files while this one serves). Per arrival: handover (the agent started or restarted, then the update sent), refused (not admitted, or no free port: nothing written to the pod) or invalid (an unusable identity: the same). files: the registry and the agent configurations as the fleet left them, byte for byte, and the archived state directories. {root} stands for the session's own directory.",
+ "description": "spec §4: the fleet over whole sessions, as emosa.agent.fleet handles them. A step: fleet_config (the fleet (re)started with this configuration on the same files; it starts the agents its registry has, in the registry's order: each [pod, configuration changed]), arrival (a pod at the front port: the result of the fleet's AWLAN_Node select, and the wall clock; with port, a pod that dialled that agent port: spec 4, re-admission), lose_registry (the registry file removed, as a factory reset loses it), mkdir (a directory under the session's), forget (a serial, archived with suffix 20261003T120000), forget_elsewhere (the same, by another fleet process on the same files while this one serves). Per arrival: handover (the agent started or restarted, then the update sent), refused (not admitted, or no free port: nothing written to the pod) or invalid (an unusable identity: the same). files: the registry and the agent configurations as the fleet left them, byte for byte, and the archived state directories. {root} stands for the session's own directory.",
  "root": "{root}",
  "sessions": [
   {
@@ -1448,6 +1448,420 @@
       ]
      },
      "now": 1759500009.5
+    }
+   ]
+  },
+  {
+   "files": {
+    "archives": [],
+    "configs": {
+     "EMOSAPOD000000A0A1": "{\n  \"pod_id\": \"EMOSAPOD000000A0A1\",\n  \"serial\": \"EMOSAPOD000000A0A1\",\n  \"ovsdb\": \"ptcp:6651:127.0.0.1\",\n  \"interface\": \"em1\",\n  \"al_mac\": \"02:a2:54:8d:a4:06\",\n  \"controller_al\": \"02:00:00:e0:00:01\",\n  \"message_set\": \"easymesh-6.1\",\n  \"multi_bss\": false,\n  \"m2_session\": \"distinct\",\n  \"profile\": \"opensync-lab-hwsim-6.6.1-v1\",\n  \"uplink\": {\n    \"mode\": \"off\"\n  },\n  \"telemetry\": {\n    \"mode\": \"off\"\n  },\n  \"state_dir\": \"{root}/state/EMOSAPOD000000A0A1\",\n  \"run_id\": \"EMOSAPOD000000A0A1\"\n}\n",
+     "EMOSAPOD000000A0B2": "{\n  \"pod_id\": \"EMOSAPOD000000A0B2\",\n  \"serial\": \"EMOSAPOD000000A0B2\",\n  \"ovsdb\": \"ptcp:6652:127.0.0.1\",\n  \"interface\": \"em2\",\n  \"al_mac\": \"02:01:42:35:35:88\",\n  \"controller_al\": \"02:00:00:e0:00:01\",\n  \"message_set\": \"easymesh-6.1\",\n  \"multi_bss\": false,\n  \"m2_session\": \"distinct\",\n  \"profile\": \"opensync-lab-hwsim-6.6.1-v1\",\n  \"uplink\": {\n    \"mode\": \"off\"\n  },\n  \"telemetry\": {\n    \"mode\": \"off\"\n  },\n  \"state_dir\": \"{root}/state/EMOSAPOD000000A0B2\",\n  \"run_id\": \"EMOSAPOD000000A0B2\"\n}\n",
+     "EMOSAPOD000000A0C3": "{\n  \"pod_id\": \"EMOSAPOD000000A0C3\",\n  \"serial\": \"EMOSAPOD000000A0C3\",\n  \"ovsdb\": \"ptcp:6653:127.0.0.1\",\n  \"interface\": \"em3\",\n  \"al_mac\": \"02:4e:8c:a3:0e:07\",\n  \"controller_al\": \"02:00:00:e0:00:01\",\n  \"message_set\": \"easymesh-6.1\",\n  \"multi_bss\": false,\n  \"m2_session\": \"distinct\",\n  \"profile\": \"opensync-lab-hwsim-6.6.1-v1\",\n  \"uplink\": {\n    \"mode\": \"off\"\n  },\n  \"telemetry\": {\n    \"mode\": \"off\"\n  },\n  \"state_dir\": \"{root}/state/EMOSAPOD000000A0C3\",\n  \"run_id\": \"EMOSAPOD000000A0C3\"\n}\n"
+    },
+    "registry": "{\n  \"EMOSAPOD000000A0A1\": {\n    \"al_mac\": \"02:a2:54:8d:a4:06\",\n    \"firmware\": null,\n    \"first_seen\": 1759500010.5,\n    \"handovers\": 1,\n    \"interface\": \"em1\",\n    \"last_seen\": 1759500010.5,\n    \"model\": \"HWSIM_POD\",\n    \"node_id\": \"EMOSAPOD000000A0A1\",\n    \"pod_id\": \"EMOSAPOD000000A0A1\",\n    \"port\": 6651\n  },\n  \"EMOSAPOD000000A0B2\": {\n    \"al_mac\": \"02:01:42:35:35:88\",\n    \"firmware\": null,\n    \"first_seen\": 1759500010.75,\n    \"handovers\": 1,\n    \"interface\": \"em2\",\n    \"last_seen\": 1759500010.75,\n    \"model\": \"HWSIM_POD\",\n    \"node_id\": \"EMOSAPOD000000A0B2\",\n    \"pod_id\": \"EMOSAPOD000000A0B2\",\n    \"port\": 6652\n  },\n  \"EMOSAPOD000000A0C3\": {\n    \"al_mac\": \"02:4e:8c:a3:0e:07\",\n    \"firmware\": null,\n    \"first_seen\": 1759500010.25,\n    \"handovers\": 1,\n    \"interface\": \"em3\",\n    \"last_seen\": 1759500010.25,\n    \"model\": \"HWSIM_POD\",\n    \"node_id\": \"EMOSAPOD000000A0C3\",\n    \"pod_id\": \"EMOSAPOD000000A0C3\",\n    \"port\": 6653\n  }\n}\n"
+   },
+   "name": "readmitted-on-the-ports-they-dial-after-a-lost-registry",
+   "steps": [
+    {
+     "expected": {
+      "started": []
+     },
+     "fleet_config": {
+      "advertise": "10.101.0.1",
+      "config_dir": "{root}/etc",
+      "controller_al": "02:00:00:e0:00:01",
+      "listen": "ptcp:6650:127.0.0.1",
+      "message_set": "easymesh-6.1",
+      "ports": [
+       6651,
+       6653
+      ],
+      "state_root": "{root}/state"
+     }
+    },
+    {
+     "arrival": [
+      {
+       "rows": [
+        {
+         "id": "EMOSAPOD000000A0A1",
+         "model": "HWSIM_POD",
+         "serial_number": "EMOSAPOD000000A0A1"
+        }
+       ]
+      }
+     ],
+     "expected": {
+      "outcome": "handover",
+      "start": [
+       "EMOSAPOD000000A0A1",
+       false
+      ],
+      "update": [
+       "Open_vSwitch",
+       {
+        "op": "update",
+        "row": {
+         "manager_addr": "tcp:10.101.0.1:6651"
+        },
+        "table": "AWLAN_Node",
+        "where": []
+       }
+      ]
+     },
+     "now": 1759500000.25
+    },
+    {
+     "arrival": [
+      {
+       "rows": [
+        {
+         "id": "EMOSAPOD000000A0B2",
+         "model": "HWSIM_POD",
+         "serial_number": "EMOSAPOD000000A0B2"
+        }
+       ]
+      }
+     ],
+     "expected": {
+      "outcome": "handover",
+      "start": [
+       "EMOSAPOD000000A0B2",
+       false
+      ],
+      "update": [
+       "Open_vSwitch",
+       {
+        "op": "update",
+        "row": {
+         "manager_addr": "tcp:10.101.0.1:6652"
+        },
+        "table": "AWLAN_Node",
+        "where": []
+       }
+      ]
+     },
+     "now": 1759500000.5
+    },
+    {
+     "arrival": [
+      {
+       "rows": [
+        {
+         "id": "EMOSAPOD000000A0C3",
+         "model": "HWSIM_POD",
+         "serial_number": "EMOSAPOD000000A0C3"
+        }
+       ]
+      }
+     ],
+     "expected": {
+      "outcome": "handover",
+      "start": [
+       "EMOSAPOD000000A0C3",
+       false
+      ],
+      "update": [
+       "Open_vSwitch",
+       {
+        "op": "update",
+        "row": {
+         "manager_addr": "tcp:10.101.0.1:6653"
+        },
+        "table": "AWLAN_Node",
+        "where": []
+       }
+      ]
+     },
+     "now": 1759500000.75
+    },
+    {
+     "lose_registry": true
+    },
+    {
+     "expected": {
+      "started": []
+     },
+     "fleet_config": {
+      "advertise": "10.101.0.1",
+      "config_dir": "{root}/etc",
+      "controller_al": "02:00:00:e0:00:01",
+      "listen": "ptcp:6650:127.0.0.1",
+      "message_set": "easymesh-6.1",
+      "ports": [
+       6651,
+       6653
+      ],
+      "state_root": "{root}/state"
+     }
+    },
+    {
+     "arrival": [
+      {
+       "rows": [
+        {
+         "id": "EMOSAPOD000000A0C3",
+         "model": "HWSIM_POD",
+         "serial_number": "EMOSAPOD000000A0C3"
+        }
+       ]
+      }
+     ],
+     "expected": {
+      "outcome": "handover",
+      "start": [
+       "EMOSAPOD000000A0C3",
+       false
+      ],
+      "update": [
+       "Open_vSwitch",
+       {
+        "op": "update",
+        "row": {
+         "manager_addr": "tcp:10.101.0.1:6653"
+        },
+        "table": "AWLAN_Node",
+        "where": []
+       }
+      ]
+     },
+     "now": 1759500010.25,
+     "port": 6653
+    },
+    {
+     "arrival": [
+      {
+       "rows": [
+        {
+         "id": "EMOSAPOD000000A0A1",
+         "model": "HWSIM_POD",
+         "serial_number": "EMOSAPOD000000A0A1"
+        }
+       ]
+      }
+     ],
+     "expected": {
+      "outcome": "handover",
+      "start": [
+       "EMOSAPOD000000A0A1",
+       false
+      ],
+      "update": [
+       "Open_vSwitch",
+       {
+        "op": "update",
+        "row": {
+         "manager_addr": "tcp:10.101.0.1:6651"
+        },
+        "table": "AWLAN_Node",
+        "where": []
+       }
+      ]
+     },
+     "now": 1759500010.5,
+     "port": 6651
+    },
+    {
+     "arrival": [
+      {
+       "rows": [
+        {
+         "id": "EMOSAPOD000000A0B2",
+         "model": "HWSIM_POD",
+         "serial_number": "EMOSAPOD000000A0B2"
+        }
+       ]
+      }
+     ],
+     "expected": {
+      "outcome": "handover",
+      "start": [
+       "EMOSAPOD000000A0B2",
+       false
+      ],
+      "update": [
+       "Open_vSwitch",
+       {
+        "op": "update",
+        "row": {
+         "manager_addr": "tcp:10.101.0.1:6652"
+        },
+        "table": "AWLAN_Node",
+        "where": []
+       }
+      ]
+     },
+     "now": 1759500010.75,
+     "port": 6652
+    }
+   ]
+  },
+  {
+   "files": {
+    "archives": [],
+    "configs": {
+     "EMOSAPOD000000A0A1": "{\n  \"pod_id\": \"EMOSAPOD000000A0A1\",\n  \"serial\": \"EMOSAPOD000000A0A1\",\n  \"ovsdb\": \"ptcp:6652:127.0.0.1\",\n  \"interface\": \"em2\",\n  \"al_mac\": \"02:a2:54:8d:a4:06\",\n  \"controller_al\": \"02:00:00:e0:00:01\",\n  \"message_set\": \"easymesh-6.1\",\n  \"multi_bss\": false,\n  \"m2_session\": \"distinct\",\n  \"profile\": \"opensync-lab-hwsim-6.6.1-v1\",\n  \"uplink\": {\n    \"mode\": \"off\"\n  },\n  \"telemetry\": {\n    \"mode\": \"off\"\n  },\n  \"state_dir\": \"{root}/state/EMOSAPOD000000A0A1\",\n  \"run_id\": \"EMOSAPOD000000A0A1\"\n}\n",
+     "EMOSAPOD000000A0B2": "{\n  \"pod_id\": \"EMOSAPOD000000A0B2\",\n  \"serial\": \"EMOSAPOD000000A0B2\",\n  \"ovsdb\": \"ptcp:6651:127.0.0.1\",\n  \"interface\": \"em1\",\n  \"al_mac\": \"02:01:42:35:35:88\",\n  \"controller_al\": \"02:00:00:e0:00:01\",\n  \"message_set\": \"easymesh-6.1\",\n  \"multi_bss\": false,\n  \"m2_session\": \"distinct\",\n  \"profile\": \"opensync-lab-hwsim-6.6.1-v1\",\n  \"uplink\": {\n    \"mode\": \"off\"\n  },\n  \"telemetry\": {\n    \"mode\": \"off\"\n  },\n  \"state_dir\": \"{root}/state/EMOSAPOD000000A0B2\",\n  \"run_id\": \"EMOSAPOD000000A0B2\"\n}\n"
+    },
+    "registry": "{\n  \"EMOSAPOD000000A0A1\": {\n    \"al_mac\": \"02:a2:54:8d:a4:06\",\n    \"firmware\": null,\n    \"first_seen\": 1759500000.25,\n    \"handovers\": 2,\n    \"interface\": \"em2\",\n    \"last_seen\": 1759500000.75,\n    \"model\": \"HWSIM_POD\",\n    \"node_id\": \"EMOSAPOD000000A0A1\",\n    \"pod_id\": \"EMOSAPOD000000A0A1\",\n    \"port\": 6652\n  },\n  \"EMOSAPOD000000A0B2\": {\n    \"al_mac\": \"02:01:42:35:35:88\",\n    \"firmware\": null,\n    \"first_seen\": 1759500001.125,\n    \"handovers\": 1,\n    \"interface\": \"em1\",\n    \"last_seen\": 1759500001.125,\n    \"model\": \"HWSIM_POD\",\n    \"node_id\": \"EMOSAPOD000000A0B2\",\n    \"pod_id\": \"EMOSAPOD000000A0B2\",\n    \"port\": 6651\n  }\n}\n"
+   },
+   "name": "agent-ports-taken-or-dialled-by-a-registered-pod",
+   "steps": [
+    {
+     "expected": {
+      "started": []
+     },
+     "fleet_config": {
+      "advertise": "10.101.0.1",
+      "config_dir": "{root}/etc",
+      "controller_al": "02:00:00:e0:00:01",
+      "listen": "ptcp:6650:127.0.0.1",
+      "message_set": "easymesh-6.1",
+      "ports": [
+       6651,
+       6653
+      ],
+      "state_root": "{root}/state"
+     }
+    },
+    {
+     "arrival": [
+      {
+       "rows": [
+        {
+         "id": "EMOSAPOD000000A0A1",
+         "model": "HWSIM_POD",
+         "serial_number": "EMOSAPOD000000A0A1"
+        }
+       ]
+      }
+     ],
+     "expected": {
+      "outcome": "handover",
+      "start": [
+       "EMOSAPOD000000A0A1",
+       false
+      ],
+      "update": [
+       "Open_vSwitch",
+       {
+        "op": "update",
+        "row": {
+         "manager_addr": "tcp:10.101.0.1:6652"
+        },
+        "table": "AWLAN_Node",
+        "where": []
+       }
+      ]
+     },
+     "now": 1759500000.25,
+     "port": 6652
+    },
+    {
+     "arrival": [
+      {
+       "rows": [
+        {
+         "id": "EMOSAPOD000000A0B2",
+         "model": "HWSIM_POD",
+         "serial_number": "EMOSAPOD000000A0B2"
+        }
+       ]
+      }
+     ],
+     "expected": {
+      "outcome": "refused",
+      "start": null,
+      "update": null
+     },
+     "now": 1759500000.5,
+     "port": 6652
+    },
+    {
+     "arrival": [
+      {
+       "rows": [
+        {
+         "id": "EMOSAPOD000000A0A1",
+         "model": "HWSIM_POD",
+         "serial_number": "EMOSAPOD000000A0A1"
+        }
+       ]
+      }
+     ],
+     "expected": {
+      "outcome": "handover",
+      "start": [
+       "EMOSAPOD000000A0A1",
+       false
+      ],
+      "update": [
+       "Open_vSwitch",
+       {
+        "op": "update",
+        "row": {
+         "manager_addr": "tcp:10.101.0.1:6652"
+        },
+        "table": "AWLAN_Node",
+        "where": []
+       }
+      ]
+     },
+     "now": 1759500000.75,
+     "port": 6653
+    },
+    {
+     "arrival": [
+      {
+       "rows": [
+        {
+         "id": "EMOSAPOD000000A0B2",
+         "model": "HWSIM_POD",
+         "serial_number": "EMOSAPOD000000A0B2"
+        }
+       ]
+      }
+     ],
+     "expected": {
+      "outcome": "handover",
+      "start": [
+       "EMOSAPOD000000A0B2",
+       false
+      ],
+      "update": [
+       "Open_vSwitch",
+       {
+        "op": "update",
+        "row": {
+         "manager_addr": "tcp:10.101.0.1:6651"
+        },
+        "table": "AWLAN_Node",
+        "where": []
+       }
+      ]
+     },
+     "now": 1759500001.125
+    },
+    {
+     "arrival": [
+      {
+       "rows": [
+        {
+         "id": "EMOSAPOD000000A0C3",
+         "model": "HWSIM_POD",
+         "serial_number": "EMOSAPOD000000A0C3"
+        }
+       ]
+      }
+     ],
+     "expected": {
+      "outcome": "refused",
+      "start": null,
+      "update": null
+     },
+     "now": 1759500001.25,
+     "port": 7000
     }
    ]
   },

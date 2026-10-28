@@ -898,6 +898,10 @@ def fleet_session_vectors():
         }
 
     legacy_model, legacy_a, legacy_b = "BCM_LEGACY_POD", "BCMPOD0000000001", "BCMPOD0000000002"
+    # pods re-admitted on their agent ports (spec 4)
+    readmit_a = "EMOSAPOD000000A0A1"
+    readmit_b = "EMOSAPOD000000A0B2"
+    readmit_c = "EMOSAPOD000000A0C3"
     legacy_5g = "bcm-pod-2.4.3-gre-5g-v1"
     plain = "HWSIMPOD00000003"  # a 6.6 pod of a model the models do not name
     models = [
@@ -1037,6 +1041,32 @@ def fleet_session_vectors():
             {"forget": SERIAL},
             {"arrival": [{"rows": [node(SERIAL)]}], "now": 1759500009.5},
         ],
+        # spec 4, re-admission: a factory reset loses the registry with the agents' state, the
+        # configurations come back, and each pod still dials its own agent port; whatever order
+        # they come back in, each gets its port, interface and AL MAC back on the port it dials
+        "readmitted-on-the-ports-they-dial-after-a-lost-registry": [
+            {"fleet_config": base},
+            {"arrival": [{"rows": [node(readmit_a)]}], "now": 1759500000.25},
+            {"arrival": [{"rows": [node(readmit_b)]}], "now": 1759500000.5},
+            {"arrival": [{"rows": [node(readmit_c)]}], "now": 1759500000.75},
+            {"lose_registry": True},
+            {"fleet_config": base},
+            {"arrival": [{"rows": [node(readmit_c)]}], "port": 6653, "now": 1759500010.25},
+            {"arrival": [{"rows": [node(readmit_a)]}], "port": 6651, "now": 1759500010.5},
+            {"arrival": [{"rows": [node(readmit_b)]}], "port": 6652, "now": 1759500010.75},
+        ],
+        # a port another pod's entry holds, or one outside the range, is not adopted; a pod
+        # with an entry that dials another agent port is handed over to its own
+        "agent-ports-taken-or-dialled-by-a-registered-pod": [
+            {"fleet_config": base},
+            {"arrival": [{"rows": [node(readmit_a)]}], "port": 6652, "now": 1759500000.25},
+            {"arrival": [{"rows": [node(readmit_b)]}], "port": 6652, "now": 1759500000.5},
+            {"arrival": [{"rows": [node(readmit_a)]}], "port": 6653, "now": 1759500000.75},
+            # times with a fraction, as in every session: the C fleet writes a whole one as an
+            # integer (1759500001), the reference as a float (1759500001.0)
+            {"arrival": [{"rows": [node(readmit_b)]}], "now": 1759500001.125},
+            {"arrival": [{"rows": [node(readmit_c)]}], "port": 7000, "now": 1759500001.25},
+        ],
         # box finding 14: emosa-fleet forget runs as its own process while the fleet serves
         "forget-while-the-fleet-serves": [
             {"fleet_config": base},
@@ -1074,6 +1104,8 @@ def fleet_session_vectors():
                     done["expected"] = {"started": list(starts)}
                 elif "mkdir" in step:
                     (Path(root) / step["mkdir"]).mkdir(parents=True)
+                elif "lose_registry" in step:
+                    (Path(fleet.config["state_root"]) / "fleet.json").unlink()
                 elif "arrival" in step:
                     updates = []
 
@@ -1087,7 +1119,7 @@ def fleet_session_vectors():
                     del starts[:]
                     try:
                         with mock.patch.object(fleet_module.time, "time", lambda s=step: s["now"]):
-                            entry = fleet.handle(None, "conformance")
+                            entry = fleet.handle(None, "conformance", step.get("port"))
                         outcome = "handover" if entry else "refused"
                     except ValueError:
                         outcome = "invalid"
@@ -1133,7 +1165,9 @@ def fleet_session_vectors():
         "files; it starts the agents its registry has, in the registry's order: each [pod, "
         "configuration changed]), arrival (a pod at the front port: the result of the fleet's "
         "AWLAN_Node "
-        "select, and the wall clock), mkdir (a directory under the session's), forget (a "
+        "select, and the wall clock; with port, a pod that dialled that agent port: spec 4, "
+        "re-admission), lose_registry (the registry file removed, as a factory reset loses "
+        "it), mkdir (a directory under the session's), forget (a "
         "serial, archived with suffix " + FLEET_STAMP + "), forget_elsewhere (the same, by "
         "another fleet process on the same files while this one serves). Per arrival: "
         "handover (the agent started or restarted, then the update sent), refused (not "

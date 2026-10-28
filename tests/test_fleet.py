@@ -3,6 +3,7 @@
 
 import asyncio
 import json
+import socket
 import threading
 import time
 
@@ -404,3 +405,129 @@ def test_an_agents_own_secret_is_never_replaced_and_a_missing_one_is_only_logged
     assert not (tmp_path / "state" / "POD3" / "secrets" / "other").exists()
     assert "other" in caplog.text and "FleetGtpPassphrase1" not in caplog.text
     assert [pod for pod, _ in started] == ["POD2", "POD3"]  # the agent starts all the same
+
+
+@pytest.mark.unit
+def test_registry_adopts_a_dialled_port_only_when_no_entry_holds_it(tmp_path):
+    registry = Registry(tmp_path / "fleet.json", range(6651, 6654))
+    placed, b = registry.adopt({"serial_number": "B", "id": "b"}, 6653)
+    assert placed == "adopted" and (b["port"], b["interface"]) == (6653, "em3")
+    assert b["al_mac"] == derive_al("B") and b["handovers"] == 1
+    # a pod with an entry keeps it, whichever agent port it dialled
+    placed, again = registry.adopt({"serial_number": "B", "id": "b"}, 6651)
+    assert placed == "registered" and again["port"] == 6653 and again["handovers"] == 2
+    # another pod's port, or one outside the range, is not adopted
+    assert registry.adopt({"serial_number": "C", "id": "c"}, 6653) == ("taken", None)
+    assert registry.adopt({"serial_number": "C", "id": "c"}, 7000) == ("taken", None)
+    assert registry.free_ports() == [6651, 6652]
+    assert Registry(tmp_path / "fleet.json", range(6651, 6654)).agents["B"]["port"] == 6653
+
+
+@pytest.mark.unit
+def test_after_a_lost_registry_each_pod_is_readmitted_on_the_port_it_dials(tmp_path):
+    """A factory reset: the configurations back, the registry gone. Each pod still dials its own
+    agent port; whatever order they come back in, each gets its port, interface and AL MAC back,
+    where the front port would hand them out by arrival order."""
+    started = []
+    fleet = make_fleet(tmp_path, started)
+    before = {}
+    for serial in ("POD1", "POD2", "POD3"):
+        fleet._call = Pod(serial)
+        before[serial] = fleet.handle(None, "peer")
+    (tmp_path / "state" / "fleet.json").unlink()
+    for serial in ("POD3", "POD1", "POD2"):
+        fleet._call = pod = Pod(serial)
+        entry = fleet.handle(None, "peer", before[serial]["port"])
+        assert {k: entry[k] for k in ("port", "interface", "al_mac")} == {
+            k: before[serial][k] for k in ("port", "interface", "al_mac")
+        }
+        assert pod.updates == [{"manager_addr": f"tcp:10.101.0.1:{entry['port']}"}]
+    assert started[-3:] == [("POD3", False), ("POD1", False), ("POD2", False)]
+    # the contrast: by arrival order at the front port, POD3 would have taken POD1's port
+    (tmp_path / "state" / "fleet.json").unlink()
+    fleet._call = Pod("POD3")
+    assert fleet.handle(None, "peer")["port"] == before["POD1"]["port"]
+
+
+@pytest.mark.unit
+def test_a_pod_on_another_pods_agent_port_or_not_admitted_is_left_unchanged(tmp_path):
+    started = []
+    fleet = make_fleet(tmp_path, started, admit=["POD1", "POD2"])
+    fleet._call = Pod("POD1")
+    assert fleet.handle(None, "peer", 6652)["port"] == 6652
+    fleet._call = pod = Pod("POD2")
+    assert fleet.handle(None, "peer", 6652) is None and not pod.updates
+    fleet._call = pod = Pod("POD9")  # not admitted
+    assert fleet.handle(None, "peer", 6653) is None and not pod.updates
+    assert [s[0] for s in started] == ["POD1"] and set(fleet.registry.agents) == {"POD1"}
+    # a pod with an entry that dials another free port is handed over to its own
+    fleet._call = pod = Pod("POD1")
+    assert fleet.handle(None, "peer", 6653)["port"] == 6652
+    assert pod.updates == [{"manager_addr": "tcp:10.101.0.1:6652"}]
+
+
+def free_tcp_port():
+    with socket.socket() as sock:
+        sock.bind(("127.0.0.1", 0))
+        return sock.getsockname()[1]
+
+
+def dial_as_pod(port, serial, updates):
+    """A pod's ovsdb-server dialling agent port ``port`` as its cm does: it answers the fleet's
+    select of AWLAN_Node and its update, until the fleet ends the session."""
+    decoder, buffer = json.JSONDecoder(), ""
+    with socket.create_connection(("127.0.0.1", port), timeout=5) as sock:
+        while data := sock.recv(65536):
+            buffer += data.decode()
+            while buffer.strip():
+                try:
+                    message, end = decoder.raw_decode(buffer.lstrip())
+                except ValueError:
+                    break
+                buffer = buffer.lstrip()[end:]
+                op = message["params"][1]
+                if op["op"] == "select":
+                    row = {"id": "node-" + serial, "serial_number": serial, "model": "m"}
+                    result = [{"rows": [row]}]
+                else:
+                    updates.append(op["row"])
+                    result = [{"count": 1}]
+                reply = {"id": message["id"], "result": result, "error": None}
+                sock.sendall(json.dumps(reply).encode())
+
+
+def refused(port):
+    try:
+        socket.create_connection(("127.0.0.1", port), timeout=1).close()
+    except ConnectionRefusedError:
+        return True
+    return False
+
+
+@pytest.mark.unit
+def test_a_serving_fleet_listens_on_the_free_agent_ports_and_readmits_a_pod_there(tmp_path):
+    port = free_tcp_port()
+    started = []
+    fleet = make_fleet(tmp_path, started, ports=[port, port])
+    ready = threading.Event()
+    pstream = fleet.listen()
+    thread = threading.Thread(target=fleet.serve, args=(pstream, ready), daemon=True)
+    thread.start()
+    try:
+        assert ready.wait(5)
+        updates = []
+        dial_as_pod(port, "EMOSA-SIM-002", updates)
+        assert updates == [{"manager_addr": f"tcp:10.101.0.1:{port}"}]
+        assert started == [("EMOSA-SIM-002", False)]
+        assert fleet.registry.agents["EMOSA-SIM-002"]["port"] == port
+        # the port is its agent's now: the fleet no longer listens on it
+        assert refused(port)
+        # released, the port is the fleet's again, its next look at the registry
+        fleet.forget("EMOSA-SIM-002")
+        end = time.monotonic() + 5
+        while refused(port) and time.monotonic() < end:
+            time.sleep(0.1)
+        assert not refused(port)
+    finally:
+        fleet.stop.set()
+        thread.join(5)

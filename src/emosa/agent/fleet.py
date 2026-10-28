@@ -66,6 +66,9 @@ TIME_ERROR = 5  # adjtimex(2)'s clock state while the kernel says the clock is u
 CLOCK_CHECK = 60  # seconds a clock check stands (a time_synced_command is not run more often)
 IDENTITY = ["id", "serial_number", "model", "firmware_version"]
 TIMEOUT = 5  # seconds for one pod's whole identify-and-hand-over exchange
+ADOPT_CHECK = 1  # seconds between the serving loop's looks at the free agent ports (re-admission)
+ADOPT_MAX = 128  # free agent ports listened on at most (the C fleet's and the forwarder's 128)
+RELEASE_WAIT = 2  # seconds a handler waits for the loop to stop listening on an agent port
 AGENT_DEFAULTS = {
     "message_set": "easymesh-6.1",
     "multi_bss": False,
@@ -157,6 +160,41 @@ class Registry:
         tmp.write_text(json.dumps(self.agents, indent=2, sort_keys=True) + "\n")
         os.replace(tmp, self.path)
 
+    def _create(self, serial, port):
+        """A new entry on ``port``: its interface ``em<index>`` the port's place in the range, its
+        AL MAC derived from the serial (§2.2), so a pod given its port again gets them again."""
+        taken = self.reserved | {a["al_mac"] for a in self.agents.values()}
+        entry = {
+            "pod_id": serial,
+            "al_mac": derive_al(serial, taken),
+            "port": port,
+            "interface": f"em{self.ports.index(port) + 1}",
+            "first_seen": time.time(),
+            "handovers": 0,
+        }
+        self.agents[serial] = entry
+        return entry
+
+    def _seen(self, entry, identity):
+        entry.update(
+            node_id=identity.get("id"),
+            model=identity.get("model"),
+            firmware=identity.get("firmware_version"),
+            last_seen=time.time(),
+            handovers=entry["handovers"] + 1,
+        )
+        if self.gtp_underlay is not None:
+            self._place(entry)
+        self._save()
+        return dict(entry)
+
+    def free_ports(self):
+        """The agent ports no entry holds."""
+        with self.lock:
+            self._load()
+            used = {a["port"] for a in self.agents.values()}
+        return [p for p in self.ports if p not in used]
+
     def assign(self, identity):
         """The pod's agent entry, allocated on first sight; None when full."""
         serial = identity["serial_number"]
@@ -168,28 +206,23 @@ class Registry:
                 port = next((p for p in self.ports if p not in used), None)
                 if port is None:
                     return None
-                index = self.ports.index(port) + 1
-                taken = self.reserved | {a["al_mac"] for a in self.agents.values()}
-                entry = {
-                    "pod_id": serial,
-                    "al_mac": derive_al(serial, taken),
-                    "port": port,
-                    "interface": f"em{index}",
-                    "first_seen": time.time(),
-                    "handovers": 0,
-                }
-                self.agents[serial] = entry
-            entry.update(
-                node_id=identity.get("id"),
-                model=identity.get("model"),
-                firmware=identity.get("firmware_version"),
-                last_seen=time.time(),
-                handovers=entry["handovers"] + 1,
-            )
-            if self.gtp_underlay is not None:
-                self._place(entry)
-            self._save()
-            return dict(entry)
+                entry = self._create(serial, port)
+            return self._seen(entry, identity)
+
+    def adopt(self, identity, port):
+        """A pod that dialled agent port ``port`` (spec 4, re-admission): ("adopted", its entry
+        made on that port) when it has none and no entry holds the port, as after a lost registry
+        (a factory reset); ("registered", its entry) when it has one, wherever it is; ("taken",
+        None) when another pod's entry holds the port."""
+        serial = identity["serial_number"]
+        with self.lock:
+            self._load()
+            entry = self.agents.get(serial)
+            if entry is not None:
+                return "registered", self._seen(entry, identity)
+            if port not in self.ports or any(a["port"] == port for a in self.agents.values()):
+                return "taken", None
+            return "adopted", self._seen(self._create(serial, port), identity)
 
     def forget(self, serial):
         with self.lock:
@@ -484,6 +517,15 @@ def schema_error(config):
     return f"/{'/'.join(path)}: {first.validator}"
 
 
+def passive(name):
+    """ovs PassiveStream.open on a listen name in the C form (``ptcp:PORT:HOST``, ``punix:PATH``):
+    (error, stream)."""
+    if name.startswith("ptcp:"):
+        _, port, host = name.split(":")  # C form ptcp:PORT:HOST; ovs Python takes HOST:PORT
+        name = f"ptcp:{host}:{port}"
+    return ovs.stream.PassiveStream.open(name)
+
+
 def write_private(path, text):
     """text to path through path.tmp and a rename, owner-only."""
     tmp = path.with_suffix(".tmp")
@@ -553,6 +595,13 @@ class Fleet:
         self.admit_by_model = config.get("admit_by_model", False)
         self.stop = threading.Event()
         self.slots = threading.BoundedSemaphore(config.get("concurrency", 16))
+        # spec 4, re-admission: each agent port no entry holds, listened on by the serving loop
+        # (on loopback, where the agents listen), which alone opens and closes them; a handler
+        # about to start an agent on one asks it to close that one first (_release)
+        self.adoption = {}  # port -> PassiveStream
+        self.adoption_lock = threading.Lock()
+        self.releases = {}  # port -> Event, set once the loop closed its listener
+        self.adopt_failed = set()  # ports it could not listen on, logged once
 
     def admission(self, serial, model, firmware):
         """How the fleet admits a pod (spec 4 step 2), for its log: "all" (admit is *), "serial"
@@ -596,8 +645,9 @@ class Fleet:
             poller.timer_wait(int(remaining * 1000))
             poller.block()
 
-    def handle(self, conn, peer):
-        """Identify one connected pod, bind its agent and hand it over."""
+    def handle(self, conn, peer, port=None):
+        """Identify one connected pod, bind its agent and hand it over. ``port``: the agent port
+        it dialled, for a pod that came on one no entry holds (spec 4, re-admission)."""
         deadline = time.monotonic() + TIMEOUT
         db = self.config.get("database", "Open_vSwitch")
         select = {"op": "select", "table": "AWLAN_Node", "where": [], "columns": IDENTITY}
@@ -612,10 +662,21 @@ class Fleet:
         if how is None:
             log.warning("pod %s (%s) not admitted: left unchanged", serial, peer)
             return None
-        entry = self.registry.assign(identity)
-        if entry is None:
+        placed = "front port"
+        with self.adoption_lock:  # the loop opens listeners on the free ports under it too
+            if port is None:
+                entry = self.registry.assign(identity)
+            else:
+                placed, entry = self.registry.adopt(identity, port)
+        if entry is None and port is None:
             log.warning("pod %s (%s): no free agent port, left unchanged", serial, peer)
             return None
+        if entry is None:
+            log.warning(
+                "pod %s (%s) on agent port %d, another pod's: left unchanged", serial, peer, port
+            )
+            return None
+        self._release(entry["port"])
         self.bind(entry)
         target = f"tcp:{self.config['advertise']}:{entry['port']}"
         update = {
@@ -628,7 +689,7 @@ class Fleet:
         if not result or result[0].get("error") or result[0].get("count") != 1:
             raise ConnectionError(f"{serial}: manager_addr update failed: {result}")
         log.info(
-            "pod %s (node %s, %s) -> agent AL %s on %s, manager_addr %s; admitted by %s%s",
+            "pod %s (node %s, %s) -> agent AL %s on %s, manager_addr %s; admitted by %s%s%s",
             serial,
             identity["id"],
             peer,
@@ -637,8 +698,53 @@ class Fleet:
             target,
             how,
             known,
+            {
+                "front port": "",
+                "adopted": f"; re-admitted on the agent port it dialled ({port}), no entry held it",
+                "registered": f"; it dialled agent port {port}, its entry's is {entry['port']}",
+            }[placed],
         )
         return entry
+
+    def _release(self, port):
+        """The serving loop's listener on agent port ``port`` closed, before an agent starts there
+        (it waits RELEASE_WAIT at most: the loop looks every 200 ms)."""
+        with self.adoption_lock:
+            if port not in self.adoption:
+                return
+            done = self.releases.setdefault(port, threading.Event())
+        if not done.wait(RELEASE_WAIT):
+            log.warning("agent port %d: still listened on by the fleet", port)
+
+    def _adopt_streams(self):
+        """The serving loop's listeners on the agent ports in line with the registry: closed where
+        a handler asked or an entry now holds the port (one made at the front port, say), opened on
+        the other free ports. A port it cannot listen on (an agent of the other fleet's there) is
+        tried again at the next check, its failure logged once."""
+        with self.adoption_lock:
+            free = set(self.registry.free_ports())
+            for port in list(self.adoption):
+                if port in self.releases or port not in free:
+                    self.adoption.pop(port).close()
+            released = set(self.releases)
+            for done in self.releases.values():
+                done.set()
+            self.releases.clear()
+            room = max(0, ADOPT_MAX - len(self.adoption))
+            for port in sorted(free - set(self.adoption) - released)[:room]:
+                error, pstream = passive(f"ptcp:{port}:127.0.0.1")
+                if error:
+                    if port not in self.adopt_failed:
+                        log.warning(
+                            "agent port %d: cannot listen for re-admission: %s",
+                            port,
+                            os.strerror(error),
+                        )
+                        self.adopt_failed.add(port)
+                    continue
+                self.adopt_failed.discard(port)
+                pstream.socket.setblocking(False)
+                self.adoption[port] = pstream
 
     def bind(self, entry):
         """The entry's agent configuration written when new or changed, and its agent
@@ -722,10 +828,10 @@ class Fleet:
                 "restarted, its configuration changed," if changed else "started",
             )
 
-    def _serve_one(self, stream):
+    def _serve_one(self, stream, port=None):
         conn = ovs.jsonrpc.Connection(stream)
         try:
-            self.handle(conn, stream.name)
+            self.handle(conn, stream.name, port)
         except (
             ConnectionError,
             TimeoutError,
@@ -741,11 +847,7 @@ class Fleet:
     # -- the front port --------------------------------------------------------
 
     def listen(self):
-        name = self.config["listen"]
-        if name.startswith("ptcp:"):
-            _, port, host = name.split(":")  # C form ptcp:PORT:HOST; ovs Python takes HOST:PORT
-            name = f"ptcp:{host}:{port}"
-        error, pstream = ovs.stream.PassiveStream.open(name)
+        error, pstream = passive(self.config["listen"])
         if error:
             raise OSError(error, f"cannot listen on {self.config['listen']}")
         pstream.socket.setblocking(False)
@@ -792,6 +894,8 @@ class Fleet:
             if files is None:
                 failures, retry_at = 1, time.monotonic() + FILES_RETRY
         self.start_registered()
+        self._adopt_streams()  # after the registry's agents started: their ports are theirs
+        adopt_at = time.monotonic() + ADOPT_CHECK
         if ready is not None:
             ready.set()
         log.info("fleet: %s, agents on ports %s", self.config["listen"], self.config["ports"])
@@ -801,22 +905,38 @@ class Fleet:
                     files = self._files(failures)
                     failures += files is None
                     retry_at = None if files is not None else time.monotonic() + FILES_RETRY
-                error, stream = pstream.accept()
-                if error == errno.EAGAIN:
+                with self.adoption_lock:
+                    asked = bool(self.releases)
+                if asked or time.monotonic() >= adopt_at:
+                    self._adopt_streams()
+                    adopt_at = time.monotonic() + ADOPT_CHECK
+                accepted = False
+                for port, listener in [(None, pstream), *self.adoption.items()]:
+                    error, stream = listener.accept()
+                    if error == errno.EAGAIN:
+                        continue
+                    if error:
+                        log.warning("accept: %s", os.strerror(error))
+                        continue
+                    accepted = True
+                    if not self.slots.acquire(timeout=TIMEOUT):
+                        stream.close()
+                        continue
+                    threading.Thread(
+                        target=self._serve_one, args=(stream, port), daemon=True
+                    ).start()
+                if not accepted:
                     poller = ovs.poller.Poller()
-                    pstream.wait(poller)
+                    for listener in [pstream, *self.adoption.values()]:
+                        listener.wait(poller)
                     poller.timer_wait(200)
                     poller.block()
-                    continue
-                if error:
-                    log.warning("accept: %s", os.strerror(error))
-                    continue
-                if not self.slots.acquire(timeout=TIMEOUT):
-                    stream.close()
-                    continue
-                threading.Thread(target=self._serve_one, args=(stream,), daemon=True).start()
         finally:
             pstream.close()
+            with self.adoption_lock:
+                for listener in self.adoption.values():
+                    listener.close()
+                self.adoption.clear()
             if files is not None:
                 files.stop()
 

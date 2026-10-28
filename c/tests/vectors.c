@@ -1568,10 +1568,17 @@ static void fleet_session_vectors(const char *dir)
                 char path[2048];
                 snprintf(path, sizeof(path), "%s/%s", full, str(step, "mkdir"));
                 em_mkdirs(path, 0755);
+            } else if (cJSON_GetObjectItemCaseSensitive(step, "lose_registry")) {
+                /* a factory reset: the registry file gone */
+                char path[2048];
+                snprintf(path, sizeof(path), "%s/fleet.json", fleet.state_root);
+                (void)unlink(path);
             } else if (cJSON_GetObjectItemCaseSensitive(step, "arrival")) {
                 em_fleet_handover h;
-                em_fleet_outcome outcome = em_fleet_identify(
-                    &fleet, cJSON_GetObjectItemCaseSensitive(step, "arrival"), num(step, "now"), &h);
+                /* with port: a pod that dialled that agent port (spec 4, re-admission) */
+                int port = cJSON_GetObjectItemCaseSensitive(step, "port") ? (int)num(step, "port") : 0;
+                em_fleet_outcome outcome = em_fleet_identify_at(
+                    &fleet, cJSON_GetObjectItemCaseSensitive(step, "arrival"), port, num(step, "now"), &h);
                 static const char *const names[] = {"handover", "refused", "invalid", "failed"};
                 cJSON *start = cJSON_CreateNull(), *update = cJSON_CreateNull();
                 if (outcome == EM_FLEET_HANDOVER) {

@@ -99,7 +99,7 @@
     },
     "README 4. The fleet": {
       "vectors": ["fleet.json", "fleet-sessions.json"],
-      "box": ["fleet-handover", "fleet-return", "fleet-upgrade", "fleet-refusals", "fleet-admit-by-model", "fleet-takeover", "fleet-forget", "fleet-supervised", "fleet-files", "fleet-config-rejected", "fleet-config-truncated", "node-config"],
+      "box": ["fleet-handover", "fleet-return", "fleet-upgrade", "fleet-readmit", "fleet-refusals", "fleet-admit-by-model", "fleet-takeover", "fleet-forget", "fleet-supervised", "fleet-files", "fleet-config-rejected", "fleet-config-truncated", "node-config"],
       "python": ["test_fleet.py", "test_node_config.py"],
       "units": ["environment_files", "supervisor", "fleet_modules"],
       "fuzz": ["fleet"],

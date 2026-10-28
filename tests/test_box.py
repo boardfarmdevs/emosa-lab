@@ -561,6 +561,14 @@ def test_a_started_fleet_starts_its_registrys_agents_before_any_pod_returns(agen
     assert result["units_after_start"] == ["enable", "start"], result
 
 
+def test_after_a_factory_reset_the_pod_is_readmitted_on_the_agent_port_it_dials(agent, tmp_path):
+    if agent == "c":
+        adapter(agent, "emosa-fleet-c")
+    result = box("fleet-readmit", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+    assert all(result["same"].values()) and result["units_after_start"][:2] == ["enable", "start"]
+
+
 def test_pods_the_fleet_must_not_take_are_left_unchanged(agent, tmp_path):
     if agent == "c":
         adapter(agent, "emosa-fleet-c")

@@ -944,13 +944,31 @@ For each connection on the front port, the fleet:
    fleet's `admit_by_model` is on (it is off unless set) and one of its `models`
    recognises the pod (below);
 3. finds or creates the pod's registry entry: the AL MAC (§2.2), the first free
-   port, and interface `em<index>`;
+   port (for a pod on an agent port, the port it dialled: re-admission, below), and
+   interface `em<index>`;
 4. writes the agent configuration; if it changed, restarts the agent,
    otherwise starts it;
 5. writes `manager_addr` and ends the session.
 
 The whole exchange MUST complete within 5 s. A pod returning later gets the
 same entry.
+
+**Re-admission on an agent port.** A pod may dial an agent port no registry entry holds: a
+factory reset loses the registry with the agents' state while the configurations come back,
+and each pod keeps the `manager_addr` its agent was given. A serving fleet MUST listen on each
+agent port no entry holds (on loopback, as the agents do, §3.1: the forwarder or the labs'
+proxy brings the pod there), at most 128 of them, and keep those listeners in line with the
+registry, looking again at least once a second (a `forget` run as another process frees its
+port). A pod that connects there goes through steps 1 and 2 as at the front port. In step 3 its
+entry, when it has none, is made on the port it dialled instead of the first free one, with the
+interface that port's place in the range gives and the AL MAC its serial gives (§2.2). So each
+pod gets its port, interface and AL MAC back, whatever order the pods come back in, and the
+same agent identity reaches the controller. A pod with an entry is handed over to its own port,
+whichever it dialled. A pod on a port another pod's entry holds is refused and left unchanged:
+that pod's agent is behind the port, and it acts on no other pod (§3.1). Before an agent starts
+on a port (step 4, after either way in), the fleet stops listening on it. Both fleets
+(conformance `fleet-sessions`: `readmitted-on-the-ports-they-dial-after-a-lost-registry`,
+`agent-ports-taken-or-dialled-by-a-registered-pod`).
 
 A serving fleet keeps each valid configuration it starts on as the last valid one
 (`fleet-config.valid.json` under its `state_root`). One that fails its checks (its

@@ -440,6 +440,52 @@ async def fleet_upgrade(box):
     )
 
 
+async def fleet_readmit(box):
+    """spec 4, re-admission: a factory reset of the gateway. The fleet and the agent stopped, the
+    registry and the agent's state gone, the configurations back (the fleet's), the fleet started
+    again: it starts no agent (its registry is empty), and the pod, still dialing its agent's
+    port, reaches the fleet's listener there. It is re-admitted on that port, with no turn
+    through the front port: the same port, interface and AL MAC, its agent enabled and started,
+    the pod provisioned again."""
+    first = await onboarded(box)
+    before = box.registry().get(box.serial, {})
+    pid = box.process.pid()
+    searches, m1s = len(box.sent(AUTOCONFIG_SEARCH)), len(box.sent(AUTOCONFIG_WSC))
+    box.stop_fleet()
+    box.process.terminate()
+    box.process.wait(15)
+    (box.units / f"{box.serial}.pid").unlink(missing_ok=True)
+    state = Path(box.fleet_config["state_root"])
+    (state / "fleet.json").unlink(missing_ok=True)
+    shutil.rmtree(state / box.serial, ignore_errors=True)  # the agent's state, lost with it
+    logged = len(box.systemctl())
+    await box.restart_fleet()
+    started = await box.until(lambda: box.process.pid(), seconds=20)
+    actions = unit_actions(box.systemctl()[logged:], box.serial)
+    again = await provision(box, searches, m1s) if started else False
+    after = box.registry().get(box.serial, {})
+    log = (box.directory / "fleet.log").read_text(errors="replace").split("--- the ")[-1]
+    same = {key: after.get(key) == before.get(key) for key in ("port", "interface", "al_mac")}
+    passed = (
+        bool(first.get("applied"))
+        and bool(started)
+        and started != pid
+        and actions[:2] == ["enable", "start"]
+        and all(same.values())
+        and after.get("handovers") == 1
+        and "re-admitted on the agent port it dialled" in log
+        and again
+    )
+    return box.result(
+        passed=passed,
+        entry=after,
+        same=same,
+        units_after_start=actions,
+        new_process=bool(started) and started != pid,
+        provisioning_again=again,
+    )
+
+
 async def fleet_config_truncated(box):
     """spec 4: the likeliest bad file in the field, a partial write: the fleet's configuration cut
     in half, which names no state root. The fleet stopped with its agent gone, started again on it:
@@ -1009,6 +1055,7 @@ SCENARIOS = {
     "fleet-handover": fleet_handover,
     "fleet-return": fleet_return,
     "fleet-upgrade": fleet_upgrade,
+    "fleet-readmit": fleet_readmit,
     "fleet-refusals": fleet_refusals,
     "fleet-admit-by-model": fleet_admit_by_model,
     "fleet-takeover": fleet_takeover,

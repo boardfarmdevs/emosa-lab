@@ -175,46 +175,76 @@ static void set_identity(em_fleet_entry *e, const char *node_id, const char *mod
     e->firmware = dup_or_null(firmware);
 }
 
-em_fleet_entry *em_registry_assign(em_registry *r, const char *serial, const char *node_id,
-                                   const char *model, const char *firmware, double now)
+bool em_registry_port_free(const em_registry *r, int port)
 {
-    em_fleet_entry *e = find(r, serial);
-    if (!e) {
-        if (strlen(serial) > 64)
-            return NULL;
-        int port = 0;
-        for (int p = r->port_low; p <= r->port_high && !port; p++) {
-            bool used = false;
-            for (size_t i = 0; i < r->count && !used; i++)
-                used = r->entries[i].port == p;
-            if (!used)
-                port = p;
-        }
-        if (!port)
-            return NULL;
-        const char **taken = em_calloc(r->count + 1, sizeof(*taken));
-        size_t ntaken = 0;
-        taken[ntaken++] = r->reserved_al;
-        for (size_t i = 0; i < r->count; i++)
-            taken[ntaken++] = r->entries[i].al_mac;
-        char al[18];
-        bool derived = em_derive_al(serial, taken, ntaken, al);
-        free(taken);
-        if (!derived)
-            return NULL;
-        e = append(r);
-        EM_FORMAT_FIXED(e->pod_id, sizeof(e->pod_id), "%s", serial); /* at most 64, checked above */
-        memcpy(e->al_mac, al, sizeof(al));
-        e->port = port;
-        EM_FORMAT_FIXED(e->interface, sizeof(e->interface), "em%d", port - r->port_low + 1);
-        e->first_seen = now;
-    }
+    if (port < r->port_low || port > r->port_high)
+        return false;
+    for (size_t i = 0; i < r->count; i++)
+        if (r->entries[i].port == port)
+            return false;
+    return true;
+}
+
+/* A new entry on `port`: its interface em<index> the port's place in the range, its AL MAC derived
+ * from the serial (spec 2.2), so a pod given its port again gets them again. NULL when the serial
+ * is too long or no AL MAC is left. */
+static em_fleet_entry *create(em_registry *r, const char *serial, int port, double now)
+{
+    if (strlen(serial) > 64)
+        return NULL;
+    const char **taken = em_calloc(r->count + 1, sizeof(*taken));
+    size_t ntaken = 0;
+    taken[ntaken++] = r->reserved_al;
+    for (size_t i = 0; i < r->count; i++)
+        taken[ntaken++] = r->entries[i].al_mac;
+    char al[18];
+    bool derived = em_derive_al(serial, taken, ntaken, al);
+    free(taken);
+    if (!derived)
+        return NULL;
+    em_fleet_entry *e = append(r);
+    EM_FORMAT_FIXED(e->pod_id, sizeof(e->pod_id), "%s", serial); /* at most 64, checked above */
+    memcpy(e->al_mac, al, sizeof(al));
+    e->port = port;
+    EM_FORMAT_FIXED(e->interface, sizeof(e->interface), "em%d", port - r->port_low + 1);
+    e->first_seen = now;
+    return e;
+}
+
+static em_fleet_entry *seen(em_registry *r, em_fleet_entry *e, const char *node_id, const char *model,
+                            const char *firmware, double now)
+{
     set_identity(e, node_id, model, firmware);
     e->last_seen = now;
     e->handovers++;
     if (r->gtp_underlay[0])
         (void)place(r, e);
     return e;
+}
+
+em_fleet_entry *em_registry_assign(em_registry *r, const char *serial, const char *node_id,
+                                   const char *model, const char *firmware, double now)
+{
+    em_fleet_entry *e = find(r, serial);
+    if (!e) {
+        int port = 0;
+        for (int p = r->port_low; p <= r->port_high && !port; p++)
+            if (em_registry_port_free(r, p))
+                port = p;
+        if (!port || !(e = create(r, serial, port, now)))
+            return NULL;
+    }
+    return seen(r, e, node_id, model, firmware, now);
+}
+
+em_fleet_entry *em_registry_adopt(em_registry *r, const char *serial, const char *node_id, const char *model,
+                                  const char *firmware, int port, double now, em_fleet_placed *placed)
+{
+    em_fleet_entry *e = find(r, serial);
+    *placed = e ? EM_FLEET_REGISTERED : EM_FLEET_ADOPTED;
+    if (!e && (!em_registry_port_free(r, port) || !(e = create(r, serial, port, now))))
+        return NULL;
+    return seen(r, e, node_id, model, firmware, now);
 }
 
 bool em_registry_forget(em_registry *r, const char *serial, em_fleet_entry *out)
@@ -774,7 +804,25 @@ static bool write_if_changed(const char *path, const char *text, bool *changed)
 em_fleet_outcome em_fleet_identify(em_fleet *f, const cJSON *select_result, double now,
                                    em_fleet_handover *out)
 {
+    return em_fleet_identify_at(f, select_result, 0, now, out);
+}
+
+size_t em_fleet_free_ports(em_fleet *f, int *ports, size_t cap)
+{
+    if (!reload(f))
+        return SIZE_MAX;
+    size_t n = 0;
+    for (int p = f->registry.port_low; p <= f->registry.port_high && n < cap; p++)
+        if (em_registry_port_free(&f->registry, p))
+            ports[n++] = p;
+    return n;
+}
+
+em_fleet_outcome em_fleet_identify_at(em_fleet *f, const cJSON *select_result, int port, double now,
+                                      em_fleet_handover *out)
+{
     memset(out, 0, sizeof(*out));
+    out->dialled = port;
     const cJSON *first = cJSON_GetArrayItem(select_result, 0);
     const cJSON *rows = cJSON_GetObjectItemCaseSensitive(cJSON_IsObject(first) ? first : NULL, "rows");
     int n = cJSON_IsArray(rows) ? cJSON_GetArraySize(rows) : 0;
@@ -803,11 +851,23 @@ em_fleet_outcome em_fleet_identify(em_fleet *f, const cJSON *select_result, doub
         EM_FORMAT_FIXED(out->why, sizeof(out->why), "pod %s: the fleet registry is unreadable", serial);
         return EM_FLEET_FAILED;
     }
-    em_fleet_entry *e = em_registry_assign(&f->registry, serial, row_text(row, "id"), row_text(row, "model"),
-                                           row_text(row, "firmware_version"), now);
-    if (!e) {
-        EM_FORMAT_FIXED(out->why, sizeof(out->why), "pod %s: no free agent port, left unchanged", serial);
-        return EM_FLEET_REFUSED;
+    em_fleet_entry *e;
+    if (port) {
+        e = em_registry_adopt(&f->registry, serial, row_text(row, "id"), row_text(row, "model"),
+                              row_text(row, "firmware_version"), port, now, &out->placed);
+        if (!e) {
+            EM_FORMAT_FIXED(out->why, sizeof(out->why), "pod %s on agent port %d, another pod's: left unchanged",
+                            serial, port);
+            return EM_FLEET_REFUSED;
+        }
+    } else {
+        out->placed = EM_FLEET_FRONT;
+        e = em_registry_assign(&f->registry, serial, row_text(row, "id"), row_text(row, "model"),
+                               row_text(row, "firmware_version"), now);
+        if (!e) {
+            EM_FORMAT_FIXED(out->why, sizeof(out->why), "pod %s: no free agent port, left unchanged", serial);
+            return EM_FLEET_REFUSED;
+        }
     }
     out->entry = *e;
     out->entry.node_id = out->entry.model = out->entry.firmware = NULL;

@@ -45,6 +45,21 @@ char *em_registry_dump(const em_registry *r);
  * valid until the next assignment. */
 em_fleet_entry *em_registry_assign(em_registry *r, const char *serial, const char *node_id,
                                    const char *model, const char *firmware, double now);
+/* How a pod's entry was found (spec 4, re-admission). */
+typedef enum {
+    EM_FLEET_FRONT,      /* at the front port: its own, or one made on the first free port */
+    EM_FLEET_ADOPTED,    /* made on the agent port it dialled, which no entry held */
+    EM_FLEET_REGISTERED, /* it dialled an agent port and has an entry: its own, wherever it is */
+} em_fleet_placed;
+/* The pod that dialled agent port `port` (spec 4, re-admission): its entry made on that port when it
+ * has none and no entry holds the port, as after a lost registry (a factory reset): its interface
+ * the port's place in the range and its AL MAC from the serial, as before (EM_FLEET_ADOPTED); its
+ * own entry when it has one (EM_FLEET_REGISTERED); NULL when another pod's entry holds the port or
+ * the port is not in the range. The pointer is valid until the next assignment. */
+em_fleet_entry *em_registry_adopt(em_registry *r, const char *serial, const char *node_id, const char *model,
+                                  const char *firmware, int port, double now, em_fleet_placed *placed);
+/* Whether `port` is in the range and no entry holds it. */
+bool em_registry_port_free(const em_registry *r, int port);
 /* The lowest 169.254.N.0/24 (N 1 to 254) overlapping neither gtp nor one of the entries'
  * except skip's (NULL: none skipped); false when none is left or gtp is not a network. */
 bool em_free_underlay(const em_registry *r, const char *gtp, const em_fleet_entry *skip, char out[20]);
@@ -131,6 +146,8 @@ typedef struct {
     bool changed;         /* its agent configuration changed: restart, not start */
     cJSON *update;        /* the transact params that hand it over (owned) */
     char admission[96];   /* HANDOVER: how it was admitted, and its models entry (spec 4), for the log */
+    em_fleet_placed placed; /* HANDOVER: how its entry was found (re-admission) */
+    int dialled;          /* the agent port it dialled; 0: the front port */
     char why[192];        /* otherwise: what to log */
 } em_fleet_handover;
 
@@ -138,6 +155,14 @@ typedef struct {
  * its agent configuration written when new or changed (spec §4 steps 1 to 4). */
 em_fleet_outcome em_fleet_identify(em_fleet *f, const cJSON *select_result, double now,
                                    em_fleet_handover *out);
+/* em_fleet_identify for a pod that dialled agent port `port` (0: the front port, as
+ * em_fleet_identify): its entry from em_registry_adopt; REFUSED when another pod's entry holds the
+ * port (spec 4, re-admission). */
+em_fleet_outcome em_fleet_identify_at(em_fleet *f, const cJSON *select_result, int port, double now,
+                                      em_fleet_handover *out);
+/* The agent ports no entry holds, the registry read again, at most `cap` of them in `ports`, in
+ * order: their count; SIZE_MAX when the registry is unreadable. */
+size_t em_fleet_free_ports(em_fleet *f, int *ports, size_t cap);
 void em_fleet_handover_clear(em_fleet_handover *h);
 /* At the fleet's start: each admitted entry of the registry, in its order (by serial), its
  * agent configuration written when new or changed and start(ctx, pod_id, changed) called,

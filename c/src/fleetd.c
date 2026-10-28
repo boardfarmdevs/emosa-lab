@@ -65,6 +65,8 @@ static const char *defaults_dir(void)
 #define TIMEOUT 5.0              /* seconds for one pod's whole exchange (spec §4) */
 #define MESSAGE_MAX (1024 * 1024) /* a select of four columns is far smaller */
 #define CONFIG_MAX (1024 * 1024)
+#define ADOPT_MAX 128   /* agent ports listened on for re-admission, at most (the forwarder's 128) */
+#define ADOPT_CHECK 1.0 /* seconds between looks at the registry's free agent ports */
 
 static volatile sig_atomic_t stopping;
 static void on_signal(int sig)
@@ -222,6 +224,7 @@ typedef struct {
     pid_t child;
     bool child_running;
     unsigned ticket; /* supervised, STARTING: the agent's start asked for (em_sup_start) */
+    int port;        /* the agent port it came on (re-admission); 0: the front port */
     em_fleet_handover handover;
     char *in, *out;
     size_t in_len, in_cap, out_len, out_off;
@@ -263,6 +266,14 @@ typedef struct {
     size_t nconns, concurrency;
     pid_t *orphans; /* systemctl children whose pod gave up waiting: reaped later */
     size_t norphans;
+    /* spec 4, re-admission: a listener on each agent port no entry holds (loopback, where the
+     * agents listen), in line with the registry (adopt_sync); one is closed before an agent
+     * starts on its port (adopt_release) */
+    int adopt_fd[ADOPT_MAX], adopt_port[ADOPT_MAX];
+    size_t nadopt;
+    double adopt_check;            /* monotonic: the next look at the registry */
+    int adopt_failed[ADOPT_MAX];   /* the ports it could not listen on, each logged once */
+    size_t nadopt_failed;
 } server;
 
 static int listen_on(const char *name, char *unix_path, size_t unix_size)
@@ -308,6 +319,69 @@ static int listen_on(const char *name, char *unix_path, size_t unix_size)
         return fd;
     }
     return -1;
+}
+
+static int adopt_index(const server *s, int port)
+{
+    for (size_t i = 0; i < s->nadopt; i++)
+        if (s->adopt_port[i] == port)
+            return (int)i;
+    return -1;
+}
+
+static void adopt_close(server *s, size_t i)
+{
+    close(s->adopt_fd[i]);
+    s->adopt_fd[i] = s->adopt_fd[--s->nadopt];
+    s->adopt_port[i] = s->adopt_port[s->nadopt];
+}
+
+/* the listener on agent port `port` closed, before an agent starts there */
+static void adopt_release(server *s, int port)
+{
+    int i = adopt_index(s, port);
+    if (i >= 0)
+        adopt_close(s, (size_t)i);
+}
+
+/* the listeners on the agent ports in line with the registry (spec 4, re-admission): closed where an
+ * entry now holds the port, opened on the other free ports; one it cannot listen on (an agent of the
+ * other fleet's there) tried again at the next look, its failure logged once */
+static void adopt_sync(server *s)
+{
+    int free_ports[ADOPT_MAX];
+    size_t nfree = em_fleet_free_ports(&s->fleet, free_ports, ADOPT_MAX);
+    if (nfree == SIZE_MAX)
+        return; /* the registry unreadable: the listeners as they were */
+    for (size_t i = s->nadopt; i-- > 0;) {
+        bool still = false;
+        for (size_t j = 0; j < nfree && !still; j++)
+            still = free_ports[j] == s->adopt_port[i];
+        if (!still)
+            adopt_close(s, i);
+    }
+    for (size_t j = 0; j < nfree; j++) {
+        if (adopt_index(s, free_ports[j]) >= 0)
+            continue;
+        char name[32], unused[sizeof(((struct sockaddr_un *)0)->sun_path)];
+        EM_FORMAT_FIXED(name, sizeof(name), "ptcp:%d:127.0.0.1", free_ports[j]);
+        int fd = listen_on(name, unused, sizeof(unused));
+        size_t logged = s->nadopt_failed;
+        for (size_t k = 0; k < s->nadopt_failed && logged == s->nadopt_failed; k++)
+            if (s->adopt_failed[k] == free_ports[j])
+                logged = k;
+        if (fd < 0) {
+            if (logged == s->nadopt_failed && s->nadopt_failed < ADOPT_MAX) {
+                WARN("agent port %d: cannot listen for re-admission: %s", free_ports[j], strerror(errno));
+                s->adopt_failed[s->nadopt_failed++] = free_ports[j];
+            }
+            continue;
+        }
+        if (logged < s->nadopt_failed) /* listening again: a later failure is logged again */
+            s->adopt_failed[logged] = s->adopt_failed[--s->nadopt_failed];
+        s->adopt_fd[s->nadopt] = fd;
+        s->adopt_port[s->nadopt++] = free_ports[j];
+    }
 }
 
 static void queue(conn *c, const cJSON *message)
@@ -360,7 +434,7 @@ static void hand_over(conn *c)
 static const char *on_reply(server *s, conn *c, const cJSON *result, char *problem, size_t size)
 {
     if (c->stage == SELECTING) {
-        em_fleet_outcome outcome = em_fleet_identify(&s->fleet, result, wall(), &c->handover);
+        em_fleet_outcome outcome = em_fleet_identify_at(&s->fleet, result, c->port, wall(), &c->handover);
         if (outcome == EM_FLEET_REFUSED) {
             WARN("%s (%s)", c->handover.why, c->peer);
             return "";
@@ -369,6 +443,7 @@ static const char *on_reply(server *s, conn *c, const cJSON *result, char *probl
             (void)em_format(problem, size, "%s", c->handover.why);
             return problem;
         }
+        adopt_release(s, c->handover.entry.port); /* its agent listens there now */
         if (s->agents.sup) { /* the fleet's child: nothing to enable */
             c->stage = STARTING;
             c->ticket = em_sup_start(s->agents.sup, c->handover.entry.pod_id, c->handover.changed, monotonic());
@@ -386,9 +461,16 @@ static const char *on_reply(server *s, conn *c, const cJSON *result, char *probl
     }
     const em_fleet_entry *e = &c->handover.entry;
     const cJSON *row = cJSON_GetObjectItemCaseSensitive(cJSON_GetArrayItem(c->handover.update, 1), "row");
-    LOG("pod %s (node %s, %s) -> agent AL %s on %s, manager_addr %s; admitted by %s", c->handover.serial,
+    char placed[96] = "";
+    if (c->handover.placed == EM_FLEET_ADOPTED)
+        EM_FORMAT_FIXED(placed, sizeof(placed), "; re-admitted on the agent port it dialled (%d), no entry held it",
+                        c->handover.dialled);
+    else if (c->handover.placed == EM_FLEET_REGISTERED)
+        EM_FORMAT_FIXED(placed, sizeof(placed), "; it dialled agent port %d, its entry's is %d", c->handover.dialled,
+                        e->port);
+    LOG("pod %s (node %s, %s) -> agent AL %s on %s, manager_addr %s; admitted by %s%s", c->handover.serial,
         c->handover.node, c->peer, e->al_mac, e->interface,
-        cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(row, "manager_addr")), c->handover.admission);
+        cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(row, "manager_addr")), c->handover.admission, placed);
     return "";
 }
 
@@ -489,12 +571,13 @@ static const char *on_supervised(server *s, conn *c)
     return NULL;
 }
 
-static void accept_pods(server *s)
+/* the pods waiting on `listener`: the front port, or (port) an agent port no entry holds */
+static void accept_pods(server *s, int listener, int port)
 {
     while (s->nconns < s->concurrency) {
         struct sockaddr_storage sa;
         socklen_t len = sizeof(sa);
-        int fd = accept(s->listener, (struct sockaddr *)&sa, &len);
+        int fd = accept(listener, (struct sockaddr *)&sa, &len);
         if (fd < 0) {
             if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
                 WARN("accept: %s", strerror(errno));
@@ -509,6 +592,7 @@ static void accept_pods(server *s)
         conn *c = &s->conns[s->nconns++];
         memset(c, 0, sizeof(*c));
         c->fd = fd;
+        c->port = port;
         c->deadline = monotonic() + TIMEOUT;
         c->stage = SELECTING;
         if (sa.ss_family == AF_INET) {
@@ -703,13 +787,18 @@ static int serve(server *s)
     else if (unstarted)
         WARN("%zu agents not started: their configurations not written", unstarted);
     s->files_fd = files_open(s);
-    struct pollfd *p = em_calloc(s->concurrency + 2 + HTTP_CONNS, sizeof(*p));
+    struct pollfd *p = em_calloc(s->concurrency + 2 + HTTP_CONNS + ADOPT_MAX, sizeof(*p));
+    int polled_adopt_fd[ADOPT_MAX], polled_adopt_port[ADOPT_MAX];
     while (!stopping) {
         nfds_t n = 0;
         bool listening = s->nconns < s->concurrency; /* full: the others wait in the backlog */
         if (listening)
             p[n++] = (struct pollfd){s->listener, POLLIN, 0};
         double now = monotonic(), wake = now + 0.2;
+        if (now >= s->adopt_check) { /* a pod handed over, or one forgotten, since the last look */
+            adopt_sync(s);
+            s->adopt_check = now + ADOPT_CHECK;
+        }
         for (size_t i = 0; i < s->nconns; i++) {
             conn *c = &s->conns[i];
             p[n++] = (struct pollfd){c->fd, (short)(POLLIN | (c->out_len > c->out_off ? POLLOUT : 0)), 0};
@@ -731,6 +820,15 @@ static int serve(server *s)
             p[n++] = (struct pollfd){h->fd, (short)(h->out ? POLLOUT : POLLIN), 0};
             if (h->deadline < wake)
                 wake = h->deadline;
+        }
+        /* the agent ports' listeners last (re-admission), as they are now: a reply below may close
+         * one (adopt_release), so each is accepted on only while it is still the same */
+        nfds_t adopt_at = n;
+        size_t nadopt_polled = listening ? s->nadopt : 0;
+        for (size_t i = 0; i < nadopt_polled; i++) {
+            polled_adopt_fd[i] = s->adopt_fd[i];
+            polled_adopt_port[i] = s->adopt_port[i];
+            p[n++] = (struct pollfd){s->adopt_fd[i], POLLIN, 0};
         }
         int timeout = wake > now ? (int)((wake - now) * 1000) + 1 : 0;
         if (poll(p, n, timeout) < 0 && errno != EINTR) {
@@ -762,7 +860,12 @@ static int serve(server *s)
         }
         reap_orphans(s);
         if (listening && (p[0].revents & POLLIN))
-            accept_pods(s);
+            accept_pods(s, s->listener, 0);
+        for (size_t i = 0; i < nadopt_polled; i++) {
+            int now_at = adopt_index(s, polled_adopt_port[i]);
+            if ((p[adopt_at + i].revents & POLLIN) && now_at >= 0 && s->adopt_fd[now_at] == polled_adopt_fd[i])
+                accept_pods(s, polled_adopt_fd[i], polled_adopt_port[i]);
+        }
         size_t first_http = files_at + (files_listening ? 1 : 0), polled = s->nhttp;
         for (size_t k = polled; k-- > 0;) /* newest first, as http_close moves the last into a gap */
             if (!http_step(s, &s->http[k], p[first_http + k].revents) || monotonic() > s->http[k].deadline)
@@ -772,6 +875,8 @@ static int serve(server *s)
     }
     while (s->nhttp)
         http_close(s, s->nhttp - 1);
+    while (s->nadopt)
+        adopt_close(s, s->nadopt - 1);
     if (s->files_fd >= 0)
         close(s->files_fd);
     while (s->nconns)
