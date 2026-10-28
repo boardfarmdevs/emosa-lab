@@ -28,6 +28,7 @@ Run: ``python -m emosa.agent.fleet serve /etc/emosa-fleet.json``
 """
 
 import argparse
+import collections
 import contextlib
 import ctypes
 import ctypes.util
@@ -72,6 +73,14 @@ ADOPT_MAX = 128  # free agent ports listened on at most (the C fleet's and the f
 MISSING_SECRETS = "fleet-secrets.missing.json"  # under the state root: references with no source
 STALE_SECRETS = "fleet-secrets.stale.json"  # under the state root: hand copies that differ
 RELEASE_WAIT = 2  # seconds a handler waits for the loop to stop listening on an agent port
+UNIDENTIFIED_LOG = 60  # seconds between log lines for connections that end before identifying
+FLEET_STATUS = "fleet-status.json"  # under the run root, else the state root: the fleet's ports
+
+
+class Unidentified(ConnectionError):
+    """A pod connection that ended or failed before the pod identified itself."""
+
+
 AGENT_DEFAULTS = {
     "message_set": "easymesh-6.1",
     "multi_bss": False,
@@ -136,11 +145,16 @@ class Registry:
     With the site's GTP underlay given (fleet ``gtp_underlay``), every entry also holds the
     underlay it uses as a GRE parent (spec 8.6), allocated on first sight like its port and kept;
     one that overlaps the GTP underlay (its configuration changed) is allocated again, at the
-    pod's next arrival or the fleet's next start, whichever comes first."""
+    pod's next arrival or the fleet's next start, whichever comes first.
 
-    def __init__(self, path, ports, *, reserved_als=(), gtp_underlay=None):
+    ``reserved_ports`` (the fleet's reserved_ports, spec 4): agent ports the platform's own
+    services use on loopback, never allocated or adopted; an entry already on one moves to the
+    first free agent port at its pod's next arrival (its interface the new port's)."""
+
+    def __init__(self, path, ports, *, reserved_als=(), reserved_ports=(), gtp_underlay=None):
         self.path, self.ports = Path(path), tuple(ports)
         self.reserved = set(reserved_als)
+        self.reserved_ports = frozenset(reserved_ports)
         self.gtp_underlay = gtp_underlay
         self.lock = threading.Lock()
         self._load()
@@ -219,12 +233,37 @@ class Registry:
         self._save()
         return dict(entry)
 
+    def _free(self):
+        """The agent ports neither an entry holds nor reserved_ports names, in order."""
+        used = {a["port"] for a in self.agents.values()}
+        return [p for p in self.ports if p not in used and p not in self.reserved_ports]
+
     def free_ports(self):
-        """The agent ports no entry holds."""
+        """The agent ports no entry holds, none of them reserved."""
         with self.lock:
             self._load()
-            used = {a["port"] for a in self.agents.values()}
-        return [p for p in self.ports if p not in used]
+            return self._free()
+
+    def _move(self, entry):
+        """An entry on a reserved port moved to the first free agent port (its interface the new
+        port's): the port it left, or None when it is on no reserved port or none is free."""
+        old = entry["port"]
+        free = self._free() if old in self.reserved_ports else []
+        if not free:
+            return None
+        entry.update(port=free[0], interface=f"em{self.ports.index(free[0]) + 1}")
+        return old
+
+    def _seen_moved(self, entry, identity, held):
+        """_seen for an entry found again, moved off a reserved port first; the copy names the
+        port it left (moved_from, never saved). None when it is on a reserved port, none free."""
+        moved = self._move(entry)
+        if moved is None and entry["port"] in self.reserved_ports:
+            return None
+        seen = self._seen(entry, identity, held)
+        if moved is not None:
+            seen["moved_from"] = moved
+        return seen
 
     def assign(self, identity, held=None):
         """The pod's agent entry, allocated on first sight; None when full. ``held``: the
@@ -233,28 +272,41 @@ class Registry:
         with self.lock:
             self._load()
             entry = self.agents.get(serial)
-            if entry is None:
-                used = {a["port"] for a in self.agents.values()}
-                port = next((p for p in self.ports if p not in used), None)
-                if port is None:
-                    return None
-                entry = self._create(serial, port)
-            return self._seen(entry, identity, held)
+            if entry is not None:
+                return self._seen_moved(entry, identity, held)
+            free = self._free()
+            if not free:
+                return None
+            return self._seen(self._create(serial, free[0]), identity, held)
 
     def adopt(self, identity, port, held=None):
         """A pod that dialled agent port ``port`` (spec 4, re-admission): ("adopted", its entry
         made on that port) when it has none and no entry holds the port, as after a lost registry
         (a factory reset); ("registered", its entry) when it has one, wherever it is; ("taken",
-        None) when another pod's entry holds the port."""
+        None) when another pod's entry holds the port or it is not in the range; ("reserved", None)
+        when reserved_ports names it. ("registered", None): its entry is on a reserved port and
+        none is free to move it to."""
         serial = identity["serial_number"]
         with self.lock:
             self._load()
             entry = self.agents.get(serial)
             if entry is not None:
-                return "registered", self._seen(entry, identity, held)
+                return "registered", self._seen_moved(entry, identity, held)
+            if port in self.reserved_ports:
+                return "reserved", None
             if port not in self.ports or any(a["port"] == port for a in self.agents.values()):
                 return "taken", None
             return "adopted", self._seen(self._create(serial, port), identity, held)
+
+    def reserved_held(self):
+        """serial -> port of each entry on a reserved port (spec 4, reserved ports)."""
+        with self.lock:
+            self._load()
+            return {
+                serial: a["port"]
+                for serial, a in sorted(self.agents.items())
+                if a["port"] in self.reserved_ports
+            }
 
     def forget(self, serial):
         with self.lock:
@@ -533,6 +585,52 @@ def check_config(config):
     ]
     if not config.get("files") and any(m.get("update") for ms in modules for m in ms.values()):
         raise EmosaError(Reason.INVALID_INPUT, "a module's update needs the fleet's files")
+    # spec 4, reserved ports: the platform's own; the fleet never listens on one
+    for item in config.get("reserved_ports") or ():
+        if isinstance(item, list) and item[0] > item[1]:
+            raise EmosaError(Reason.INVALID_INPUT, f"reserved_ports: {item} is not a range")
+    reserved = reserved_ports(config)
+    front = listen_port(config["listen"])
+    if front in reserved:
+        raise EmosaError(
+            Reason.INVALID_INPUT, f"the front port {front} is reserved (reserved_ports)"
+        )
+    if config.get("files") and config["files"].get("port", FILES_PORT) in reserved:
+        raise EmosaError(
+            Reason.INVALID_INPUT, "the file server's port is reserved (reserved_ports)"
+        )
+    low, high = config["ports"]
+    if low <= high and all(p in reserved for p in range(low, high + 1)):
+        raise EmosaError(Reason.INVALID_INPUT, "every agent port is reserved (reserved_ports)")
+
+
+def reserved_ports(config):
+    """The ports a fleet configuration reserves for the platform's own services on loopback
+    (spec 4, reserved_ports: each item a port or a [first, last] range), as a frozenset; none
+    when it names none (the reference has no build default)."""
+    ports = set()
+    for item in config.get("reserved_ports") or ():
+        first, last = (item, item) if isinstance(item, int) else item
+        ports.update(range(first, last + 1))
+    return frozenset(ports)
+
+
+def listen_port(name):
+    """The TCP port of a listen name in the C form (ptcp:PORT:HOST); None for another."""
+    if not name.startswith("ptcp:"):
+        return None
+    return int(name.split(":")[1])
+
+
+def port_list(ports):
+    """Ports as the log and the status name them: runs as first-last, comma separated."""
+    runs = []
+    for port in sorted(ports):
+        if runs and runs[-1][1] == port - 1:
+            runs[-1][1] = port
+        else:
+            runs.append([port, port])
+    return ", ".join(str(a) if a == b else f"{a}-{b}" for a, b in runs) or "none"
 
 
 def schema_error(config):
@@ -650,10 +748,12 @@ class Fleet:
         check_config(config)
         self.config = config
         low, high = config["ports"]
+        self.reserved_ports = reserved_ports(config)
         self.registry = Registry(
             Path(config["state_root"]) / "fleet.json",
             range(low, high + 1),
             reserved_als={config["controller_al"]},
+            reserved_ports=self.reserved_ports,
             gtp_underlay=config.get("gtp_underlay"),
         )
         self.config_dir = Path(config["config_dir"])
@@ -671,6 +771,14 @@ class Fleet:
         self.releases = {}  # port -> Event, set once the loop closed its listener
         self.adopt_failed = set()  # ports it could not listen on, logged once
         self.secrets_lock = threading.Lock()  # the record of secrets with no source
+        # connections that ended before the pod identified itself (a platform's client on an
+        # agent port, say): each counted, one logged per UNIDENTIFIED_LOG s with the rest summed
+        self.unidentified_lock = threading.Lock()
+        self.unidentified = 0  # since the fleet started
+        self.unidentified_quiet_until = 0.0  # monotonic: until then they are summed, not logged
+        self.unidentified_summed = collections.Counter()  # where, since the last line
+        self.status_text = None  # the fleet status as last written
+        self.status_error = None  # why the last write failed, logged once
 
     def admission(self, serial, model, firmware):
         """How the fleet admits a pod (spec 4 step 2), for its log: "all" (admit is *), "serial"
@@ -725,7 +833,10 @@ class Fleet:
             ops.append(
                 {"op": "select", "table": "Wifi_Inet_Config", "where": [], "columns": INET_COLUMNS}
             )
-        results = self._call(conn, "transact", ops, deadline)
+        try:
+            results = self._call(conn, "transact", ops, deadline)
+        except (ConnectionError, TimeoutError) as exc:
+            raise Unidentified(str(exc)) from exc
         rows = results[0].get("rows", [])
         inet = results[1] if len(results) > 1 and isinstance(results[1], dict) else {}
         held = held_underlay(inet.get("rows"))
@@ -745,14 +856,43 @@ class Fleet:
                 entry = self.registry.assign(identity, held)
             else:
                 placed, entry = self.registry.adopt(identity, port, held)
-        if entry is None and port is None:
-            log.warning("pod %s (%s): no free agent port, left unchanged", serial, peer)
-            return None
         if entry is None:
-            log.warning(
-                "pod %s (%s) on agent port %d, another pod's: left unchanged", serial, peer, port
-            )
+            held_port = self.registry.reserved_held().get(serial)
+            if held_port is not None:
+                log.error(
+                    "pod %s (%s): its entry's agent port %d is reserved (reserved_ports) and no"
+                    " other is free to move it to: left unchanged",
+                    serial,
+                    peer,
+                    held_port,
+                )
+            elif port is None:
+                log.warning("pod %s (%s): no free agent port, left unchanged", serial, peer)
+            elif placed == "reserved":
+                log.warning(
+                    "pod %s (%s) on agent port %d, reserved (reserved_ports): left unchanged",
+                    serial,
+                    peer,
+                    port,
+                )
+            else:
+                log.warning(
+                    "pod %s (%s) on agent port %d, another pod's: left unchanged",
+                    serial,
+                    peer,
+                    port,
+                )
             return None
+        moved = entry.pop("moved_from", None)
+        if moved is not None:
+            log.error(
+                "pod %s: its entry was on agent port %d, reserved (reserved_ports): moved to %d"
+                " (%s), its agent restarted there",
+                serial,
+                moved,
+                entry["port"],
+                entry["interface"],
+            )
         self._release(entry["port"])
         self.bind(entry)
         target = f"tcp:{self.config['advertise']}:{entry['port']}"
@@ -984,7 +1124,10 @@ class Fleet:
         """At the fleet's start, every admitted pod's agent in the registry, as step 4
         does, without waiting for the pod to come back through the front port: an image
         upgrade keeps the registry and the configurations (on /nvram), not the agents'
-        enabled units. In the registry's order (by serial); a failed start is logged."""
+        enabled units. In the registry's order (by serial); a failed start is logged. An entry
+        on a reserved port (spec 4, reserved_ports) is not started: its agent is stopped, as it
+        would listen where the platform's own service does, and the entry moves at its pod's
+        next arrival."""
         self.registry.settle()
         with self.registry.lock:
             self.registry._load()
@@ -995,6 +1138,16 @@ class Fleet:
                 self.admission(entry["pod_id"], entry.get("model"), entry.get("firmware"))[0]
                 is None
             ):
+                continue
+            if entry["port"] in self.reserved_ports:
+                log.error(
+                    "pod %s: its entry is on agent port %d, reserved (reserved_ports): its agent"
+                    " is stopped, not started; the entry moves to a free port at the pod's next"
+                    " arrival",
+                    entry["pod_id"],
+                    entry["port"],
+                )
+                self.stopper(entry["pod_id"])
                 continue
             try:
                 changed = self.bind(entry)
@@ -1007,10 +1160,84 @@ class Fleet:
                 "restarted, its configuration changed," if changed else "started",
             )
 
+    def _note_unidentified(self, peer, port, exc):
+        """A connection that ended before the pod identified itself: counted; logged when none
+        was in the last UNIDENTIFIED_LOG s, else summed into the next summary (_unidentified_tick),
+        so a platform's client redialling an agent port cannot flood the log."""
+        now = time.monotonic()
+        with self.unidentified_lock:
+            self.unidentified += 1
+            if now < self.unidentified_quiet_until:
+                where = "front port" if port is None else f"agent port {port}"
+                self.unidentified_summed[where] += 1
+                return
+            self.unidentified_quiet_until = now + UNIDENTIFIED_LOG
+        log.warning("pod connection %s: %s, before it identified itself", peer, exc)
+
+    def _unidentified_tick(self):
+        """The summary of the connections summed since the last line, once their quiet time is
+        over: one line per UNIDENTIFIED_LOG s while they go on."""
+        now = time.monotonic()
+        with self.unidentified_lock:
+            if not self.unidentified_summed or now < self.unidentified_quiet_until:
+                return
+            summed, self.unidentified_summed = self.unidentified_summed, collections.Counter()
+            self.unidentified_quiet_until = now + UNIDENTIFIED_LOG
+        log.warning(
+            "%d more pod connections ended before identifying in the last %d s (%s)",
+            sum(summed.values()),
+            UNIDENTIFIED_LOG,
+            ", ".join(f"{where}: {n}" for where, n in sorted(summed.items())),
+        )
+
+    def status(self):
+        """The fleet's status (fleet-status schema, spec 4): its agent ports, the reserved ones
+        and where they come from, the ports entries hold (and those of them reserved), the ports
+        it listens on for re-admission or could not, and the connections that ended before
+        identifying since it started."""
+        with self.registry.lock:
+            self.registry._load()
+            assigned = sorted(a["port"] for a in self.registry.agents.values())
+        with self.adoption_lock:
+            listening, failed = sorted(self.adoption), sorted(self.adopt_failed)
+        with self.unidentified_lock:
+            unidentified = self.unidentified
+        return {
+            "agent_ports": list(self.config["ports"]),
+            "reserved_ports": sorted(self.reserved_ports),
+            "reserved_from": "configuration" if "reserved_ports" in self.config else "none",
+            "assigned": assigned,
+            "reserved_assigned": [p for p in assigned if p in self.reserved_ports],
+            "listening": listening,
+            "cannot_listen": failed,
+            "unidentified_connections": unidentified,
+        }
+
+    def write_status(self):
+        """The fleet's status as FLEET_STATUS under the run root (else the state root), written
+        when it changed."""
+        text = json.dumps(self.status(), indent=2, sort_keys=True) + "\n"
+        if text == self.status_text:
+            return
+        root = Path(self.config.get("run_root") or self.config["state_root"])
+        try:
+            root.mkdir(parents=True, exist_ok=True)
+            tmp = root / f"{FLEET_STATUS}.tmp"  # the C fleet's em_write_file
+            tmp.write_text(text)
+            os.replace(tmp, root / FLEET_STATUS)
+        except OSError as exc:
+            if str(exc) != self.status_error:  # logged once while it fails the same way
+                log.warning("fleet status not written under %s: %s", root, exc)
+                self.status_error = str(exc)
+            return
+        self.status_text, self.status_error = text, None
+
     def _serve_one(self, stream, port=None):
         conn = ovs.jsonrpc.Connection(stream)
         try:
             self.handle(conn, stream.name, port)
+        except Unidentified as exc:
+            self._note_unidentified(stream.name, port, exc)
         except (
             ConnectionError,
             TimeoutError,
@@ -1074,10 +1301,17 @@ class Fleet:
                 failures, retry_at = 1, time.monotonic() + FILES_RETRY
         self.start_registered()
         self._adopt_streams()  # after the registry's agents started: their ports are theirs
+        self.write_status()
         adopt_at = time.monotonic() + ADOPT_CHECK
         if ready is not None:
             ready.set()
-        log.info("fleet: %s, agents on ports %s", self.config["listen"], self.config["ports"])
+        log.info(
+            "fleet: %s, agents on ports %s, reserved %s (%s)",
+            self.config["listen"],
+            self.config["ports"],
+            port_list(self.reserved_ports),
+            "configuration" if "reserved_ports" in self.config else "none",
+        )
         try:
             while not self.stop.is_set():
                 if retry_at is not None and time.monotonic() >= retry_at:  # the address yet?
@@ -1088,6 +1322,8 @@ class Fleet:
                     asked = bool(self.releases)
                 if asked or time.monotonic() >= adopt_at:
                     self._adopt_streams()
+                    self._unidentified_tick()
+                    self.write_status()
                     adopt_at = time.monotonic() + ADOPT_CHECK
                 accepted = False
                 for port, listener in [(None, pstream), *self.adoption.items()]:

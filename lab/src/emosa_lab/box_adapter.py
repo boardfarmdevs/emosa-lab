@@ -489,6 +489,85 @@ async def fleet_readmit(box):
     )
 
 
+RESERVED_PORTS = [6652, 6654]  # fleet-reserved-ports' reserved, as an RDK-B gateway's 6666-6667
+FREE_PORT = 6653  # the one agent port left free there
+
+
+def refused(port):
+    """Whether a connection to 127.0.0.1:port is refused: nothing listens there."""
+    try:
+        socket.create_connection(("127.0.0.1", port), timeout=2).close()
+    except ConnectionRefusedError:
+        return True
+    return False
+
+
+async def fleet_reserved_ports(box):
+    """spec 4, reserved ports: ports the platform's own services use on loopback inside the agent
+    ports (an RDK-B gateway's parodus and its WebPA client, 6666-6667 there). The fleet never
+    listens on one: the platform's service binds its port while the fleet serves, and a dial to a
+    reserved port where nothing listens is refused, as before the re-admission listeners; the
+    fleet listens on the other free port only. A platform's client that connects to a free agent
+    port and hangs up before identifying, thirty times, is counted in the fleet's status and
+    logged once. The status names the ports."""
+    first = await onboarded(box)
+    root = Path(box.fleet_config.get("run_root") or box.fleet_config["state_root"])
+
+    def status():
+        try:
+            return json.loads((root / "fleet-status.json").read_text())
+        except (OSError, ValueError):
+            return None
+
+    listening = await box.until(
+        lambda: (s := status()) is not None and s.get("listening") == [FREE_PORT], seconds=10
+    )
+    service = socket.socket()  # the platform's service on its port while the fleet serves
+    service.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    try:
+        service.bind(("127.0.0.1", RESERVED_PORTS[1]))
+        service.listen()
+        bound = True
+    except OSError:
+        bound = False
+    finally:
+        service.close()
+    dial_refused = await asyncio.to_thread(refused, RESERVED_PORTS[0])
+    # the box's own probes of the front port, before the pod, count too
+    before = (status() or {}).get("unidentified_connections", 0)
+    for _ in range(30):  # a platform's client redialling an agent port, hanging up at once
+        with socket.create_connection(("127.0.0.1", FREE_PORT), timeout=2):
+            pass
+    counted = await box.until(
+        lambda: (s := status()) is not None and s.get("unidentified_connections") == before + 30,
+        seconds=15,
+    )
+    final = status() or {}
+    log = (box.directory / "fleet.log").read_text(errors="replace").split("--- the ")[-1]
+    lines = log.count("before it identified itself")
+    entry = box.registry().get(box.serial, {})
+    passed = (
+        bool(first.get("applied"))
+        and entry.get("port") == FLEET_PORTS[0]
+        and bool(listening)
+        and bound
+        and dial_refused
+        and bool(counted)
+        and lines == 1
+        and final.get("reserved_ports") == RESERVED_PORTS
+        and final.get("reserved_from") == "configuration"
+        and final.get("assigned") == [FLEET_PORTS[0]]
+        and final.get("cannot_listen") == []
+    )
+    return box.result(
+        passed=passed,
+        status=final,
+        service_bound=bound,
+        reserved_refused=dial_refused,
+        unidentified_log_lines=lines,
+    )
+
+
 READMIT_PODS = ("EMOSAPOD000000B0B2", "EMOSAPOD000000B0C3")  # fleet-readmit-pods' other two
 COLLIDING_POD = "EMOSAPOD000000B0D4"  # one that dials another pod's agent port
 
@@ -1212,6 +1291,7 @@ SCENARIOS = {
     "fleet-upgrade": fleet_upgrade,
     "fleet-readmit": fleet_readmit,
     "fleet-readmit-pods": fleet_readmit_pods,
+    "fleet-reserved-ports": fleet_reserved_ports,
     "fleet-refusals": fleet_refusals,
     "fleet-admit-by-model": fleet_admit_by_model,
     "fleet-takeover": fleet_takeover,
@@ -1223,6 +1303,7 @@ SCENARIOS = {
 }
 OPTIONS = {
     "fleet-readmit-pods": {"fleet": {"ports": [6651, 6653]}},
+    "fleet-reserved-ports": {"fleet": {"ports": [6651, 6654], "reserved_ports": RESERVED_PORTS}},
     "fleet-refusals": {"fleet": {"admit": [OTHER_POD]}, "handover_seconds": 6},
     "fleet-admit-by-model": {
         "legacy": True,

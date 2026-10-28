@@ -578,6 +578,14 @@ def test_after_a_factory_reset_three_pods_back_in_another_order_keep_their_entri
     assert result["entries"] == expected, result
 
 
+def test_the_fleet_never_listens_on_a_reserved_port_and_sums_unidentified_dials(agent, tmp_path):
+    if agent == "c":
+        adapter(agent, "emosa-fleet-c")
+    result = box("fleet-reserved-ports", agent, tmp_path / "box", timeout=240)
+    assert result["passed"], result
+    assert result["status"]["listening"] == [6653] and result["unidentified_log_lines"] == 1
+
+
 def test_pods_the_fleet_must_not_take_are_left_unchanged(agent, tmp_path):
     if agent == "c":
         adapter(agent, "emosa-fleet-c")

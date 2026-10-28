@@ -959,6 +959,82 @@ static void fleet_modules(const char *scratch)
     free(answer);
 }
 
+/* spec 4, reserved ports: parsed from the configuration (a port or a [first, last] range), named as
+ * runs, refused where the fleet itself would listen on one; never allocated or adopted, and an
+ * entry found again on one moves to the first free port */
+static void fleet_reserved_ports(const char *scratch)
+{
+    const char *from = NULL;
+    char why[200], named[64];
+    cJSON *config = cJSON_Parse("{\"reserved_ports\": [6652, [6666, 6667]]}");
+    unsigned char *bits = em_reserved_ports(config, &from, why, sizeof(why));
+    CHECK(bits && !strcmp(from, "configuration") && em_port_reserved(bits, 6652) && em_port_reserved(bits, 6667) &&
+              !em_port_reserved(bits, 6653) && !em_port_reserved(bits, 0) && !em_port_reserved(bits, 70000),
+          "a port and a range");
+    CHECK(bits && em_port_list(bits, named, sizeof(named)) && !strcmp(named, "6652, 6666-6667"), "named as runs");
+    CHECK(bits && !em_port_list(bits, named, 8), "too long to name in 8 bytes");
+    free(bits);
+    cJSON_Delete(config);
+    const char *bad[] = {"{\"reserved_ports\": [[6667, 6666]]}", "{\"reserved_ports\": [0]}",
+                         "{\"reserved_ports\": [[1, 2, 3]]}", "{\"reserved_ports\": 6666}",
+                         "{\"reserved_ports\": [6666.5]}"};
+    for (size_t i = 0; i < sizeof(bad) / sizeof(*bad); i++) {
+        config = cJSON_Parse(bad[i]);
+        bits = em_reserved_ports(config, &from, why, sizeof(why));
+        CHECK(!bits && strstr(why, "reserved_ports"), "refused: %s", bad[i]);
+        free(bits);
+        cJSON_Delete(config);
+    }
+    config = cJSON_CreateObject(); /* none named: the build's default, empty in a plain build */
+    bits = em_reserved_ports(config, &from, why, sizeof(why));
+    CHECK(bits && em_port_list(bits, named, sizeof(named)) &&
+              (!strcmp(from, "none") ? !strcmp(named, "none") : !strcmp(from, "build") && strcmp(named, "none")),
+          "the build's default: %s (%s)", bits ? named : "?", from ? from : "?");
+    free(bits);
+    cJSON_Delete(config);
+    /* where the fleet itself would listen on one, the configuration is refused */
+    char dir[512], text[1200];
+    snprintf(dir, sizeof(dir), "%s/reserved", scratch);
+    CHECK(em_mkdirs(dir, 0700), "a state root");
+    const char *refused[][2] = {
+        {"\"listen\": \"ptcp:6666:127.0.0.1\", \"reserved_ports\": [[6666, 6667]]", "the front port 6666 is reserved"},
+        {"\"listen\": \"ptcp:6640:127.0.0.1\", \"files\": {\"directory\": \"/x\"}, \"reserved_ports\": [6650]",
+         "the file server's port is reserved"},
+        {"\"listen\": \"ptcp:6640:127.0.0.1\", \"reserved_ports\": [[6650, 6660]]", "every agent port is reserved"},
+    };
+    for (size_t i = 0; i < sizeof(refused) / sizeof(*refused); i++) {
+        snprintf(text, sizeof(text),
+                 "{%s, \"ports\": [6651, 6653], \"advertise\": \"10.0.0.1\", \"controller_al\": \"02:00:00:e0:00:01\", "
+                 "\"state_root\": \"%s\", \"config_dir\": \"%s\"}",
+                 refused[i][0], dir, dir);
+        em_fleet f;
+        bool opened = em_fleet_open(&f, cJSON_Parse(text), why, sizeof(why));
+        CHECK(!opened && strstr(why, refused[i][1]), "refused: %s (%s)", refused[i][1], why);
+        em_fleet_close(&f);
+    }
+    /* skipped, not shifted: an entry on one (made before it was reserved) moves when found again */
+    em_registry r = {.port_low = 6651, .port_high = 6653};
+    em_fleet_entry *e = em_registry_assign(&r, "A", NULL, NULL, NULL, 1.5);
+    CHECK(e && e->port == 6651, "A on 6651");
+    e = em_registry_assign(&r, "B", NULL, NULL, NULL, 1.5);
+    CHECK(e && e->port == 6652, "B on 6652, not yet reserved");
+    config = cJSON_Parse("{\"reserved_ports\": [6652]}");
+    bits = em_reserved_ports(config, &from, why, sizeof(why));
+    cJSON_Delete(config);
+    r.reserved = bits;
+    CHECK(!em_registry_port_free(&r, 6652) && em_registry_port_free(&r, 6653), "6652 reserved, 6653 free");
+    e = em_registry_assign(&r, "A", NULL, NULL, NULL, 2.5);
+    CHECK(e && e->port == 6651 && !r.moved_from, "A, on no reserved port, stays");
+    em_fleet_placed placed;
+    e = em_registry_adopt(&r, "B", NULL, NULL, NULL, 6653, 2.5, NULL, &placed);
+    CHECK(e && placed == EM_FLEET_REGISTERED && e->port == 6653 && !strcmp(e->interface, "em3") && r.moved_from == 6652,
+          "B moved off 6652 to 6653 (em3)");
+    CHECK(!em_registry_assign(&r, "C", NULL, NULL, NULL, 2.5), "C: no free port, 6652 never handed out");
+    CHECK(!em_registry_adopt(&r, "C", NULL, NULL, NULL, 6652, 2.5, NULL, &placed), "6652 dialled: not adopted");
+    em_registry_free(&r);
+    free(bits);
+}
+
 static void ethernet(void)
 {
     /* what is refused before any packet socket (the box opens real ones) */
@@ -1900,6 +1976,7 @@ int main(int argc, char **argv)
     fleet_underlays();
     fleet_secrets(argv[2]);
     fleet_modules(argv[2]);
+    fleet_reserved_ports(argv[2]);
     ethernet();
     schema_keywords(argv[2]);
     helpers(argv[2]);

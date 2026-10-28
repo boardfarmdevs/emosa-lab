@@ -1,0 +1,23 @@
+{
+  "agent_ports": [
+    6651,
+    6690
+  ],
+  "assigned": [
+    6651,
+    6652
+  ],
+  "cannot_listen": [],
+  "listening": [
+    6653,
+    6654,
+    6655
+  ],
+  "reserved_assigned": [],
+  "reserved_from": "build",
+  "reserved_ports": [
+    6666,
+    6667
+  ],
+  "unidentified_connections": 0
+}

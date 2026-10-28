@@ -17,7 +17,7 @@ EXAMPLES = Path(__file__).resolve().parents[1] / "spec" / "examples"
 
 
 @pytest.mark.parametrize(
-    "schema", ["fleet-config", "agent-config", "fleet-registry", "agent-status"]
+    "schema", ["fleet-config", "agent-config", "fleet-registry", "agent-status", "fleet-status"]
 )
 def test_the_spec_examples_are_valid(schema):
     validate(schema, json.loads((EXAMPLES / f"{schema}.json").read_text()))
@@ -30,6 +30,7 @@ def test_what_the_fleet_writes_meets_the_contracts(tmp_path):
         fleet._call = Pod(serial)
         fleet.handle(None, "peer")
     validate("fleet-registry", fleet.registry.agents)
+    validate("fleet-status", fleet.status())
     for entry in fleet.registry.agents.values():
         validate("agent-config", agent_config(entry, fleet.config))
         written = json.loads((tmp_path / "etc" / f"{entry['pod_id']}.json").read_text())

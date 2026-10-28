@@ -31,9 +31,26 @@ typedef struct {
     int port_low, port_high;
     char reserved_al[18]; /* the controller's AL */
     char gtp_underlay[20]; /* the site's GTP underlay (fleet gtp_underlay); "": none */
+    /* the reserved ports (spec 4, reserved_ports), EM_PORT_BITS bits, not owned; NULL: none */
+    const unsigned char *reserved;
+    int moved_from; /* the reserved port the last assignment or adoption moved its entry off; 0: none */
     size_t count, cap;
     em_fleet_entry *entries;
 } em_registry;
+
+/* spec 4, reserved ports: the ports the platform's own services use on loopback (an RDK-B
+ * gateway's parodus and its WebPA client), never allocated, adopted, listened on for re-admission or
+ * forwarded. A set of ports as bits; em_reserved_ports the configuration's reserved_ports (each a
+ * port or a [first, last] range) or, without it, the build's default (EMOSA_RESERVED_PORTS:
+ * "6666-6667", say), *from "configuration", "build" or "none"; NULL with *why when it is not one. */
+#define EM_PORT_BITS 65536
+unsigned char *em_reserved_ports(const cJSON *config, const char **from, char *why, size_t size);
+bool em_port_reserved(const unsigned char *reserved, int port);
+/* Whether the registry reserves `port`. */
+bool em_registry_reserved(const em_registry *r, int port);
+/* Ports as the log and the status name them: runs as first-last, comma separated ("none": none);
+ * false when they do not fit. */
+bool em_port_list(const unsigned char *reserved, char *out, size_t size);
 
 void em_registry_free(em_registry *r);
 /* The entries of a registry file (fleet-registry schema); false when it is not one. */
@@ -68,7 +85,9 @@ em_fleet_entry *em_registry_assign_held(em_registry *r, const char *serial, cons
  * rows (spec 8.6: static, the underlay's .1 with netmask 255.255.255.0, a 169.254.N.0/24, N 1 to
  * 254), when they name exactly one; false otherwise. */
 bool em_held_underlay(const cJSON *rows, char out[20]);
-/* Whether `port` is in the range and no entry holds it. */
+/* Whether `port` is in the range, not reserved, and no entry holds it. An entry found again on a
+ * reserved port (em_registry_assign_held, em_registry_adopt) moves to the first free port, its
+ * interface the new port's (moved_from the port it left); with none free it is not returned. */
 bool em_registry_port_free(const em_registry *r, int port);
 /* The lowest 169.254.N.0/24 (N 1 to 254) overlapping neither gtp nor one of the entries'
  * except skip's (NULL: none skipped); false when none is left or gtp is not a network. */
@@ -135,6 +154,8 @@ typedef struct {
     const char *database, *state_root, *config_dir;
     em_registry registry;
     char registry_path[512];
+    unsigned char *reserved_ports; /* owned, the registry's reserved (em_reserved_ports) */
+    const char *reserved_from;     /* "configuration", "build" or "none" */
     /* told of what became of each secret reference when an agent configuration is written
      * (Fleet.provision_secrets' log lines); NULL: not told */
     void (*secret_note)(const char *pod_id, const char *ref, em_secret_event event);
@@ -175,6 +196,8 @@ typedef struct {
     char admission[96];   /* HANDOVER: how it was admitted, and its models entry (spec 4), for the log */
     em_fleet_placed placed; /* HANDOVER: how its entry was found (re-admission) */
     int dialled;          /* the agent port it dialled; 0: the front port */
+    int moved_from;       /* HANDOVER: the reserved port its entry was moved off (reserved_ports); 0: none */
+    bool loud;            /* REFUSED: an error, not a warning (its entry is stuck on a reserved port) */
     char why[192];        /* otherwise: what to log */
 } em_fleet_handover;
 
@@ -197,9 +220,11 @@ void em_fleet_handover_clear(em_fleet_handover *h);
  * the files, not the agents' enabled units). The underlays are settled first and the
  * registry saved when one changed. The number of entries whose configuration could not be
  * written (their agents not started); SIZE_MAX when the registry is unreadable or its
- * settled underlays cannot be saved (no agent started). */
+ * settled underlays cannot be saved (no agent started). An admitted entry on a reserved port
+ * is not started: stop(ctx, pod_id, port) is called instead (spec 4, reserved ports: its agent
+ * would listen where the platform's service does; the entry moves at its pod's next arrival). */
 size_t em_fleet_start_registered(em_fleet *f, void (*start)(void *ctx, const char *pod_id, bool changed),
-                                 void *ctx);
+                                 void (*stop)(void *ctx, const char *pod_id, int port), void *ctx);
 
 /* The handover's update succeeded: one row changed, no error. */
 bool em_fleet_update_ok(const cJSON *result);

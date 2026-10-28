@@ -67,6 +67,14 @@ configure_file(src/version.h.in ${CMAKE_CURRENT_BINARY_DIR}/version.h @ONLY)
 set(EMOSA_SCHEMAS_DIR "/opt/emosa-adapter/share/schemas" CACHE PATH "the JSON schemas")
 set(EMOSA_PROFILES_DIR "/usr/share/emosa/profiles" CACHE PATH "the pod profiles")
 
+# The ports the platform's own services use on loopback, reserved when a fleet configuration
+# names none (spec 4, reserved_ports): ports and first-last ranges, comma separated. An RDK-B
+# package sets 6666-6667 (parodus's local URL and its WebPA client's).
+set(EMOSA_RESERVED_PORTS "" CACHE STRING "the reserved ports by default (6666-6667, say)")
+if(NOT EMOSA_RESERVED_PORTS MATCHES "^([0-9]+(-[0-9]+)?(,[0-9]+(-[0-9]+)?)*)?$")
+    message(FATAL_ERROR "EMOSA_RESERVED_PORTS '${EMOSA_RESERVED_PORTS}' is not ports and ranges")
+endif()
+
 # RDK's logger instead of stderr (log.h): rdk-logger's rdk_logger.h and librdkloggers.
 option(EMOSA_RDK_LOGGER "log through RDK's logger" OFF)
 set(EMOSA_RDK_LOG_DIR "/rdklogs/logs/" CACHE STRING "the RDK log directory (at most 31 characters)")
@@ -79,6 +87,7 @@ target_include_directories(emosa PUBLIC src ${CMAKE_CURRENT_BINARY_DIR} ${CJSON_
 target_link_libraries(emosa ${CRYPTO_LIBRARIES} ${CJSON_LIBRARIES} ${SQLITE_LIBRARIES} m)
 target_compile_definitions(emosa PUBLIC EMOSA_SCHEMAS_DIR="${EMOSA_SCHEMAS_DIR}"
                            EMOSA_PROFILES_DIR="${EMOSA_PROFILES_DIR}")
+target_compile_definitions(emosa PRIVATE EMOSA_RESERVED_PORTS="${EMOSA_RESERVED_PORTS}")
 if(EMOSA_RDK_LOGGER)
     find_path(RDK_LOGGER_INCLUDE_DIR rdk_logger.h)
     find_library(RDK_LOGGER_LIBRARY rdkloggers)

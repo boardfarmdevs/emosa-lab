@@ -43,6 +43,8 @@
 
 static int failures, checks;
 
+#define ADOPT_PORTS_MAX 128 /* the free agent ports a free_ports step reads, at most (the fleet's 128) */
+
 static void fail(const char *set, const char *name, const char *what)
 {
     failures++;
@@ -1514,6 +1516,23 @@ static void record_start(void *ctx, const char *pod_id, bool changed)
     cJSON_AddItemToArray((cJSON *)ctx, start);
 }
 
+/* the fleet's start (em_fleet_start_registered): the agents started, and those of entries on a
+ * reserved port stopped instead (spec 4, reserved ports) */
+typedef struct {
+    cJSON *started, *stopped;
+} registered;
+
+static void record_registered(void *ctx, const char *pod_id, bool changed)
+{
+    record_start(((registered *)ctx)->started, pod_id, changed);
+}
+
+static void record_reserved(void *ctx, const char *pod_id, int port)
+{
+    (void)port;
+    record_stop(((registered *)ctx)->stopped, pod_id);
+}
+
 /* a secret as a store keeps it (a 0700 directory, a 0600 file): the fleet_secret and agent_secret
  * steps; a null value removes it; synthetic values only */
 static void write_test_secret(const char *dir, const char *ref, const char *value)
@@ -1651,15 +1670,30 @@ static void fleet_session_vectors(const char *dir)
                     em_fleet_close(&fleet);
                     break;
                 }
-                /* the fleet starts serving: its registry's agents */
-                cJSON *started = cJSON_CreateArray();
-                size_t failed = em_fleet_start_registered(&fleet, record_start, started);
+                /* the fleet starts serving: its registry's agents; those on reserved ports stopped */
+                registered seen = {cJSON_CreateArray(), cJSON_CreateArray()};
+                size_t failed = em_fleet_start_registered(&fleet, record_registered, record_reserved, &seen);
+                const cJSON *stopped = cJSON_GetObjectItemCaseSensitive(expected, "stopped");
+                cJSON *none = cJSON_CreateArray();
                 checks++;
                 if (failed)
                     fail("fleet-sessions", where, "an agent configuration not written");
-                else if (!cJSON_Compare(started, cJSON_GetObjectItemCaseSensitive(expected, "started"), 1))
+                else if (!cJSON_Compare(seen.started, cJSON_GetObjectItemCaseSensitive(expected, "started"), 1))
                     fail("fleet-sessions", where, "the agents started differ");
-                cJSON_Delete(started);
+                else if (!cJSON_Compare(seen.stopped, stopped ? stopped : none, 1))
+                    fail("fleet-sessions", where, "the agents stopped on reserved ports differ");
+                cJSON_Delete(seen.started);
+                cJSON_Delete(seen.stopped);
+                cJSON_Delete(none);
+            } else if (cJSON_GetObjectItemCaseSensitive(step, "free_ports")) {
+                /* the agent ports the fleet listens on for re-admission: none reserved */
+                int ports[ADOPT_PORTS_MAX];
+                size_t n = em_fleet_free_ports(&fleet, ports, ADOPT_PORTS_MAX);
+                cJSON *got = cJSON_CreateIntArray(ports, n == SIZE_MAX ? 0 : (int)n);
+                checks++;
+                if (n == SIZE_MAX || !cJSON_Compare(got, cJSON_GetObjectItemCaseSensitive(expected, "free_ports"), 1))
+                    fail("fleet-sessions", where, "the free agent ports differ");
+                cJSON_Delete(got);
             } else if (str(step, "mkdir")) {
                 char path[2048];
                 snprintf(path, sizeof(path), "%s/%s", full, str(step, "mkdir"));

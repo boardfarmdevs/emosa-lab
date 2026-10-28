@@ -1,7 +1,9 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 /* emosa-forward-c: the forwarder spec §3.1 names, for a fleet on a gateway: the fleet's front
  * port and its agent ports, which listen on loopback, reached on the fleet's advertise
- * address (the gateway's LAN address), each connection spliced to 127.0.0.1 on its port.
+ * address (the gateway's LAN address), each connection spliced to 127.0.0.1 on its port. An
+ * agent port the configuration reserves (reserved_ports, else the build's default: spec 4) is not
+ * listened on: the platform's own loopback services stay out of the LAN's reach.
  *
  *   emosa-forward-c CONFIG     the fleet configuration; inert unless it has "forward": true
  *
@@ -22,6 +24,7 @@
 #include <unistd.h>
 
 #include "common.h"
+#include "fleet.h"
 #include "jschema.h"
 #include "log.h"
 #include "version.h"
@@ -282,23 +285,45 @@ static size_t plan(const cJSON *config, struct in_addr *address, listener *liste
         FAIL("forward: advertise %s is where the ports listen, nothing to forward", advertise->valuestring);
         return 0;
     }
+    /* spec 4, reserved ports: the platform's own on loopback, never reached from the LAN */
+    const char *from;
+    char why[128];
+    unsigned char *reserved = em_reserved_ports(config, &from, why, sizeof(why));
+    if (!reserved) {
+        FAIL("forward: %s", why);
+        return 0;
+    }
     size_t n = 0;
     const cJSON *front_listen = cJSON_GetObjectItemCaseSensitive(config, "listen");
     int front = 0;
     char host[32] = "";
     if (cJSON_IsString(front_listen) &&
         sscanf(front_listen->valuestring, "ptcp:%5d:%31s", &front, host) == 2 && /* NOLINT(cert-err34-c): QUALITY.md §5 */
-        !strcmp(host, "127.0.0.1") && front > 0 && front < 65536)
+        !strcmp(host, "127.0.0.1") && front > 0 && front < 65536) {
+        if (em_port_reserved(reserved, front)) {
+            FAIL("forward: the front port %d is reserved (reserved_ports)", front);
+            free(reserved);
+            return 0;
+        }
         listeners[n++] = (listener){-1, front};
+    }
     const cJSON *ports = cJSON_GetObjectItemCaseSensitive(config, "ports");
     const cJSON *first = cJSON_GetArrayItem(ports, 0), *last = cJSON_GetArrayItem(ports, 1);
     if (!cJSON_IsNumber(first) || !cJSON_IsNumber(last) || first->valueint < 1 || last->valueint > 65535 ||
         first->valueint > last->valueint || last->valueint - first->valueint + 1 > LISTENERS_MAX - 1) {
         FAIL("forward: the agent ports must be a range of at most %d", LISTENERS_MAX - 1);
+        free(reserved);
         return 0;
     }
     for (int port = first->valueint; port <= last->valueint; port++)
-        listeners[n++] = (listener){-1, port};
+        if (!em_port_reserved(reserved, port))
+            listeners[n++] = (listener){-1, port};
+    char named[512];
+    if (!em_port_list(reserved, named, sizeof(named)))
+        (void)em_copy(named, sizeof(named), "(too many to name)");
+    INFO("forward: agent ports %d-%d on %s, reserved %s (%s) not forwarded", first->valueint, last->valueint,
+         advertise->valuestring, named, from);
+    free(reserved);
     return n;
 }
 

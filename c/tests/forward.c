@@ -112,16 +112,30 @@ static int dial(const char *address, int port)
     return -1;
 }
 
-static void write_config(const char *path, int front, int first, int last, bool forward)
+/* one try: whether a connection to address:port is refused (nothing listens there) */
+static bool refused(const char *address, int port)
+{
+    int fd = socket(AF_INET, SOCK_STREAM, 0);
+    struct sockaddr_in sa = at(address, port);
+    bool no = fd >= 0 && connect(fd, (struct sockaddr *)&sa, sizeof(sa)) && errno == ECONNREFUSED;
+    if (fd >= 0)
+        close(fd);
+    return no;
+}
+
+static void write_config(const char *path, int front, int first, int last, bool forward, int reserved)
 {
     FILE *f = fopen(path, "w");
     if (!f)
         return;
+    char extra[64] = "";
+    if (reserved)
+        (void)snprintf(extra, sizeof(extra), "\"reserved_ports\": [%d], ", reserved);
     (void)fprintf(f,
-                  "{\"listen\": \"ptcp:%d:127.0.0.1\", \"advertise\": \"127.0.0.2\", %s"
+                  "{\"listen\": \"ptcp:%d:127.0.0.1\", \"advertise\": \"127.0.0.2\", %s%s"
                   "\"ports\": [%d, %d], \"controller_al\": \"00:60:2f:da:68:d4\", "
                   "\"state_root\": \"/nonexistent\", \"config_dir\": \"/nonexistent\"}\n",
-                  front, forward ? "\"forward\": true, " : "", first, last);
+                  front, forward ? "\"forward\": true, " : "", extra, first, last);
     (void)fclose(f);
 }
 
@@ -137,14 +151,14 @@ int main(int argc, char **argv)
     CHECK(front > 0 && agent > 0, "no free ports");
 
     /* without "forward": inert, at once */
-    write_config(config, front, agent, silent, false);
+    write_config(config, front, agent, silent, false, 0);
     pid_t pid = forwarder(argv[1], argv[2], config);
     int status = -1;
     CHECK(waitpid(pid, &status, 0) == pid && WIFEXITED(status) && WEXITSTATUS(status) == 0,
           "without forward: exits 0, nothing forwarded (status %d)", status);
 
     /* with it: the agent port both ways, each end passed on */
-    write_config(config, front, agent, silent, true);
+    write_config(config, front, agent, silent, true, 0);
     pid_t server = echo(agent);
     CHECK(server > 0, "echo server");
     pid = forwarder(argv[1], argv[2], config);
@@ -181,6 +195,28 @@ int main(int argc, char **argv)
     (void)kill(pid, SIGTERM);
     CHECK(waitpid(pid, &status, 0) == pid && WIFEXITED(status) && WEXITSTATUS(status) == 0,
           "stops on SIGTERM with 0 (status %d)", status);
+
+    /* spec 4, reserved ports: a reserved agent port is not listened on, so a LAN dial to it is
+     * refused even while the platform's service listens behind it on loopback; the others are
+     * forwarded as before */
+    write_config(config, front, agent, agent + 2, true, agent + 1);
+    pid_t service = echo(agent + 1); /* the platform's own, on loopback: parodus, say */
+    CHECK(service > 0, "a loopback service on the reserved port");
+    pid = forwarder(argv[1], argv[2], config);
+    fd = dial("127.0.0.2", agent + 2);
+    CHECK(fd >= 0, "an agent port after the reserved one forwarded");
+    if (fd >= 0)
+        close(fd);
+    CHECK(refused("127.0.0.2", agent + 1), "the reserved port refused on the advertise address");
+    (void)kill(pid, SIGTERM);
+    CHECK(waitpid(pid, &status, 0) == pid && WIFEXITED(status) && WEXITSTATUS(status) == 0,
+          "stops on SIGTERM with 0 (status %d)", status);
+    fd = dial("127.0.0.1", agent + 1); /* the service sees its one connection and ends */
+    if (fd >= 0) {
+        (void)shutdown(fd, SHUT_WR);
+        close(fd);
+    }
+    CHECK(service > 0 && waitpid(service, &status, 0) == service, "the loopback service ended");
     (void)unlink(config);
     (void)printf("%s: %d checks, %d failed\n", failures ? "FAIL" : "PASS", checks, failures);
     return failures ? 1 : 0;

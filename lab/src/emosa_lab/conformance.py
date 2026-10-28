@@ -966,6 +966,8 @@ def fleet_session_vectors():
         "message_set": EASYMESH_61,
     }
     gre = {**base, "ports": [6651, 6654], "gtp_underlay": "169.254.1.0/24"}  # GRE parents (8.6)
+    # reserved ports (spec 4): a port and a range, inside the agent ports
+    reserved = {**base, "ports": [6651, 6656], "reserved_ports": [6652, [6654, 6655]]}
     # keys in sorted order, as own's below: the configuration file keeps the order it is given
     bootstrap = {"uplink": {"bootstrap": {"secret_ref": "gtp", "ssid": "gtp-ssid"}, "mode": "off"}}
     secret_config = {  # the fleet's store, and pods whose GTP station takes its secret
@@ -1179,6 +1181,31 @@ def fleet_session_vectors():
             {"arrival": [{"rows": [node(readmit_b)]}], "now": 1759500001.125},
             {"arrival": [{"rows": [node(readmit_c)]}], "port": 7000, "now": 1759500001.25},
         ],
+        # spec 4, reserved ports: the platform's own services' ports on loopback (an RDK-B
+        # gateway's parodus and its WebPA client) are skipped, the range not shifted: never
+        # allocated at the front port, adopted when dialled, or listened on for re-admission
+        "reserved-agent-ports-are-never-allocated-or-adopted": [
+            {"fleet_config": reserved},
+            {"free_ports": True},
+            {"arrival": [{"rows": [node(readmit_a)]}], "now": 1759500000.25},
+            {"arrival": [{"rows": [node(readmit_b)]}], "now": 1759500000.5},
+            {"arrival": [{"rows": [node(readmit_c)]}], "port": 6652, "now": 1759500000.75},
+            {"arrival": [{"rows": [node(readmit_c)]}], "now": 1759500001.25},
+            {"free_ports": True},
+            {"arrival": [{"rows": [node(readmit_d)]}], "now": 1759500001.5},
+        ],
+        # an entry already on a reserved port (made before the port was reserved): its agent
+        # stopped at the fleet's start, not started; at its pod's next arrival the entry moves to
+        # the first free port, its interface the new port's, and its agent restarts there
+        "an-entry-on-a-reserved-port-moves-at-its-pods-next-arrival": [
+            {"fleet_config": base},
+            {"arrival": [{"rows": [node(readmit_a)]}], "now": 1759500000.25},
+            {"arrival": [{"rows": [node(readmit_b)]}], "now": 1759500000.5},
+            {"fleet_config": {**base, "reserved_ports": [6652]}},
+            {"free_ports": True},
+            {"arrival": [{"rows": [node(readmit_b)]}], "port": 6653, "now": 1759500010.25},
+            {"free_ports": True},
+        ],
         # box finding 14: emosa-fleet forget runs as its own process while the fleet serves
         "forget-while-the-fleet-serves": [
             {"fleet_config": base},
@@ -1214,6 +1241,10 @@ def fleet_session_vectors():
                     )
                     fleet.start_registered()  # serving: the registry's agents first
                     done["expected"] = {"started": list(starts)}
+                    if stops:  # entries on reserved ports: their agents stopped instead
+                        done["expected"]["stopped"] = list(stops)
+                elif "free_ports" in step:
+                    done["expected"] = {"free_ports": fleet.registry.free_ports()}
                 elif "mkdir" in step:
                     (Path(root) / step["mkdir"]).mkdir(parents=True)
                 elif "lose_registry" in step:
@@ -1279,7 +1310,10 @@ def fleet_session_vectors():
         "description": "spec §4: the fleet over whole sessions, as emosa.agent.fleet handles "
         "them. A step: fleet_config (the fleet (re)started with this configuration on the same "
         "files; it starts the agents its registry has, in the registry's order: each [pod, "
-        "configuration changed]), arrival (a pod at the front port: the result of the fleet's "
+        "configuration changed]; stopped, when there are any: the pods whose entries are on a "
+        "reserved port, their agents stopped, not started: spec 4, reserved ports), free_ports "
+        "(the agent ports the fleet listens on for re-admission: none an entry holds, none "
+        "reserved), arrival (a pod at the front port: the result of the fleet's "
         "AWLAN_Node "
         "select, and the wall clock; with port, a pod that dialled that agent port: spec 4, "
         "re-admission), lose_registry (the registry file removed, as a factory reset loses "

@@ -164,6 +164,14 @@ namespace (the bridge port stays in the gateway's), and each agent opens its soc
 returns to its own namespace for its pod connection and broker. meta-cmf-bananapi-vcpe's
 recipe builds with `emosa`.
 
+**The platform's reserved ports** (CMake `EMOSA_RESERVED_PORTS`, ports and first-last ranges,
+comma separated; empty by default). The fleet and the forwarder take them as the reserved ports
+when the fleet configuration has no `reserved_ports` (spec §4): agent ports never allocated,
+adopted, listened on or forwarded, so the platform's own loopback services keep them. An RDK-B
+gateway's parodus listens on 127.0.0.1:6666 and its WebPA client on 6667, inside the default
+agent ports 6651-6690: meta-cmf-bananapi-vcpe's recipe builds with `6666-6667`. The fleet logs
+them at its start and names them in its status (`fleet-status.json`).
+
 **Bill of materials** (`packaging/sbom.py`, SPDX 2.3, JSON): every file of this
 repository that goes into the programs or the package with its SHA-1 and SHA-256, the
 libraries they link (versions from pkg-config where it was built), and the programs the

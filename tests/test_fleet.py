@@ -677,3 +677,148 @@ def test_a_changed_fleet_secret_replaces_the_fleets_own_copies_and_restarts_them
     assert started == [(p, False) for p in pods]
     missing = json.loads((tmp_path / "state" / "fleet-secrets.missing.json").read_text())
     assert missing == dict.fromkeys(pods, ["gtp"])
+
+
+@pytest.mark.unit
+def test_reserved_ports_are_never_allocated_adopted_or_listened_on(tmp_path):
+    """spec 4, reserved ports: the platform's own services' ports on loopback (an RDK-B gateway's
+    parodus and its WebPA client) are skipped, not a range shifted: the interfaces stay the
+    ports' places in the range."""
+    registry = Registry(tmp_path / "fleet.json", range(6651, 6656), reserved_ports={6652, 6654})
+    entries = [registry.assign({"serial_number": s}) for s in ("A", "B", "C")]
+    assert [(e["port"], e["interface"]) for e in entries] == [
+        (6651, "em1"),
+        (6653, "em3"),
+        (6655, "em5"),
+    ]
+    assert registry.assign({"serial_number": "D"}) is None and registry.free_ports() == []
+    assert registry.adopt({"serial_number": "D"}, 6652) == ("reserved", None)
+    assert "D" not in Registry(tmp_path / "fleet.json", range(6651, 6656)).agents
+
+
+@pytest.mark.unit
+def test_an_entry_on_a_reserved_port_moves_at_its_pods_next_arrival(tmp_path):
+    path = tmp_path / "fleet.json"
+    plain = Registry(path, range(6651, 6654))
+    assert [plain.assign({"serial_number": s})["port"] for s in ("A", "B")] == [6651, 6652]
+    registry = Registry(path, range(6651, 6654), reserved_ports={6652})
+    assert registry.reserved_held() == {"B": 6652}
+    assert registry.assign({"serial_number": "A"})["port"] == 6651  # not on one: kept
+    moved = registry.assign({"serial_number": "B"})
+    assert (moved["port"], moved["interface"], moved["moved_from"]) == (6653, "em3", 6652)
+    saved = json.loads(path.read_text())["B"]
+    assert (saved["port"], saved["al_mac"]) == (6653, derive_al("B")) and "moved_from" not in saved
+    assert registry.reserved_held() == {}
+    # one dialling an agent port moves too; with none free it stays, and is not handed over
+    full = Registry(tmp_path / "full.json", range(6651, 6653))
+    assert [full.assign({"serial_number": s})["port"] for s in ("A", "B")] == [6651, 6652]
+    full = Registry(tmp_path / "full.json", range(6651, 6653), reserved_ports={6652})
+    assert full.adopt({"serial_number": "B"}, 6652) == ("registered", None)
+    assert full.reserved_held() == {"B": 6652}
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "extra, why",
+    [
+        ({"reserved_ports": [[6667, 6666]]}, "not a range"),
+        ({"listen": "ptcp:6666:127.0.0.1", "reserved_ports": [[6666, 6667]]}, "front port"),
+        ({"files": {"directory": "/x"}, "reserved_ports": [6650]}, "file server"),
+        ({"reserved_ports": [[6650, 6660]]}, "every agent port"),
+    ],
+)
+def test_a_configuration_on_a_reserved_port_is_refused(tmp_path, extra, why):
+    from emosa.agent.fleet import check_config
+    from emosa.errors import EmosaError
+
+    with pytest.raises(EmosaError, match=why):
+        check_config(fleet_config(tmp_path, **extra))
+    check_config(fleet_config(tmp_path, reserved_ports=[6652, [6666, 6667]]))
+
+
+@pytest.mark.unit
+def test_an_entry_on_a_reserved_port_is_loud_and_its_agent_stopped(tmp_path, caplog):
+    started = []
+    fleet = make_fleet(tmp_path, started)
+    for serial in ("POD1", "POD2"):
+        fleet._call = Pod(serial)
+        fleet.handle(None, "peer")
+    del started[:]
+    fleet = make_fleet(tmp_path, started, reserved_ports=[6652])
+    with caplog.at_level("ERROR", logger="emosa.fleet"):
+        fleet.start_registered()
+    assert started == [("POD1", False), ("POD2", "stopped")]
+    assert "agent port 6652, reserved (reserved_ports): its agent is stopped" in caplog.text
+    status = fleet.status()
+    assert (status["reserved_assigned"], status["reserved_from"]) == ([6652], "configuration")
+    # its pod back at the front port: moved, said loudly, its agent restarted on the new port
+    del started[:]
+    fleet._call = pod = Pod("POD2")
+    with caplog.at_level("ERROR", logger="emosa.fleet"):
+        entry = fleet.handle(None, "peer")
+    assert (entry["port"], entry["interface"]) == (6653, "em3") and "moved_from" not in entry
+    assert pod.updates == [{"manager_addr": "tcp:10.101.0.1:6653"}]
+    assert started == [("POD2", True)]
+    assert "was on agent port 6652, reserved (reserved_ports): moved to 6653" in caplog.text
+    assert fleet.status()["reserved_assigned"] == []
+
+
+@pytest.mark.unit
+def test_connections_ending_before_identifying_are_counted_and_logged_once_a_minute(
+    tmp_path, caplog, monkeypatch
+):
+    from emosa.agent import fleet as fleet_module
+
+    fleet = make_fleet(tmp_path, [])
+    clock = [1000.0]
+    monkeypatch.setattr(fleet_module.time, "monotonic", lambda: clock[0])
+
+    def lost(conn, method, params, deadline):
+        raise ConnectionError("connection lost: Connection reset by peer")
+
+    fleet._call = lost
+    with caplog.at_level("WARNING", logger="emosa.fleet"):
+        for _ in range(30):  # a platform's client redialling an agent port, 30 a second
+            stream = type("Stream", (), {"name": "tcp:127.0.0.1:40000", "close": lambda s: None})()
+            fleet.slots.acquire()
+            fleet._serve_one(stream, 6666)
+            clock[0] += 1 / 30
+        fleet._unidentified_tick()  # inside the minute: nothing more
+        clock[0] += fleet_module.UNIDENTIFIED_LOG
+        fleet._unidentified_tick()
+        fleet._unidentified_tick()  # summed once
+    lines = [r.getMessage() for r in caplog.records]
+    assert lines == [
+        "pod connection tcp:127.0.0.1:40000: connection lost: Connection reset by peer,"
+        " before it identified itself",
+        "29 more pod connections ended before identifying in the last 60 s (agent port 6666: 29)",
+    ]
+    assert fleet.status()["unidentified_connections"] == 30
+
+
+@pytest.mark.unit
+def test_the_fleet_status_names_its_ports(tmp_path):
+    from emosa.config import validate
+
+    fleet = make_fleet(tmp_path, [], reserved_ports=[[6652, 6652]], run_root=str(tmp_path / "run"))
+    fleet._call = Pod("POD1")
+    fleet.handle(None, "peer")
+    fleet._adopt_streams()
+    try:
+        fleet.write_status()
+        written = json.loads((tmp_path / "run" / "fleet-status.json").read_text())
+        validate("fleet-status", written)
+        assert written == {
+            "agent_ports": [6651, 6653],
+            "reserved_ports": [6652],
+            "reserved_from": "configuration",
+            "assigned": [6651],
+            "reserved_assigned": [],
+            "listening": sorted(fleet.adoption),
+            "cannot_listen": sorted(fleet.adopt_failed),
+            "unidentified_connections": 0,
+        }
+        assert 6652 not in fleet.adoption and 6652 not in fleet.adopt_failed
+    finally:
+        for listener in fleet.adoption.values():
+            listener.close()

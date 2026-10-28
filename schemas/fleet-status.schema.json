@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/boardfarmdevs/emosa-lab/schemas/fleet-status.schema.json",
+  "title": "EMOSA fleet status",
+  "description": "The serving fleet's ports (spec 4): RUN_ROOT/fleet-status.json (STATE_ROOT/fleet-status.json without a run root), written at its start and then at most once a second while anything changes. Read-only for observers; never contains secrets.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["agent_ports", "reserved_ports", "reserved_from", "assigned", "reserved_assigned", "listening", "cannot_listen", "unidentified_connections"],
+  "$defs": {
+    "ports": {"type": "array", "items": {"type": "integer", "minimum": 1, "maximum": 65535}}
+  },
+  "properties": {
+    "agent_ports": {"type": "array", "items": {"type": "integer", "minimum": 1, "maximum": 65535}, "minItems": 2, "maxItems": 2, "description": "The configuration's ports: first and last agent port."},
+    "reserved_ports": {"$ref": "#/$defs/ports", "description": "The reserved ports in effect (reserved_ports), sorted: never allocated, adopted, listened on or forwarded."},
+    "reserved_from": {"enum": ["configuration", "build", "none"], "description": "Where they come from: the configuration's reserved_ports, the build's default (the C fleet's EMOSA_RESERVED_PORTS) or none."},
+    "assigned": {"$ref": "#/$defs/ports", "description": "The agent ports the registry's entries hold, sorted."},
+    "reserved_assigned": {"$ref": "#/$defs/ports", "description": "Those of them that are reserved: each entry's agent is not started, and the entry moves at its pod's next arrival. Empty when all is well."},
+    "listening": {"$ref": "#/$defs/ports", "description": "The free agent ports the fleet listens on for re-admission (on loopback), sorted."},
+    "cannot_listen": {"$ref": "#/$defs/ports", "description": "Free agent ports it could not listen on (another program's there), sorted."},
+    "unidentified_connections": {"type": "integer", "minimum": 0, "description": "Connections, at the front port or an agent port, that ended before the pod identified itself, since the fleet started (logged at most once a minute)."}
+  }
+}

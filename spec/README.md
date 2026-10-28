@@ -977,6 +977,34 @@ over the GTP underlay, is allocated as before. Both fleets (conformance `fleet-s
 `gre-parents-keep-their-underlays-after-a-lost-registry`; box `fleet-readmit`,
 `fleet-readmit-pods`).
 
+**Reserved ports.** The platform's own services may use ports inside the agent ports on
+loopback: an RDK-B gateway's parodus listens on 127.0.0.1:6666 (`PARODUS_URL`) and its WebPA
+client on 6667, and their clients redial those ports every 100 ms (28 October: the
+re-admission listeners took 6666 on a lab gateway without parodus, and the fleet logged some 30
+lines a second). The configuration's `reserved_ports` names them, each a port or a
+`[first, last]` range; without it the build's default applies (the C fleet's
+`EMOSA_RESERVED_PORTS`, 6666-6667 in an RDK-B package; none in the reference). A reserved port
+is skipped, the range is not shifted: the fleet MUST NOT allocate one (step 3), adopt one, or
+listen on one for re-admission, and the forwarder MUST NOT listen on one, so a dial there is
+refused as before and the platform's service keeps its port from the LAN's reach; an entry's
+interface stays its port's place in the range. A configuration whose front port or file
+server's port is reserved, or whose agent ports are all reserved, is refused. An entry already
+on a reserved port (made before the port was reserved) is loud: at the fleet's start its agent
+is stopped, not started, with an error, and at its pod's next arrival the entry moves to the
+first free port (its interface the new port's) with an error and its agent restarts there; with
+none free the pod is refused, with an error. Both fleets (conformance `fleet-sessions`:
+`reserved-agent-ports-are-never-allocated-or-adopted`,
+`an-entry-on-a-reserved-port-moves-at-its-pods-next-arrival`; box `fleet-reserved-ports`).
+
+**The fleet's status.** A serving fleet writes `fleet-status.json` under its `run_root` (else
+its `state_root`, fleet-status schema) at its start and then at most once a second while
+anything changes: its agent ports, the reserved ones and where they come from, the ports the
+entries hold (and those of them reserved), the ports it listens on for re-admission or could
+not, and the connections that ended before the pod identified itself since it started. Such a
+connection (at the front port or an agent port) is logged when none was in the last minute;
+the others are summed into one line a minute while they go on, so a platform's client
+redialling a port cannot flood the log.
+
 A serving fleet keeps each valid configuration it starts on as the last valid one
 (`fleet-config.valid.json` under its `state_root`). One that fails its checks (its
 schema, a module's update without `files`, or not JSON at all, a partial write) is

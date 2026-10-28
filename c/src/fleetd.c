@@ -67,6 +67,9 @@ static const char *defaults_dir(void)
 #define CONFIG_MAX (1024 * 1024)
 #define ADOPT_MAX 128   /* agent ports listened on for re-admission, at most (the forwarder's 128) */
 #define ADOPT_CHECK 1.0 /* seconds between looks at the registry's free agent ports */
+#define UNIDENTIFIED_LOG 60.0 /* seconds between log lines for connections that end before identifying */
+#define UNIDENTIFIED_PLACES (ADOPT_MAX + 1) /* the front port and the agent ports listened on */
+#define FLEET_STATUS "fleet-status.json" /* under the run root, else the state root: the fleet's ports */
 
 static volatile sig_atomic_t stopping;
 static void on_signal(int sig)
@@ -235,6 +238,16 @@ static void start_agent(void *ctx, const char *pod_id, bool changed)
             changed ? "restarted, its configuration changed," : "started");
 }
 
+/* at the fleet's start, an entry on a reserved port (spec 4, reserved ports): loudly, its agent
+ * stopped, not started (it would listen where the platform's own service does) */
+static void stop_reserved(void *ctx, const char *pod_id, int port)
+{
+    FAIL("pod %s: its entry is on agent port %d, reserved (reserved_ports): its agent is stopped, not started; the "
+         "entry moves to a free port at the pod's next arrival",
+         pod_id, port);
+    stop_agent(ctx, pod_id);
+}
+
 /* -- the front port ----------------------------------------------------------------- */
 
 typedef enum { SELECTING, ENABLING, STARTING, HANDING_OVER } stage;
@@ -248,6 +261,7 @@ typedef struct {
     bool child_running;
     unsigned ticket; /* supervised, STARTING: the agent's start asked for (em_sup_start) */
     int port;        /* the agent port it came on (re-admission); 0: the front port */
+    bool replied;    /* its reply to the select came: what ends it now is not "unidentified" */
     em_fleet_handover handover;
     char *in, *out;
     size_t in_len, in_cap, out_len, out_off;
@@ -297,6 +311,16 @@ typedef struct {
     double adopt_check;            /* monotonic: the next look at the registry */
     int adopt_failed[ADOPT_MAX];   /* the ports it could not listen on, each logged once */
     size_t nadopt_failed;
+    /* connections that ended before the pod identified itself (a platform's client on an agent
+     * port, say): each counted, one logged per UNIDENTIFIED_LOG s with the rest summed by port */
+    unsigned long unidentified;      /* since the fleet started */
+    double unidentified_quiet_until; /* monotonic: until then they are summed, not logged */
+    int summed_port[UNIDENTIFIED_PLACES]; /* 0: the front port */
+    unsigned long summed[UNIDENTIFIED_PLACES];
+    size_t nsummed;
+    unsigned long summed_total; /* since the last line, those of ports with no place too */
+    char *status_text;      /* the fleet status as last written (FLEET_STATUS) */
+    char status_error[160]; /* why the last write failed, logged once */
 } server;
 
 static int listen_on(const char *name, char *unix_path, size_t unix_size)
@@ -407,6 +431,84 @@ static void adopt_sync(server *s)
     }
 }
 
+static int by_number(const void *a, const void *b)
+{
+    int x = *(const int *)a, y = *(const int *)b;
+    return (x > y) - (x < y);
+}
+
+static cJSON *sorted_ports(const int *ports, size_t n)
+{
+    int *order = em_calloc(n + 1, sizeof(*order));
+    memcpy(order, ports, n * sizeof(*order));
+    em_sort(order, n, sizeof(*order), by_number);
+    cJSON *list = cJSON_CreateArray();
+    for (size_t i = 0; i < n; i++)
+        cJSON_AddItemToArray(list, cJSON_CreateNumber(order[i]));
+    free(order);
+    return list;
+}
+
+/* Fleet.status (fleet-status schema, spec 4): its agent ports, the reserved ones and where they
+ * come from, the ports entries hold (and those of them reserved), the ports it listens on for
+ * re-admission or could not, and the connections that ended before identifying since it started.
+ * Written as FLEET_STATUS under the run root (else the state root) when it changed; the registry
+ * as adopt_sync read it last. */
+static void write_status(server *s)
+{
+    const em_fleet *f = &s->fleet;
+    cJSON *st = cJSON_CreateObject();
+    int range[2] = {f->registry.port_low, f->registry.port_high};
+    cJSON_AddItemToObject(st, "agent_ports", cJSON_CreateIntArray(range, 2));
+    cJSON *reserved = cJSON_AddArrayToObject(st, "reserved_ports");
+    for (int p = 1; p < EM_PORT_BITS; p++)
+        if (em_port_reserved(f->reserved_ports, p))
+            cJSON_AddItemToArray(reserved, cJSON_CreateNumber(p));
+    cJSON_AddStringToObject(st, "reserved_from", f->reserved_from);
+    int *held = em_calloc(f->registry.count + 1, sizeof(*held));
+    int *on_reserved = em_calloc(f->registry.count + 1, sizeof(*on_reserved));
+    size_t nheld = 0, non_reserved = 0;
+    for (size_t i = 0; i < f->registry.count; i++) {
+        held[nheld++] = f->registry.entries[i].port;
+        if (em_registry_reserved(&f->registry, f->registry.entries[i].port))
+            on_reserved[non_reserved++] = f->registry.entries[i].port;
+    }
+    cJSON_AddItemToObject(st, "assigned", sorted_ports(held, nheld));
+    cJSON_AddItemToObject(st, "reserved_assigned", sorted_ports(on_reserved, non_reserved));
+    free(held);
+    free(on_reserved);
+    cJSON_AddItemToObject(st, "listening", sorted_ports(s->adopt_port, s->nadopt));
+    cJSON_AddItemToObject(st, "cannot_listen", sorted_ports(s->adopt_failed, s->nadopt_failed));
+    cJSON_AddNumberToObject(st, "unidentified_connections", (double)s->unidentified);
+    char *body = em_json_dumps(st, EM_JSON_INDENT2, true);
+    cJSON_Delete(st);
+    size_t n = strlen(body) + 2;
+    char *text = em_malloc(n);
+    EM_FORMAT_FIXED(text, n, "%s\n", body);
+    free(body);
+    if (s->status_text && !strcmp(text, s->status_text)) {
+        free(text);
+        return;
+    }
+    const char *run_root = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(f->config, "run_root"));
+    const char *root = run_root && *run_root ? run_root : f->state_root;
+    char path[600];
+    if (!em_format(path, sizeof(path), "%s/%s", root, FLEET_STATUS) || !em_mkdirs(root, 0755) ||
+        !em_write_file(path, text, false)) {
+        char why[sizeof(s->status_error)];
+        (void)em_copy(why, sizeof(why), strerror(errno));
+        if (strcmp(why, s->status_error)) { /* logged once while it fails the same way */
+            WARN("fleet status not written under %s: %s", root, why);
+            (void)em_copy(s->status_error, sizeof(s->status_error), why);
+        }
+        free(text);
+        return;
+    }
+    s->status_error[0] = 0;
+    free(s->status_text);
+    s->status_text = text;
+}
+
 static void queue(conn *c, const cJSON *message)
 {
     char *text = cJSON_PrintUnformatted(message);
@@ -424,10 +526,77 @@ static void request(conn *c, const char *method, cJSON *params, long id)
     cJSON_Delete(m);
 }
 
+/* a connection that ended before the pod identified itself: counted; logged when none was in the
+ * last UNIDENTIFIED_LOG s, else summed into the next summary (unidentified_tick), so a platform's
+ * client redialling an agent port cannot flood the log */
+static void note_unidentified(server *s, const conn *c, const char *problem)
+{
+    s->unidentified++;
+    double now = monotonic();
+    if (now >= s->unidentified_quiet_until) {
+        s->unidentified_quiet_until = now + UNIDENTIFIED_LOG;
+        WARN("pod connection %s: %s, before it identified itself", c->peer, problem);
+        return;
+    }
+    s->summed_total++;
+    size_t k = 0;
+    while (k < s->nsummed && s->summed_port[k] != c->port)
+        k++;
+    if (k == s->nsummed) {
+        if (k == UNIDENTIFIED_PLACES)
+            return; /* in the total only */
+        s->summed_port[k] = c->port;
+        s->summed[k] = 0;
+        s->nsummed++;
+    }
+    s->summed[k]++;
+}
+
+static int by_port(const void *a, const void *b)
+{
+    int x = *(const int *)a, y = *(const int *)b;
+    if ((x == 0) != (y == 0))
+        return x == 0 ? 1 : -1; /* the agent ports, then the front port */
+    return (x > y) - (x < y);
+}
+
+/* the summary of the connections summed since the last line, once their quiet time is over: one
+ * line per UNIDENTIFIED_LOG s while they go on */
+static void unidentified_tick(server *s)
+{
+    double now = monotonic();
+    if (!s->summed_total || now < s->unidentified_quiet_until)
+        return;
+    int order[UNIDENTIFIED_PLACES];
+    for (size_t k = 0; k < s->nsummed; k++)
+        order[k] = s->summed_port[k];
+    em_sort(order, s->nsummed, sizeof(*order), by_port);
+    char where[1024] = "";
+    size_t n = 0;
+    for (size_t j = 0; j < s->nsummed && n < sizeof(where); j++) {
+        size_t k = 0;
+        while (s->summed_port[k] != order[j])
+            k++;
+        int w = order[j] ? snprintf(where + n, sizeof(where) - n, "%sagent port %d: %lu", n ? ", " : "", order[j],
+                                    s->summed[k])
+                         : snprintf(where + n, sizeof(where) - n, "%sfront port: %lu", n ? ", " : "", s->summed[k]);
+        if (w < 0 || (size_t)w >= sizeof(where) - n)
+            break; /* cut: the total stands */
+        n += (size_t)w;
+    }
+    WARN("%lu more pod connections ended before identifying in the last %d s (%s)", s->summed_total,
+         (int)UNIDENTIFIED_LOG, where);
+    s->nsummed = 0;
+    s->summed_total = 0;
+    s->unidentified_quiet_until = now + UNIDENTIFIED_LOG;
+}
+
 static void finish(server *s, size_t i, const char *problem)
 {
     conn *c = &s->conns[i];
-    if (problem)
+    if (problem && c->stage == SELECTING && !c->replied)
+        note_unidentified(s, c, problem);
+    else if (problem)
         WARN("pod connection %s: %s", c->peer, problem);
     if (c->child_running) {
         s->orphans = em_realloc(s->orphans, (s->norphans + 1) * sizeof(*s->orphans));
@@ -459,13 +628,20 @@ static const char *on_reply(server *s, conn *c, const cJSON *result, char *probl
     if (c->stage == SELECTING) {
         em_fleet_outcome outcome = em_fleet_identify_at(&s->fleet, result, c->port, wall(), &c->handover);
         if (outcome == EM_FLEET_REFUSED) {
-            WARN("%s (%s)", c->handover.why, c->peer);
+            if (c->handover.loud)
+                FAIL("%s (%s)", c->handover.why, c->peer);
+            else
+                WARN("%s (%s)", c->handover.why, c->peer);
             return "";
         }
         if (outcome != EM_FLEET_HANDOVER) {
             (void)em_format(problem, size, "%s", c->handover.why);
             return problem;
         }
+        if (c->handover.moved_from) /* spec 4, reserved ports: loudly */
+            FAIL("pod %s: its entry was on agent port %d, reserved (reserved_ports): moved to %d (%s), its agent "
+                 "restarted there",
+                 c->handover.serial, c->handover.moved_from, c->handover.entry.port, c->handover.entry.interface);
         adopt_release(s, c->handover.entry.port); /* its agent listens there now */
         if (s->agents.sup) { /* the fleet's child: nothing to enable */
             c->stage = STARTING;
@@ -520,6 +696,7 @@ static const char *on_input(server *s, conn *c, char *problem, size_t size)
             queue(c, echo);
             cJSON_Delete(echo);
         } else if ((c->stage == SELECTING || c->stage == HANDING_OVER) && em_rpc_is_reply(m, id, &result)) {
+            c->replied = c->replied || (c->stage == SELECTING && result);
             verdict = result ? on_reply(s, c, result, problem, size) : "transact refused";
         }
         cJSON_Delete(m);
@@ -800,11 +977,15 @@ static int serve(server *s)
     s->concurrency = cJSON_IsNumber(concurrency) ? (size_t)concurrency->valueint : 16;
     s->conns = em_calloc(s->concurrency, sizeof(*s->conns));
     char *ports = cJSON_PrintUnformatted(cJSON_GetObjectItemCaseSensitive(s->fleet.config, "ports"));
-    LOG("EMOSA C fleet %s (%s): %s, agents on ports %s, %s", EMOSA_VERSION, EMOSA_REVISION, listen_name, ports,
+    char reserved[512];
+    if (!em_port_list(s->fleet.reserved_ports, reserved, sizeof(reserved)))
+        (void)em_copy(reserved, sizeof(reserved), "(too many to name)");
+    LOG("EMOSA C fleet %s (%s): %s, agents on ports %s, reserved %s (%s), %s", EMOSA_VERSION, EMOSA_REVISION,
+        listen_name, ports, reserved, s->fleet.reserved_from,
         s->agents.sup ? "supervised by the fleet" : "systemd units");
     free(ports);
     /* the agents the registry already has, before the first pod (an upgraded image) */
-    size_t unstarted = em_fleet_start_registered(&s->fleet, start_agent, &s->agents);
+    size_t unstarted = em_fleet_start_registered(&s->fleet, start_agent, stop_reserved, &s->agents);
     if (unstarted == SIZE_MAX)
         WARN("the fleet registry is unreadable: no agent started");
     else if (unstarted)
@@ -820,6 +1001,8 @@ static int serve(server *s)
         double now = monotonic(), wake = now + 0.2;
         if (now >= s->adopt_check) { /* a pod handed over, or one forgotten, since the last look */
             adopt_sync(s);
+            unidentified_tick(s);
+            write_status(s);
             s->adopt_check = now + ADOPT_CHECK;
         }
         for (size_t i = 0; i < s->nconns; i++) {
@@ -900,6 +1083,8 @@ static int serve(server *s)
         http_close(s, s->nhttp - 1);
     while (s->nadopt)
         adopt_close(s, s->nadopt - 1);
+    free(s->status_text);
+    s->status_text = NULL;
     if (s->files_fd >= 0)
         close(s->files_fd);
     while (s->nconns)

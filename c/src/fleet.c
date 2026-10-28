@@ -19,6 +19,104 @@
 
 #define REGISTRY_MAX (16 * 1024 * 1024)
 #define CONFIG_MAX (1024 * 1024)
+#ifndef EMOSA_RESERVED_PORTS
+#define EMOSA_RESERVED_PORTS "" /* the build's default reserved ports (CMake EMOSA_RESERVED_PORTS) */
+#endif
+
+static void reserve(unsigned char *bits, int first, int last)
+{
+    for (int p = first; p <= last; p++)
+        bits[p / 8] |= (unsigned char)(1U << (p % 8));
+}
+
+bool em_port_reserved(const unsigned char *reserved, int port)
+{
+    return reserved && port > 0 && port < EM_PORT_BITS && ((reserved[port / 8] >> (port % 8)) & 1U);
+}
+
+bool em_registry_reserved(const em_registry *r, int port) { return em_port_reserved(r->reserved, port); }
+
+/* the build's default as text: ports and first-last ranges, comma separated ("6666-6667") */
+static bool reserve_text(unsigned char *bits, const char *text)
+{
+    const char *at = text;
+    while (*at) {
+        char *end;
+        long first = strtol(at, &end, 10), last = first;
+        if (end == at)
+            return false;
+        if (*end == '-') {
+            at = end + 1;
+            last = strtol(at, &end, 10);
+            if (end == at)
+                return false;
+        }
+        if (first < 1 || last > 65535 || first > last || (*end && *end != ','))
+            return false;
+        reserve(bits, (int)first, (int)last);
+        at = *end ? end + 1 : end;
+    }
+    return true;
+}
+
+static bool whole_port(const cJSON *v)
+{
+    return cJSON_IsNumber(v) && v->valuedouble == (double)v->valueint && v->valueint >= 1 && v->valueint <= 65535;
+}
+
+unsigned char *em_reserved_ports(const cJSON *config, const char **from, char *why, size_t size)
+{
+    unsigned char *bits = em_calloc(EM_PORT_BITS / 8, 1);
+    const cJSON *list = cJSON_GetObjectItemCaseSensitive(config, "reserved_ports");
+    if (!list) {
+        *from = EMOSA_RESERVED_PORTS[0] ? "build" : "none";
+        if (reserve_text(bits, EMOSA_RESERVED_PORTS))
+            return bits;
+        (void)em_format(why, size, "the build's reserved ports (%s) are not ports", EMOSA_RESERVED_PORTS);
+        free(bits);
+        return NULL;
+    }
+    *from = "configuration";
+    bool ok = cJSON_IsArray(list);
+    const cJSON *item, *items = ok ? list : NULL; /* a variable: the macro does not parenthesize */
+    cJSON_ArrayForEach(item, items)
+    {
+        bool range = cJSON_IsArray(item);
+        const cJSON *first = range ? cJSON_GetArrayItem(item, 0) : item;
+        const cJSON *last = range ? cJSON_GetArrayItem(item, 1) : item;
+        if ((range && cJSON_GetArraySize(item) != 2) || !whole_port(first) || !whole_port(last) ||
+            first->valueint > last->valueint) {
+            ok = false;
+            break;
+        }
+        reserve(bits, first->valueint, last->valueint);
+    }
+    if (ok)
+        return bits;
+    (void)em_format(why, size, "reserved_ports: each must be a port or a [first, last] range");
+    free(bits);
+    return NULL;
+}
+
+bool em_port_list(const unsigned char *reserved, char *out, size_t size)
+{
+    size_t n = 0;
+    out[0] = 0;
+    for (int p = 1; p < EM_PORT_BITS; p++) {
+        if (!em_port_reserved(reserved, p))
+            continue;
+        int last = p;
+        while (last + 1 < EM_PORT_BITS && em_port_reserved(reserved, last + 1))
+            last++;
+        int w = last == p ? snprintf(out + n, size - n, "%s%d", n ? ", " : "", p)
+                          : snprintf(out + n, size - n, "%s%d-%d", n ? ", " : "", p, last);
+        if (w < 0 || (size_t)w >= size - n)
+            return false;
+        n += (size_t)w;
+        p = last;
+    }
+    return n || em_copy(out, size, "none");
+}
 
 bool em_derive_al(const char *serial, const char *const *taken, size_t ntaken, char out[18])
 {
@@ -185,7 +283,7 @@ static void set_identity(em_fleet_entry *e, const char *node_id, const char *mod
 
 bool em_registry_port_free(const em_registry *r, int port)
 {
-    if (port < r->port_low || port > r->port_high)
+    if (port < r->port_low || port > r->port_high || em_registry_reserved(r, port))
         return false;
     for (size_t i = 0; i < r->count; i++)
         if (r->entries[i].port == port)
@@ -236,10 +334,29 @@ em_fleet_entry *em_registry_assign(em_registry *r, const char *serial, const cha
     return em_registry_assign_held(r, serial, node_id, model, firmware, now, NULL);
 }
 
+/* An entry found again on a reserved port moved to the first free port, its interface the new
+ * port's (moved_from the port it left); false when it is on one and none is free. */
+static bool move_off_reserved(em_registry *r, em_fleet_entry *e)
+{
+    if (!em_registry_reserved(r, e->port))
+        return true;
+    for (int p = r->port_low; p <= r->port_high; p++)
+        if (em_registry_port_free(r, p)) {
+            r->moved_from = e->port;
+            e->port = p;
+            EM_FORMAT_FIXED(e->interface, sizeof(e->interface), "em%d", p - r->port_low + 1);
+            return true;
+        }
+    return false;
+}
+
 em_fleet_entry *em_registry_assign_held(em_registry *r, const char *serial, const char *node_id,
                                         const char *model, const char *firmware, double now, const char *held)
 {
+    r->moved_from = 0;
     em_fleet_entry *e = find(r, serial);
+    if (e && !move_off_reserved(r, e))
+        return NULL;
     if (!e) {
         int port = 0;
         for (int p = r->port_low; p <= r->port_high && !port; p++)
@@ -255,8 +372,11 @@ em_fleet_entry *em_registry_adopt(em_registry *r, const char *serial, const char
                                   const char *firmware, int port, double now, const char *held,
                                   em_fleet_placed *placed)
 {
+    r->moved_from = 0;
     em_fleet_entry *e = find(r, serial);
     *placed = e ? EM_FLEET_REGISTERED : EM_FLEET_ADOPTED;
+    if (e && !move_off_reserved(r, e))
+        return NULL;
     if (!e && (!em_registry_port_free(r, port) || !(e = create(r, serial, port, now))))
         return NULL;
     return seen(r, e, node_id, model, firmware, now, held);
@@ -735,6 +855,29 @@ bool em_fleet_open(em_fleet *f, cJSON *config, char *why, size_t size)
         (void)em_format(why, size, "a module's update needs the fleet's files");
         return false;
     }
+    /* spec 4, reserved ports: the platform's own; the fleet never listens on one */
+    if (!(f->reserved_ports = em_reserved_ports(config, &f->reserved_from, why, size)))
+        return false;
+    f->registry.reserved = f->reserved_ports;
+    int front = 0;
+    const char *listen = config_text(config, "listen", "");
+    if (sscanf(listen, "ptcp:%5d:", &front) == 1 && em_port_reserved(f->reserved_ports, front)) { /* NOLINT(cert-err34-c): QUALITY.md §5 */
+        (void)em_format(why, size, "the front port %d is reserved (reserved_ports)", front);
+        return false;
+    }
+    const cJSON *files = cJSON_GetObjectItemCaseSensitive(config, "files");
+    const cJSON *files_port = cJSON_GetObjectItemCaseSensitive(files, "port");
+    if (files && em_port_reserved(f->reserved_ports, cJSON_IsNumber(files_port) ? files_port->valueint : EM_FILES_PORT)) {
+        (void)em_format(why, size, "the file server's port is reserved (reserved_ports)");
+        return false;
+    }
+    bool usable = false;
+    for (int p = f->registry.port_low; p <= f->registry.port_high && !usable; p++)
+        usable = !em_port_reserved(f->reserved_ports, p);
+    if (!usable && f->registry.port_low <= f->registry.port_high) {
+        (void)em_format(why, size, "every agent port is reserved (reserved_ports)");
+        return false;
+    }
     bool ok = reload(f);
     if (!ok)
         (void)em_format(why, size, "%s is unreadable or not a fleet registry", f->registry_path);
@@ -744,6 +887,9 @@ bool em_fleet_open(em_fleet *f, cJSON *config, char *why, size_t size)
 void em_fleet_close(em_fleet *f)
 {
     em_registry_free(&f->registry);
+    free(f->reserved_ports);
+    f->reserved_ports = NULL;
+    f->registry.reserved = NULL;
     cJSON_Delete(f->config);
     f->config = NULL;
 }
@@ -910,20 +1056,30 @@ em_fleet_outcome em_fleet_identify_at(em_fleet *f, const cJSON *select_result, i
     if (port) {
         e = em_registry_adopt(&f->registry, serial, row_text(row, "id"), row_text(row, "model"),
                               row_text(row, "firmware_version"), port, now, holds ? held : NULL, &out->placed);
-        if (!e) {
-            EM_FORMAT_FIXED(out->why, sizeof(out->why), "pod %s on agent port %d, another pod's: left unchanged",
-                            serial, port);
-            return EM_FLEET_REFUSED;
-        }
     } else {
         out->placed = EM_FLEET_FRONT;
         e = em_registry_assign_held(&f->registry, serial, row_text(row, "id"), row_text(row, "model"),
                                     row_text(row, "firmware_version"), now, holds ? held : NULL);
-        if (!e) {
-            EM_FORMAT_FIXED(out->why, sizeof(out->why), "pod %s: no free agent port, left unchanged", serial);
-            return EM_FLEET_REFUSED;
-        }
     }
+    if (!e) {
+        const em_fleet_entry *own = find(&f->registry, serial);
+        if (own && em_registry_reserved(&f->registry, own->port)) {
+            out->loud = true;
+            EM_FORMAT_FIXED(out->why, sizeof(out->why),
+                            "pod %s: its entry's agent port %d is reserved (reserved_ports) and no other is free "
+                            "to move it to: left unchanged",
+                            serial, own->port);
+        } else if (!port)
+            EM_FORMAT_FIXED(out->why, sizeof(out->why), "pod %s: no free agent port, left unchanged", serial);
+        else if (em_registry_reserved(&f->registry, port))
+            EM_FORMAT_FIXED(out->why, sizeof(out->why),
+                            "pod %s on agent port %d, reserved (reserved_ports): left unchanged", serial, port);
+        else
+            EM_FORMAT_FIXED(out->why, sizeof(out->why), "pod %s on agent port %d, another pod's: left unchanged",
+                            serial, port);
+        return EM_FLEET_REFUSED;
+    }
+    out->moved_from = f->registry.moved_from;
     out->entry = *e;
     out->entry.node_id = out->entry.model = out->entry.firmware = NULL;
     char *registry = em_registry_dump(&f->registry);
@@ -952,7 +1108,7 @@ em_fleet_outcome em_fleet_identify_at(em_fleet *f, const cJSON *select_result, i
 }
 
 size_t em_fleet_start_registered(em_fleet *f, void (*start)(void *ctx, const char *pod_id, bool changed),
-                                 void *ctx)
+                                 void (*stop)(void *ctx, const char *pod_id, int port), void *ctx)
 {
     if (!reload(f))
         return SIZE_MAX;
@@ -969,6 +1125,10 @@ size_t em_fleet_start_registered(em_fleet *f, void (*start)(void *ctx, const cha
         const em_fleet_entry *e = &f->registry.entries[i];
         if (!admitted(f->config, e->pod_id, e->model, e->firmware, NULL, 0))
             continue;
+        if (em_registry_reserved(&f->registry, e->port)) {
+            stop(ctx, e->pod_id, e->port);
+            continue;
+        }
         char path[600];
         bool changed = false;
         cJSON *agent = em_agent_config(e, f->config);
