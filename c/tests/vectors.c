@@ -1515,13 +1515,17 @@ static void record_start(void *ctx, const char *pod_id, bool changed)
 }
 
 /* a secret as a store keeps it (a 0700 directory, a 0600 file): the fleet_secret and agent_secret
- * steps; synthetic values only */
+ * steps; a null value removes it; synthetic values only */
 static void write_test_secret(const char *dir, const char *ref, const char *value)
 {
     char path[1400];
     em_mkdirs(dir, 0700);
     (void)chmod(dir, 0700);
     snprintf(path, sizeof(path), "%s/%s", dir, ref);
+    if (!value) {
+        (void)unlink(path);
+        return;
+    }
     FILE *f = fopen(path, "w");
     if (!f)
         return;

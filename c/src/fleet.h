@@ -127,6 +127,7 @@ typedef enum {
     EM_SECRET_REPLACED,    /* the fleet's copy, replaced: the fleet's value changed */
     EM_SECRET_ADOPTED,     /* a copy equal to the fleet's, marked the fleet's */
     EM_SECRET_STALE,       /* the agent's own (placed or changed by hand), not the fleet's value */
+    EM_SECRET_UNSOURCED,   /* the fleet's copy, its value gone from the fleet's store: kept, missing */
 } em_secret_event;
 
 typedef struct {

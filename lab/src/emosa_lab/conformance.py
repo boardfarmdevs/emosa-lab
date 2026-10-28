@@ -884,10 +884,13 @@ FLEET_STAMP = "20261003T120000"  # forget's archive suffix, as time.strftime wou
 
 def write_test_secret(directory, ref, value):
     """A secret as a store keeps it (a 0700 directory, a 0600 file): a session's fleet store, or
-    an agent's own copy placed by hand. Synthetic values only."""
+    an agent's own copy placed by hand; None removes it. Synthetic values only."""
     directory.mkdir(mode=0o700, parents=True, exist_ok=True)
     directory.chmod(0o700)
     path = directory / ref
+    if value is None:
+        path.unlink(missing_ok=True)
+        return
     path.write_text(value)
     path.chmod(0o600)
 
@@ -1158,6 +1161,10 @@ def fleet_session_vectors():
             {"agent_secret": {"pod": readmit_c, "ref": "gtp", "value": "SyntheticKeyOne1"}},
             {"arrival": [{"rows": [node(readmit_c)]}], "now": 1759500000.75},
             {"fleet_secret": {"ref": "gtp", "value": "SyntheticKeyTwo2"}},
+            {"fleet_config": secret_config},
+            # the fleet's value gone (an image that found its source broken): every copy stands,
+            # no agent restarts, and none is missing (each agent still has one)
+            {"fleet_secret": {"ref": "gtp", "value": None}},
             {"fleet_config": secret_config},
         ],
         # a port another pod's entry holds, or one outside the range, is not adopted; a pod

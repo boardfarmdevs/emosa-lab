@@ -827,8 +827,8 @@ class Fleet:
         (spec §4 step 4). Whether it is restarted."""
         path = self.config_dir / f"{entry['pod_id']}.json"
         config = agent_config(entry, self.config)
-        missing, stale, replaced = self.provision_secrets(config)
-        self.note_missing_secrets(entry["pod_id"], missing)
+        missing, stale, replaced, unsourced = self.provision_secrets(config)
+        self.note_missing_secrets(entry["pod_id"], missing, unsourced)
         self.note_stale_secrets(entry["pod_id"], stale)
         text = json.dumps(config, indent=2) + "\n"
         changed = path.exists() and path.read_text() != text
@@ -854,11 +854,13 @@ class Fleet:
         still matches its marker is replaced when the fleet's value changed (a changed
         onboarding key): written atomically, its marker updated, and the agent restarted (bind).
         One with no marker that equals the fleet's value is marked then (an agent provisioned
-        before markers). Any other copy (placed or changed by hand) is never replaced.
-        (missing, stale, replaced): the references with no source, in neither store (the
-        agent's alone when the fleet has none, as after a factory reset that lost the agent's
-        store); those whose own copy, not the fleet's, differs from the fleet's value; and those
-        replaced. No value, marker or HMAC is ever logged."""
+        before markers). Any other copy (placed or changed by hand) is never replaced, and no
+        copy is ever deleted or emptied because the fleet's value went missing.
+        (missing, stale, replaced, unsourced): the references with no source, in neither store
+        (the agent's alone when the fleet has none, as after a factory reset that lost the
+        agent's store); those whose own copy, not the fleet's, differs from the fleet's value;
+        those replaced; and those whose copy is the fleet's but whose value is gone from the
+        fleet's store (the copy kept). No value, marker or HMAC is ever logged."""
         uplink = config.get("uplink") or {}
         refs = sorted(
             {
@@ -871,11 +873,11 @@ class Fleet:
             }
         )
         if not refs:
-            return [], [], []
+            return [], [], [], []
         fleet = FileSecrets(Path(self.config["secrets"])) if self.config.get("secrets") else None
         own = FileSecrets(Path(config["state_dir"]) / "secrets")
         pod = config["pod_id"]
-        missing, stale, replaced = [], [], []
+        missing, stale, replaced, unsourced = [], [], [], []
         for ref in refs:
             source = have = None
             with contextlib.suppress(EmosaError):
@@ -893,11 +895,15 @@ class Fleet:
                 replace_private(own.directory, marker_name(ref), marker(own, source))
                 log.info("pod %s: secret %s provisioned from the fleet's store", pod, ref)
                 continue
-            if source is None:
-                continue  # nothing to compare it with: the agent's copy stands
             mark = None
             with contextlib.suppress(EmosaError):
                 mark = own.read(marker_name(ref))
+            if source is None:
+                # the fleet's own source gone: its copy is never deleted or emptied for that, only
+                # recorded as missing; one placed by hand is the agent's alone
+                if mark is not None and hmac.compare_digest(mark, marker(own, have)):
+                    unsourced.append(ref)
+                continue
             if hmac.compare_digest(have, source):
                 if mark is None or not hmac.compare_digest(mark, marker(own, have)):
                     replace_private(own.directory, marker_name(ref), marker(own, have))
@@ -914,13 +920,15 @@ class Fleet:
                 )
                 continue
             stale.append(ref)
-        return missing, stale, replaced
+        return missing, stale, replaced, unsourced
 
-    def note_missing_secrets(self, pod_id, missing):
+    def note_missing_secrets(self, pod_id, missing, unsourced=()):
         """spec §4: a secret reference with no source fails loudly, without taking any pod off
         EMOSA: an error logged by reference only (never a value) each time the pod's agent is
         bound, and kept under the state root (fleet-secrets.missing.json: each pod and its
-        references with no source) until it has one. The agent starts all the same."""
+        references with no source) until it has one. The agent starts all the same. So does one
+        whose copy is the fleet's but whose value is gone from the fleet's store (unsourced): the
+        copy is kept and works on, the record says the fleet can no longer give it."""
         for ref in missing:
             log.error(
                 "pod %s: secret %s in neither its store nor the fleet's: whatever needs it (its"
@@ -928,7 +936,14 @@ class Fleet:
                 pod_id,
                 ref,
             )
-        self._record_secrets(MISSING_SECRETS, pod_id, missing)
+        for ref in unsourced:
+            log.error(
+                "pod %s: secret %s gone from the fleet's store: the fleet's copy in its store is"
+                " kept and used, but no new value can reach it until the fleet's has one",
+                pod_id,
+                ref,
+            )
+        self._record_secrets(MISSING_SECRETS, pod_id, [*missing, *unsourced])
 
     def note_stale_secrets(self, pod_id, stale):
         """spec §4: an agent's own copy (placed or changed by hand, never replaced) that differs

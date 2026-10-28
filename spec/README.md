@@ -1038,7 +1038,10 @@ equals the fleet's value is marked then (an agent provisioned before markers), s
 later change. Any other copy, placed or changed by hand, is never replaced: while it differs
 from the fleet's value it is logged as a warning by reference each time the configuration is
 written and recorded under the state root (`fleet-secrets.stale.json`, as the missing record
-below). No value, marker or HMAC is ever logged or recorded. A reference with no source, in neither store (the agent's alone when the
+below). A replacement happens only when there is a new value to write: no copy is ever deleted
+or emptied because the fleet's value went missing; the fleet's copy whose value is gone from the
+fleet's store is kept and used, and recorded as missing (below). No value, marker or HMAC is ever
+logged or recorded. A reference with no source, in neither store (the agent's alone when the
 fleet has none, as after a factory reset that lost the agents' state), fails loudly without
 taking any pod off EMOSA: it is logged as an error by reference, each time the fleet writes that
 agent's configuration, and recorded under the state root (`fleet-secrets.missing.json`: each pod

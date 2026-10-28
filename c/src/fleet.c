@@ -1104,8 +1104,6 @@ bool em_fleet_provision_secrets(const em_fleet *f, const cJSON *agent_config)
             noted = own.backend.create(&own, refs[i], value, value_len);
             em_hmac_hex(own.key, sizeof(own.key), value, value_len, theirs);
             noted = noted && replace_file(dir, name, theirs, strlen(theirs));
-        } else if (!value) {
-            noted = false; /* nothing to compare it with: the agent's copy stands */
         } else {
             uint8_t *mark = own.backend.read(&own, name, &mark_len);
             em_hmac_hex(own.key, sizeof(own.key), have, have_len, mine);
@@ -1114,7 +1112,15 @@ bool em_fleet_provision_secrets(const em_fleet *f, const cJSON *agent_config)
                 OPENSSL_cleanse(mark, mark_len);
                 free(mark);
             }
-            if (have_len == value_len && !CRYPTO_memcmp(have, value, have_len)) {
+            if (!value) {
+                /* the fleet's own source gone: its copy is never deleted or emptied for that, only
+                 * recorded as missing; one placed by hand is the agent's alone */
+                noted = marked;
+                if (marked) {
+                    missing[nmissing++] = refs[i];
+                    event = EM_SECRET_UNSOURCED;
+                }
+            } else if (have_len == value_len && !CRYPTO_memcmp(have, value, have_len)) {
                 /* equal: marked the fleet's, an agent provisioned before markers included */
                 event = EM_SECRET_ADOPTED;
                 noted = !marked && replace_file(dir, name, mine, strlen(mine));

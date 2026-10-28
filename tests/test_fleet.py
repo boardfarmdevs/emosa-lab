@@ -667,3 +667,13 @@ def test_a_changed_fleet_secret_replaces_the_fleets_own_copies_and_restarts_them
     fleet_secret(own("POD2"), "gtp", "SyntheticKeyTwo2")
     fleet.bind(entries["POD2"])
     assert not stale.exists() and (own("POD2") / ".gtp.from-fleet").exists()
+    # the fleet's value gone: every copy kept (never deleted or emptied), no agent restarts, and
+    # the fleet's copies recorded as missing
+    (store / "gtp").unlink()
+    del started[:]
+    for pod in pods:
+        fleet.bind(entries[pod])
+    assert [(own(p) / "gtp").read_text() for p in pods] == ["SyntheticKeyTwo2"] * 3
+    assert started == [(p, False) for p in pods]
+    missing = json.loads((tmp_path / "state" / "fleet-secrets.missing.json").read_text())
+    assert missing == dict.fromkeys(pods, ["gtp"])

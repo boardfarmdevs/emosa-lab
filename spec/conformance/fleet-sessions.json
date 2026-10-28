@@ -2179,8 +2179,8 @@
      ]
     },
     "records": {
-     "missing": null,
-     "stale": "{\n  \"EMOSAPOD000000A0B2\": [\n    \"gtp\"\n  ]\n}\n"
+     "missing": "{\n  \"EMOSAPOD000000A0A1\": [\n    \"gtp\"\n  ],\n  \"EMOSAPOD000000A0C3\": [\n    \"gtp\"\n  ]\n}\n",
+     "stale": null
     },
     "registry": "{\n  \"EMOSAPOD000000A0A1\": {\n    \"al_mac\": \"02:a2:54:8d:a4:06\",\n    \"firmware\": null,\n    \"first_seen\": 1759500000.25,\n    \"handovers\": 1,\n    \"interface\": \"em1\",\n    \"last_seen\": 1759500000.25,\n    \"model\": \"HWSIM_POD\",\n    \"node_id\": \"EMOSAPOD000000A0A1\",\n    \"pod_id\": \"EMOSAPOD000000A0A1\",\n    \"port\": 6651\n  },\n  \"EMOSAPOD000000A0B2\": {\n    \"al_mac\": \"02:01:42:35:35:88\",\n    \"firmware\": null,\n    \"first_seen\": 1759500000.5,\n    \"handovers\": 1,\n    \"interface\": \"em2\",\n    \"last_seen\": 1759500000.5,\n    \"model\": \"HWSIM_POD\",\n    \"node_id\": \"EMOSAPOD000000A0B2\",\n    \"pod_id\": \"EMOSAPOD000000A0B2\",\n    \"port\": 6652\n  },\n  \"EMOSAPOD000000A0C3\": {\n    \"al_mac\": \"02:4e:8c:a3:0e:07\",\n    \"firmware\": null,\n    \"first_seen\": 1759500000.75,\n    \"handovers\": 1,\n    \"interface\": \"em3\",\n    \"last_seen\": 1759500000.75,\n    \"model\": \"HWSIM_POD\",\n    \"node_id\": \"EMOSAPOD000000A0C3\",\n    \"pod_id\": \"EMOSAPOD000000A0C3\",\n    \"port\": 6653\n  }\n}\n",
     "secrets": {
@@ -2380,6 +2380,72 @@
        [
         "EMOSAPOD000000A0C3",
         true
+       ]
+      ]
+     },
+     "fleet_config": {
+      "advertise": "10.101.0.1",
+      "config_dir": "{root}/etc",
+      "controller_al": "02:00:00:e0:00:01",
+      "listen": "ptcp:6650:127.0.0.1",
+      "message_set": "easymesh-6.1",
+      "pods": {
+       "EMOSAPOD000000A0A1": {
+        "uplink": {
+         "bootstrap": {
+          "secret_ref": "gtp",
+          "ssid": "gtp-ssid"
+         },
+         "mode": "off"
+        }
+       },
+       "EMOSAPOD000000A0B2": {
+        "uplink": {
+         "bootstrap": {
+          "secret_ref": "gtp",
+          "ssid": "gtp-ssid"
+         },
+         "mode": "off"
+        }
+       },
+       "EMOSAPOD000000A0C3": {
+        "uplink": {
+         "bootstrap": {
+          "secret_ref": "gtp",
+          "ssid": "gtp-ssid"
+         },
+         "mode": "off"
+        }
+       }
+      },
+      "ports": [
+       6651,
+       6653
+      ],
+      "secrets": "{root}/fleet-secrets",
+      "state_root": "{root}/state"
+     }
+    },
+    {
+     "fleet_secret": {
+      "ref": "gtp",
+      "value": null
+     }
+    },
+    {
+     "expected": {
+      "started": [
+       [
+        "EMOSAPOD000000A0A1",
+        false
+       ],
+       [
+        "EMOSAPOD000000A0B2",
+        false
+       ],
+       [
+        "EMOSAPOD000000A0C3",
+        false
        ]
       ]
      },

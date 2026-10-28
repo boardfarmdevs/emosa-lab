@@ -204,6 +204,11 @@ static void secret_note(const char *pod_id, const char *ref, em_secret_event eve
              "never replaced",
              pod_id, ref);
         break;
+    case EM_SECRET_UNSOURCED: /* recorded as missing, the copy never deleted */
+        FAIL("pod %s: secret %s gone from the fleet's store: the fleet's copy in its store is kept and used, but "
+             "no new value can reach it until the fleet's has one",
+             pod_id, ref);
+        break;
     }
 }
 
