@@ -37,7 +37,7 @@
     },
     "README 2.6 What the agent reports": {
       "vectors": ["translation-northbound.json"],
-      "box": ["clients", "reannounce"],
+      "box": ["clients", "clients-all-leave", "reannounce"],
       "python": ["test_wire_reports.py", "test_easymesh_view.py"]
     },
     "README 3.1 Connections": {

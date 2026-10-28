@@ -191,6 +191,12 @@ def test_a_client_joining_and_leaving_is_notified_and_aged_per_response(agent, t
     assert result["passed"], result
 
 
+def test_a_topology_response_lists_every_bss_after_its_last_client_left(agent, tmp_path):
+    result = box("clients-all-leave", agent, tmp_path / "box")
+    assert result["stations"] and result["left"], result
+    assert result["passed"], result
+
+
 def test_the_controllers_next_topology_query_reannounces_every_client_once(agent, tmp_path):
     result = box("reannounce", agent, tmp_path / "box")
     assert result["passed"], result

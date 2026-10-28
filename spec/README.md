@@ -277,6 +277,16 @@ is not an EasyMesh link, and the agent reports nothing about it. When that
 backhaul's upstream is another pod of the same fleet, the two agents report each
 other as 1905 neighbors on it, with its link metrics (§8.5).
 
+A Topology Response always carries the Associated Clients TLV: every BSS of its AP
+Operational BSS TLV, each with its associated stations, none included. EasyMesh asks for
+the TLV only when a client is associated, but RDK's own agent always sends it, and RDK's
+controller takes it as the agent's complete association snapshot: a station it holds on the
+agent's BSSes that the TLV does not list is removed. So a station whose leave the controller
+missed goes at the agent's next response, also when that leave emptied the BSS (28 October:
+without the TLV, a pod's emptied backhaul BSS kept a stale association across cold starts).
+An agent that cannot list every BSS's stations sends no Topology Response, never an empty
+one in their place.
+
 ## 3. Southbound: OpenSync OVSDB
 
 ### 3.1 Connections

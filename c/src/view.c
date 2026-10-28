@@ -512,7 +512,6 @@ em_reason em_topology_radios_tlvs(const uint8_t agent_al[6], const uint8_t contr
     if (!nradios || nradios > EM_MAX_RADIOS || 1 + nbss + extra > 255)
         return EM_INVALID_INPUT;
     em_buf dev = {0}, bridge = {0}, nb = {0}, op = {0}, conf = {0}, cl = {0};
-    size_t clients = 0;
     /* Device Information: the agent's own port, then one AP interface per BSS, each of its
      * radio's band (802.11n 2.4 or 5 GHz) on its radio's channel */
     bool ok = em_buf_put(&dev, agent_al, 6) && em_buf_u8(&dev, (uint8_t)(1 + nbss + extra)) &&
@@ -563,7 +562,6 @@ em_reason em_topology_radios_tlvs(const uint8_t agent_al[6], const uint8_t contr
                     ok = false;
                 else
                     ok = em_buf_put(&cl, b->stations[s], 6) && em_buf_u16(&cl, (uint16_t)(age > 65535 ? 65535 : age));
-                clients++;
             }
         }
     }
@@ -590,8 +588,12 @@ em_reason em_topology_radios_tlvs(const uint8_t agent_al[6], const uint8_t contr
         ok = ok && append(out, 0x07, &b);
         em_buf_free(&b);
     }
+    /* Associated Clients always, every BSS of the AP Operational BSS with its stations, none
+     * included, as RDK's own agent sends it: the controller takes it as the agent's complete
+     * association snapshot, so a station whose leave it missed goes at the next response (spec
+     * 2.6; a pod's BSS emptied by that leave kept a stale association, 28 October) */
     ok = ok && append_bytes(out, 0x80, services, 2) && append(out, 0x83, &op) &&
-         (r1 || append(out, 0xB7, &conf)) && (!clients || append(out, 0x84, &cl)) &&
+         (r1 || append(out, 0xB7, &conf)) && append(out, 0x84, &cl) &&
          (!uplink || append_bytes(out, 0xCB, bsta, 13)) &&
          (r1 || append_bytes(out, 0xB3, &profile, 1));
     em_buf_free(&dev);

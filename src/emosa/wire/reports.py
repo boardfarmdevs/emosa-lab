@@ -406,8 +406,11 @@ def _topology(facts, binding, message_set=EASYMESH_61, now=None):
     tlvs.extend((_em(SupportedServices((1,))), _em(facts.operational)))
     if message_set != R1:  # R1 has no BSS Configuration Report and no Profile TLV
         tlvs.append(_em(facts.configuration))
-    if clients:
-        tlvs.append(_em(facts.clients))
+    # Associated Clients always, every active BSS with its stations, none included, as RDK's own
+    # agent sends it: the controller takes it as the agent's complete association snapshot, so a
+    # station whose leave it missed goes at the next response (spec 2.6; a pod's BSS emptied by
+    # that leave kept a stale association, 28 October)
+    tlvs.append(_em(facts.clients))
     if facts.backhaul_radios:
         # the Backhaul STA Radio Capabilities (spec 8.6): the in-use bSTA MAC on its radio (the
         # in-use radio comes first), reported in the Topology Response so the controller models a

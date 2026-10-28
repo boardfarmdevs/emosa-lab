@@ -282,7 +282,8 @@ def test_topology_reply_preserves_mid_and_complete_ieee_and_easymesh_inventory()
     report = reply()
     message = assemble(report.frames)
     assert message.mid == 65535 and message.message_type == 3
-    assert {t.kind for t in message.tlvs} == {3, 4, 7, 0x80, 0x83, 0xB7, 0xB3}
+    # 0x84 also with no client (spec 2.6): every BSS's list, empty here
+    assert {t.kind for t in message.tlvs} == {3, 4, 7, 0x80, 0x83, 0xB7, 0x84, 0xB3}
     assert message.destination == CONTROLLER and message.source == AGENT
     assert SSID.decode() not in repr(report)
 
@@ -472,6 +473,18 @@ def test_offline_learning_command_and_native_diagnostic_boundaries(tmp_path):
     assert "0x03" in topo["invalid_or_unsupported_value_tlvs"]
     assert "0x04" in topo["missing_required_tlvs"]
     assert native["operations_created"] == 0 and not native["onboarding_proven"]
+
+
+def test_a_topology_response_lists_every_bss_clients_also_with_none():
+    # spec 2.6: RDK's controller takes the Associated Clients TLV as the agent's complete
+    # snapshot; without it, a BSS a missed leave emptied kept a stale association (28 October)
+    _, _, facts = fixtures()
+    facts = replace(facts, clients=AssociatedClients((BssClients(BSSID, ()),)))
+    message = assemble(reply(facts).frames)
+    (value,) = [t.value for t in message.tlvs if t.kind == 0x84]
+    assert decode_value(0x84, value) == AssociatedClients((BssClients(BSSID, ()),))
+    (operational,) = [t.value for t in message.tlvs if t.kind == 0x83]
+    assert [b.ap_mac for r in decode_value(0x83, operational).radios for b in r.bsses] == [BSSID]
 
 
 def test_a_topology_response_reports_each_stations_age_as_it_is_sent():

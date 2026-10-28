@@ -1726,6 +1726,78 @@ def client_ages(topology):
     return ages
 
 
+def bss_clients(topology):
+    """{BSSID: [station MACs]} from a Topology Response's Associated Clients TLV (0x84); None
+    when the response has no such TLV."""
+    value = next((t.value for t in topology.tlvs if t.kind == 0x84), None) if topology else None
+    if value is None:
+        return None
+    listed, at = {}, 1
+    for _ in range(value[0] if value else 0):
+        bssid, count = value[at : at + 6].hex(":"), int.from_bytes(value[at + 6 : at + 8], "big")
+        at += 8
+        listed[bssid] = [value[at + 8 * i : at + 8 * i + 6].hex(":") for i in range(count)]
+        at += 8 * count
+    return listed
+
+
+def operational_bsses(topology):
+    """The BSSIDs of a Topology Response's AP Operational BSS TLV (0x83): radios(1), per radio:
+    RUID(6), BSSes(1), per BSS: BSSID(6), SSID length(1), SSID."""
+    value = next((t.value for t in topology.tlvs if t.kind == 0x83), b"") if topology else b""
+    bsses, at = [], 1
+    for _ in range(value[0] if value else 0):
+        count = value[at + 6]
+        at += 7
+        for _ in range(count):
+            bsses.append(value[at : at + 6].hex(":"))
+            at += 7 + value[at + 6]
+    return bsses
+
+
+async def clients_all_leave(box):
+    """spec 2.6: every station leaves the pod's BSSes: a Topology Notification with a Client
+    Association Event leave for each, and the next Topology Response still carries the
+    Associated Clients TLV, every BSS of its AP Operational BSS TLV with no station. RDK's
+    controller takes that TLV as the agent's complete snapshot; without it a pod's BSS that a
+    missed leave emptied kept a stale association (28 October)."""
+    if not (await onboarded(box)).get("applied"):
+        return box.result(passed=False, failed="not onboarded")
+    await box.ask(TOPOLOGY_QUERY, (Tlv(0xB3, b"\x01"),), TOPOLOGY_RESPONSE)  # re-announcement done
+    await asyncio.sleep(2)
+    # the stations the agent reports (its BSSes'), each to be notified as it leaves; every station
+    # of the pod leaves, those of VIFs the agent does not represent too
+    first = await box.ask(TOPOLOGY_QUERY, (Tlv(0xB3, b"\x01"),), TOPOLOGY_RESPONSE)
+    gone = sorted(mac for macs in (bss_clients(first) or {}).values() for mac in macs)
+    rows = await box.rows("Wifi_Associated_Clients")
+    stations = sorted(
+        (rows[client]["mac"], vif["if_name"])
+        for vif in (await box.rows("Wifi_VIF_State")).values()
+        for client in uuids(vif.get("associated_clients"))
+        if client in rows
+    )
+    before = len(box.sent(TOPOLOGY_NOTIFICATION))
+    for mac, if_name in stations:
+        await box.client_leave(mac, if_name)
+    left = await box.until(
+        lambda: set(gone) <= {e[0] for e in association_events(box, before) if not e[2]},
+        seconds=20,
+    )
+    response = await box.ask(TOPOLOGY_QUERY, (Tlv(0xB3, b"\x01"),), TOPOLOGY_RESPONSE)
+    listed, operational = bss_clients(response), operational_bsses(response)
+    passed = (
+        bool(gone)
+        and bool(left)
+        and listed is not None
+        and sorted(listed) == sorted(operational)
+        and bool(operational)
+        and not any(listed.values())
+    )
+    return box.result(
+        passed=passed, stations=gone, left=bool(left), listed=listed, operational=operational
+    )
+
+
 async def clients(box):
     """A station joins and leaves the pod's BSS: a Topology Notification with a Client
     Association Event each time (spec 2.4); the Topology Response lists the station with its
@@ -9663,6 +9735,7 @@ SCENARIOS = {
     "new-source": new_source,
     "pod-recreated": pod_recreated,
     "clients": clients,
+    "clients-all-leave": clients_all_leave,
     "reannounce": reannounce,
     "channel-selection": channel_selection,
     "channel-scan": channel_scan,
