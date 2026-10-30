@@ -15,7 +15,7 @@ off; layer A is a (b) mechanism too). Times are PDT.
 - pod-1 (parent, `RPIPOD023F87E628DD`): its 5 GHz radio carries `bhaul-sta-50` (uplink, on
   `lnf_radius_5g`) **and** `b-ap-50` (the parent AP EMOSA owns). Needs a pin
   `POD_BACKHAUL_BSSID_50=02:00:00:8a:29:1d` in pod-1's inside pod.env when it becomes the parent
-  (yocto-53).
+  (the pod image's maintainers).
 - Station MAC == radio RUID is NOT a controller filter (0216 learns it on 2.4 GHz where it also
   equals the RUID); the missing 5 GHz row was just the agent not reporting the 5 GHz radio — fixed
   below. The empty `BackhaulSta.MACAddress` display is a separate post-layer-B fix.
@@ -74,7 +74,7 @@ Both agents, vectors and box for each; spec 8.6 and 9 record the rules.
 
 ## The (b) proof on rdk-1010 (12 October, PDT; UTC in brackets)
 EMOSA 1c1e7ae on the gateway from 15:30:41 (22:30:41Z); pods relaunched from
-`rpi-pod-amd64-20261012084755` by yocto-53 (pod-1 14:40:43, pod-2 14:41:13), both on
+`rpi-pod-amd64-20261012084755` by the pod image's maintainers (pod-1 14:40:43, pod-2 14:41:13), both on
 `opensync-lab-hwsim-6.6.1-gre-5g-v1`; extenders stopped 14:44:22-40.
 - Both pods report two radios (2.4 GHz ch 6, 5 GHz ch 36); each radio's own M2 makes its
   `b-ap-50` (pod-1 72:00:00:00:6b:00, pod-2 72:00:00:00:6d:00); every operation applied.

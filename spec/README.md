@@ -626,7 +626,7 @@ is everything above. For a legacy pod, all of this specification applies, except
   VIF). A BSS is WPA2-PSK in this encoding while its map's `encryption` is
   `WPA-PSK` and it has a `key`. Guarded AP VIF fields: `if_name`, `mode`,
   `enabled`, `ssid` and `security`.
-- **The AP's bridge port.** A legacy pod's wm and its authenticator (Broadcom's
+- **The AP's bridge port.** A legacy pod's wm and its authenticator (the platform's
   nas and eapd) hear an AP's stations on the AP's bridge, whose members are
   that bridge's Open vSwitch ports. The pod never adds an AP there: its cloud
   writes the `Port`. `Wifi_VIF_State.bridge` shows the bridge either way, from
@@ -667,7 +667,7 @@ is everything above. For a legacy pod, all of this specification applies, except
   itself (`wl0` under the 5 GHz home AP `wl0.2`) stays down: OpenSync 1.4's wm
   raises a netdev only while applying a VIF on it, and the seed's stations are
   deleted before wm starts. Later OpenSync raises it with every VIF, as a
-  Broadcom radio in DHD offload mode passes none of the host's frames otherwise:
+  radio in DHD offload mode passes none of the host's frames otherwise:
   the authenticator's M1 never reached the air (16 October). For each radio
   carrying a home AP whose VIFs are all EMOSA's (the fronthaul, its slots, the
   profile's stations), with no VIF or Inet row on its own netdev, the agent
@@ -686,7 +686,7 @@ is everything above. For a legacy pod, all of this specification applies, except
   and nm sets the link down again. Its status gives the setting, the writes and
   each home AP's radio's `port_state` as nm reports it in `Wifi_Master_State`
   (`phy_netdev_up`).
-- **The authenticator's reload.** OpenSync 2.4.3's Broadcom wm restarts the
+- **The authenticator's reload.** OpenSync 2.4.3's platform wm restarts the
   pod's authenticator (nas and eapd) in full only for a new AP or a change of
   its `security` entries beyond the key (`encryption`, `mode`, `oftag`). An
   `ssid` or `key` alone is a fast reload. An EMOSA write that makes an AP or
@@ -1891,7 +1891,7 @@ a parent pod, as opensync-lab's local-noc does (`mesh.py`, `parent_step` and `gr
   EMOSA's credential are gone after a restart and the pod returns to its pin by itself. EMOSA sees a
   new OpenSync instance and **re-applies the active move from its persisted target** once the pod is
   back, without the operator (as the uplink switch is re-applied after every re-onboarding, §8.3). A
-  move therefore needs no persistent pod database. **Pod-side change** (yocto-53, with the next pod
+  move therefore needs no persistent pod database. **Pod-side change** (the pod image's maintainers, with the next pod
   image after soak B; nothing on the Pis before): pod-bootstrap's `load_creds` selects only
   credentials without a BSSID, so a fallback station brought up **during** a move cannot link or take
   EMOSA's BSSID-pinned credential (today it takes all credentials and the first one's SSID/key).

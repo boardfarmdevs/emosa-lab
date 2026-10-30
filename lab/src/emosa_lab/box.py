@@ -68,7 +68,7 @@ AUTOCONFIG_SEARCH, AUTOCONFIG_RESPONSE, AUTOCONFIG_WSC = 0x0007, 0x0008, 0x0009
 REGISTRAR = ROOT / ".cache/wsc-registrar/component-registrar"  # scripts/build-wsc-registrar.py
 REGISTRAR_SSID = "EMOSA-WSC-component"  # deploy/wire/component-registrar.c
 COLD_VIF = "home-ap-24"  # the profiles' fronthaul VIF
-# a legacy pod (spec 3.10): OpenSync 2.0's schema without multi_ap, two Broadcom radios, its
+# a legacy pod (spec 3.10): OpenSync 2.0's schema without multi_ap, two radios, its
 # station on its GRE uplink and no AP yet; its profile's fronthaul wl1.2 and GRE parent AP wl1.1
 LEGACY_ROWS = ROOT / "tests/fixtures/opensync/pod-2.0-legacy-tables.json"
 LEGACY_PROFILE = "bcm-pod-2.4.3-gre-v1"
@@ -1024,7 +1024,7 @@ class Box:
         }
 
 
-# spec 3.10: OpenSync 2.4.3's Broadcom wm (bcmwl_nas_update_security) restarts a legacy pod's
+# spec 3.10: OpenSync 2.4.3's platform wm (its authenticator update) restarts a legacy pod's
 # authenticator (nas, eapd) in full for a new AP or a change of its security entries beyond the
 # ssid and key (encryption, mode, oftag); a new ssid or key alone is a fast reload
 FULL_RELOAD = ("encryption", "mode", "oftag")
@@ -2828,9 +2828,8 @@ async def fallback_during_move(box):
     """Spec 8.6 (EMOSA's half): a GRE move and its revert leave the pod's fallback station exactly
     as pod-bh-fallback set it - enabled, its own credential, its own parent. EMOSA writes only the
     moved station's columns, never the fallback's (make-before-break takes off only the station cm
-    used and the ones EMOSA wrote, spec 8.3). The other
-    half (the fallback not taking EMOSA's credential) is the pod side: yocto-53's load_creds and the
-    Pi soak, not the box."""
+    used and the ones EMOSA wrote, spec 8.3). The other half (the fallback not taking EMOSA's
+    credential) is the pod side: the pod image's load_creds and the Pi soak, not the box."""
     if not (await onboarded(box)).get("applied"):
         return box.result(passed=False, failed="not onboarded")
     # a fleet GRE parent peer (so a steer onto it is a GRE join), and the fallback station up
@@ -5503,7 +5502,7 @@ async def gre_parent_withdrawn(box):
     tunnel scope, seeing the AP and its children gone, then removes every child's gretap and
     br-home port. The window between the two transactions (the gretaps briefly in br-home with
     their local address gone) is bounded and leaves br-home's own port untouched, the agent up and
-    its tunnel reconcile settled. NM/osw behaviour in that window is the pod's (yocto-53's twin
+    its tunnel reconcile settled. NM/osw behaviour in that window is the pod's (the pod image's twin
     scenario 3, real OpenSync); the box has no netdevs."""
     ap, failure = await gre_parent_up(box)
     if failure:
