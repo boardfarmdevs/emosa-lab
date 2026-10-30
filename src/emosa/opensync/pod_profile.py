@@ -95,7 +95,7 @@ HOME_VIF = {"group_rekey": 86400, "ft_psk": 0}
 # spec 3.10: a radio's own netdev (wl0 under the 5 GHz home AP wl0.2) stays down on a pod converted
 # at boot. OpenSync 1.4's wm raises a netdev only while applying a VIF on it, and the seed's
 # stations are deleted before wm starts; later OpenSync raises the radio's netdev with every VIF,
-# as "dhd datapath doesn't work unless phy netdev is also up": a radio in DHD offload
+# as its datapath doesn't work unless the phy netdev is also up: a radio in full-offload
 # mode passed no frame of the host's (the authenticator's M1) while it was down (16 October). For
 # a radio carrying a home AP whose VIFs are all EMOSA's (a cloud-made pod's radio carries its
 # cloud's too, and its cloud's onboarding raised it), with no VIF or Inet row on its own netdev,

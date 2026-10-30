@@ -667,7 +667,7 @@ is everything above. For a legacy pod, all of this specification applies, except
   itself (`wl0` under the 5 GHz home AP `wl0.2`) stays down: OpenSync 1.4's wm
   raises a netdev only while applying a VIF on it, and the seed's stations are
   deleted before wm starts. Later OpenSync raises it with every VIF, as a
-  radio in DHD offload mode passes none of the host's frames otherwise:
+  radio in full-offload mode passes none of the host's frames otherwise:
   the authenticator's M1 never reached the air (16 October). For each radio
   carrying a home AP whose VIFs are all EMOSA's (the fronthaul, its slots, the
   profile's stations), with no VIF or Inet row on its own netdev, the agent
